@@ -153,7 +153,7 @@ function EditProblem() {
       errorNoti(
         t("validation:numberBetween", {
           fieldName: t("memoryLimit"),
-          min: 1,
+          min: 3,
           max: 1024,
         }),
         3000
