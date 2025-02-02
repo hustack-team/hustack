@@ -184,7 +184,7 @@ function CreateProblem() {
       return false;
     }
     if (memoryLimit < 3 || memoryLimit > 1024) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("memoryLimit"), min: 1, max: 1024}), 3000);
+      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024}), 3000);
       return false;
     }
     if (!statusSuccessful) {

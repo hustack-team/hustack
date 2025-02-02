@@ -15,7 +15,7 @@ export default function displayTime(input) {
     return (
       <>
         {formatTime(time.getDate())}/{formatTime(time.getMonth() + 1)}/
-        {time.getFullYear()}&nbsp;&nbsp;
+        {time.getFullYear()}&nbsp;
         {formatTime(time.getHours())}
         <b>:</b>
         {formatTime(time.getMinutes())}
