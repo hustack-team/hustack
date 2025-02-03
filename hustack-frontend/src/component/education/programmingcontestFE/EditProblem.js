@@ -74,6 +74,7 @@ function EditProblem() {
   const [status, setStatus] = useState('');
   const [isOwner, setIsOwner] = useState(false);
   const [sampleTestCase, setSampleTestCase] = useState(null);
+  const [problem, setProblem] = useState({});
 
   const [loading, setLoading] = useState(false);
 
@@ -160,7 +161,7 @@ function EditProblem() {
       );
       return false;
     }
-    if (!statusSuccessful) {
+    if (problem.correctSolutionSourceCode !== codeSolution && !statusSuccessful) {
       errorNoti(t("validateSubmit.warningCheckSolutionCompile"), 5000);
       return false;
     }
@@ -256,38 +257,40 @@ function EditProblem() {
       "get",
       "teacher/problems/" + problemId,
       (res) => {
-        res = res.data;
-        if (res.attachment && res.attachment.length !== 0) {
-          const newFileURLArray = res.attachment.map((url) => ({
+        const data = res.data;
+        setProblem(data)
+
+        if (data.attachment && data.attachment.length !== 0) {
+          const newFileURLArray = data.attachment.map((url) => ({
             id: randomImageName(),
             content: url,
           }));
           newFileURLArray.forEach((file, idx) => {
-            file.fileName = res.attachmentNames[idx];
+            file.fileName = data.attachmentNames[idx];
           });
           setFetchedImageArray(newFileURLArray);
         }
 
-        setProblemName(res.problemName);
-        setLevelId(res.levelId);
-        // setTimeLimit(res.timeLimit);
-        setTimeLimitCPP(res.timeLimitCPP);
-        setTimeLimitJAVA(res.timeLimitJAVA);
-        setTimeLimitPYTHON(res.timeLimitPYTHON);
-        setMemoryLimit(res.memoryLimit);
-        setIsPublic(res.publicProblem ? 'Y' : 'N');
-        setLanguageSolution(res.correctSolutionLanguage);
-        setCodeSolution(res.correctSolutionSourceCode);
-        setIsPreloadCode(res.isPreloadCode);
-        setPreloadCode(res.preloadCode);
-        setSolutionCheckerLanguage(res.solutionCheckerSourceLanguage);
-        setSolutionChecker(res.solutionCheckerSourceCode || "");
-        setIsCustomEvaluated(res.scoreEvaluationType === CUSTOM_EVALUATION);
-        setDescription(res.problemDescription);
-        setSelectedTags(res.tags);
-        setStatus(res.status);
-        setSampleTestCase(res.sampleTestCase);
-        setIsOwner(res.roles?.includes("OWNER"));
+        setProblemName(data.problemName);
+        setLevelId(data.levelId);
+        // setTimeLimit(data.timeLimit);
+        setTimeLimitCPP(data.timeLimitCPP);
+        setTimeLimitJAVA(data.timeLimitJAVA);
+        setTimeLimitPYTHON(data.timeLimitPYTHON);
+        setMemoryLimit(data.memoryLimit);
+        setIsPublic(data.publicProblem ? 'Y' : 'N');
+        setLanguageSolution(data.correctSolutionLanguage);
+        setCodeSolution(data.correctSolutionSourceCode);
+        setIsPreloadCode(data.isPreloadCode);
+        setPreloadCode(data.preloadCode);
+        setSolutionCheckerLanguage(data.solutionCheckerSourceLanguage);
+        setSolutionChecker(data.solutionCheckerSourceCode || "");
+        setIsCustomEvaluated(data.scoreEvaluationType === CUSTOM_EVALUATION);
+        setDescription(data.problemDescription);
+        setSelectedTags(data.tags);
+        setStatus(data.status);
+        setSampleTestCase(data.sampleTestCase);
+        setIsOwner(data.roles?.includes("OWNER"));
       },
       {
         onError: (e) => {

@@ -45,7 +45,7 @@
   "editProblem": "Edit problem",
   "viewProblem": "View Problem information",
   "validateSubmit": {
-    "warningCheckSolutionCompile": "Your source code must pass \"Compilation\" step",
+    "warningCheckSolutionCompile": "You have not completed the \"Compilation\" step",
     "missingField": "Missing required field: {{fieldName}}"
   },
   "generalInfo": "General information",
