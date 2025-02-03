@@ -173,7 +173,6 @@ function ContestProblemSubmissionDetailViewedByManager() {
       "post",
       `/teacher/submissions/${problemSubmissionId}/comments`,
       (res) => {
-        console.log("Comment saved:", res.data);
         handleCloseDialog();
         successNoti("Comment added successfully");
       },
@@ -223,13 +222,16 @@ function ContestProblemSubmissionDetailViewedByManager() {
             backgroundColor: "transparent",
           }}
         >
-          <Box sx={{mb: 4}}>
-            <HustCopyCodeBlock
-              title={t('common:message')}
-              text={submission.message}
-              language="bash"
-            />
-          </Box>
+          {(submission.status && submission.status !== "In Progress")
+            && (submission.message && !['Evaluated', 'Evaluating', 'Successful'].includes(submission.message))
+            && (<Box sx={{mb: 4}}>
+                <HustCopyCodeBlock
+                  title={t('common:message')}
+                  text={submission.message}
+                  language="bash"
+                />
+              </Box>
+            )}
           <Box sx={{mb: 4}}>
             <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1}}>
               <Typography variant="h6">{t('common:sourceCode')}</Typography>
@@ -243,9 +245,9 @@ function ContestProblemSubmissionDetailViewedByManager() {
               showLineNumbers
             />
           </Box>
-          {submission.status &&
-            submission.status !== "Compile Error" &&
-            submission.status !== "In Progress" && (
+          {submission.status
+            && !["Compile Error", "In Progress", "N/E Forbidden Ins."].includes(submission.status)
+            && (
               <ManagerViewParticipantProgramSubmissionDetailTestCaseByTestCase
                 submissionId={problemSubmissionId}
               />
