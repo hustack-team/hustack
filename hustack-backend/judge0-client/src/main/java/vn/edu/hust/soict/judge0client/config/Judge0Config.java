@@ -51,5 +51,7 @@ public class Judge0Config {
 
         Integer maxMaxFileSize;
 
+        Integer javaMaxProcessesAndOrThreadsExtra;
+
     }
 }
