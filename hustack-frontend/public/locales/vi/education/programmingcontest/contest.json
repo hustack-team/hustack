@@ -14,5 +14,9 @@
   "editContest": "Chỉnh sửa Contest",
   "validateSubmit": {
       "missingField": "Trường {{fieldName}} không được bỏ trống"
-  }
+  },
+  "submission": "Bài nộp",
+  "submissionList": "Danh sách Bài nộp",
+  "reJudge": "Chấm lại",
+  "reJudgingNotification": "Đang chấm lại bài nộp có ID"
 }

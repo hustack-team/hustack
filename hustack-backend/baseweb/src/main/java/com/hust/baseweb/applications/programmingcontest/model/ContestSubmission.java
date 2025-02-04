@@ -1,35 +1,44 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-import java.util.Date;
 import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContestSubmission {
 
-    private UUID contestSubmissionId;
-    private String problemId;
-    private String problemName;
-    private String contestId;
-    private String userId;
-    private String fullname;
-    private String affiliation;
-    private String testCasePass;
-    private String sourceCodeLanguage;
-    private Long point;
-    private String status;
-    private String message;
-    private String createAt;
-    private Date submissionDate;
-    private String managementStatus;
-    private String violationForbiddenInstruction;
-    private String violationForbiddenInstructionMessage;
+    UUID contestSubmissionId;
 
+    String problemId;
+
+    String problemName;
+
+    String contestId;
+
+    String userId;
+
+    String fullname;
+
+    String testCasePass;
+
+    String sourceCodeLanguage;
+
+    Long point;
+
+    String status;
+
+    String message;
+
+    String createAt;
+
+    String managementStatus;
+
+    String violationForbiddenInstruction;
+
+    String violationForbiddenInstructionMessage;
 }

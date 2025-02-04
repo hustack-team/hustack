@@ -36,5 +36,9 @@
   "sourceCode": "Source code",
   "message": "Message",
   "comment": "Comment",
-  "submissionDetails": "Submission details"
+  "submissionDetails": "Submission details",
+  "id": "{{name}} ID",
+  "user": "User",
+  "fromDate": "From date",
+  "toDate": "To date"
 }
