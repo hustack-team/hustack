@@ -1,16 +1,17 @@
 package com.hust.baseweb.applications.admin.dataadmin.education.service;
 
 import com.hust.baseweb.applications.admin.dataadmin.education.model.ProgrammingContestSubmissionOM;
-import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
-import com.hust.baseweb.applications.programmingcontest.model.ContestSubmission;
 import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
+import com.hust.baseweb.model.SubmissionFilter;
+import com.hust.baseweb.model.SubmissionProjection;
 import com.hust.baseweb.service.UserService;
+import com.hust.baseweb.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,37 +30,33 @@ public class ProgrammingContestSubmissionServiceImpl {
         return contestSubmissionRepo.findContestSubmissionsOfStudent(studentLoginId, search, pageable);
     }
 
-    public Page<ContestSubmission> search(ContestSubmissionEntity filter, Pageable pageable) {
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                                               .withIgnorePaths(
-                                                   "contestSubmissionId",
-                                                   "testCasePass",
-                                                   "sourceCode",
-                                                   "runtime",
-                                                   "memoryUsage",
-                                                   "point",
-                                                   "createdAt",
-                                                   "updateAt",
-                                                   "lastUpdatedByUserId")
-                                               .withIgnoreNullValues()
-                                               .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)
-                                               .withIgnoreCase();
-        Example<ContestSubmissionEntity> example = Example.of(filter, matcher);
-        Page<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAll(example, pageable);
+    public Page<SubmissionProjection> search(SubmissionFilter filter) {
+        String userId = StringUtils.isNotBlank(filter.getUserId()) ? filter.getUserId().trim() : null;
+        String contestId = StringUtils.isNotBlank(filter.getContestId()) ? filter.getContestId().trim() : null;
+        String problemId = StringUtils.isNotBlank(filter.getProblemId()) ? filter.getProblemId().trim() : null;
+        normalizeFilter(filter);
+        Pageable pageable = CommonUtils.getPageable(
+            filter.getPage(),
+            filter.getSize(),
+            Sort.by("created_stamp").descending());
 
-        return submissions.map((submission) -> ContestSubmission
-            .builder()
-            .contestSubmissionId(submission.getContestSubmissionId())
-            .problemId(submission.getProblemId())
-            .contestId(submission.getContestId())
-            .userId(submission.getUserId())
-            .testCasePass(submission.getTestCasePass())
-            .sourceCodeLanguage(submission.getSourceCodeLanguage())
-//                .point(submission.getPoint())
-            .status(submission.getStatus())
-            .submissionDate(submission.getCreatedAt())
-            .managementStatus(submission.getManagementStatus())
-            .fullname(userService.getUserFullName(submission.getUserId()))
-            .build());
+        return contestSubmissionRepo.findAllBy(
+            userId,
+            contestId,
+            problemId,
+            filter.getLanguages(),
+            filter.getStatuses(),
+            filter.getFromDate(),
+            filter.getToDate(),
+            pageable);
+    }
+
+    private void normalizeFilter(SubmissionFilter filter) {
+        if (StringUtils.isBlank(filter.getLanguages())) {
+            filter.setLanguages(null);
+        }
+        if (StringUtils.isBlank(filter.getStatuses())) {
+            filter.setStatuses(null);
+        }
     }
 }

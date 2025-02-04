@@ -63,23 +63,26 @@ export default function ContestProblemSubmissionDetail() {
             backgroundColor: "transparent",
           }}
         >
-          <Box sx={{mb: 4}}>
-            <HustCopyCodeBlock
-              title={t('common:message')}
-              text={submission.message}
-              language="bash"
-            />
-          </Box>
-          {submission.status &&
-            submission.status !== "Compile Error" &&
-            submission.status !== "In Progress" && (
+          {(submission.status && submission.status !== "In Progress")
+            && (submission.message && !['Evaluated', 'Evaluating', 'Successful'].includes(submission.message))
+            && (<Box sx={{mb: 4}}>
+                <HustCopyCodeBlock
+                  title={t('common:message')}
+                  text={submission.message}
+                  language="bash"
+                />
+              </Box>
+            )}
+          {submission.status
+            && !["Compile Error", "In Progress", "N/E Forbidden Ins."].includes(submission.status)
+            && (
               <Box sx={{mb: 4}}>
                 <ParticipantProgramSubmissionDetailTestCaseByTestCase
                   submissionId={problemSubmissionId}
                 />
               </Box>
             )}
-          <Box>
+          <Box sx={{mb: 4}}>
             <Typography variant="h6" sx={{mb: 1}}>{t('common:sourceCode')}</Typography>
             <HustCopyCodeBlock
               text={submission.sourceCode}
@@ -87,8 +90,8 @@ export default function ContestProblemSubmissionDetail() {
               showLineNumbers
             />
           </Box>
-          <Box sx={{mt: 4}}>
-            <Typography variant={"h6"} sx={{mb: 1}}>
+          {comments?.length > 0 && (<Box>
+            <Typography variant="h6" sx={{mb: 1}}>
               {t('common:comment')}
             </Typography>
             {comments.map((comment) => (
@@ -96,7 +99,7 @@ export default function ContestProblemSubmissionDetail() {
                 <strong>{comment.username}:</strong> {comment.comment}
               </Typography>
             ))}
-          </Box>
+          </Box>)}
         </Paper>
       </Stack>
       <Box sx={{order: {xs: 0, md: 1}}}>
