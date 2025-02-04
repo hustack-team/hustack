@@ -177,7 +177,10 @@ StandardTable.propTypes = {
   title: PropTypes.string,
   columns: PropTypes.array.isRequired,
   actions: PropTypes.array,
-  data: PropTypes.array,
+  data: PropTypes.oneOfType([
+    PropTypes.array,
+    PropTypes.func
+  ]),
   commandBarComponents: PropTypes.element,
   editable: PropTypes.object,
 };

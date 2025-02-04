@@ -14,5 +14,9 @@
   "editContest": "Edit Contest",
   "validateSubmit": {
       "missingField": "Missing required field: {{fieldName}}"
-  }
+  },
+  "submission": "Submission",
+  "submissionList": "Submissions",
+  "reJudge": "Rejudge",
+  "reJudgingNotification": "Rejudging the submission with ID"
 }

@@ -19,7 +19,7 @@ import {useKeycloak} from "@react-keycloak/web";
 import {getLevels, getStatuses} from "./CreateProblem";
 
 const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []}
-const selectProps = (options) => ({
+export const selectProps = (options) => ({
   multiple: true,
   renderValue: (selected) => (
     <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 0.5}}>

@@ -5,31 +5,39 @@ import {format} from "date-fns";
 import moment from "moment";
 
 export function toFormattedDateTime(rawTime) {
-  let date = new Date(rawTime);
-  return (
-    date.getFullYear() +
-    "-" +
-    addZeroBefore(date.getMonth() + 1, 2) +
-    "-" +
-    addZeroBefore(date.getDate(), 2) +
-    " " +
-    addZeroBefore(date.getHours(), 2) +
-    ":" +
-    addZeroBefore(date.getMinutes(), 2) +
-    ":" +
-    addZeroBefore(date.getSeconds(), 2)
-  );
+  if (rawTime) {
+    let date = new Date(rawTime);
+    return (
+      date.getFullYear() +
+      "-" +
+      addZeroBefore(date.getMonth() + 1, 2) +
+      "-" +
+      addZeroBefore(date.getDate(), 2) +
+      " " +
+      addZeroBefore(date.getHours(), 2) +
+      ":" +
+      addZeroBefore(date.getMinutes(), 2) +
+      ":" +
+      addZeroBefore(date.getSeconds(), 2)
+    );
+  } else {
+    return rawTime;
+  }
 }
 
 export function toFormattedDate(rawTime) {
-  let date = new Date(rawTime);
-  return (
-    date.getFullYear() +
-    "-" +
-    addZeroBefore(date.getMonth() + 1, 2) +
-    "-" +
-    addZeroBefore(date.getDate(), 2)
-  );
+  if (rawTime) {
+    let date = new Date(rawTime);
+    return (
+      date.getFullYear() +
+      "-" +
+      addZeroBefore(date.getMonth() + 1, 2) +
+      "-" +
+      addZeroBefore(date.getDate(), 2)
+    );
+  } else {
+    return rawTime;
+  }
 }
 
 export function toFormattedTime(numberSeconds) {
@@ -70,7 +78,7 @@ export function datePicker(label, date, setDate, onChangeSelected = () => "") {
           "aria-label": "change date",
         }}
       />
-      <p />
+      <p/>
     </MuiPickersUtilsProvider>
   );
 }

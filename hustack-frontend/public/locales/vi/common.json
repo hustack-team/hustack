@@ -36,5 +36,9 @@
   "sourceCode": "Mã nguồn",
   "message": "Thông báo",
   "comment": "Bình luận",
-  "submissionDetails": "Thông tin chi tiết"
+  "submissionDetails": "Thông tin chi tiết",
+  "id": "ID {{name}}",
+  "user": "Người dùng",
+  "fromDate": "Từ ngày",
+  "toDate": "Đến ngày"
 }
