@@ -22,7 +22,6 @@ export default function ManagerViewParticipantProgramSubmissionDetailTestCaseByT
     {
       title: "ID",
       sorting: false,
-      cellStyle: {minWidth: 112},
       render: (rowData) => rowData.testCaseId.substring(0, 6),
     },
     {
@@ -40,12 +39,12 @@ export default function ManagerViewParticipantProgramSubmissionDetailTestCaseByT
       title: t("message"),
       field: "message",
       sorting: false,
-      cellStyle: {minWidth: 200},
+      cellStyle: {minWidth: 100},
     },
     {
       title: t("runtime") + " (ms)",
       type: 'numeric',
-      cellStyle: {minWidth: 150},
+      cellStyle: {minWidth: 190},
       render: (rowData) =>
         rowData.runtime?.toLocaleString("fr-FR", localeOption),
     },
@@ -60,7 +59,7 @@ export default function ManagerViewParticipantProgramSubmissionDetailTestCaseByT
       title: t("common:action"),
       sorting: false,
       align: "center",
-      cellStyle: {minWidth: 100},
+      cellStyle: {minWidth: 90},
       render: (rowData) => (
         <Tooltip title={t('common:viewDetail')}>
           <IconButton

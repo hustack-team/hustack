@@ -29,17 +29,21 @@ export default function ParticipantProgramSubmissionDetailTestCaseByTestCase(pro
       cellStyle: {minWidth: 120},
       render: (rowData) => rowData.graded === 'Y' ? t("common:yes") : t("common:no")
     },
-    {title: t('point'), field: "point", type: 'numeric'},
+    {
+      title: t('point'),
+      field: "point",
+      type: 'numeric'
+    },
     {
       title: t("message"),
       field: "message",
       sorting: false,
-      cellStyle: {minWidth: 200},
+      cellStyle: {minWidth: 100},
     },
     {
       title: t("runtime") + " (ms)",
       type: 'numeric',
-      cellStyle: {minWidth: 150},
+      cellStyle: {minWidth: 190},
       render: (rowData) =>
         rowData.runtime?.toLocaleString("fr-FR", localeOption),
     },
@@ -54,7 +58,7 @@ export default function ParticipantProgramSubmissionDetailTestCaseByTestCase(pro
       title: t("common:action"),
       sorting: false,
       align: "center",
-      cellStyle: {minWidth: 100},
+      cellStyle: {minWidth: 90},
       render: (rowData) => (
         <Tooltip title={t('common:viewDetail')}>
           <IconButton
