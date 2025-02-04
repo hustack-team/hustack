@@ -226,9 +226,7 @@ const handleRejudge = () => {
         Rejudge
       </PrimaryButton>
       
-      <div>
-      {contestId}:{problemId}
-      </div>
+      
       <div>
         
         <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
