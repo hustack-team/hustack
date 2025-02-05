@@ -1,7 +1,7 @@
 import {makeStyles} from "@material-ui/core/styles";
 import {LoadingButton} from "@mui/lab";
 import {Box, Checkbox, FormControlLabel, Grid, InputAdornment, Stack, TextField, Typography,} from "@mui/material";
-import {request} from "api";
+import {extractErrorMessage, request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
 import React, {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
@@ -118,7 +118,7 @@ function EditProblem() {
       {
         onError: (e) => {
           setLoading(false)
-          errorNoti(t("common:error"), true);
+          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
       body
@@ -235,8 +235,8 @@ function EditProblem() {
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error"), 3000);
           setLoading(false);
+          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         },
       },
       formData,
@@ -294,7 +294,7 @@ function EditProblem() {
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error"))
+          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       });
   }, [problemId]);

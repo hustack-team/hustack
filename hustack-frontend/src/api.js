@@ -117,3 +117,19 @@ export async function request(
     console.log("Request config", e.config);
   }
 }
+
+export function extractErrorMessage(e) {
+  if(e?.response?.data?.message && e.response.data.message !== "No message available") {
+    return e?.response?.data?.message
+  }
+
+  if(e?.response?.data?.error) {
+    return e?.response?.data?.error
+  }
+
+  if(e?.response?.data) {
+    return e?.response?.data
+  }
+
+  return null
+}
