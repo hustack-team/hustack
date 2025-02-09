@@ -11,6 +11,7 @@ import com.hust.baseweb.applications.exam.model.request.ExamSubjectSaveReq;
 import com.hust.baseweb.applications.exam.repository.ExamQuestionRepository;
 import com.hust.baseweb.applications.exam.repository.ExamSubjectRepository;
 import com.hust.baseweb.applications.exam.service.ExamSubjectService;
+import com.hust.baseweb.applications.exam.utils.Constants;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +79,11 @@ public class ExamSubjectServiceImpl implements ExamSubjectService {
         long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
         List<ExamSubjectEntity> list = query.getResultList();
         return new PageImpl<>(list, pageable, totalRecord);
+    }
+
+    @Override
+    public List<ExamSubjectEntity> getAll() {
+        return examSubjectRepository.findAllByStatusOrderByName(Constants.Status.ACTIVE);
     }
 
     @Override

@@ -13,6 +13,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -27,6 +28,12 @@ public class ExamSubjectController {
     public ResponseEntity<Page<ExamSubjectEntity>> filter(
         Pageable pageable, @RequestBody ExamSubjectFilterReq examSubjectFilterReq) {
         return ResponseEntity.ok(examSubjectService.filter(pageable, examSubjectFilterReq));
+    }
+
+    @Secured("ROLE_TEACHER")
+    @GetMapping("/get-all")
+    public ResponseEntity<List<ExamSubjectEntity>> getAll() {
+        return ResponseEntity.ok(examSubjectService.getAll());
     }
 
     @Secured("ROLE_TEACHER")
