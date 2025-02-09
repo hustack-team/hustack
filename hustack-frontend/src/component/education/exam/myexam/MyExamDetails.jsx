@@ -58,6 +58,7 @@ function MyExamDetails(props) {
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [startLoadTime, setStartLoadTime] = useState(null);
+  const [startDoing, setStartDoing] = useState(false);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -75,7 +76,6 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
-    setStartLoadTime(new Date());
   }, []);
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
@@ -184,6 +184,11 @@ function MyExamDetails(props) {
     }
   }
 
+  const handleStartDoing = () => {
+    setStartLoadTime(new Date());
+    setStartDoing(true)
+  }
+
   // Checking focus tab
   useEffect(() => {
     // handleCheckingFocusTab()
@@ -223,6 +228,19 @@ function MyExamDetails(props) {
                 <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>
                 <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>
               </div>
+              {
+                data?.examResultId == null && !startDoing && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    style={{margin: "16px 0"}}
+                    onClick={handleStartDoing}
+                    type="submit"
+                  >
+                    Bắt đầu làm bài
+                  </Button>
+                )
+              }
             </div>
 
             {
@@ -512,7 +530,7 @@ function MyExamDetails(props) {
                         value?.questionType === 1 && (
                           <div key={questionOrder}>
                             {
-                              data?.examResultId == null && (
+                              data?.examResultId == null && startDoing && (
                                 <div>
                                   <RichTextEditor
                                     content={tmpTextAnswer}
@@ -661,7 +679,7 @@ function MyExamDetails(props) {
               Hủy
             </Button>
             {
-              data?.examResultId == null && (
+              data?.examResultId == null && startDoing && (
                 <Button
                   disabled={isLoading}
                   variant="contained"
