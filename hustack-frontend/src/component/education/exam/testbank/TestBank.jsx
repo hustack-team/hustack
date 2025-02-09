@@ -171,6 +171,7 @@ function TestBank(props) {
               id: question.questionId,
               code: question.questionCode,
               type: question.questionType,
+              level: question.questionLevel,
               content: question.questionContent,
               filePath: question.questionFile,
               numberAnswer: question.questionNumberAnswer,
@@ -182,7 +183,10 @@ function TestBank(props) {
               multichoice: question.questionMultichoice,
               answer: question.questionAnswer,
               explain: question.questionExplain,
-              order: question.questionOrder
+              order: question.questionOrder,
+              examSubjectName: question.examSubjectName,
+              examTagIdStr: question.examTagIdStr,
+              examTagNameStr: question.examTagNameStr,
             })
           }
           history.push({

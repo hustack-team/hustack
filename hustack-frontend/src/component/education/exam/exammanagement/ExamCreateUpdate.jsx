@@ -163,7 +163,9 @@ function ExamCreateUpdate(props) {
       examStudents: examStudents,
       examStudentDeletes: examStudentDeletes
     }
-    validateBody(body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
@@ -192,24 +194,25 @@ function ExamCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã kỳ thi không được bỏ trống')
-      return
+      return false
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên kỳ thi không được bỏ trống')
-      return
+      return false
     }
     if(body.examTestId == null || body.examTestId === ''){
       toast.error('Chọn đề thi cho kỳ thi')
-      return
+      return false
     }
     if(body.startTime == null || body.startTime === ''){
       toast.error('Thời gian bắt đầu không được bỏ trống')
-      return
+      return false
     }
     if(body.endTime == null || body.endTime === ''){
       toast.error('Thời gian kết thúc không được bỏ trống')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {

@@ -52,7 +52,9 @@ function QuestionTagCreateUpdate(props) {
       id: data?.id,
       name: name,
     }
-    validateBody(body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
@@ -80,8 +82,9 @@ function QuestionTagCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.name == null || body.name === ''){
       toast.error('Tên tag không được bỏ trống')
-      return
+      return false
     }
+    return true
   }
 
   const closeDialog = () => {

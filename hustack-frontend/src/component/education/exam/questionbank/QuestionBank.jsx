@@ -4,7 +4,7 @@ import {Box, Button, Card, CardContent, CardHeader, Input} from "@material-ui/co
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import {request} from "../../../../api";
 import {Link, useHistory} from "react-router-dom";
-import {FormControl, MenuItem, Select} from "@mui/material";
+import {Autocomplete, FormControl, MenuItem, Select} from "@mui/material";
 import useDebounceValue from "../hooks/use-debounce";
 import {toast} from "react-toastify";
 import TextField from "@material-ui/core/TextField";
@@ -14,7 +14,7 @@ import {DataGrid} from "@material-ui/data-grid";
 import InfoIcon from "@mui/icons-material/Info";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
-import {parseHTMLToString} from "../ultils/DataUltils";
+import {parseHTMLToString, parseToString} from "../ultils/DataUltils";
 
 const baseColumn = {
   sortable: false,
@@ -26,9 +26,27 @@ function QuestionBank(props) {
 
   const columns = [
     {
+      field: "examTagName",
+      headerName: "Tag",
+      minWidth: 150,
+      ...baseColumn,
+      renderCell: (rowData) => {
+        const result = rowData.row.examTags.map(item => item?.name).join(', ')
+        return (
+          <div style={{fontStyle: 'italic'}}>{result}</div>
+        )
+      }
+    },
+    {
       field: "code",
       headerName: "Mã câu hỏi",
-      minWidth: 170,
+      minWidth: 150,
+      ...baseColumn
+    },
+    {
+      field: "examSubjectName",
+      headerName: "Môn học",
+      minWidth: 150,
       ...baseColumn
     },
     {
@@ -41,21 +59,21 @@ function QuestionBank(props) {
         return parseHTMLToString(rowData.value)
       }
     },
-    {
-      field: "answer",
-      headerName: "Đáp án",
-      ...baseColumn,
-      flex: 1,
-      minWidth: 170,
-      renderCell: (rowData) => {
-        return parseHTMLToString(rowData.value)
-      }
-    },
+    // {
+    //   field: "answer",
+    //   headerName: "Đáp án",
+    //   ...baseColumn,
+    //   flex: 1,
+    //   minWidth: 170,
+    //   renderCell: (rowData) => {
+    //     return parseHTMLToString(rowData.value)
+    //   }
+    // },
     {
       field: "type",
       headerName: "Loại câu hỏi",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 130,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return (
@@ -67,6 +85,29 @@ function QuestionBank(props) {
           )
         }else{
           return 'Tất cả'
+        }
+      },
+    },
+    {
+      field: "level",
+      headerName: "Mức độ",
+      ...baseColumn,
+      minWidth: 130,
+      renderCell: (rowData) => {
+        if(rowData.value === "EASY"){
+          return (
+            <strong style={{color: '#61bd6d'}}>Dễ</strong>
+          )
+        }else if(rowData.value === "MEDIUM"){
+          return (
+            <strong style={{color: '#716DF2'}}>Trung bình</strong>
+          )
+        }else if(rowData.value === "HARD"){
+          return (
+            <strong style={{color: 'red'}}>Khó</strong>
+          )
+        }else{
+          return ''
         }
       },
     },
@@ -103,12 +144,36 @@ function QuestionBank(props) {
     }
   ]
 
+  const questionLevels = [
+    {
+      value: 'all',
+      name: 'Tất cả'
+    },
+    {
+      value: "EASY",
+      name: 'Dễ'
+    },
+    {
+      value: "MEDIUM",
+      name: 'Trung bình'
+    },
+    {
+      value: "HARD",
+      name: 'Khó'
+    },
+  ]
+
   const [questionList, setQuestionList] = useState([])
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(5)
   const [totalCount, setTotalCount] = useState(0)
   const [keywordFilter, setKeywordFilter] = useState("")
   const [typeFilter, setTypeFilter] = useState('all')
+  const [levelFilter, setLevelFilter] = useState('all');
+  const [examSubjectIdFilter, setExamSubjectIdFilter] = useState('all');
+  const [examTagsFilter, setExamTagsFilter] = useState([]);
+  const [examSubjects, setExamSubjects] = useState([]);
+  const [questionTags, setQuestionTags] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [idDelete, setIdDelete] = useState("")
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -118,13 +183,21 @@ function QuestionBank(props) {
   const history = useHistory();
 
   useEffect(() => {
+    getAllQuestionTag()
+    getAllExamSubject()
+  }, []);
+
+  useEffect(() => {
     filterQuestion()
-  }, [page, pageSize, debouncedKeywordFilter, typeFilter]);
+  }, [page, pageSize, debouncedKeywordFilter, typeFilter, levelFilter, examSubjectIdFilter, examTagsFilter]);
 
   const filterQuestion = () =>{
     const body = {
       keyword: keywordFilter,
-      type: typeFilter === 'all' ? null : typeFilter
+      type: typeFilter === 'all' ? null : typeFilter,
+      level: levelFilter === 'all' ? null : levelFilter,
+      examSubjectId: examSubjectIdFilter === 'all' ? null : examSubjectIdFilter,
+      examTags: examTagsFilter,
     }
     request(
       "post",
@@ -139,6 +212,37 @@ function QuestionBank(props) {
       },
       { onError: (e) => toast.error(e) },
       body
+    );
+  }
+
+  const getAllQuestionTag = () => {
+    request(
+      "get",
+      `/exam-tag/get-all`,
+      (res) => {
+        if(res.status === 200){
+          setQuestionTags(res.data)
+        }
+      },
+      { onError: (e) => toast.error(e) }
+    );
+  }
+
+  const getAllExamSubject = () => {
+    request(
+      "get",
+      `/exam-subject/get-all`,
+      (res) => {
+        if(res.status === 200){
+          let tmpData = res.data
+          tmpData.unshift({
+            id: 'all',
+            name: 'Tất cả'
+          })
+          setExamSubjects(tmpData)
+        }
+      },
+      { onError: (e) => toast.error(e) }
     );
   }
 
@@ -169,6 +273,9 @@ function QuestionBank(props) {
         question: {
           code: "",
           type: 1,
+          level: 'EASY',
+          examSubjectId: "",
+          examTags: [],
           content: "",
           filePath: "",
           numberAnswer: "",
@@ -193,17 +300,20 @@ function QuestionBank(props) {
         question: {
           code: rowData.code,
           type: rowData.type,
-          content: rowData.content,
+          level: rowData.level,
+          examSubjectId: rowData.examSubjectId,
+          examTags: rowData.examTags,
+          content: parseToString(rowData.content),
           filePath: rowData.filePath,
           numberAnswer: rowData.numberAnswer,
-          contentAnswer1: rowData.contentAnswer1,
-          contentAnswer2: rowData.contentAnswer2,
-          contentAnswer3: rowData.contentAnswer3,
-          contentAnswer4: rowData.contentAnswer4,
-          contentAnswer5: rowData.contentAnswer5,
+          contentAnswer1: parseToString(rowData.contentAnswer1),
+          contentAnswer2: parseToString(rowData.contentAnswer2),
+          contentAnswer3: parseToString(rowData.contentAnswer3),
+          contentAnswer4: parseToString(rowData.contentAnswer4),
+          contentAnswer5: parseToString(rowData.contentAnswer5),
           multichoice: rowData.multichoice,
-          answer: rowData.answer,
-          explain: rowData.explain
+          answer: parseToString(rowData.answer),
+          explain: parseToString(rowData.explain)
         },
         isCreate: false
       },
@@ -247,7 +357,7 @@ function QuestionBank(props) {
                     id="questionType"
                     select
                     label="Loại câu hỏi"
-                    style={{ width: "150px"}}
+                    style={{ width: "150px", marginRight: "16px"}}
                     value={typeFilter}
                     onChange={(event) => {
                       setTypeFilter(event.target.value);
@@ -261,6 +371,68 @@ function QuestionBank(props) {
                       })
                     }
                   </TextField>
+
+                  <TextField
+                    required
+                    autoFocus
+                    id="questionLevel"
+                    select
+                    label="Mức độ"
+                    style={{ width: "150px", marginRight: "16px"}}
+                    value={levelFilter}
+                    onChange={(event) => {
+                      setLevelFilter(event.target.value);
+                    }}
+                  >
+                    {
+                      questionLevels.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+
+                  <TextField
+                    required
+                    autoFocus
+                    id="examSubjectId"
+                    select
+                    label="Môn học"
+                    style={{ width: "150px", marginRight: "16px"}}
+                    value={examSubjectIdFilter}
+                    onChange={(event) => {
+                      setExamSubjectIdFilter(event.target.value);
+                    }}
+                  >
+                    {
+                      examSubjects.map(item => {
+                        return (
+                          <MenuItem value={item.id}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+                </Box>
+                <Box display="flex" justifyContent="flex-start" width="100%">
+                  <Autocomplete
+                    multiple
+                    id="examTagIds"
+                    options={questionTags}
+                    getOptionLabel={(item) => item?.name}
+                    value={examTagsFilter}
+                    onChange={(event, newValue) => {
+                      setExamTagsFilter(newValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        style={{width: "300px", marginRight: "16px"}}
+                        variant="standard"
+                        label="Tag"
+                      />
+                    )}
+                  />
                 </Box>
               </Box>
 

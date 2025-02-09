@@ -74,7 +74,9 @@ function ExamSubjectCreateUpdate(props) {
       name: name,
       status: status
     }
-    validateBody(body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
@@ -103,12 +105,13 @@ function ExamSubjectCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã môn học không được bỏ trống')
-      return
+      return false
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên môn học không được bỏ trống')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {
