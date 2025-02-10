@@ -1,9 +1,6 @@
 package com.hust.baseweb.config.security;
 
 import com.hust.baseweb.applications.education.exception.CustomAccessDeniedHandler;
-import lombok.AllArgsConstructor;
-import lombok.var;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -17,7 +14,6 @@ import org.springframework.security.web.savedrequest.NullRequestCache;
 
 
 @Configuration
-@AllArgsConstructor(onConstructor_ = @Autowired)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 //    private BaseWebUserDetailService userDetailsService;
@@ -38,7 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthenticationConverter(
     ) {
-        final var jwtConverter = new Jwt2AuthenticationConverter();
+        final Jwt2AuthenticationConverter jwtConverter = new Jwt2AuthenticationConverter();
 
         jwtConverter.setJwtGrantedAuthoritiesConverter(new Jwt2AuthoritiesConverter());
         jwtConverter.setPrincipalClaimName("preferred_username");
