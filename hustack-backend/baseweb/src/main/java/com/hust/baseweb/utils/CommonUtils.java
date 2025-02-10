@@ -1,33 +1,17 @@
 package com.hust.baseweb.utils;
 
-import com.hust.baseweb.model.querydsl.SortCriteria;
 import org.javatuples.Pair;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
 
 public class CommonUtils {
 
     public static int SEQ_ID_LEN = 6;
-
-    public static Sort buildSortBySortCriteria(List<SortCriteria> sort) {
-        if (sort.size() == 0) {
-            return null;
-        }
-        List<Order> orders = new ArrayList<>();
-        for (SortCriteria sortCriteria : sort) {
-            if (sortCriteria.isAsc()) {
-                orders.add(new Order(Sort.Direction.ASC, sortCriteria.getField()));
-            } else {
-                orders.add(new Order(Sort.Direction.DESC, sortCriteria.getField()));
-            }
-        }
-        return Sort.by(orders);
-
-    }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static String buildQueryDslPath(Pair<Map<String, String>, Map<String, Pair>> pair, String field) {

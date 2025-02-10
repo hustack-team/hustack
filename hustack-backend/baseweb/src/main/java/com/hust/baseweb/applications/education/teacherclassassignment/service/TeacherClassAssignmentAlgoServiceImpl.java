@@ -4,7 +4,6 @@ import com.hust.baseweb.applications.education.teacherclassassignment.model.*;
 import com.hust.baseweb.applications.education.teacherclassassignment.service.algorithm.solver.BaseSolver;
 import com.hust.baseweb.applications.education.teacherclassassignment.utils.TimetableConflictChecker;
 import lombok.extern.log4j.Log4j2;
-import lombok.var;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -111,7 +110,7 @@ public class TeacherClassAssignmentAlgoServiceImpl implements TeacherClassAssign
         Arrays.stream(priorityMatrix).forEach(row -> Arrays.fill(row, Integer.MAX_VALUE));
 
         hourClass = new double[n];
-        var mClassIdx2TeacherIndexes = new HashSet[n]; // mClassIdx2TeacherIndexes[i]: danh sach cac gv co the day lop i.
+        HashSet[] mClassIdx2TeacherIndexes = new HashSet[n]; // mClassIdx2TeacherIndexes[i]: danh sach cac gv co the day lop i.
         for (int i = 0; i < n; i++) {
             mClassIdx2TeacherIndexes[i] = new HashSet<Integer>();
             hourClass[i] = algoClasses[i].getHourLoad();
