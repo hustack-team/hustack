@@ -74,7 +74,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // Route security
         http
             .authorizeRequests()
-            .antMatchers("/roles").permitAll()
             .antMatchers("/actuator/prometheus/**").permitAll()
             .antMatchers(HttpMethod.GET, "/videos/videos/*").permitAll()
             .antMatchers(HttpMethod.GET, "/service/files/**").permitAll()
@@ -86,20 +85,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/js/**").permitAll()
             .antMatchers("/chatSocketHandler/**").permitAll()
 
-            .antMatchers("/export-problem/*")
-            .permitAll()
             .antMatchers("/edu/assignment/*/submissions")
             .permitAll()
             .antMatchers("/edu/class/**")
             .hasAnyRole("TEACHER", "STUDENT")
             .antMatchers("/edu/assignment/**")
             .hasAnyRole("TEACHER", "STUDENT")
-            .regexMatchers("/v2/api-docs")
-            .permitAll()
-            .regexMatchers("/.*swagger.*")
-            .permitAll()
-            .regexMatchers(".*/user/register/*$")
-            .permitAll()
             .antMatchers("/public/**")
             .permitAll()
             .anyRequest().authenticated()
