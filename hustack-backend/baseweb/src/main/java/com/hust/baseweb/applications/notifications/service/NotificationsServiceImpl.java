@@ -2,10 +2,8 @@ package com.hust.baseweb.applications.notifications.service;
 
 import com.google.common.collect.Iterables;
 import com.hust.baseweb.applications.notifications.entity.Notifications;
-import com.hust.baseweb.applications.notifications.entity.QNotifications;
 import com.hust.baseweb.applications.notifications.model.NotificationDTO;
 import com.hust.baseweb.applications.notifications.repo.NotificationsRepo;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,12 +134,10 @@ public class NotificationsServiceImpl implements NotificationsService {
         String status,
         Date beforeOrAt
     ) {
-        QNotifications qNotifications = QNotifications.notifications;
-        BooleanExpression unRead = qNotifications.statusId.eq(STATUS_CREATED);
-        BooleanExpression toUser = qNotifications.toUser.eq(userId);
-        BooleanExpression beforeOrAtTime = qNotifications.createdStamp.loe(beforeOrAt);
-
-        Iterable<Notifications> notifications = notificationsRepo.findAll(toUser.and(unRead).and(beforeOrAtTime));
+        Iterable<Notifications> notifications = notificationsRepo.findByToUserAndStatusIdAndCreatedStampLessThanEqual(
+            userId,
+            STATUS_CREATED,
+            beforeOrAt);
 
         // TODO: upgrade this method to check valid status according to notification status transition.
         if (Iterables.size(notifications) > 0) {

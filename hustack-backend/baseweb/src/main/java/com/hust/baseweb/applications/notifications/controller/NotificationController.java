@@ -148,7 +148,7 @@ public class NotificationController {
     @GetMapping(params = {"fromId", "page", "size"})
     public ResponseEntity<?> getNotifications(
         @CurrentSecurityContext(expression = "authentication.name") String toUser,
-        @RequestParam UUID fromId,
+        @RequestParam(required = false) UUID fromId,
         @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
         @RequestParam(defaultValue = "10") @Positive Integer size
     ) {

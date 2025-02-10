@@ -1,25 +1,17 @@
 package com.hust.baseweb.applications.notifications.repo;
 
 import com.hust.baseweb.applications.notifications.entity.Notifications;
-import com.hust.baseweb.applications.notifications.entity.QNotifications;
 import com.hust.baseweb.applications.notifications.model.NotificationDTO;
-import com.querydsl.core.types.dsl.StringExpression;
-import com.querydsl.core.types.dsl.StringPath;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
-import org.springframework.data.querydsl.binding.QuerydslBinderCustomizer;
-import org.springframework.data.querydsl.binding.QuerydslBindings;
-import org.springframework.data.querydsl.binding.SingleValueBinding;
 
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
-public interface NotificationsRepo
-    extends JpaRepository<Notifications, UUID>,
-    QuerydslPredicateExecutor<Notifications>,
-    QuerydslBinderCustomizer<QNotifications> {
+public interface NotificationsRepo extends JpaRepository<Notifications, UUID> {
 
     long countByToUserAndStatusId(String toUser, String statusId);
 
@@ -102,20 +94,9 @@ public interface NotificationsRepo
            nativeQuery = true)
     NotificationDTO findNotificationById(UUID notificationId);
 
-    @Override
-    default void customize(
-        QuerydslBindings bindings, QNotifications root
-    ) {
-        bindings.bind(String.class)
-                .first((SingleValueBinding<StringPath, String>) StringExpression::containsIgnoreCase);
-
-        bindings.excluding(
-            root.id,
-            root.content,
-            root.fromUser,
-            root.toUser,
-            root.lastUpdatedStamp,
-            root.url,
-            root.statusId);
-    }
+    List<Notifications> findByToUserAndStatusIdAndCreatedStampLessThanEqual(
+        String toUser,
+        String statusId,
+        Date beforeOrAt
+    );
 }
