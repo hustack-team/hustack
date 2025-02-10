@@ -4,7 +4,7 @@ import React, {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import {useHistory} from "react-router-dom";
 import {CompileStatus} from "./CompileStatus";
-import {request} from "../../../api";
+import {extractErrorMessage, request} from "../../../api";
 import {useTranslation} from "react-i18next";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
 import {errorNoti, successNoti} from "../../../utils/notification";
@@ -139,7 +139,7 @@ function CreateProblem() {
       {
         onError: (e) => {
           setLoading(false)
-          errorNoti(t("common:error"))
+          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
       body
@@ -248,8 +248,8 @@ function CreateProblem() {
         history.push("/programming-contest/list-problems");
       },
       {
-        onError: () => {
-          errorNoti(t("common:error"), 3000);
+        onError: (e) => {
+          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
           setLoading(false);
         },
       },

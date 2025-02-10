@@ -67,7 +67,7 @@ import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.EX
 @AllArgsConstructor(onConstructor_ = {@Autowired})
 public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
-    public static final Integer MAX_SUBMISSIONS_CHECKSIMILARITY = 1000;
+    public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
     private final ProblemRepo problemRepo;
 
@@ -76,8 +76,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     private DockerClientBase dockerClientBase;
 
     private TempDir tempDir;
-
-    private ProblemPagingAndSortingRepo problemPagingAndSortingRepo;
 
     private UserLoginRepo userLoginRepo;
 
@@ -128,6 +126,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     private ContestProblemExportService exporter;
 
     private ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
+
     private UserRegistrationContestService userRegistrationContestService;
 
     private Judge0Service judge0Service;
@@ -214,7 +213,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             UserContestProblemRole.ROLE_VIEWER
         );
         List<UserContestProblemRole> roles = new ArrayList<>();
-        List<String> users = Arrays.asList(createdBy);
+        List<String> users = new ArrayList<>();
+        users.add(createdBy);
         if (!"admin".equals(createdBy)) {
             users.add("admin");
         }
@@ -2646,7 +2646,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                     }
                 }
             }
-            if (listSubmissions.size() > MAX_SUBMISSIONS_CHECKSIMILARITY) {
+            if (listSubmissions.size() > MAX_SUBMISSIONS_CHECK_SIMILARITY) {
                 if (!userLoginId.equals("admin")) {
                     model.setMessage("Too Many submissions, only admin can do this task");
                     return model;
