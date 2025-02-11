@@ -9,34 +9,35 @@ import StandardTable from "../../table/StandardTable";
 import { RejudgeButton } from "./RejudgeButton";
 import { getStatusColor } from "./lib";
 //import { Box, IconButton, Tooltip, LinearProgress } from "@mui/material";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import { Box, Tooltip, LinearProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,TextField,
-    Typography,Button,
-   } from "@mui/material";
+import {
+  Box, Tooltip, LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions, TextField,
+  Typography, Button,
+} from "@mui/material";
 
-  import PrimaryButton from "component/button/PrimaryButton";
+import PrimaryButton from "component/button/PrimaryButton";
 
 export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
   const [submissions, setSubmissions] = useState([]);
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { contestId, problemId} = useParams();
+  const { contestId, problemId } = useParams();
   const [problemDescription, setProblemDescription] = useState("");
   const [solutionCode, setSolutionCode] = useState("");
-  const [newProblemId, setNewProblemId] = useState(null);  
-  const [openMapNewProblemDialog, setOpenMapNewProblemDialog] = useState(false);  
+  const [newProblemId, setNewProblemId] = useState(null);
+  const [openMapNewProblemDialog, setOpenMapNewProblemDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-   const {t} = useTranslation([
-      "education/programmingcontest/problem",
-      "common",
-      "validation",
-    ]);
+  const { t } = useTranslation([
+    "education/programmingcontest/problem",
+    "common",
+    "validation",
+  ]);
 
   const columns = [
     {
@@ -109,24 +110,24 @@ export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
     },
     { title: "Man. Status", field: "managementStatus" },
     { title: "Violation", field: "violationForbiddenInstruction" },
-    
+
   ];
 
-  function getProblemDetail(){
+  function getProblemDetail() {
     request("get", "/teacher-get-problem-detail-in-contest/" + contestId + "/" + problemId, (res) => {
-        setLoading(false);
-        console.log('getProblemDetail, res = ',res);
-        setProblem(res.data);
-        setProblemDescription(res.data.problemDescription);
-        setSolutionCode(res.data.solutionCode);
-      });
+      setLoading(false);
+      console.log('getProblemDetail, res = ', res);
+      setProblem(res.data);
+      setProblemDescription(res.data.problemDescription);
+      setSolutionCode(res.data.solutionCode);
+    });
   }
-  function getSubmissionsOfContestProblem(){
+  function getSubmissionsOfContestProblem() {
     request("get", "/teacher-get-submissions-of-problem-in-contest/" + contestId + "/" + problemId, (res) => {
-        setLoading(false);
-        setSubmissions(res.data);
-      });
-  } 
+      setLoading(false);
+      setSubmissions(res.data);
+    });
+  }
 
 
   const handleMapNewProblemDialogOpen = () => {
@@ -138,79 +139,82 @@ export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
     setNewContestId("");
     setNewContestName("");
     setErrorMessage("");
-    history.push("/programming-contest/contest-manager/"+contestId); // comment this line : not return to list-problems when click cancel
+    history.push("/programming-contest/contest-manager/" + contestId); // comment this line : not return to list-problems when click cancel
   };
 
   const handleProcess = () => {
 
 
     const body = {
-        contestId: contestId,
-        problemId: problemId,
-        newProblemId: newProblemId,
+      contestId: contestId,
+      problemId: problemId,
+      newProblemId: newProblemId,
     };
 
     request(
-        "post", 
-        "/map-new-problem-to-submissions-in-contest",
-        (res) => { 
-            handleMapNewProblemDialogClose();
-            history.push("/programming-contest/contest-manager/"+newContestId);
-        },
-        {
-            onError: (error) => {
-                setErrorMessage("Failed to clone the problem. Please try again.");
-                console.error("Error cloning problem:", error);
-            },
-            400: (error) => {
-                setErrorMessage("Invalid request. Please check your input.");
-            },
-            404: (error) => {
-                setErrorMessage("Original problem not found.");
-            },
-            500: (error) => {
-              setErrorMessage("Original problem already exists.");
-          },
-        },
-        body 
-    );
-};
-
-const handleRejudge = () => {
-
-
-  const body = {
-      contestId: contestId,
-      problemId: problemId,
-  
-  };
-
-  request(
-      "post", 
-      "/submissions-of-a-problem-in-contest/rejudge",
-      (res) => { 
-          //handleMapNewProblemDialogClose();
-          //history.push("/programming-contest/contest-manager/"+newContestId);
+      "post",
+      "/map-new-problem-to-submissions-in-contest",
+      (res) => {
+        handleMapNewProblemDialogClose();
+        history.push("/programming-contest/contest-manager/" + newContestId);
       },
       {
-          onError: (error) => {
-              setErrorMessage("Failed to rejudge submissions. Please try again.");
-              console.error("Error cloning problem:", error);
-          },
-          400: (error) => {
-              setErrorMessage("400 Invalid request. Please check your input.");
-          },
-          404: (error) => {
-              setErrorMessage("404 not found.");
-          },
-          500: (error) => {
-            setErrorMessage("Error 500");
+        onError: (error) => {
+          setErrorMessage("Failed to clone the problem. Please try again.");
+          console.error("Error cloning problem:", error);
+        },
+        400: (error) => {
+          setErrorMessage("Invalid request. Please check your input.");
+        },
+        404: (error) => {
+          setErrorMessage("Original problem not found.");
+        },
+        500: (error) => {
+          setErrorMessage("Original problem already exists.");
         },
       },
-      body 
-  );
-};
+      body
+    );
+  };
 
+  const handleRejudge = () => {
+
+
+    const body = {
+      contestId: contestId,
+      problemId: problemId,
+
+    };
+
+    request(
+      "post",
+      "/submissions-of-a-problem-in-contest/rejudge",
+      (res) => {
+        //handleMapNewProblemDialogClose();
+        //history.push("/programming-contest/contest-manager/"+newContestId);
+      },
+      {
+        onError: (error) => {
+          setErrorMessage("Failed to rejudge submissions. Please try again.");
+          console.error("Error cloning problem:", error);
+        },
+        400: (error) => {
+          setErrorMessage("400 Invalid request. Please check your input.");
+        },
+        404: (error) => {
+          setErrorMessage("404 not found.");
+        },
+        500: (error) => {
+          setErrorMessage("Error 500");
+        },
+      },
+      body
+    );
+  };
+  const handleViewDetailManager = () => {
+    const url = `/programming-contest/manager-view-problem-detail/${problemId}`;
+    window.open(url, '_blank'); // Open the URL in a new tab
+  };
   useEffect(() => {
     getProblemDetail();
     getSubmissionsOfContestProblem();
@@ -219,47 +223,49 @@ const handleRejudge = () => {
   return (
     <Box mb={2}>
       {loading && <LinearProgress />}
-      <PrimaryButton onClick={handleMapNewProblemDialogOpen}>
-        Map New Problem
-      </PrimaryButton>
-      <PrimaryButton onClick={handleRejudge}>
-        Rejudge
-      </PrimaryButton>
-      
+      <Box display="flex" mb={2}>
+        <Box sx={{ marginRight: '20px' }}>
+          <PrimaryButton onClick={handleMapNewProblemDialogOpen}>
+            Map New Problem
+          </PrimaryButton>
+        </Box>
+        <Box sx={{ marginRight: '20px' }}>
+          <PrimaryButton onClick={handleRejudge}>
+            Rejudge
+          </PrimaryButton>
+        </Box>
+        <PrimaryButton onClick={handleViewDetailManager}>
+          View Detail
+        </PrimaryButton>
+      </Box>
       <div>
-      {contestId}:{problemId}
+        {contestId}:{problemId}
       </div>
       <div>
-        
-        <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
-                <Typography variant="h6" sx={{marginBottom: "8px"}}>
-                  {t("problemDescription")}
-                </Typography>
-                <RichTextEditor
-                  toolbarHidden
-                  content={problemDescription}
-                  readOnly
-                />
-              </Box>
-        
-      </div>
-      <div>
-     
+        <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
+          <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+            {t("problemDescription")}
+          </Typography>
+          <RichTextEditor
+            toolbarHidden
+            content={problemDescription}
+            readOnly
+          />
+        </Box>
       </div>
       <StandardTable
-              title={"Submissions"}
-              columns={columns}
-              data={submissions}
-              hideCommandBar
-              options={{
-                selection: false,
-                pageSize: 5,
-                search: true,
-                sorting: true,
-              }}
-            />
-
-<Dialog open={openMapNewProblemDialog} onClose={handleMapNewProblemDialogClose}>
+        title={"Submissions"}
+        columns={columns}
+        data={submissions}
+        hideCommandBar
+        options={{
+          selection: false,
+          pageSize: 5,
+          search: true,
+          sorting: true,
+        }}
+      />
+      <Dialog open={openMapNewProblemDialog} onClose={handleMapNewProblemDialogClose}>
         <DialogTitle>{"Map new problem for submissions"}</DialogTitle>
         <DialogContent>
           <TextField
@@ -271,8 +277,7 @@ const handleRejudge = () => {
             variant="outlined"
             value={newProblemId}
             onChange={(e) => setNewProblemId(e.target.value)}
-           />
-          
+          />
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
         </DialogContent>
         <DialogActions>
@@ -283,7 +288,7 @@ const handleRejudge = () => {
             Update
           </Button>
         </DialogActions>
-      </Dialog>        
+      </Dialog>
     </Box>
   );
 }
