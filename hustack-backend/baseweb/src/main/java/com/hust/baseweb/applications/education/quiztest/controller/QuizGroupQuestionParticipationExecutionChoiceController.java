@@ -14,7 +14,6 @@ import com.hust.baseweb.applications.education.quiztest.repo.QuizGroupQuestionPa
 import com.hust.baseweb.applications.education.quiztest.repo.QuizTestExecutionSubmissionRepo;
 import com.hust.baseweb.applications.education.quiztest.service.QuizTestService;
 import com.hust.baseweb.applications.education.service.CourseService;
-import com.hust.baseweb.service.PersonService;
 import com.hust.baseweb.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -49,7 +48,6 @@ public class QuizGroupQuestionParticipationExecutionChoiceController {
     EduQuizTestRepo eduQuizTestRepo;
     HistoryLogQuizGroupQuestionParticipationExecutionChoiceRepo historyLogQuizGroupQuestionParticipationExecutionChoiceRepo;
     UserService userService;
-    PersonService personService;
     ClassService classService;
     CourseService courseService;
     private RabbitTemplate rabbitTemplate;

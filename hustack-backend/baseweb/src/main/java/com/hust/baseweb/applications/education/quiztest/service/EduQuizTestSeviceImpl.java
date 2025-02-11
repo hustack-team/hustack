@@ -29,7 +29,6 @@ import com.hust.baseweb.config.rabbitmq.QuizRoutingKey;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.PersonModel;
 import com.hust.baseweb.repo.UserLoginRepo;
-import com.hust.baseweb.repo.UserRegisterRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
 import lombok.AllArgsConstructor;
@@ -51,7 +50,6 @@ import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.QU
 public class EduQuizTestSeviceImpl implements QuizTestService {
 
     UserLoginRepo userLoginRepo;
-    UserRegisterRepo userRegisterRepo;
     EduQuizTestRepo repo;
     EduTestQuizParticipantRepo eduTestQuizParticipantRepo;
     EduQuizTestGroupRepo eduQuizTestGroupRepo;
