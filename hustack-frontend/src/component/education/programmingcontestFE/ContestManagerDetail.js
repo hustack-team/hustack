@@ -1,11 +1,12 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { Grid, LinearProgress,
+import {
+  Grid, LinearProgress,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,TextField,
-  Typography,Button,
- } from "@mui/material";
+  DialogActions, TextField,
+  Typography, Button,
+} from "@mui/material";
 import { request } from "api";
 import PrimaryButton from "component/button/PrimaryButton";
 import HustContainerCard from "component/common/HustContainerCard";
@@ -30,7 +31,7 @@ export function ContestManagerDetail(props) {
     maxSourceCodeLength: 50000,
     minTimeBetweenTwoSubmissions: 0,
     participantViewSubmissionMode: "",
-    contestType:""
+    contestType: ""
   });
 
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,7 @@ export function ContestManagerDetail(props) {
   };
 
   const hasSpecialCharacterContestId = () => {
-    return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(newContestId); 
+    return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(newContestId);
   };
 
 
@@ -85,128 +86,203 @@ export function ContestManagerDetail(props) {
     setNewContestId("");
     setNewContestName("");
     setErrorMessage("");
-    history.push("/programming-contest/contest-manager/"+contestId); // comment this line : not return to list-problems when click cancel
+    history.push("/programming-contest/contest-manager/" + contestId); // comment this line : not return to list-problems when click cancel
   };
 
   const handleClone = () => {
     if (hasSpecialCharacterContestId()) {
-        setErrorMessage("Contest ID can only contain letters, numbers, underscores, and hyphens.");
-        return;
+      setErrorMessage("Contest ID can only contain letters, numbers, underscores, and hyphens.");
+      return;
     }
 
 
     const cloneRequest = {
-        fromContestId: contestId,
-        toContestId: newContestId,
-        toContestName: newContestName,
+      fromContestId: contestId,
+      toContestId: newContestId,
+      toContestName: newContestName,
     };
 
     request(
-        "post", 
-        "/clone-contest",
-        (res) => { 
-            handleCloneDialogClose();
-            history.push("/programming-contest/contest-manager/"+newContestId);
+      "post",
+      "/clone-contest",
+      (res) => {
+        handleCloneDialogClose();
+        history.push("/programming-contest/contest-manager/" + newContestId);
+      },
+      {
+        onError: (error) => {
+          setErrorMessage("Failed to clone the problem. Please try again.");
+          console.error("Error cloning problem:", error);
+        },
+        400: (error) => {
+          setErrorMessage("Invalid request. Please check your input.");
+        },
+        404: (error) => {
+          setErrorMessage("Original problem not found.");
+        },
+        500: (error) => {
+          setErrorMessage("Original problem already exists.");
+        },
+      },
+      cloneRequest
+    );
+  };
+  const [contestType, setContestType] = useState("");
+  const [status, setStatus] = useState("");
+  const [submissionActionType, setSubmissionActionType] = useState("");
+  const [maxNumberSubmission, setMaxNumberSubmission] = useState(10);
+  const [participantViewResultMode, setParticipantViewResultMode] = useState("");
+  const [problemDescriptionViewType, setProblemDescriptionViewType] = useState("");
+  const [evaluateBothPublicPrivateTestcase, setEvaluateBothPublicPrivateTestcase] = useState("");
+  const [maxSourceCodeLength, setMaxSourceCodeLength] = useState(50000);
+  const [minTimeBetweenTwoSubmissions, setMinTimeBetweenTwoSubmissions] = useState(0);
+  const [judgeMode, setJudgeMode] = useState("");
+  const [participantViewSubmissionMode, setParticipantViewSubmissionMode] = useState("");
+  const [allowedLanguages, setAllowedLanguages] = useState([]);
+  const [participantViewProblemsTag, setParticipantViewProblemsTag] = useState("");
+  const [participantViewComment, setParticipantViewComment] = useState("");
+  const [contestName, setContestName] = useState("");
+  const [contestTime, setContestTime] = useState(Number(0));
+  const [startDate, setStartDate] = useState(new Date());
+  const [countDown, setCountDown] = useState(Number(0));
+  const [contestPublic, setContestPublic] = useState(false);
+  const handleDelete = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this contest?");
+
+    if (confirmed) {
+      const modelUpdateContest = {
+        contestName: contestName,
+        contestSolvingTime: contestTime,
+        startedAt: startDate,
+        countDownTime: countDown,
+        statusId: "DISABLED",
+        submissionActionType: submissionActionType,
+        maxNumberSubmission: maxNumberSubmission,
+        participantViewResultMode: participantViewResultMode,
+        problemDescriptionViewType: problemDescriptionViewType,
+        maxSourceCodeLength: maxSourceCodeLength,
+        evaluateBothPublicPrivateTestcase: evaluateBothPublicPrivateTestcase,
+        minTimeBetweenTwoSubmissions: minTimeBetweenTwoSubmissions,
+        judgeMode: judgeMode,
+        participantViewSubmissionMode: participantViewSubmissionMode,
+        languagesAllowed: allowedLanguages,
+        contestType: contestType,
+        contestShowTag: participantViewProblemsTag,
+        contestShowComment: participantViewComment,
+        contestPublic: contestPublic,
+      };
+
+      request(
+        "put",
+        `/contests/${contestId}`,
+        () => {
+          history.push("/programming-contest/teacher-list-contest-manager");
+
         },
         {
-            onError: (error) => {
-                setErrorMessage("Failed to clone the problem. Please try again.");
-                console.error("Error cloning problem:", error);
-            },
-            400: (error) => {
-                setErrorMessage("Invalid request. Please check your input.");
-            },
-            404: (error) => {
-                setErrorMessage("Original problem not found.");
-            },
-            500: (error) => {
-              setErrorMessage("Original problem already exists.");
+          onError: (error) => {
+            console.error("Error updating contest:", error);
+            errorNoti("Failed to delete the contest", 3000);
           },
         },
-        cloneRequest 
-    );
-};
+        modelUpdateContest
+      );
+    } else {
+      console.log("Delete action canceled");
+    }
+  };
+
+
 
   return (
     <>
-    <HustContainerCard
-      title={contestId}
-      action={
-        <PrimaryButton
-          color="info"
-          onClick={handleEdit}
-          startIcon={<EditIcon />}
-        >
-          Edit
-        </PrimaryButton>        
-      }      
-    >
-
-      {loading && <LinearProgress />}
-      <Grid container spacing={2} display={loading ? "none" : ""}>
-        {[
-          ["Name", contestDetail.name],
-          ["Status", contestDetail.statusId],
-          ["Type", contestDetail.contestType],
-          [
-            "View problem description",
-            contestDetail.problemDescriptionViewType,
-          ],
-          [
-            "Max submissions",
-            `${contestDetail.maxNumberSubmission} (per problem)`,
-          ],
-          [
-            "Source length limit",
-            `${contestDetail.maxSourceCodeLength.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (chars)`,
-          ],
-          [
-            "Submission interval",
-            `${contestDetail.minTimeBetweenTwoSubmissions.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (s)`,
-            undefined,
-            "Minimum time between two consecutive submissions by a participant",
-          ],
-          [
-            "Languages allowed",
-            !contestDetail.languagesAllowed ||
-            _.isEmpty(contestDetail.languagesAllowed.trim())
-              ? "All supported languages"
-              : contestDetail.languagesAllowed,
-          ],
-          ["Action on submission", contestDetail.submissionActionType],
-          [
-            "Evaluate both public and private testcases",
-            contestDetail.evaluateBothPublicPrivateTestcase,
-          ],
-          [
-            "View testcase detail",
-            contestDetail.participantViewResultMode,
-            undefined,
-            "Allow or disallow participant to view the input and output of each testcase",
-          ],
-          [
-            "Participant view submission",
-            contestDetail.participantViewSubmissionMode,
-            undefined,
-            "Allow or disallow participant to view their own submissions",
-          ],
-        ].map(([key, value, sx, helpText]) => (
-          <Grid item xs={12} sm={12} md={4}>
-            {detail(key, value, sx, helpText)}
-          </Grid>
-        ))}
-      </Grid>
-      <PrimaryButton onClick={handleCloneDialogOpen}>
-        Clone
-      </PrimaryButton>
-    </HustContainerCard>
-    <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
+      <HustContainerCard
+        title={contestId}
+        action={
+          <>
+            <PrimaryButton
+              color="info"
+              onClick={handleEdit}
+              startIcon={<EditIcon />}
+              style={{ marginRight: "20px" }}
+            >
+              Edit
+            </PrimaryButton>
+            <PrimaryButton
+              color="info"
+              onClick={handleDelete}
+              startIcon={<EditIcon />}
+            >
+              Delete
+            </PrimaryButton>
+          </>
+        }
+      >
+        {loading && <LinearProgress />}
+        <Grid container spacing={2} display={loading ? "none" : ""}>
+          {[
+            ["Name", contestDetail.name],
+            ["Status", contestDetail.statusId],
+            ["Type", contestDetail.contestType],
+            [
+              "View problem description",
+              contestDetail.problemDescriptionViewType,
+            ],
+            [
+              "Max submissions",
+              `${contestDetail.maxNumberSubmission} (per problem)`,
+            ],
+            [
+              "Source length limit",
+              `${contestDetail.maxSourceCodeLength.toLocaleString(
+                "fr-FR",
+                localeOption
+              )} (chars)`,
+            ],
+            [
+              "Submission interval",
+              `${contestDetail.minTimeBetweenTwoSubmissions.toLocaleString(
+                "fr-FR",
+                localeOption
+              )} (s)`,
+              undefined,
+              "Minimum time between two consecutive submissions by a participant",
+            ],
+            [
+              "Languages allowed",
+              !contestDetail.languagesAllowed ||
+                _.isEmpty(contestDetail.languagesAllowed.trim())
+                ? "All supported languages"
+                : contestDetail.languagesAllowed,
+            ],
+            ["Action on submission", contestDetail.submissionActionType],
+            [
+              "Evaluate both public and private testcases",
+              contestDetail.evaluateBothPublicPrivateTestcase,
+            ],
+            [
+              "View testcase detail",
+              contestDetail.participantViewResultMode,
+              undefined,
+              "Allow or disallow participant to view the input and output of each testcase",
+            ],
+            [
+              "Participant view submission",
+              contestDetail.participantViewSubmissionMode,
+              undefined,
+              "Allow or disallow participant to view their own submissions",
+            ],
+          ].map(([key, value, sx, helpText]) => (
+            <Grid item xs={12} sm={12} md={4}>
+              {detail(key, value, sx, helpText)}
+            </Grid>
+          ))}
+        </Grid>
+        <PrimaryButton onClick={handleCloneDialogOpen}>
+          Clone
+        </PrimaryButton>
+      </HustContainerCard>
+      <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
         <DialogTitle>{"Clone Contest"}</DialogTitle>
         <DialogContent>
           <TextField
