@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - "hustack-frontend/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "hustack-frontend/**"
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
