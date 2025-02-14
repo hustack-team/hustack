@@ -375,7 +375,8 @@ public class ExamServiceImpl implements ExamService {
                    "    er.total_time as totalTime,\n" +
                    "    er.submited_at as submitedAt,\n" +
                    "    er.file_path as answerFiles,\n" +
-                   "    er.comment as comment\n" +
+                   "    er.comment as comment,\n" +
+                   "    e.answer_status as examAnswerStatus\n" +
                    "from\n" +
                    "    exam_student es\n" +
                    "left join exam e on\n" +
@@ -401,23 +402,24 @@ public class ExamServiceImpl implements ExamService {
         if (!Objects.isNull(result) && !result.isEmpty()) {
             for (Object[] obj : result) {
                 list.add(MyExamDetailsRes.builder()
-                                        .examStudentId(DataUtils.safeToString(obj[0]))
-                                        .examId(DataUtils.safeToString(obj[1]))
-                                        .examCode(DataUtils.safeToString(obj[2]))
-                                        .examName(DataUtils.safeToString(obj[3]))
-                                        .examDescription(DataUtils.safeToString(obj[4]))
-                                        .startTime(DataUtils.safeToString(obj[5]))
-                                        .endTime(DataUtils.safeToString(obj[6]))
-                                        .examTestId(DataUtils.safeToString(obj[7]))
-                                        .examTestCode(DataUtils.safeToString(obj[8]))
-                                        .examTestName(DataUtils.safeToString(obj[9]))
-                                        .examResultId(DataUtils.safeToString(obj[10]))
-                                        .totalScore(DataUtils.safeToInt(obj[11]))
-                                        .totalTime(DataUtils.safeToInt(obj[12]))
-                                        .submitedAt(DataUtils.safeToString(obj[13]))
-                                        .answerFiles(DataUtils.safeToString(obj[14]))
-                                        .comment(DataUtils.safeToString(obj[15]))
-                                        .build());
+                                         .examStudentId(DataUtils.safeToString(obj[0]))
+                                         .examId(DataUtils.safeToString(obj[1]))
+                                         .examCode(DataUtils.safeToString(obj[2]))
+                                         .examName(DataUtils.safeToString(obj[3]))
+                                         .examDescription(DataUtils.safeToString(obj[4]))
+                                         .startTime(DataUtils.safeToString(obj[5]))
+                                         .endTime(DataUtils.safeToString(obj[6]))
+                                         .examTestId(DataUtils.safeToString(obj[7]))
+                                         .examTestCode(DataUtils.safeToString(obj[8]))
+                                         .examTestName(DataUtils.safeToString(obj[9]))
+                                         .examResultId(DataUtils.safeToString(obj[10]))
+                                         .totalScore(DataUtils.safeToInt(obj[11]))
+                                         .totalTime(DataUtils.safeToInt(obj[12]))
+                                         .submitedAt(DataUtils.safeToString(obj[13]))
+                                         .answerFiles(DataUtils.safeToString(obj[14]))
+                                         .comment(DataUtils.safeToString(obj[15]))
+                                         .examAnswerStatus(DataUtils.safeToString(obj[16]))
+                                         .build());
             }
         }
 

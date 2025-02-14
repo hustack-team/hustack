@@ -36,6 +36,46 @@ function QuestionBankDetails(props) {
         <DialogTitle>Chi tiết câu hỏi - {question?.code}</DialogTitle>
         <DialogContent>
           <div>
+            <div style={{display: 'flex', alignItems: 'center', marginBottom: '18px'}}>
+              {
+                question?.level === "EASY" && (
+                  <strong style={{
+                    color: "#61bd6d",
+                    padding: '5px 10px',
+                    border: '1px solid #61bd6d',
+                    borderRadius: '20px'
+                  }}>Dễ</strong>
+                )
+              }
+              {
+                question?.level === "MEDIUM" && (
+                  <strong
+                    style={{color: '#716DF2', padding: '5px 10px', border: '1px solid #716DF2', borderRadius: '20px'}}>Trung
+                    bình</strong>
+                )
+              }
+              {
+                question?.level === "HARD" && (
+                  <strong style={{
+                    color: 'red',
+                    padding: '5px 10px',
+                    border: '1px solid red',
+                    borderRadius: '20px'
+                  }}>Khó</strong>
+                )
+              }
+              {
+                question?.examTagNameStr && (
+                  <div style={{display: 'flex', marginLeft: '24px'}}>
+                    <strong style={{fontStyle: "italic"}}># {question?.examTagNameStr}</strong>
+                  </div>
+                )
+              }
+            </div>
+            <div style={{display: 'flex'}}>
+              <h4 style={{marginRight: '5px', marginTop: 0}}>Môn học:</h4>
+              <p style={{marginTop: 0, marginBottom: 0}}>{question?.examSubjectName}</p>
+            </div>
             <div>
               <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung câu hỏi:</h4>
               <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.content)}</p>

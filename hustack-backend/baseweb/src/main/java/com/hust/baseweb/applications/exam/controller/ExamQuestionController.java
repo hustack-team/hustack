@@ -1,13 +1,17 @@
 package com.hust.baseweb.applications.exam.controller;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hust.baseweb.applications.exam.entity.ExamQuestionEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionDeleteReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionDetailsReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionFilterReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionSaveReq;
+import com.hust.baseweb.applications.exam.model.response.ExamQuestionDetailsRes;
+import com.hust.baseweb.applications.exam.model.response.ExamQuestionFilterRes;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
+import com.hust.baseweb.applications.exam.utils.LocalDateTimeAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 
 @Slf4j
 @RestController
@@ -29,13 +34,13 @@ public class ExamQuestionController {
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/filter")
-    public ResponseEntity<Page<ExamQuestionEntity>> filter(Pageable pageable, @RequestBody ExamQuestionFilterReq examQuestionFilterReq) {
+    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @RequestBody ExamQuestionFilterReq examQuestionFilterReq) {
         return ResponseEntity.ok(examQuestionService.filter(pageable, examQuestionFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/details")
-    public ResponseEntity<ResponseData<ExamQuestionEntity>> details(@RequestBody ExamQuestionDetailsReq examQuestionDetailsReq) {
+    public ResponseEntity<ResponseData<ExamQuestionDetailsRes>> details(@RequestBody ExamQuestionDetailsReq examQuestionDetailsReq) {
         return ResponseEntity.ok(examQuestionService.details(examQuestionDetailsReq));
     }
 
@@ -43,7 +48,9 @@ public class ExamQuestionController {
     @PostMapping("/create")
     public ResponseEntity<ResponseData<ExamQuestionEntity>> create(@RequestParam("body") String questions,
                                                                    @RequestParam("files") MultipartFile[] files) {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
         return ResponseEntity.ok(examQuestionService.create(gson.fromJson(questions, ExamQuestionSaveReq.class), files));
     }
 
@@ -51,7 +58,9 @@ public class ExamQuestionController {
     @PostMapping("/update")
     public ResponseEntity<ResponseData<ExamQuestionEntity>> update(@RequestParam("body") String questions,
                                                                    @RequestParam("files") MultipartFile[] files) {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
         return ResponseEntity.ok(examQuestionService.update(gson.fromJson(questions, ExamQuestionSaveReq.class), files));
     }
 

@@ -92,9 +92,9 @@ function TestBankCreateUpdate(props) {
       examTestQuestionSaveReqList: examTestQuestionSaveReqList,
       examTestQuestionDeleteReqList: questionDeleteList
     }
-    validateBody(body)
-
-    console.log('body',body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
@@ -123,16 +123,17 @@ function TestBankCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã đề thi không được bỏ trống')
-      return
+      return false
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên đề thi không được bỏ trống')
-      return
+      return false
     }
     if(body.examTestQuestionSaveReqList.length < 1){
       toast.error('Đề thi phải có ít nhất 1 câu hỏi')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {

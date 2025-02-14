@@ -13,11 +13,17 @@ import javax.persistence.*;
 @Table(name = "exam_question")
 public class ExamQuestionEntity extends BaseEntity {
 
+    @Column(name = "exam_subject_id")
+    private String examSubjectId;
+
     @Column(name = "code")
     private String code;
 
     @Column(name = "type")
     private Integer type;
+
+    @Column(name = "\"level\"")
+    private String level;
 
     @Column(name = "content")
     private String content;
