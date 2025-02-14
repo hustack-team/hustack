@@ -1,12 +1,12 @@
 package com.hust.baseweb.applications.education.quiztest.entity;
 
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 
-import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 

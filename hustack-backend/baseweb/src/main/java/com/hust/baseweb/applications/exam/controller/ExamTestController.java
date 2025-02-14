@@ -1,11 +1,14 @@
 package com.hust.baseweb.applications.exam.controller;
 
-import com.hust.baseweb.applications.exam.entity.ExamQuestionEntity;
 import com.hust.baseweb.applications.exam.entity.ExamTestEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
-import com.hust.baseweb.applications.exam.model.request.*;
+import com.hust.baseweb.applications.exam.model.request.ExamTestDeleteReq;
+import com.hust.baseweb.applications.exam.model.request.ExamTestDetailsReq;
+import com.hust.baseweb.applications.exam.model.request.ExamTestFilterReq;
+import com.hust.baseweb.applications.exam.model.request.ExamTestSaveReq;
 import com.hust.baseweb.applications.exam.model.response.ExamTestDetailsRes;
 import com.hust.baseweb.applications.exam.service.ExamTestService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,8 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
 
 @Slf4j
 @RestController

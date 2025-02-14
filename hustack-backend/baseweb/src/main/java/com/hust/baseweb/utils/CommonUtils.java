@@ -1,30 +1,15 @@
 package com.hust.baseweb.utils;
 
-import org.javatuples.Pair;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 
 public class CommonUtils {
 
     public static int SEQ_ID_LEN = 6;
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static String buildQueryDslPath(Pair<Map<String, String>, Map<String, Pair>> pair, String field) {
-        String[] elm = field.split("\\.");
-        StringBuilder result = new StringBuilder();
-        Pair<Map<String, String>, Map<String, Pair>> pairTmp = pair;
-        for (int i = 0; i < elm.length - 1; i++) {
-            result.append(pairTmp.getValue0().get(elm[i]).length() != 0 ? (pairTmp.getValue0().get(elm[i]) + ".") : "");
-            pairTmp = pairTmp.getValue1().get(elm[i]);
-        }
-        result.append(pairTmp.getValue0().get(elm[elm.length - 1]));
-        return result.toString();
-    }
 
     public static String buildSeqId(int idx) {
         StringBuilder stringBuilder = new StringBuilder(idx + "");

@@ -3,6 +3,7 @@ package com.hust.baseweb.applications.education.thesisdefensejury.repo;
 import com.hust.baseweb.applications.education.thesisdefensejury.entity.Thesis;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ThesisRepo extends PagingAndSortingRepository<Thesis, UUID> {
+public interface ThesisRepo extends JpaRepository<Thesis, UUID>, PagingAndSortingRepository<Thesis, UUID> {
 
     Page<Thesis> findAll(Pageable pageable);
 

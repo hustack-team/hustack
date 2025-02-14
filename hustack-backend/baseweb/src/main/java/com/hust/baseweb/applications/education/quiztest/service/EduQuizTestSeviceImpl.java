@@ -31,13 +31,13 @@ import com.hust.baseweb.model.PersonModel;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;

@@ -44,7 +44,7 @@ public class TestcaseController {
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> addTestcase(
         @RequestPart("dto") ModelProgrammingContestUploadTestCase dto,
-        @RequestPart(value = "file") MultipartFile file
+        @RequestPart(value = "file", required = false) MultipartFile file
     ) throws Exception {
         try (ByteArrayInputStream stream = new ByteArrayInputStream(file.getBytes())) {
             String testCase = IOUtils.toString(stream, StandardCharsets.UTF_8);

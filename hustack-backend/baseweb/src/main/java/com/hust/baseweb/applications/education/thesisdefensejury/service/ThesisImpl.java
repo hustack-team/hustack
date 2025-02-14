@@ -11,6 +11,7 @@ import com.hust.baseweb.applications.education.thesisdefensejury.models.ThesisOM
 import com.hust.baseweb.applications.education.thesisdefensejury.repo.*;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.repo.UserLoginRepo;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

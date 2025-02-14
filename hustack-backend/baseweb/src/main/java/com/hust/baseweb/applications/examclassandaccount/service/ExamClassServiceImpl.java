@@ -1,6 +1,5 @@
 package com.hust.baseweb.applications.examclassandaccount.service;
 
-import com.hust.baseweb.applications.education.classmanagement.model.ModelResponseEduClassDetail;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClass;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClassUserloginMap;
 import com.hust.baseweb.applications.examclassandaccount.model.ModelCreateExamClass;
@@ -20,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 @Service
 @Transactional
-@javax.transaction.Transactional
+@jakarta.transaction.Transactional
 
 public class ExamClassServiceImpl implements ExamClassService{
 

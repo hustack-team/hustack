@@ -1,9 +1,9 @@
 package com.hust.baseweb.applications.programmingcontest.entity;
 
 import com.hust.baseweb.entity.UserLogin;
+import jakarta.persistence.*;
 import lombok.*;
 
-import javax.persistence.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;

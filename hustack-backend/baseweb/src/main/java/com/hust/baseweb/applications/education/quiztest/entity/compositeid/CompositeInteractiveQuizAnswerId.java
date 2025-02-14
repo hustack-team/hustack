@@ -1,14 +1,18 @@
 package com.hust.baseweb.applications.education.quiztest.entity.compositeid;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 public class CompositeInteractiveQuizAnswerId implements Serializable {
     private UUID interactiveQuizId;
     private UUID questionId;

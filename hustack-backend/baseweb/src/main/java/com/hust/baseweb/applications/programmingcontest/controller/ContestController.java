@@ -15,8 +15,8 @@ import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -33,13 +33,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
-import javax.ws.rs.Path;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
-@Log4j2
+
 @RestController
 @CrossOrigin
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -631,8 +629,7 @@ public class ContestController {
     }
 
     @Async
-
-    private void logGetRankingOfContest(String userId, String contestId){
+    protected void logGetRankingOfContest(String userId, String contestId){
         if(true)return;
         LmsLogModelCreate logM = new LmsLogModelCreate();
         logM.setUserId(userId);
@@ -700,7 +697,7 @@ public class ContestController {
     }
 
     @Async
-    private void logGetSubmissionsOfContest(String userId, String contestId){
+    protected void logGetSubmissionsOfContest(String userId, String contestId){
         if(true)return;
         LmsLogModelCreate logM = new LmsLogModelCreate();
         logM.setUserId(userId);

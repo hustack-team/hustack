@@ -5,12 +5,12 @@ import com.hust.baseweb.applications.education.thesisdefensejury.entity.ThesisDe
 import com.hust.baseweb.applications.education.thesisdefensejury.models.Response;
 import com.hust.baseweb.applications.education.thesisdefensejury.models.ThesisDefensePlanIM;
 import com.hust.baseweb.applications.education.thesisdefensejury.repo.ThesisDefensePlanRepo;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 

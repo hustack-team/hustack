@@ -8,19 +8,16 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.time.Duration;
-
 @Configuration
-//@EnableSpringHttpSession
-public class SessionConfig {
+public class RedisConfig {
 
-    @Value("${spring.redis.host}")
+    @Value("${spring.data.redis.host}")
     private String host;
 
-    @Value("${spring.redis.port}")
+    @Value("${spring.data.redis.port}")
     private Integer port;
 
-    @Value("${spring.redis.password}")
+    @Value("${spring.data.redis.password}")
     private String password;
 
     @Bean
@@ -41,22 +38,4 @@ public class SessionConfig {
         return RedisSerializationBuilder.getSnappyRedisTemplate(redisConnectionFactory(), Object.class);
     }
 
-//    @Bean
-//    public RedisSessionRepository sessionRepository(RedisTemplate<String, Object> redisTemplate) {
-//        RedisSessionRepository redisSessionRepository = new RedisSessionRepository(redisTemplate);
-//        redisSessionRepository.setDefaultMaxInactiveInterval(Duration.ofHours(24));
-//        return redisSessionRepository;
-//    }
-
-//    /**
-//     * Customize Spring Session’s HttpSession integration to use HTTP headers X-Auth-Token
-//     * to convey the current session information instead of cookies,
-//     * <a href="https://docs.spring.io/spring-session/docs/current/reference/html5/guides/java-rest.html">reference</a>
-//     *
-//     * @return
-//     */
-//    @Bean
-//    public HttpSessionIdResolver httpSessionIdResolver() {
-//        return HeaderHttpSessionIdResolver.xAuthToken();
-//    }
 }

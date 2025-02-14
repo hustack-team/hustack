@@ -1,12 +1,12 @@
 package com.hust.baseweb.applications.education.quiztest.entity;
 
 import com.hust.baseweb.applications.education.quiztest.entity.compositeid.CompositeTestQuizRoleId;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

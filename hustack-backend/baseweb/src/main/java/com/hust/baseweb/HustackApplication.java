@@ -6,19 +6,17 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @ConfigurationPropertiesScan
-@EnableAsync 
+@EnableAsync
 @EnableScheduling
 @EnableCaching
-@EnableWebSecurity
-@EnableGlobalMethodSecurity(securedEnabled = true)
-@SpringBootApplication(scanBasePackages = {"com.hust.baseweb", "vn.edu.hust.soict.judge0client"})
-public class BasewebApplication {
+@EnableMethodSecurity
+@SpringBootApplication(scanBasePackages = {"com.hust.baseweb", "vn.edu.hust.soict.judge0client", "ai.soict.hustack.authzresourceserver"})
+public class HustackApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BasewebApplication.class, args);
+        SpringApplication.run(HustackApplication.class, args);
     }
 }

@@ -1,18 +1,15 @@
 package com.hust.baseweb.config.rabbitmq;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.validation.annotation.Validated;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 
 @Getter
 @Validated
 @AllArgsConstructor
-@ConstructorBinding
 @ConfigurationProperties(prefix = "spring.rabbitmq.programming-contest")
 public class RabbitProgrammingContestProperties {
 

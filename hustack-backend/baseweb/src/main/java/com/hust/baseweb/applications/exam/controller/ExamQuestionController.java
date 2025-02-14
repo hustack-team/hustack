@@ -8,6 +8,7 @@ import com.hust.baseweb.applications.exam.model.request.ExamQuestionDetailsReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionFilterReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionSaveReq;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.validation.Valid;
 
 @Slf4j
 @RestController

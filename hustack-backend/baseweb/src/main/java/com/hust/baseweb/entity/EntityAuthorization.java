@@ -1,13 +1,13 @@
 package com.hust.baseweb.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.util.Date;
 
 /**

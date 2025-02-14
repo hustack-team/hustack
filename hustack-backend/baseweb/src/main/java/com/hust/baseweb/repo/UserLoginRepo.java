@@ -20,7 +20,7 @@ public interface UserLoginRepo extends JpaRepository<UserLogin, String> {
 
     @Query(
         "select new com.hust.baseweb.model.PersonModel( ul.userLoginId, p.lastName, p.middleName, p.firstName) from UserLogin ul " +
-        "inner join Party pa on ul.party = pa inner join Person p on p.partyId = ul.party and  (ul.userLoginId like %:keyword% )")
+        "inner join Party pa on ul.party = pa inner join Person p on p.partyId = ul.party.partyId and (ul.userLoginId like %:keyword% )")
     Page<PersonModel> searchUser(Pageable pageable, @Param("keyword") String keyword);
 
     @Query(value =
