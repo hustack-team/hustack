@@ -113,7 +113,9 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         QuizQuestionCreateInputModel input = gson.fromJson(json, QuizQuestionCreateInputModel.class);
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = input.getFileId();
-        List<MultipartFile> fileArray = Arrays.asList(files);
+        List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList);
 
         fileArray.forEach((file) -> {
             ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
@@ -480,7 +482,9 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         QuizQuestionUpdateInputModel input = gson.fromJson(json, QuizQuestionUpdateInputModel.class);
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = input.getFileId();
-        List<MultipartFile> fileArray = Arrays.asList(files);
+        List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList);
 
         fileArray.forEach((file) -> {
             ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
@@ -529,7 +533,9 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         }
         List<String> solutionAttachmentIds = Arrays.stream(oldSolutionAttachments)
                                                    .collect(Collectors.toList());
-        solutionAttachmentIds.removeAll(Arrays.asList(input.getDeletedAttachmentIds()));
+        solutionAttachmentIds.removeAll(Optional.ofNullable(input.getDeletedAttachmentIds())
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList));
         solutionAttachmentIds.addAll(addedSolutionAttachmentIds);
         String newSolutionAttachmentIds = solutionAttachmentIds.size() == 0
             ? null
