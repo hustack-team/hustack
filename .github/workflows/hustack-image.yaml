@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - "hustack-backend/baseweb/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "hustack-backend/baseweb/**"
 
 jobs:
   build:

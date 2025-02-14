@@ -152,7 +152,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = dto.getFileId();
-        List<MultipartFile> fileArray = Arrays.asList(files);
+        List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList);
 
         fileArray.forEach((file) -> {
             ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
@@ -294,7 +296,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         List<String> attachmentId = new ArrayList<>();
         attachmentId.add(problem.getAttachment());
         String[] fileId = dto.getFileId();
-        List<MultipartFile> fileArray = Arrays.asList(files);
+        List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList);
 
         List<String> removedFilesId = dto.getRemovedFilesId();
         if (problem.getAttachment() != null && !problem.getAttachment().isEmpty()) {
