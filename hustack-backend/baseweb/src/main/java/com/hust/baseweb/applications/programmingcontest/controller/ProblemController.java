@@ -3,7 +3,6 @@ package com.hust.baseweb.applications.programmingcontest.controller;
 import com.hust.baseweb.applications.chatgpt.ChatGPTService;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.model.LmsLogModelCreate;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.ApiService;
-import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.TagEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.UserContestProblemRole;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
@@ -124,7 +123,7 @@ public class ProblemController {
         Principal principal,
         @PathVariable("problemId") String problemId,
         @RequestPart("dto") ModelUpdateContestProblem dto,
-        @RequestPart("files") MultipartFile[] files
+        @RequestPart(value = "files", required = false) MultipartFile[] files
     ) throws Exception {
         return ResponseEntity.ok().body(problemTestCaseService.updateContestProblem(
             problemId,
