@@ -39,7 +39,7 @@ const ModelAddNewTag = ({isOpen, handleSuccess, handleClose}) => {
 
     request(
       "post",
-      "/tags",
+      "/tags", 
       handleSuccess,
       {
         onError: (e) => {
