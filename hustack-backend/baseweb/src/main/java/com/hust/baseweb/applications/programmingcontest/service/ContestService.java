@@ -9,27 +9,35 @@ import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.UserRegistrationContestRepo;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContestService {
 
-    private ContestRepo contestRepo;
-    private UserRegistrationContestRepo userRegistrationContestRepo;
-    private ContestProblemRepo contestProblemRepo;
-    private ContestSubmissionRepo contestSubmissionRepo;
+    ContestRepo contestRepo;
 
-    private static final String HASH_CONTEST = "CONTEST";
-    private static final String HASH_CONTEST_SOLVING_DETAIL = "CONTEST_SOLVING_DETAIL";
+    UserRegistrationContestRepo userRegistrationContestRepo;
+
+    ContestProblemRepo contestProblemRepo;
+
+    ContestSubmissionRepo contestSubmissionRepo;
+
+    static final String HASH_CONTEST = "CONTEST";
 
     @Cacheable(value = HASH_CONTEST, key = "#contestId")
     public ContestEntity findContestWithCache(String contestId) {
@@ -56,11 +64,6 @@ public class ContestService {
 
     public ContestEntity saveContest(ContestEntity contest) {
         return contestRepo.save(contest);
-    }
-
-    @Cacheable(value = HASH_CONTEST_SOLVING_DETAIL, key = "#contest.contestId")
-    public ModelGetContestDetailResponse getModelGetContestDetailResponseWithCache(ContestEntity contest) {
-        return getModelGetContestDetailResponse(contest);
     }
 
     public ModelGetContestDetailResponse getModelGetContestDetailResponse(ContestEntity contestEntity) {
@@ -154,110 +157,116 @@ public class ContestService {
         return cp != null ? cp.getProblemRename() : null;
     }
 
-    public int mapNewProblemToSubmissionsInContest(ModelInputMapNewProblemToSubmissionsInContest m){
-        List<ContestSubmissionEntity> L = contestSubmissionRepo.findAllByContestIdAndProblemId(m.getContestId(),m.getProblemId());
-        for(ContestSubmissionEntity sub: L){
+    public int mapNewProblemToSubmissionsInContest(ModelInputMapNewProblemToSubmissionsInContest m) {
+        List<ContestSubmissionEntity> L = contestSubmissionRepo.findAllByContestIdAndProblemId(
+            m.getContestId(),
+            m.getProblemId());
+
+        for (ContestSubmissionEntity sub : L) {
             sub.setProblemId(
                 m.getNewProblemId()
             );
-            sub = contestSubmissionRepo.save(sub);
+            contestSubmissionRepo.save(sub);
         }
+
         return L.size();
     }
+
     @Transactional
-    public ModelGetContestResponse cloneContest(String userId, ModelInputCloneContest m){
+    public ModelGetContestResponse cloneContest(String userId, ModelInputCloneContest m) {
         ContestEntity fromContest = contestRepo.findContestByContestId(m.getFromContestId());
-        if(fromContest == null) return null;
+        if (fromContest == null) {
+            return null;
+        }
 
         ContestEntity contest = ContestEntity.builder()
-            .contestId(m.getToContestId())
-            .contestName(m.getToContestName())
-            .contestPublic(fromContest.getContestPublic())
-            .contestType(fromContest.getContestType())
-            .contestSolvingTime(fromContest.getContestSolvingTime())
-            .sendConfirmEmailUponSubmission(fromContest.getSendConfirmEmailUponSubmission())
-            .languagesAllowed(fromContest.getLanguagesAllowed())
-            .endTime(fromContest.getEndTime())
-            .createdAt(new Date())
-            .judgeMode(fromContest.getJudgeMode())
-            .contestShowTag(fromContest.getContestShowTag())
-            .countDown(fromContest.getCountDown())
-            .contestShowComment(fromContest.getContestShowComment())
-            .participantViewSubmissionMode(fromContest.getParticipantViewSubmissionMode())
-            .maxNumberSubmissions(fromContest.getMaxNumberSubmissions())
-            .problems(fromContest.getProblems())
-            .userId(userId)
-            .evaluateBothPublicPrivateTestcase(fromContest.getEvaluateBothPublicPrivateTestcase())
-            .maxSourceCodeLength(fromContest.getMaxSourceCodeLength())
-            .minTimeBetweenTwoSubmissions(fromContest.getMinTimeBetweenTwoSubmissions())
-            .problemDescriptionViewType(fromContest.getProblemDescriptionViewType())
-            .statusId(ContestEntity.CONTEST_STATUS_CREATED)
-            .submissionActionType(fromContest.getSubmissionActionType())
-            .build();
+                                             .contestId(m.getToContestId())
+                                             .contestName(m.getToContestName())
+                                             .contestPublic(fromContest.getContestPublic())
+                                             .contestType(fromContest.getContestType())
+                                             .contestSolvingTime(fromContest.getContestSolvingTime())
+                                             .sendConfirmEmailUponSubmission(fromContest.getSendConfirmEmailUponSubmission())
+                                             .languagesAllowed(fromContest.getLanguagesAllowed())
+                                             .endTime(fromContest.getEndTime())
+                                             .createdAt(new Date())
+                                             .judgeMode(fromContest.getJudgeMode())
+                                             .contestShowTag(fromContest.getContestShowTag())
+                                             .countDown(fromContest.getCountDown())
+                                             .contestShowComment(fromContest.getContestShowComment())
+                                             .participantViewSubmissionMode(fromContest.getParticipantViewSubmissionMode())
+                                             .maxNumberSubmissions(fromContest.getMaxNumberSubmissions())
+                                             .problems(fromContest.getProblems())
+                                             .userId(userId)
+                                             .evaluateBothPublicPrivateTestcase(fromContest.getEvaluateBothPublicPrivateTestcase())
+                                             .maxSourceCodeLength(fromContest.getMaxSourceCodeLength())
+                                             .minTimeBetweenTwoSubmissions(fromContest.getMinTimeBetweenTwoSubmissions())
+                                             .problemDescriptionViewType(fromContest.getProblemDescriptionViewType())
+                                             .statusId(ContestEntity.CONTEST_STATUS_CREATED)
+                                             .submissionActionType(fromContest.getSubmissionActionType())
+                                             .build();
 
         contest = contestRepo.save(contest);
 
         // clone problems in contest
         List<ContestProblem> problems = contestProblemRepo.findAllByContestId(m.getFromContestId());
-        for(ContestProblem p: problems){
+        for (ContestProblem p : problems) {
             ContestProblem cp = ContestProblem.builder()
-                .contestId(m.getToContestId())
-                .forbiddenInstructions(p.getForbiddenInstructions())
-                .problemId(p.getProblemId())
-                .problemRecode(p.getProblemRecode())
-                .problemRename(p.getProblemRename())
-                .submissionMode(p.getSubmissionMode())
+                                              .contestId(m.getToContestId())
+                                              .forbiddenInstructions(p.getForbiddenInstructions())
+                                              .problemId(p.getProblemId())
+                                              .problemRecode(p.getProblemRecode())
+                                              .problemRename(p.getProblemRename())
+                                              .submissionMode(p.getSubmissionMode())
                                               .build();
-            cp = contestProblemRepo.save(cp);
+            contestProblemRepo.save(cp);
         }
 
         // clone submissions
         List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestId(m.getFromContestId());
-        for(ContestSubmissionEntity sub: submissions){
+        for (ContestSubmissionEntity sub : submissions) {
             ContestSubmissionEntity cloneSub = ContestSubmissionEntity.builder()
-                .contestId(m.getToContestId())
-                .point(sub.getPoint())
-                .runtime(sub.getRuntime())
-                .memoryUsage(sub.getMemoryUsage())
-                .message(sub.getMessage())
-                .problemId(sub.getProblemId())
-                .sourceCode(sub.getSourceCode())
-                .memoryUsage(sub.getMemoryUsage())
-                .sourceCodeLanguage(sub.getSourceCodeLanguage())
-                .submittedByUserId(sub.getSubmittedByUserId())
-                .testCasePass(sub.getTestCasePass())
-                .managementStatus(sub.getManagementStatus())
-                .status(sub.getStatus())
-                .userId(sub.getUserId())
-                .submittedByUserId(sub.getSubmittedByUserId())
-                .violateForbiddenInstruction(sub.getViolateForbiddenInstruction())
-                .violateForbiddenInstructionMessage(sub.getViolateForbiddenInstructionMessage())
-                .createdAt(sub.getCreatedAt())
+                                                                      .contestId(m.getToContestId())
+                                                                      .point(sub.getPoint())
+                                                                      .runtime(sub.getRuntime())
+                                                                      .memoryUsage(sub.getMemoryUsage())
+                                                                      .message(sub.getMessage())
+                                                                      .problemId(sub.getProblemId())
+                                                                      .sourceCode(sub.getSourceCode())
+                                                                      .memoryUsage(sub.getMemoryUsage())
+                                                                      .sourceCodeLanguage(sub.getSourceCodeLanguage())
+                                                                      .submittedByUserId(sub.getSubmittedByUserId())
+                                                                      .testCasePass(sub.getTestCasePass())
+                                                                      .managementStatus(sub.getManagementStatus())
+                                                                      .status(sub.getStatus())
+                                                                      .userId(sub.getUserId())
+                                                                      .submittedByUserId(sub.getSubmittedByUserId())
+                                                                      .violateForbiddenInstruction(sub.getViolateForbiddenInstruction())
+                                                                      .violateForbiddenInstructionMessage(sub.getViolateForbiddenInstructionMessage())
+                                                                      .createdAt(sub.getCreatedAt())
                                                                       .build();
-            cloneSub = contestSubmissionRepo.save(cloneSub);
+            contestSubmissionRepo.save(cloneSub);
         }
 
         // clone contest user roles, table user_registration_contest_new
         List<UserRegistrationContestEntity> userRegis = userRegistrationContestRepo.findAllByContestId(m.getFromContestId());
-        for(UserRegistrationContestEntity u: userRegis){
+        for (UserRegistrationContestEntity u : userRegis) {
             UserRegistrationContestEntity ure = UserRegistrationContestEntity.builder()
-                .contestId(m.getToContestId())
-                .fullname(u.getFullname())
-                .roleId(u.getRoleId())
-                .status(u.getStatus())
-                .createdStamp(u.getCreatedStamp())
-                .lastUpdated(u.getLastUpdated())
-                .permissionId(u.getPermissionId())
-                .userId(u.getUserId())
-                .updatedByUserLogin_id(u.getUpdatedByUserLogin_id())
-                .build();
-            ure = userRegistrationContestRepo.save(ure);
+                                                                             .contestId(m.getToContestId())
+                                                                             .fullname(u.getFullname())
+                                                                             .roleId(u.getRoleId())
+                                                                             .status(u.getStatus())
+                                                                             .createdStamp(u.getCreatedStamp())
+                                                                             .lastUpdated(u.getLastUpdated())
+                                                                             .permissionId(u.getPermissionId())
+                                                                             .userId(u.getUserId())
+                                                                             .updatedByUserLogin_id(u.getUpdatedByUserLogin_id())
+                                                                             .build();
+            userRegistrationContestRepo.save(ure);
         }
 
 
-        ModelGetContestResponse res = ModelGetContestResponse.builder()
-            .contestId(contest.getContestId())
-            .build();
-        return res;
+        return ModelGetContestResponse.builder()
+                                      .contestId(contest.getContestId())
+                                      .build();
     }
 }

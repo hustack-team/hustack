@@ -2795,7 +2795,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     }
 
     @Override
-    public void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission, ContestEntity contest) {
+    public void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission) {
         contestService.updateContestSubmissionStatus(
             submission.getContestSubmissionId(),
             ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
@@ -2812,7 +2812,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (sub != null) {
             // QUEUE MODE
             if (contest.getJudgeMode().equals(ContestEntity.ASYNCHRONOUS_JUDGE_MODE_QUEUE)) {
-                evaluateSubmissionUsingQueue(sub, contest);
+                evaluateSubmissionUsingQueue(sub);
             }
         }
     }
