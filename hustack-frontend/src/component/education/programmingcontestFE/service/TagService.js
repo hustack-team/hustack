@@ -3,7 +3,7 @@ import {request} from "../../../../api";
 export const getAllTags = (successHandler) => {
   request(
     "get",
-    "/tags/",
+    "/tags",
     successHandler,
     {}
   ).then();
