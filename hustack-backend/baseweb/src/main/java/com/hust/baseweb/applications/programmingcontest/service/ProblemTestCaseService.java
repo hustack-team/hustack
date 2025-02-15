@@ -224,7 +224,7 @@ public interface ProblemTestCaseService {
 
     void evaluateSubmission(ContestSubmissionEntity sub, ContestEntity contest);
 
-    void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission, ContestEntity contest);
+    void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission);
 
 //    List<CodePlagiarism> findAllByContestId(String contestId);
 

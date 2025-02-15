@@ -1,10 +1,10 @@
 package com.hust.baseweb.applications.programmingcontest.entity;
 
 import com.hust.baseweb.entity.UserLogin;
+import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 

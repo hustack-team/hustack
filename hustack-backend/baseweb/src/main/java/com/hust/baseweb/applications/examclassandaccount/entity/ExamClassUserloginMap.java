@@ -1,11 +1,11 @@
 package com.hust.baseweb.applications.examclassandaccount.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
 import java.util.UUID;
 
 @Data
@@ -18,7 +18,7 @@ public class ExamClassUserloginMap {
     public static final String STATUS_ACTIVE = "ACTIVE";
     public static final String STATUS_DISABLE = "DISABLE";
 
-    @javax.persistence.Id
+    @jakarta.persistence.Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID Id;

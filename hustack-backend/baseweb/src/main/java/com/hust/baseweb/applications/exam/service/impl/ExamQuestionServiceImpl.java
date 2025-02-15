@@ -2,8 +2,6 @@ package com.hust.baseweb.applications.exam.service.impl;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
-import com.hust.baseweb.applications.exam.entity.ExamEntity;
 import com.hust.baseweb.applications.exam.entity.ExamQuestionEntity;
 import com.hust.baseweb.applications.exam.entity.ExamTestQuestionEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
@@ -17,6 +15,9 @@ import com.hust.baseweb.applications.exam.service.ExamQuestionService;
 import com.hust.baseweb.applications.exam.service.MongoFileService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -27,9 +28,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;

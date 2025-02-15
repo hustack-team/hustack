@@ -1,6 +1,7 @@
 package com.hust.baseweb.entity;
 
 import com.hust.baseweb.applications.whiteboard.entity.UserWhiteboard;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.persistence.*;
 import java.util.Date;
 import java.util.Set;
 

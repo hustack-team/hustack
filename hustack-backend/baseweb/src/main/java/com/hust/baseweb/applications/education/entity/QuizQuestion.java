@@ -1,13 +1,11 @@
 package com.hust.baseweb.applications.education.entity;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
-
-import com.hust.baseweb.applications.education.quiztest.entity.InteractiveQuizAnswer;
-
-import java.util.*;
+import java.util.Date;
+import java.util.UUID;
 
 @Getter
 @Setter

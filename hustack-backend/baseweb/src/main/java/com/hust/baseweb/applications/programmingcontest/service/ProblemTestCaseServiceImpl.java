@@ -8,7 +8,6 @@ import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputStreamUtils;
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
-import com.hust.baseweb.applications.programmingcontest.docker.DockerClientBase;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
@@ -18,7 +17,6 @@ import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
 import com.hust.baseweb.applications.programmingcontest.utils.DateTimeUtils;
-import com.hust.baseweb.applications.programmingcontest.utils.TempDir;
 import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritycheckingalgorithms.CodeSimilarityCheck;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
@@ -28,6 +26,7 @@ import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -54,7 +53,6 @@ import vn.edu.hust.soict.judge0client.config.Judge0Config;
 import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
 import vn.edu.hust.soict.judge0client.service.Judge0Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -72,10 +70,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     private final ProblemRepo problemRepo;
 
     private TestCaseRepo testCaseRepo;
-
-    private DockerClientBase dockerClientBase;
-
-    private TempDir tempDir;
 
     private UserLoginRepo userLoginRepo;
 
@@ -2801,7 +2795,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     }
 
     @Override
-    public void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission, ContestEntity contest) {
+    public void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission) {
         contestService.updateContestSubmissionStatus(
             submission.getContestSubmissionId(),
             ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
@@ -2818,7 +2812,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (sub != null) {
             // QUEUE MODE
             if (contest.getJudgeMode().equals(ContestEntity.ASYNCHRONOUS_JUDGE_MODE_QUEUE)) {
-                evaluateSubmissionUsingQueue(sub, contest);
+                evaluateSubmissionUsingQueue(sub);
             }
         }
     }

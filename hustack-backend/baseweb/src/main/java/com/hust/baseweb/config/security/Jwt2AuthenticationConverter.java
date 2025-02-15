@@ -33,7 +33,7 @@ public class Jwt2AuthenticationConverter
      */
     @Deprecated
     protected Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
-        return (Collection) this.jwtGrantedAuthoritiesConverter.convert(jwt);
+        return this.jwtGrantedAuthoritiesConverter.convert(jwt);
     }
 
     public void setJwtGrantedAuthoritiesConverter(Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter) {

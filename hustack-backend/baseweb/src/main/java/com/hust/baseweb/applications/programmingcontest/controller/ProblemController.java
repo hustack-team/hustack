@@ -17,6 +17,7 @@ import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseS
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.service.UserService;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.validation.constraints.NotBlank;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
