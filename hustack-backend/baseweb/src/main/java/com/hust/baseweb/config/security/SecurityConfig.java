@@ -21,7 +21,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.web.cors.CorsConfiguration;
@@ -67,7 +66,7 @@ public class SecurityConfig {
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
 
             // Add policy enforcement after processing the Bearer token
-            .addFilterAfter(createPolicyEnforcerFilter(), BearerTokenAuthenticationFilter.class)
+//            .addFilterAfter(createPolicyEnforcerFilter(), BearerTokenAuthenticationFilter.class)
 
             // Enable anonymous
 //            .anonymous(Customizer.withDefaults())
@@ -82,7 +81,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // permission to access all static resources
                 .requestMatchers("/resources/**", "/css/**", "/image/**", "/js/**", "/chatSocketHandler/**").permitAll()
-                .requestMatchers("/actuator/prometheus/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/videos/videos/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/service/files/**").permitAll()
                 .requestMatchers("/edu/assignment/*/submissions").permitAll()
