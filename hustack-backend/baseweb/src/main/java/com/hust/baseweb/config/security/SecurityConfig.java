@@ -81,7 +81,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // permission to access all static resources
                 .requestMatchers("/resources/**", "/css/**", "/image/**", "/js/**", "/chatSocketHandler/**").permitAll()
-                .requestMatchers("/actuator/prometheus/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/videos/videos/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/service/files/**").permitAll()
                 .requestMatchers("/edu/assignment/*/submissions").permitAll()
