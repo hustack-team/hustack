@@ -213,7 +213,7 @@ export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
   };
   const handleViewDetailManager = () => {
     const url = `/programming-contest/manager-view-problem-detail/${problemId}`;
-    window.open(url, '_blank'); // Open the URL in a new tab
+    window.open(url, '_blank'); 
   };
   useEffect(() => {
     getProblemDetail();

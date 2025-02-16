@@ -146,6 +146,7 @@ export function ContestManagerDetail(props) {
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
+  
   const handleDelete = async () => {
     const confirmed = window.confirm("Are you sure you want to delete this contest?");
 
@@ -177,22 +178,16 @@ export function ContestManagerDetail(props) {
         `/contests/${contestId}`,
         () => {
           history.push("/programming-contest/teacher-list-contest-manager");
-
         },
         {
           onError: (error) => {
-            console.error("Error updating contest:", error);
             errorNoti("Failed to delete the contest", 3000);
           },
         },
         modelUpdateContest
       );
-    } else {
-      console.log("Delete action canceled");
     }
   };
-
-
 
   return (
     <>
