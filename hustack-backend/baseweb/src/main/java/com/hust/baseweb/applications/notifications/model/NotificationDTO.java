@@ -1,10 +1,13 @@
 package com.hust.baseweb.applications.notifications.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import net.minidev.json.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.hust.baseweb.applications.notifications.entity.Notifications.STATUS_READ;
 import static com.hust.baseweb.utils.DateTimeUtils.ISO_8601_DATE_FORMAT;
@@ -53,15 +56,20 @@ public interface NotificationDTO {
 
     @JsonIgnore
     default String toJson() {
-        JSONObject jsonObject = new JSONObject();
+        Map<String, Object> jsonMap = new HashMap<>();
 
-        jsonObject.put("id", getId());
-        jsonObject.put("content", getContent());
-        jsonObject.put("url", getUrl());
-        jsonObject.put("avatar", getAvatar());
-        jsonObject.put("read", getRead());
-        jsonObject.put("createdStamp", ISO_8601_DATE_FORMAT.format(getCreatedStamp()));
+        jsonMap.put("id", getId());
+        jsonMap.put("content", getContent());
+        jsonMap.put("url", getUrl());
+        jsonMap.put("avatar", getAvatar());
+        jsonMap.put("read", getRead());
+        jsonMap.put("createdStamp", ISO_8601_DATE_FORMAT.format(getCreatedStamp()));
 
-        return jsonObject.toJSONString();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(jsonMap);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error converting object to JSON", e);
+        }
     }
 }

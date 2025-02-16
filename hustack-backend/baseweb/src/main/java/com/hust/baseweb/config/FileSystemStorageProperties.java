@@ -1,20 +1,13 @@
 package com.hust.baseweb.config;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
-
-import javax.validation.constraints.NotBlank;
 
 @Getter
 @AllArgsConstructor
-@ConstructorBinding
 @ConfigurationProperties(prefix = "content.fs")
-/**
- * Properties of this class are immutable.
- * @author Le Anh Tuan
- */
 public class FileSystemStorageProperties {
 
     @NotBlank

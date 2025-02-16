@@ -241,18 +241,12 @@ export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
       <div>
         {contestId}:{problemId}
       </div>
-      <div>
-        <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
-          <Typography variant="h6" sx={{ marginBottom: "8px" }}>
-            {t("problemDescription")}
-          </Typography>
-          <RichTextEditor
-            toolbarHidden
-            content={problemDescription}
-            readOnly
-          />
-        </Box>
-      </div>
+      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
+        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+          {t("problemDescription")}
+        </Typography>
+        <RichTextEditor toolbarHidden content={problemDescription} readOnly />
+      </Box>
       <StandardTable
         title={"Submissions"}
         columns={columns}
@@ -289,6 +283,6 @@ export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Box> 
   );
-}
+}  

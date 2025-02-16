@@ -1,11 +1,10 @@
 package com.hust.baseweb.applications.education.entity;
 
-import java.util.UUID;
-
-import javax.persistence.*;
-
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Entity
 @IdClass(EduClassMaterialId.class)

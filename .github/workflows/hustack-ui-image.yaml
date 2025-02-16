@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - "hustack-frontend/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "hustack-frontend/**"
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -15,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Check out code
       #     - name: Build the Docker image
       #       run: docker build . --file Dockerfile --tag hustack-ui:$(date +%s)
       - name: Build & push Docker image
-        uses: mr-smithers-excellent/docker-build-push@v5
+        uses: mr-smithers-excellent/docker-build-push@v6
         with:
           image: leanhtuan/hustack-ui
           #         tags: v1, latest

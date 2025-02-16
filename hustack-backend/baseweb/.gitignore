@@ -1,10 +1,9 @@
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**
-!**/src/test/**
-logs/
-*.yml
+!**/src/main/**/target/
+!**/src/test/**/target/
+
 ### STS ###
 .apt_generated
 .classpath
@@ -27,20 +26,11 @@ logs/
 /nbdist/
 /.nb-gradle/
 build/
-/lib/
-/out/
-/src/main/java/com/hust/baseweb/applications/education/classmanagement/data/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
 ### VS Code ###
 .vscode/
-.history
-/gg_api_key.txt
-/.ssh/
-*.bat
-/or-tools_Ubuntu-18.04-64bit_v8.0.8283/
-./or-tools_Ubuntu-20.04-64bit_v8.0.8283
-./or-tools_Ubuntu-20.04-64bit_v8.0.8283/*
-./temp_dir
-./temp_dir/*
-temp_dir/
-data.sql
-data
+
+*.yml
+/src/main/resources/policy-enforcer.json

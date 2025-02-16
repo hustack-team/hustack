@@ -19,7 +19,7 @@ import java.util.*;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 @Service
 @Transactional
-@javax.transaction.Transactional
+@jakarta.transaction.Transactional
 public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapService{
     @Autowired
     private ExamClassUserloginMapRepo examClassUserloginMapRepo;

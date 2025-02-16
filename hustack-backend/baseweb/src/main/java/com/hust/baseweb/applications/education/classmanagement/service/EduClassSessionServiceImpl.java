@@ -4,17 +4,9 @@ import com.hust.baseweb.applications.education.classmanagement.entity.EduClassSe
 import com.hust.baseweb.applications.education.classmanagement.enumeration.RegistStatus;
 import com.hust.baseweb.applications.education.classmanagement.model.EduClassSessionDetailOM;
 import com.hust.baseweb.applications.education.classmanagement.repo.EduClassSessionRepo;
-import com.hust.baseweb.applications.education.entity.EduClass;
-import com.hust.baseweb.applications.education.entity.EduCourse;
-import com.hust.baseweb.applications.education.entity.EduCourseSession;
-import com.hust.baseweb.applications.education.entity.EduCourseSessionInteractiveQuiz;
-import com.hust.baseweb.applications.education.entity.EduCourseSessionInteractiveQuizQuestion;
+import com.hust.baseweb.applications.education.entity.*;
 import com.hust.baseweb.applications.education.model.GetStudentsOfClassOM;
-import com.hust.baseweb.applications.education.quiztest.entity.EduQuizTest;
-import com.hust.baseweb.applications.education.quiztest.entity.EduTestQuizGroup;
-import com.hust.baseweb.applications.education.quiztest.entity.EduTestQuizParticipant;
-import com.hust.baseweb.applications.education.quiztest.entity.InteractiveQuiz;
-import com.hust.baseweb.applications.education.quiztest.entity.InteractiveQuizQuestion;
+import com.hust.baseweb.applications.education.quiztest.entity.*;
 import com.hust.baseweb.applications.education.quiztest.model.quiztestgroup.GenerateQuizTestGroupInputModel;
 import com.hust.baseweb.applications.education.quiztest.repo.EduQuizTestRepo;
 import com.hust.baseweb.applications.education.quiztest.repo.EduTestQuizParticipantRepo;
@@ -26,13 +18,12 @@ import com.hust.baseweb.applications.education.repo.ClassRepo;
 import com.hust.baseweb.applications.education.repo.EduCourseSessionInteractiveQuizQuestionRepo;
 import com.hust.baseweb.applications.education.repo.EduCourseSessionInteractiveQuizRepo;
 import com.hust.baseweb.applications.education.repo.EduCourseSessionRepo;
-
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.*;
 
 @Service

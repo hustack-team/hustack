@@ -2,10 +2,10 @@ package com.hust.baseweb.applications.education.repo;
 
 import com.hust.baseweb.applications.education.entity.EduClassUserLoginRole;
 import com.hust.baseweb.applications.education.entity.compositeid.EduClassUserLoginRoleId;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 
-import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;

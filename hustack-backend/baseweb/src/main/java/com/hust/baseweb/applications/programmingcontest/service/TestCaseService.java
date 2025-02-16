@@ -2,27 +2,22 @@ package com.hust.baseweb.applications.programmingcontest.service;
 
 import com.hust.baseweb.applications.programmingcontest.entity.TestCaseEntity;
 import com.hust.baseweb.applications.programmingcontest.repo.TestCaseRepo;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TestCaseService {
 
-    private TestCaseRepo testCaseRepo;
+    TestCaseRepo testCaseRepo;
 
-    private static final String HASH = "TEST_CASE";
-
-    @Cacheable(value = HASH, key = "#problemId + '_' + #evaluatePrivateTestcase")
-    public List<TestCaseEntity> findListTestCaseWithCache(String problemId, boolean evaluatePrivateTestcase) {
-        return findListTestCase(problemId, evaluatePrivateTestcase);
-    }
+    static final String HASH = "TEST_CASE";
 
     @Caching(evict = {
         @CacheEvict(value = HASH, key = "#testCase.problemId + '_true'"),
@@ -30,16 +25,6 @@ public class TestCaseService {
     })
     public TestCaseEntity saveTestCaseWithCache(TestCaseEntity testCase) {
         return saveTestCase(testCase);
-    }
-
-    public List<TestCaseEntity> findListTestCase(String problemId, boolean evaluatePrivateTestcase) {
-        List<TestCaseEntity> testCaseEntityList;
-        if (evaluatePrivateTestcase) {
-            testCaseEntityList = testCaseRepo.findAllByProblemId(problemId);
-        } else {
-            testCaseEntityList = testCaseRepo.findAllByProblemIdAndIsPublic(problemId, "Y");
-        }
-        return testCaseEntityList;
     }
 
     public TestCaseEntity saveTestCase(TestCaseEntity testCase) {

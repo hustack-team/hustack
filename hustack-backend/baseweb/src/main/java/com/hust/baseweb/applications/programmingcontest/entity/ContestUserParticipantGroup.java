@@ -1,10 +1,8 @@
 package com.hust.baseweb.applications.programmingcontest.entity;
 
-import com.hust.baseweb.applications.programmingcontest.composite.CompositeContestProblemId;
 import com.hust.baseweb.applications.programmingcontest.composite.CompositeContestUserParticipantGroupId;
+import jakarta.persistence.*;
 import lombok.*;
-
-import javax.persistence.*;
 
 @Getter
 @Setter

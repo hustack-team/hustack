@@ -1,10 +1,8 @@
 package com.hust.baseweb.applications.programmingcontest.exception;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
-@Builder
+@Getter
 public class MiniLeetCodeException extends Exception {
 
     private int code;

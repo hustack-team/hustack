@@ -1,9 +1,9 @@
 package com.hust.baseweb.applications.notifications.service;
 
-import com.google.common.collect.Iterables;
 import com.hust.baseweb.applications.notifications.entity.Notifications;
 import com.hust.baseweb.applications.notifications.model.NotificationDTO;
 import com.hust.baseweb.applications.notifications.repo.NotificationsRepo;
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import javax.annotation.PostConstruct;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -134,13 +133,13 @@ public class NotificationsServiceImpl implements NotificationsService {
         String status,
         Date beforeOrAt
     ) {
-        Iterable<Notifications> notifications = notificationsRepo.findByToUserAndStatusIdAndCreatedStampLessThanEqual(
+        List<Notifications> notifications = notificationsRepo.findByToUserAndStatusIdAndCreatedStampLessThanEqual(
             userId,
             STATUS_CREATED,
             beforeOrAt);
 
         // TODO: upgrade this method to check valid status according to notification status transition.
-        if (Iterables.size(notifications) > 0) {
+        if (!notifications.isEmpty()) {
             for (Notifications notification : notifications) {
                 notification.setStatusId(status);
             }

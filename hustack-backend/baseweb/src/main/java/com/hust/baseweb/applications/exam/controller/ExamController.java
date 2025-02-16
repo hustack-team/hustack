@@ -10,6 +10,7 @@ import com.hust.baseweb.applications.exam.model.response.ExamMarkingDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.MyExamDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.MyExamFilterRes;
 import com.hust.baseweb.applications.exam.service.ExamService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,8 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.validation.Valid;
 
 @Slf4j
 @RestController

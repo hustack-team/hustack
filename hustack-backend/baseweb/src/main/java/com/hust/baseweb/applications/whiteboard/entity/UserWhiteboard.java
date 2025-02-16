@@ -1,10 +1,10 @@
 package com.hust.baseweb.applications.whiteboard.entity;
 
 import com.hust.baseweb.entity.UserLogin;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
 import java.util.UUID;
 
 @Getter

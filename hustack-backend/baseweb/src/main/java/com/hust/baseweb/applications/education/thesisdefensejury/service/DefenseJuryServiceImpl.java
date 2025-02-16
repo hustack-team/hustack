@@ -10,6 +10,7 @@ import com.hust.baseweb.applications.education.thesisdefensejury.models.ThesisWi
 import com.hust.baseweb.applications.education.thesisdefensejury.repo.*;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.repo.UserLoginRepo;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.*;
 
 @AllArgsConstructor(onConstructor = @__(@Autowired))
