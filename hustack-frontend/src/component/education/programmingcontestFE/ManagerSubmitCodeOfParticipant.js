@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {request} from "../../../api";
 import {errorNoti, successNoti} from "../../../utils/notification";
 
-import { Button, Card, CardContent, Chip, Typography } from "@mui/material";
+import {Button, Chip} from "@mui/material";
 import PublishIcon from "@mui/icons-material/Publish";
 import SendIcon from "@mui/icons-material/Send";
 import {LoadingButton} from "@mui/lab";
@@ -15,8 +15,8 @@ export default function ManagerSubmitCodeOfParticipant(props) {
     event.preventDefault();
 
     setIsProcessing(true);
-    let formData = new FormData();
-    formData.append("inputJson", JSON.stringify({ contestId }));
+    const formData = new FormData();
+    formData.append("dto", new Blob([JSON.stringify({ contestId })], {type: 'application/json'}));
     formData.append("file", filename);
 
     let successHandler = (res) => {

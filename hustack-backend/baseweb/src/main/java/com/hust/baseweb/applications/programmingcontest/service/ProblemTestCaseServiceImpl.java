@@ -2842,24 +2842,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     }
 
-    private ModelEvaluateBatchSubmissionResponse judgeAllInProgressSubmissionsOfContest(String contestId) {
-        List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestIdAndStatus(
-            contestId,
-            ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
-        ContestEntity contest = contestService.findContestWithCache(contestId);
-        for (ContestSubmissionEntity sub : submissions) {// take the last submission in the sorted list
-            evaluateSubmission(sub, contest);
-        }
-        return null;
-
-
-    }
-
-    @Override
-    public ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContest(String contestId) {
-        return judgeAllInProgressSubmissionsOfContest(contestId);
-    }
-
     private ModelGetContestPageResponse getModelGetContestPageResponse(Page<ContestEntity> contestPage, long count) {
         List<ModelGetContestResponse> lists = new ArrayList<>();
         if (contestPage != null) {
