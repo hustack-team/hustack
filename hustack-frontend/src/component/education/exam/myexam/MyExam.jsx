@@ -242,5 +242,5 @@ function MyExam(props) {
 }
 
 const screenName = "MENU_EXAMINEE_PARTICIPANT";
-// export default withScreenSecurity(QuestionBank, screenName, true);
-export default MyExam;
+export default withScreenSecurity(MyExam, screenName, true);
+//export default MyExam;
