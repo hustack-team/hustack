@@ -131,7 +131,6 @@ public interface ProblemTestCaseService {
 
     List<ModelMemberOfContestResponse> getListMemberOfContestGroup(String contestId, String userId);
 
-
     ListModelUserRegisteredContestInfo getListUserRegisterContestPendingPaging(Pageable pageable, String contestId);
 
     List<ModelMemberOfContestResponse> getPendingRegisteredUsersOfContest(String contestId);
@@ -199,7 +198,6 @@ public interface ProblemTestCaseService {
 
     List<ContestSubmission> getNewestSubmissionResults(String userLoginId);
 
-
     ContestSubmissionEntity getContestSubmissionDetailForTeacher(UUID submissionId);
 
     ContestSubmissionEntity getContestSubmissionDetailForStudent(String userId, UUID submissionId);
@@ -216,11 +214,9 @@ public interface ProblemTestCaseService {
 
     ModelEvaluateBatchSubmissionResponse reJudgeAllSubmissionsOfContest(String contestId);
 
-    ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContest(String contestId);
-
     void evaluateSubmission(UUID submisionId);
-    void evaluateSubmissions(String contestId, String problemId);
 
+    void evaluateSubmissions(String contestId, String problemId);
 
     void evaluateSubmission(ContestSubmissionEntity sub, ContestEntity contest);
 

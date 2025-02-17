@@ -62,7 +62,9 @@ public class NotificationController {
             log.debug("onCompletion fired on connection: {}", toUser);
         }); // OK
         subscription.onError((e) -> { // Must consider carefully, but currently OK
-            log.error("onError fired on connection {} with exception: {}", toUser, e.getMessage());
+            if (e.getMessage() != null && !e.getMessage().contains("Broken pipe")) {
+                log.error("onError fired on connection {} with exception: {}", toUser, e.getMessage());
+            }
             subscription.completeWithError(e);
         });
 
@@ -71,9 +73,10 @@ public class NotificationController {
             subscriptions.get(toUser).add(subscription);
             log.info("{} RE-SUBSCRIBES --> #CURRENT CONNECTION = {}", toUser, subscriptions.get(toUser).size());
         } else {
-            subscriptions.put(toUser, new ArrayList<SseEmitter>() {{
-                add(subscription);
-            }});
+            subscriptions.put(
+                toUser, new ArrayList<>() {{
+                    add(subscription);
+                }});
             log.info("{} SUBSCRIBES", toUser);
         }
 
@@ -90,9 +93,6 @@ public class NotificationController {
     @Async
     @Scheduled(fixedRate = 40000)
     public void sendHeartbeatSignal() {
-//        log.info("#CURRENT ACTIVE USER = {}, START SENDING HEARTBEAT EVENT", subscriptions.size());
-//        long start = System.currentTimeMillis();
-
         subscriptions.forEach((toUser, subscription) -> {
             // Use iterator to avoid ConcurrentModificationException.
             ListIterator<SseEmitter> iterator = subscription.listIterator();
@@ -110,12 +110,16 @@ public class NotificationController {
                 } catch (Exception e) {
                     iterator.remove();
                     size--;
-//                    log.error("FAILED WHEN SENDING HEARTBEAT SIGNAL TO {}, MAY BE USER CLOSED A CONNECTION", toUser);
-                    log.error("Failed to send heartbeat on connection {} because of error: {}", toUser, e.getMessage());
+                    if (e.getMessage() != null &&
+                        !e.getMessage().contains("ResponseBodyEmitter has already completed")) {
+                        log.error(
+                            "Failed to send heartbeat on connection {} because of error: {}",
+                            toUser,
+                            e.getMessage());
+                    }
+
                     try {
-                        if (e.getMessage().equals("ResponseBodyEmitter is already set complete")) {
-//                            log.info("ResponseBodyEmitter on connection {} is already set complete", toUser);
-                        } else {
+                        if (!"ResponseBodyEmitter is already set complete".equals(e.getMessage())) {
                             emitter.completeWithError(e);
                             log.debug("Marked SseEmitter on connection {} as complete with an error", toUser);
                         }
@@ -131,11 +135,6 @@ public class NotificationController {
                 subscriptions.remove(toUser);
             }
         });
-
-//        log.info(
-//            "#CURRENT ACTIVE USER = {}, SENDING HEARTBEAT EVENT DONE IN: {} MS",
-//            subscriptions.size(),
-//            (System.currentTimeMillis() - start) * 1.0);
     }
 
     /**
