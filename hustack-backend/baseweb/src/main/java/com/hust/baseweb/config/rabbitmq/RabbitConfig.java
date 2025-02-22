@@ -12,7 +12,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,25 +19,34 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class RabbitProgrammingContestConfig {
+public class RabbitConfig {
 
     public static final String EXCHANGE = "programming_contest_exchange";
+
     public static final String QUIZ_EXCHANGE = "quiz_exchange";
-    public static final String JUDGE_PROBLEM_QUEUE = "judge_problem_queue";
-    public static final String JUDGE_CUSTOM_PROBLEM_QUEUE = "judge_custom_problem_queue";
-    public static final String QUIZ_QUEUE = "quiz_queue";
 
     public static final String DEAD_LETTER_EXCHANGE = "programming_contest_dead_letter_exchange";
+
     public static final String QUIZ_DEAD_LETTER_EXCHANGE = "quiz_dead_letter_exchange";
+
+    public static final String JUDGE_PROBLEM_QUEUE = "judge_problem_queue";
+
     public static final String JUDGE_PROBLEM_DEAD_LETTER_QUEUE = "judge_problem_dead_letter_queue";
+
+    public static final String JUDGE_CUSTOM_PROBLEM_QUEUE = "judge_custom_problem_queue";
+
     public static final String JUDGE_CUSTOM_PROBLEM_DEAD_LETTER_QUEUE = "judge_custom_problem_dead_letter_queue";
+
+    public static final String QUIZ_QUEUE = "quiz_queue";
+
     public static final String QUIZ_DEAD_LETTER_QUEUE = "quiz_dead_letter_queue";
 
-    @Value("${spring.rabbitmq.listener.simple.auto-startup}")
-    private boolean autoStartup;
+    public static final String NOTIFICATION_QUEUE = "notification_queue";
+
+    public static final String NOTIFICATION_DEAD_LETTER_QUEUE = "notification_dead_letter_queue";
 
     @Autowired
-    private RabbitProgrammingContestProperties rabbitConfig;
+    private RabbitProperties rabbitConfig;
 
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter) {
@@ -47,6 +55,12 @@ public class RabbitProgrammingContestConfig {
 
         return rabbitTemplate;
     }
+
+    @Bean
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+        return new RabbitAdmin(connectionFactory);
+    }
+
 
     @Bean
     public MessageConverter jsonMessageConverter() {
@@ -58,19 +72,18 @@ public class RabbitProgrammingContestConfig {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
-    // Configuration setting:
-    // https://docs.spring.io/spring-amqp/docs/current/reference/html/#containerAttributes
+    // Configuration setting: https://docs.spring.io/spring-amqp/docs/current/reference/html/#containerAttributes
     @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+    public SimpleRabbitListenerContainerFactory quizListenerContainerFactory(ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
 
-        factory.setAutoStartup(autoStartup);
+        factory.setAutoStartup(rabbitConfig.getQuiz().isAutoStartup());
         factory.setConnectionFactory(connectionFactory);
         factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         factory.setMessageConverter(jsonMessageConverter());
-        factory.setConcurrentConsumers(rabbitConfig.getConcurrentConsumers());
-        factory.setMaxConcurrentConsumers(rabbitConfig.getMaxConcurrentConsumers());
-        factory.setPrefetchCount(rabbitConfig.getPrefetchCount());
+        factory.setConcurrentConsumers(rabbitConfig.getQuiz().getConcurrentConsumers());
+        factory.setMaxConcurrentConsumers(rabbitConfig.getQuiz().getMaxConcurrentConsumers());
+        factory.setPrefetchCount(rabbitConfig.getQuiz().getPrefetchCount());
         // factory.setChannelTransacted(true); //try if there are faults, but this will
         // slow down the process
 
@@ -78,8 +91,20 @@ public class RabbitProgrammingContestConfig {
     }
 
     @Bean
-    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
-        return new RabbitAdmin(connectionFactory);
+    public SimpleRabbitListenerContainerFactory notificationListenerContainerFactory(ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+
+        factory.setAutoStartup(rabbitConfig.getNotification().isAutoStartup());
+        factory.setConnectionFactory(connectionFactory);
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        factory.setMessageConverter(jsonMessageConverter());
+        factory.setConcurrentConsumers(rabbitConfig.getNotification().getConcurrentConsumers());
+        factory.setMaxConcurrentConsumers(rabbitConfig.getNotification().getMaxConcurrentConsumers());
+        factory.setPrefetchCount(rabbitConfig.getNotification().getPrefetchCount());
+        // factory.setChannelTransacted(true); //try if there are faults, but this will
+        // slow down the process
+
+        return factory;
     }
 
     @Bean
@@ -97,6 +122,14 @@ public class RabbitProgrammingContestConfig {
     }
 
     @Bean
+    public Binding judgeProblemBinding() {
+        return BindingBuilder
+            .bind(judgeProblemQueue())
+            .to(exchange())
+            .with(RabbitRoutingKey.JUDGE_PROBLEM);
+    }
+
+    @Bean
     public Queue judgeCustomProblemQueue() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-queue-type", "quorum");
@@ -106,16 +139,28 @@ public class RabbitProgrammingContestConfig {
     }
 
     @Bean
-    public Binding judgeProblemBinding() {
-        return BindingBuilder.bind(judgeProblemQueue()).to(exchange()).with(ProblemContestRoutingKey.JUDGE_PROBLEM);
-    }
-
-    @Bean
     public Binding judgeCustomProblemBinding() {
         return BindingBuilder
             .bind(judgeCustomProblemQueue())
             .to(exchange())
-            .with(ProblemContestRoutingKey.JUDGE_CUSTOM_PROBLEM);
+            .with(RabbitRoutingKey.JUDGE_CUSTOM_PROBLEM);
+    }
+
+    @Bean
+    public Queue notificationQueue() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-queue-type", "quorum");
+        args.put("x-overflow", "reject-publish");
+
+        return new Queue(NOTIFICATION_QUEUE, true, false, false, args);
+    }
+
+    @Bean
+    public Binding notificationBinding() {
+        return BindingBuilder
+            .bind(notificationQueue())
+            .to(exchange())
+            .with(RabbitRoutingKey.NOTIFICATION);
     }
 
     // DeadLetterExchange & DeadLetterQueue
@@ -129,21 +174,10 @@ public class RabbitProgrammingContestConfig {
         Map<String, Object> args = new HashMap<>();
         args.put("x-queue-type", "quorum");
         args.put("x-dead-letter-exchange", EXCHANGE);
-        args.put("x-dead-letter-routing-key", ProblemContestRoutingKey.JUDGE_PROBLEM);
-        args.put("x-message-ttl", rabbitConfig.getDeadMessageTtl());
+        args.put("x-dead-letter-routing-key", RabbitRoutingKey.JUDGE_PROBLEM);
+        args.put("x-message-ttl", rabbitConfig.getQuiz().getDeadMessageTtl());
 
         return new Queue(JUDGE_PROBLEM_DEAD_LETTER_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Queue judgeCustomProblemDeadLetterQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-queue-type", "quorum");
-        args.put("x-dead-letter-exchange", EXCHANGE);
-        args.put("x-dead-letter-routing-key", ProblemContestRoutingKey.JUDGE_CUSTOM_PROBLEM);
-        args.put("x-message-ttl", rabbitConfig.getDeadMessageTtl());
-
-        return new Queue(JUDGE_CUSTOM_PROBLEM_DEAD_LETTER_QUEUE, true, false, false, args);
     }
 
     @Bean
@@ -151,7 +185,18 @@ public class RabbitProgrammingContestConfig {
         return BindingBuilder
             .bind(judgeProblemDeadLetterQueue())
             .to(deadLetterExchange())
-            .with(ProblemContestRoutingKey.JUDGE_PROBLEM_DL);
+            .with(RabbitRoutingKey.JUDGE_PROBLEM_DL);
+    }
+
+    @Bean
+    public Queue judgeCustomProblemDeadLetterQueue() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-queue-type", "quorum");
+        args.put("x-dead-letter-exchange", EXCHANGE);
+        args.put("x-dead-letter-routing-key", RabbitRoutingKey.JUDGE_CUSTOM_PROBLEM);
+        args.put("x-message-ttl", rabbitConfig.getQuiz().getDeadMessageTtl());
+
+        return new Queue(JUDGE_CUSTOM_PROBLEM_DEAD_LETTER_QUEUE, true, false, false, args);
     }
 
     @Bean
@@ -159,12 +204,26 @@ public class RabbitProgrammingContestConfig {
         return BindingBuilder
             .bind(judgeCustomProblemDeadLetterQueue())
             .to(deadLetterExchange())
-            .with(ProblemContestRoutingKey.JUDGE_CUSTOM_PROBLEM_DL);
+            .with(RabbitRoutingKey.JUDGE_CUSTOM_PROBLEM_DL);
     }
 
     @Bean
-    public DirectExchange quizExchange() {
-        return new DirectExchange(QUIZ_EXCHANGE, true, false);
+    public Queue notificationDeadLetterQueue() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-queue-type", "quorum");
+        args.put("x-dead-letter-exchange", EXCHANGE);
+        args.put("x-dead-letter-routing-key", RabbitRoutingKey.NOTIFICATION);
+        args.put("x-message-ttl", rabbitConfig.getNotification().getDeadMessageTtl());
+
+        return new Queue(NOTIFICATION_DEAD_LETTER_QUEUE, true, false, false, args);
+    }
+
+    @Bean
+    public Binding notificationDeadLetterBinding() {
+        return BindingBuilder
+            .bind(notificationQueue())
+            .to(deadLetterExchange())
+            .with(RabbitRoutingKey.NOTIFICATION_DL);
     }
 
     @Bean
@@ -177,14 +236,16 @@ public class RabbitProgrammingContestConfig {
     }
 
     @Bean
-    public Binding judgeQuizBinding() {
-        return BindingBuilder.bind(quizQueue()).to(quizExchange()).with(QuizRoutingKey.QUIZ);
+    public DirectExchange quizExchange() {
+        return new DirectExchange(QUIZ_EXCHANGE, true, false);
     }
 
-    // DeadLetterExchange & DeadLetterQueue
     @Bean
-    public DirectExchange quizDeadLetterExchange() {
-        return new DirectExchange(QUIZ_DEAD_LETTER_EXCHANGE, true, false);
+    public Binding judgeQuizBinding() {
+        return BindingBuilder
+            .bind(quizQueue())
+            .to(quizExchange())
+            .with(QuizRoutingKey.QUIZ);
     }
 
     @Bean
@@ -193,9 +254,14 @@ public class RabbitProgrammingContestConfig {
         args.put("x-queue-type", "quorum");
         args.put("x-dead-letter-exchange", EXCHANGE);
         args.put("x-dead-letter-routing-key", QuizRoutingKey.QUIZ_DL);
-        args.put("x-message-ttl", rabbitConfig.getDeadMessageTtl());
+        args.put("x-message-ttl", rabbitConfig.getQuiz().getDeadMessageTtl());
 
         return new Queue(QUIZ_DEAD_LETTER_QUEUE, true, false, false, args);
+    }
+
+    @Bean
+    public DirectExchange quizDeadLetterExchange() {
+        return new DirectExchange(QUIZ_DEAD_LETTER_EXCHANGE, true, false);
     }
 
     @Bean

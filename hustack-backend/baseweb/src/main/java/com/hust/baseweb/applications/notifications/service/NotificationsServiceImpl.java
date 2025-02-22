@@ -1,7 +1,9 @@
 package com.hust.baseweb.applications.notifications.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hust.baseweb.applications.notifications.entity.Notifications;
 import com.hust.baseweb.applications.notifications.model.NotificationDTO;
+import com.hust.baseweb.applications.notifications.model.NotificationProjection;
 import com.hust.baseweb.applications.notifications.repo.NotificationsRepo;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -33,6 +35,8 @@ import static com.hust.baseweb.applications.notifications.entity.Notifications.S
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class NotificationsServiceImpl implements NotificationsService {
 
+    ObjectMapper mapper;
+
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     NotificationsRepo notificationsRepo;
@@ -50,10 +54,10 @@ public class NotificationsServiceImpl implements NotificationsService {
     }
 
     @Override
-    public Page<NotificationDTO> getNotifications(String toUser, UUID fromId, int page, int size) {
+    public Page<NotificationProjection> getNotifications(String toUser, UUID fromId, int page, int size) {
         Pageable sortedByCreatedStampDsc =
             PageRequest.of(page, size, Sort.by("created_stamp").descending());
-        Page<NotificationDTO> notifications = fromId == null
+        Page<NotificationProjection> notifications = fromId == null
             ? notificationsRepo.findAllNotifications(
             toUser,
             sortedByCreatedStampDsc)
@@ -77,19 +81,39 @@ public class NotificationsServiceImpl implements NotificationsService {
         notification.setUrl(url);
         notification.setStatusId(STATUS_CREATED);
 
-        notification = notificationsRepo.save(notification);
+        create(notification);
+    }
 
-        // Send new notification.
+    /**
+     * @param notification
+     */
+    @Override
+    public void create(Notifications notification) {
+        notification = notificationsRepo.save(notification);
+        NotificationDTO dto = mapper.convertValue(
+            notificationsRepo.findNotificationById(notification.getId()),
+            NotificationDTO.class);
+        dispatchNotification(notification.getToUser(), dto);
+    }
+
+    /**
+     * @param notification
+     */
+    @Override
+    public void createEphemeralNotification(Notifications notification) {
+        NotificationDTO dto = mapper.convertValue(notification, NotificationDTO.class);
+        dispatchNotification(notification.getToUser(), dto);
+    }
+
+    private void dispatchNotification(String toUser, NotificationDTO dto) {
         List<SseEmitter> subscription = subscriptions.get(toUser);
         if (null != subscription) {
             send(
                 subscription,
                 SseEmitter.event()
-                          .id(notification.getId().toString())
+                          .id(dto.getId())
                           .name(SSE_EVENT_NEW_NOTIFICATION)
-                          .data(
-                              notificationsRepo.findNotificationById(notification.getId()).toJson(),
-                              MediaType.TEXT_EVENT_STREAM)
+                          .data(dto.toJson(), MediaType.TEXT_EVENT_STREAM)
                 // TODO: discover reconnectTime() method
             );
         }
@@ -102,16 +126,16 @@ public class NotificationsServiceImpl implements NotificationsService {
                                                          } catch (Exception ignore) {
                                                              // This is normal behavior when a client disconnects.
                                                              // onError callback will be automatically fired.
-                                                             log.error(
-                                                                 "Failed to send event because of error: {}",
-                                                                 ignore.getMessage());
-                                                             try {
-                                                                 subscription.completeWithError(ignore);
-                                                             } catch (Exception completionException) {
-                                                                 log.error(
-                                                                     "Error occurred when attempting to mark SseEmitter as complete: {}",
-                                                                     completionException.getMessage());
-                                                             }
+//                                                             log.error(
+//                                                                 "Failed to send event because of error: {}",
+//                                                                 ignore.getMessage());
+//                                                             try {
+//                                                                 subscription.completeWithError(ignore);
+//                                                             } catch (Exception completionException) {
+//                                                                 log.error(
+//                                                                     "Error occurred when attempting to mark SseEmitter as complete: {}",
+//                                                                     completionException.getMessage());
+//                                                             }
                                                          }
                                                      }
         ));

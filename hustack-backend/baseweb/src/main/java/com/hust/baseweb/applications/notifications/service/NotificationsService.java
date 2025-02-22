@@ -1,6 +1,7 @@
 package com.hust.baseweb.applications.notifications.service;
 
-import com.hust.baseweb.applications.notifications.model.NotificationDTO;
+import com.hust.baseweb.applications.notifications.entity.Notifications;
+import com.hust.baseweb.applications.notifications.model.NotificationProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -18,11 +19,15 @@ public interface NotificationsService {
     // Use concurrent instead of synchronized collection because of performance and thread-safe
     ConcurrentHashMap<String, List<SseEmitter>> subscriptions = new ConcurrentHashMap<>();
 
-    Page<NotificationDTO> getNotifications(String toUser, UUID fromId, int page, int size);
+    Page<NotificationProjection> getNotifications(String toUser, UUID fromId, int page, int size);
 
     long countNumUnreadNotification(String toUser);
 
     void create(String fromUser, String toUser, String content, String url);
+
+    void create(Notifications notification);
+
+    void createEphemeralNotification(Notifications notification);
 
     void updateStatus(UUID notificationId, String status);
 

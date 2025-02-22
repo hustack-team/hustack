@@ -42,7 +42,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.QUIZ_EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.QUIZ_EXCHANGE;
 
 @Log4j2
 @Service
