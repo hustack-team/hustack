@@ -34,6 +34,11 @@ const useStyles = makeStyles((theme) => ({
   badge: {top: -3, right: -3},
 }));
 
+const NOTIFICATION_TYPE = {
+  EPHEMERAL: 'EPHEMERAL',
+  PERSISTENT: 'PERSISTENT',
+}
+
 const SSE_EVENTS = {
   HEARTBEAT: "HEARTBEAT",
   NEW_NOTIFICATION: "NEW_NOTIFICATION",
@@ -130,7 +135,7 @@ function NotificationButton() {
     const handleNewNotificationEvent = function (e) {
       const notification = JSON.parse(e.data);
 
-      if (notification.type === "EPHEMERAL" && notification.content === "SUBMISSION_GRADED") {
+      if (notification.type === NOTIFICATION_TYPE.EPHEMERAL && notification.content === "SUBMISSION_GRADED") {
         toast(<Box p={1} sx={{color: '#1a1e23'}}>
           <Typography variant={"subtitle2"} component={'span'}>{t('submissionGradedHead')} </Typography>
           <Link to={`/programming-contest/manager-view-contest-problem-submission-detail/${notification.id}`}>
@@ -149,36 +154,38 @@ function NotificationButton() {
       }
 
       if (notifications.get()) {
-        let newNotification = processNotificationsContent([notification]);
-        const len = notifications.get().length;
+        if (notification.type !== NOTIFICATION_TYPE.EPHEMERAL) {
+          let newNotification = processNotificationsContent([notification]);
+          const len = notifications.get().length;
 
-        if (len === 0) {
-          // Notification list is empty
-          notifications.set(newNotification);
-          numUnRead.set(1);
-        } else {
-          newNotification = newNotification[0];
-          const newCreatedTime = new Date(newNotification.time).getTime();
-          let consideredCreatedTime;
+          if (len === 0) {
+            // Notification list is empty
+            notifications.set(newNotification);
+            numUnRead.set(1);
+          } else {
+            newNotification = newNotification[0];
+            const newCreatedTime = new Date(newNotification.time).getTime();
+            let consideredCreatedTime;
 
-          // case 1: new is later than the considered one -> insert at that position and stop
-          // case 2: new is the same as the considered one -> stop
-          // case 3: new is earlier than the considered one -> continuously iterate
-          for (let i = 0; i < len; i++) {
-            consideredCreatedTime = new Date(
-              notifications[i].time.get()
-            ).getTime();
+            // case 1: new is later than the considered one -> insert at that position and stop
+            // case 2: new is the same as the considered one -> stop
+            // case 3: new is earlier than the considered one -> continuously iterate
+            for (let i = 0; i < len; i++) {
+              consideredCreatedTime = new Date(
+                notifications[i].time.get()
+              ).getTime();
 
-            if (newCreatedTime > consideredCreatedTime) {
-              notifications.set((p) => {
-                p.splice(i, 0, newNotification);
-                return p;
-              });
+              if (newCreatedTime > consideredCreatedTime) {
+                notifications.set((p) => {
+                  p.splice(i, 0, newNotification);
+                  return p;
+                });
 
-              numUnRead.set(numUnRead.get() + 1);
-              return;
-            } else if (newCreatedTime === consideredCreatedTime) {
-              return;
+                numUnRead.set(numUnRead.get() + 1);
+                return;
+              } else if (newCreatedTime === consideredCreatedTime) {
+                return;
+              }
             }
           }
         }
