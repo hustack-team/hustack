@@ -25,6 +25,9 @@ public class Notifications {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @Transient
+    private NotificationType type;
+
     private String content;
 
     private String fromUser;

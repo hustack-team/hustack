@@ -62,7 +62,8 @@ public class NotificationController {
             log.debug("onCompletion fired on connection: {}", toUser);
         }); // OK
         subscription.onError((e) -> { // Must consider carefully, but currently OK
-            if (e.getMessage() != null && !e.getMessage().contains("Broken pipe")) {
+            if (e.getMessage() != null &&
+                !e.getMessage().contains("Broken pipe")) {
                 log.error("onError fired on connection {} with exception: {}", toUser, e.getMessage());
             }
             subscription.completeWithError(e);
@@ -94,7 +95,6 @@ public class NotificationController {
     @Scheduled(fixedRate = 40000)
     public void sendHeartbeatSignal() {
         subscriptions.forEach((toUser, subscription) -> {
-            // Use iterator to avoid ConcurrentModificationException.
             ListIterator<SseEmitter> iterator = subscription.listIterator();
             int size = subscription.size();
 
@@ -110,24 +110,25 @@ public class NotificationController {
                 } catch (Exception e) {
                     iterator.remove();
                     size--;
-                    if (e.getMessage() != null &&
-                        !e.getMessage().contains("ResponseBodyEmitter has already completed")) {
-                        log.error(
-                            "Failed to send heartbeat on connection {} because of error: {}",
-                            toUser,
-                            e.getMessage());
-                    }
-
-                    try {
-                        if (!"ResponseBodyEmitter is already set complete".equals(e.getMessage())) {
-                            emitter.completeWithError(e);
-                            log.debug("Marked SseEmitter on connection {} as complete with an error", toUser);
-                        }
-                    } catch (Exception completionException) {
-                        log.error(
-                            "Error occurred when attempting to mark SseEmitter: {}",
-                            completionException.getMessage());
-                    }
+//                    if (e.getMessage() != null &&
+//                        !e.getMessage().contains("ResponseBodyEmitter has already completed") &&
+//                        !e.getMessage().contains("Broken pipe")) {
+//                        log.error(
+//                            "Failed to send heartbeat on connection {} because of error: {}",
+//                            toUser,
+//                            e.getMessage());
+//                    }
+//
+//                    try {
+//                        if (!"ResponseBodyEmitter is already set complete".equals(e.getMessage())) {
+//                            emitter.completeWithError(e);
+//                            log.debug("Marked SseEmitter on connection {} as complete with an error", toUser);
+//                        }
+//                    } catch (Exception completionException) {
+//                        log.error(
+//                            "Error occurred when attempting to mark SseEmitter: {}",
+//                            completionException.getMessage());
+//                    }
                 }
             }
 

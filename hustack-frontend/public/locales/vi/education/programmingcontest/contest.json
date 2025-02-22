@@ -18,5 +18,7 @@
   "submission": "Bài nộp",
   "submissionList": "Danh sách Bài nộp",
   "reJudge": "Chấm lại",
-  "reJudgingNotification": "Đang chấm lại bài nộp có ID"
+  "reJudgingNotification": "Đang chấm lại bài nộp có ID",
+  "submissionGradedHead": "Bài nộp",
+  "submissionGradedTail": "đã được chấm xong"
 }

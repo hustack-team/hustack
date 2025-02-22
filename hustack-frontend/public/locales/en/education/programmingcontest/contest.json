@@ -18,5 +18,7 @@
   "submission": "Submission",
   "submissionList": "Submissions",
   "reJudge": "Rejudge",
-  "reJudgingNotification": "Rejudging the submission with ID"
+  "reJudgingNotification": "Rejudging the submission with ID",
+  "submissionGradedHead": "Submission",
+  "submissionGradedTail": "has been graded"
 }

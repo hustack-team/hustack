@@ -1,6 +1,9 @@
 package com.hust.baseweb.consumer;
 
-import com.hust.baseweb.applications.education.quiztest.service.QuizTestService;
+import com.hust.baseweb.applications.notifications.entity.NotificationType;
+import com.hust.baseweb.applications.notifications.entity.Notifications;
+import com.hust.baseweb.applications.notifications.service.NotificationsService;
+import com.hust.baseweb.config.rabbitmq.RabbitConfig;
 import com.hust.baseweb.config.rabbitmq.RabbitProperties;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -13,39 +16,39 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.UUID;
 
-import static com.hust.baseweb.config.rabbitmq.QuizRoutingKey.QUIZ_DL;
-import static com.hust.baseweb.config.rabbitmq.RabbitConfig.QUIZ_DEAD_LETTER_EXCHANGE;
-import static com.hust.baseweb.config.rabbitmq.RabbitConfig.QUIZ_QUEUE;
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.NOTIFICATION_QUEUE;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.NOTIFICATION_DL;
 
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class QuizSubmissionListener extends BaseRabbitListener {
+public class NotificationListener {
 
-    QuizTestService quizTestService;
+    NotificationsService notificationsService;
 
     RabbitProperties rabbitConfig;
 
-    @Override
-    @RabbitListener(queues = QUIZ_QUEUE, containerFactory = "quizListenerContainerFactory")
+    @RabbitListener(queues = NOTIFICATION_QUEUE, containerFactory = "notificationListenerContainerFactory")
     public void onMessage(
-        Message message, String messageBody, Channel channel,
+        Message message, Notifications messageBody, Channel channel,
         @Header(required = false, name = "x-delivery-count") Integer deliveryCount
     ) throws Exception {
-        if (deliveryCount == null || deliveryCount < rabbitConfig.getQuiz().getRetryLimit()) {
+        if (deliveryCount == null || deliveryCount < rabbitConfig.getNotification().getRetryLimit()) {
             retryMessage(message, messageBody, channel);
         } else {
             sendMessageToDeadLetterQueue(message, channel);
         }
     }
 
-    @Override
-    protected void retryMessage(Message message, String messageBody, Channel channel) throws IOException {
+    protected void retryMessage(Message message, Notifications messageBody, Channel channel) throws IOException {
         try {
-            UUID quizId = UUID.fromString(messageBody);
-            quizTestService.updateFromQuizTestExecutionSubmission(quizId);
+            if (messageBody.getType() == NotificationType.EPHEMERAL) {
+                notificationsService.createEphemeralNotification(messageBody);
+            } else if (messageBody.getType() == NotificationType.PERSISTENT) {
+                notificationsService.create(messageBody);
+            }
+
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,11 +56,10 @@ public class QuizSubmissionListener extends BaseRabbitListener {
         }
     }
 
-    @Override
     protected void sendMessageToDeadLetterQueue(Message message, Channel channel) throws IOException {
         channel.basicPublish(
-            QUIZ_DEAD_LETTER_EXCHANGE,
-            QUIZ_DL,
+            RabbitConfig.DEAD_LETTER_EXCHANGE,
+            NOTIFICATION_DL,
             new AMQP.BasicProperties.Builder().deliveryMode(2).build(),
             message.getBody());
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);

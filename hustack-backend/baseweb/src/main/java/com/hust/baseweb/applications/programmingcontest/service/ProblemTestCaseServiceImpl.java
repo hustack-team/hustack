@@ -57,8 +57,8 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.hust.baseweb.config.rabbitmq.ProblemContestRoutingKey.JUDGE_PROBLEM;
-import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
 
 @Slf4j
 @Service
