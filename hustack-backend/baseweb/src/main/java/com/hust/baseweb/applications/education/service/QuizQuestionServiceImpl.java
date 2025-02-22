@@ -117,25 +117,26 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
 
-        fileArray.forEach((file) -> {
-            ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
-            log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
+            fileArray.forEach((file) -> {
+                ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
 
-            ObjectId id = null;
-            try {
-                id = mongoContentService.storeFileToGridFs(model);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(model);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 
-            if (id != null) {
-                ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
-                attachmentId.add(rs.getId());
-            }
-        });
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
 
-        List<String> solutionAttachmentStorageIds = mongoContentService.storeFiles(solutionAttachments);
+        List<String>    solutionAttachmentStorageIds = mongoContentService.storeFiles(solutionAttachments);
+
 
         QuizQuestion quizQuestion = new QuizQuestion();
         quizQuestion.setLevelId(input.getLevelId());
@@ -482,27 +483,27 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         QuizQuestionUpdateInputModel input = gson.fromJson(json, QuizQuestionUpdateInputModel.class);
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = input.getFileId();
+
         List<MultipartFile> fileArray = Optional.ofNullable(files)
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
+            fileArray.forEach((file) -> {
+                ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
 
-        fileArray.forEach((file) -> {
-            ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
-            log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(model);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 
-            ObjectId id = null;
-            try {
-                id = mongoContentService.storeFileToGridFs(model);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            if (id != null) {
-                ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
-                attachmentId.add(rs.getId());
-            }
-        });
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
 
         QuizQuestion quizQuestionTemp = quizQuestionRepo.findById(questionId).orElse(null);
         if (quizQuestionTemp == null) {
@@ -540,7 +541,7 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         String newSolutionAttachmentIds = solutionAttachmentIds.size() == 0
             ? null
             : String.join(";", solutionAttachmentIds);
-        quizQuestion.setSolutionAttachment(newSolutionAttachmentIds);
+            quizQuestion.setSolutionAttachment(newSolutionAttachmentIds);
 
         for (String deletedAttachmentId : input.getDeletedAttachmentIds()) {
             mongoContentService.deleteFilesById(deletedAttachmentId);
