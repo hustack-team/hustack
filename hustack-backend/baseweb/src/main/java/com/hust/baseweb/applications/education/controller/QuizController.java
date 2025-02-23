@@ -194,11 +194,8 @@ public class QuizController {
     @PostMapping("/update-quiz-question/{questionId}")
     public ResponseEntity<?> updateQuizQuestion(
         Principal principal,
-        //@RequestBody QuizQuestionCreateInputModel input,
         @PathVariable UUID questionId,
         @RequestParam("QuizQuestionUpdateInputModel") String json,
-        //@RequestParam("files") MultipartFile[] files,
-        //@RequestParam("addedSolutionAttachments") MultipartFile[] addedSolutionAttachments
         @RequestParam(required = false) MultipartFile[] files,
         @RequestParam(required = false) MultipartFile[] addedSolutionAttachments
     ) {
@@ -291,11 +288,8 @@ public class QuizController {
     @PostMapping("/create-quiz-question")
     public ResponseEntity<?> createQuizQuestion(
         Principal principal,
-        //@RequestBody QuizQuestionCreateInputModel input,
         @RequestParam("QuizQuestionCreateInputModel") String json,
-        //@RequestParam("files") MultipartFile[] files,
         @RequestParam(required = false) MultipartFile[] files,
-        //@RequestParam("solutionAttachments") MultipartFile[] solutionAttachments
         @RequestParam(required = false) MultipartFile[] solutionAttachments
 
     ) {
