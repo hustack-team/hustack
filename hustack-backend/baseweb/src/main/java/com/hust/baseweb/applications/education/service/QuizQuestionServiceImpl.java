@@ -135,7 +135,10 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
                 }
             });
 
-        List<String>    solutionAttachmentStorageIds = mongoContentService.storeFiles(solutionAttachments);
+
+        List<String>    solutionAttachmentStorageIds = null;
+        if(solutionAttachments != null)
+            solutionAttachmentStorageIds = mongoContentService.storeFiles(solutionAttachments);
 
 
         QuizQuestion quizQuestion = new QuizQuestion();
@@ -150,7 +153,8 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         quizQuestion.setStatusId(QuizQuestion.STATUS_PRIVATE);
         quizQuestion.setAttachment(String.join(";", attachmentId));
         quizQuestion.setSolutionContent(input.getSolutionContent());
-        quizQuestion.setSolutionAttachment(String.join(";", solutionAttachmentStorageIds));
+        if(solutionAttachmentStorageIds != null)
+            quizQuestion.setSolutionAttachment(String.join(";", solutionAttachmentStorageIds));
         quizQuestion.setCreatedStamp(new Date());
         quizQuestion = quizQuestionRepo.save(quizQuestion);
 
@@ -484,6 +488,7 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = input.getFileId();
 
+
         List<MultipartFile> fileArray = Optional.ofNullable(files)
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
@@ -504,6 +509,7 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
                     attachmentId.add(rs.getId());
                 }
             });
+
 
         QuizQuestion quizQuestionTemp = quizQuestionRepo.findById(questionId).orElse(null);
         if (quizQuestionTemp == null) {
@@ -527,21 +533,28 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         quizQuestion.setStatusId(quizQuestionTemp.getStatusId());
         quizQuestion.setSolutionContent(input.getSolutionContent());
 
-        List<String> addedSolutionAttachmentIds = mongoContentService.storeFiles(addedSolutionAttachments);
+        List<String>  addedSolutionAttachmentIds = null;
+        if(addedSolutionAttachments != null)
+            addedSolutionAttachmentIds = mongoContentService.storeFiles(addedSolutionAttachments);
+
         String[] oldSolutionAttachments = {};
         if (quizQuestionTemp.getSolutionAttachment() != null) {
             oldSolutionAttachments = quizQuestionTemp.getSolutionAttachment().split(";");
         }
         List<String> solutionAttachmentIds = Arrays.stream(oldSolutionAttachments)
                                                    .collect(Collectors.toList());
+
         solutionAttachmentIds.removeAll(Optional.ofNullable(input.getDeletedAttachmentIds())
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList));
-        solutionAttachmentIds.addAll(addedSolutionAttachmentIds);
+
+        if(addedSolutionAttachmentIds != null)
+            solutionAttachmentIds.addAll(addedSolutionAttachmentIds);
+
         String newSolutionAttachmentIds = solutionAttachmentIds.size() == 0
             ? null
             : String.join(";", solutionAttachmentIds);
-            quizQuestion.setSolutionAttachment(newSolutionAttachmentIds);
+        quizQuestion.setSolutionAttachment(newSolutionAttachmentIds);
 
         for (String deletedAttachmentId : input.getDeletedAttachmentIds()) {
             mongoContentService.deleteFilesById(deletedAttachmentId);

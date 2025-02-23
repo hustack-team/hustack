@@ -197,8 +197,10 @@ public class QuizController {
         //@RequestBody QuizQuestionCreateInputModel input,
         @PathVariable UUID questionId,
         @RequestParam("QuizQuestionUpdateInputModel") String json,
-        @RequestParam("files") MultipartFile[] files,
-        @RequestParam("addedSolutionAttachments") MultipartFile[] addedSolutionAttachments
+        //@RequestParam("files") MultipartFile[] files,
+        //@RequestParam("addedSolutionAttachments") MultipartFile[] addedSolutionAttachments
+        @RequestParam(required = false) MultipartFile[] files,
+        @RequestParam(required = false) MultipartFile[] addedSolutionAttachments
     ) {
 
 //        Gson g = new Gson();
@@ -291,8 +293,11 @@ public class QuizController {
         Principal principal,
         //@RequestBody QuizQuestionCreateInputModel input,
         @RequestParam("QuizQuestionCreateInputModel") String json,
-        @RequestParam("files") MultipartFile[] files,
-        @RequestParam("solutionAttachments") MultipartFile[] solutionAttachments
+        //@RequestParam("files") MultipartFile[] files,
+        @RequestParam(required = false) MultipartFile[] files,
+        //@RequestParam("solutionAttachments") MultipartFile[] solutionAttachments
+        @RequestParam(required = false) MultipartFile[] solutionAttachments
+
     ) {
         UserLogin u = userService.findById(principal.getName());
 
