@@ -30,16 +30,29 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.multichoice as questionMultichoice,\n" +
                    "    eq.answer as questionAnswer,\n" +
                    "    eq.explain as questionExplain,\n" +
-                   "    etq.order as questionOrder\n" +
+                   "    etq.order as questionOrder,\n" +
+                   "    es.name as examSubjectName,\n" +
+                   "    eq.level as questionLevel,\n" +
+                   "    string_agg(eta.id, ',') as examTagIdStr,\n" +
+                   "    string_agg(eta.name, ',') as examTagNameStr\n" +
                    "from\n" +
                    "    exam_test et\n" +
                    "left join exam_test_question etq on\n" +
                    "    et.id = etq.exam_test_id\n" +
                    "left join exam_question eq on\n" +
                    "    etq.exam_question_id = eq.id\n" +
+                   "left join exam_subject es on\n" +
+                   "    es.id = eq.exam_subject_id\n" +
+                   "left join exam_question_tag eqt on\n" +
+                   "    eqt.exam_question_id = eq.id\n" +
+                   "left join exam_tag eta on\n" +
+                   "    eta.id = eqt.exam_tag_id\n" +
                    "where\n" +
                    "    et.created_by = :userLogin\n" +
                    "    and et.id = :examTestId\n" +
+                   "group by etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer,\n" +
+                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3, eq.content_answer4,\n" +
+                   "    eq.content_answer5, eq.multichoice, eq.answer, eq.explain, etq.order, es.name, eq.level\n" +
                    "order by\n" +
                    "    etq.order", nativeQuery = true)
     List<ExamTestQuestionDetailsRes> details(@Param("userLogin") String userLogin,
@@ -59,8 +72,8 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content_answer4 as questionContentAnswer4,\n" +
                    "    eq.content_answer5 as questionContentAnswer5,\n" +
                    "    eq.multichoice as questionMultichoice,\n" +
-                   "    case when erd.score is not null then eq.answer else null end as questionAnswer,\n" +
-                   "    case when erd.score is not null then eq.explain else null end as questionExplain,\n" +
+                   "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.answer else null end as questionAnswer,\n" +
+                   "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.explain else null end as questionExplain,\n" +
                    "    etq.order as questionOrder,\n" +
                    "    erd.answer as answer,\n" +
                    "    erd.file_path as filePathAnswer,\n" +
@@ -74,6 +87,8 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    etq.exam_question_id = eq.id\n" +
                    "left join exam_student es on\n" +
                    "    es.exam_test_id = et.id\n" +
+                   "left join exam e on\n" +
+                   "    e.id = es.exam_id\n" +
                    "left join exam_result er on\n" +
                    "    es.id = er.exam_student_id\n" +
                    "left join exam_result_details erd on\n" +

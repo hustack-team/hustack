@@ -12,10 +12,7 @@ import {DataGrid} from "@material-ui/data-grid";
 import InfoIcon from "@mui/icons-material/Info";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
-import {formatDateTime} from "../ultils/DateUltils";
-import ExamDelete from "./ExamDelete";
-import ExamDetails from "./ExamDetails";
-import {parseHTMLToString} from "../ultils/DataUltils";
+import ExamSubjectDelete from "./ExamSubjectDelete";
 
 const baseColumn = {
   sortable: false,
@@ -23,95 +20,49 @@ const baseColumn = {
 
 const rowsPerPage = [5, 10, 20];
 
-function ExamManagement(props) {
+function ExamSubjectManagement(props) {
 
   const columns = [
     {
       field: "code",
-      headerName: "Mã kỳ thi",
+      headerName: "Mã môn học",
       minWidth: 170,
       ...baseColumn
     },
     {
       field: "name",
-      headerName: "Tên kỳ thi",
-      minWidth: 200,
-      ...baseColumn
-    },
-    {
-      field: "description",
-      headerName: "Mô tả kỳ thi",
-      ...baseColumn,
+      headerName: "Tên môn học",
+      minWidth: 250,
       flex: 1,
-      minWidth: 200,
-      renderCell: (rowData) => {
-        return parseHTMLToString(rowData.value)
-      }
-    },
-    {
-      field: "startTime",
-      headerName: "Thời gian bắt đầu",
-      ...baseColumn,
-      minWidth: 170,
-      renderCell: (rowData) => {
-        return formatDateTime(rowData.value)
-      },
-    },
-    {
-      field: "endTime",
-      headerName: "Thời gian kết thúc",
-      ...baseColumn,
-      minWidth: 170,
-      renderCell: (rowData) => {
-        return formatDateTime(rowData.value)
-      },
+      ...baseColumn
     },
     {
       field: "status",
       headerName: "Trạng thái",
       ...baseColumn,
-      minWidth: 120,
-      renderCell: (rowData) => {
-        if(rowData.value === 0){
-          return (
-            <strong style={{color: '#f50000c9'}}>Chưa kích hoạt</strong>
-          )
-        }else{
-          return (
-            <strong style={{color: '#61bd6d'}}>Kích hoạt</strong>
-          )
-        }
-      },
-    },
-    {
-      field: "answerStatus",
-      headerName: "Trạng thái đáp án",
-      ...baseColumn,
       minWidth: 170,
       renderCell: (rowData) => {
-        if(rowData.value === 'NO_OPEN'){
+        if(rowData.value === 'INACTIVE'){
           return (
-            <strong style={{color: '#f50000c9'}}>Không được xem</strong>
+            <strong style={{color: '#f50000c9'}}>Không hoạt động</strong>
           )
-        }else if(rowData.value === 'OPEN'){
+        }else if(rowData.value === 'ACTIVE'){
           return (
-            <strong style={{color: '#61bd6d'}}>Được xem</strong>
+            <strong style={{color: '#61bd6d'}}>Hoạt động</strong>
           )
-        }else{
-          return ''
         }
+        return ''
       },
     },
     {
       field: "",
       headerName: "",
       sortable: false,
-      minWidth: 120,
-      maxWidth: 120,
+      minWidth: 60,
+      maxWidth: 60,
       renderCell: (rowData) => {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
-            <InfoIcon style={{cursor: 'pointer'}} onClick={(data) => handleDetails(rowData?.row)}/>
             <EditIcon style={{cursor: 'pointer'}} onClick={(data) => handleUpdate(rowData?.row)}/>
             <DeleteIcon style={{cursor: 'pointer', color: 'red'}} onClick={(data) => handleDelete(rowData?.row)}/>
           </Box>
@@ -126,16 +77,16 @@ function ExamManagement(props) {
       name: 'Tất cả'
     },
     {
-      value: 0,
-      name: 'Chưa kích hoạt'
+      value: 'INACTIVE',
+      name: 'Không hoạt động'
     },
     {
-      value: 1,
-      name: 'Kích hoạt'
+      value: 'ACTIVE',
+      name: 'Hoạt động'
     }
   ]
 
-  const [examList, setExamList] = useState([])
+  const [examSubjectList, setExamSubjectList] = useState([])
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(5)
   const [totalCount, setTotalCount] = useState(0)
@@ -143,8 +94,6 @@ function ExamManagement(props) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [idDelete, setIdDelete] = useState("")
-  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
-  const [examDetails, setExamDetails] = useState(null)
 
   const debouncedKeywordFilter = useDebounceValue(keywordFilter, 500)
   const history = useHistory();
@@ -160,10 +109,10 @@ function ExamManagement(props) {
     }
     request(
       "post",
-      `/exam/filter?page=${page}&size=${pageSize}`,
+      `/exam-subject/filter?page=${page}&size=${pageSize}`,
       (res) => {
         if(res.status === 200){
-          setExamList(res.data.content);
+          setExamSubjectList(res.data.content);
           setTotalCount(res.data.totalElements);
         }else {
           toast.error(res)
@@ -176,19 +125,12 @@ function ExamManagement(props) {
 
   const onClickCreateNewButton = () => {
     history.push({
-      pathname: "/exam/create-update",
+      pathname: "/exam/create-update-subject",
       state: {
         data: {
-          examTestId: "",
-          examTests: "",
           code: "",
           name: "",
-          description: "",
-          status: 1,
-          answerStatus: "NO_OPEN",
-          startTime: "",
-          endTime: "",
-          examStudents: []
+          status: 'ACTIVE'
         },
         isCreate: true
       },
@@ -196,48 +138,13 @@ function ExamManagement(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const body = {
-      id: rowData.id
-    }
-    request(
-      "post",
-      `/exam/details`,
-      (res) => {
-        if(res.data.resultCode === 200){
-          history.push({
-            pathname: "/exam/create-update",
-            state: {
-              data: res.data.data,
-              isCreate: false
-            },
-          });
-        }else{
-          toast.error(res.data.resultMsg)
-        }
+    history.push({
+      pathname: "/exam/create-update-subject",
+      state: {
+        data: rowData,
+        isCreate: false
       },
-      { onError: (e) => toast.error(e) },
-      body
-    );
-  };
-
-  const handleDetails = (rowData) => {
-    const body = {
-      id: rowData.id
-    }
-    request(
-      "post",
-      `/exam/details`,
-      (res) => {
-        if(res.data.resultCode === 200){
-          setExamDetails(res.data.data)
-          setOpenDetailsDialog(true)
-        }else{
-          toast.error(res.data.resultMsg)
-        }
-      },
-      { onError: (e) => toast.error(e) },
-      body
-    );
+    });
   };
 
   const handleDelete = (rowData) => {
@@ -252,11 +159,11 @@ function ExamManagement(props) {
           title={
             <Box display="flex" justifyContent="space-between" alignItems="end" width="100%">
               <Box display="flex" flexDirection="column" width="80%">
-                <h4 style={{marginTop: 0, paddingTop: 0}}>Danh sách kỳ thi</h4>
+                <h4 style={{marginTop: 0, paddingTop: 0}}>Danh sách môn học</h4>
                 <Box display="flex" justifyContent="flex-start" width="100%">
                   <TextField
                     autoFocus
-                    id="examCode"
+                    id="examSubjectCode"
                     label="Nội dung tìm kiếm"
                     placeholder="Tìm kiếm theo code hoặc tên"
                     value={keywordFilter}
@@ -270,7 +177,7 @@ function ExamManagement(props) {
                   />
 
                   <TextField
-                    id="examStatus"
+                    id="examSubjectStatus"
                     select
                     label="Trạng thái"
                     style={{ width: "150px"}}
@@ -306,7 +213,7 @@ function ExamManagement(props) {
         <CardContent>
           <DataGrid
             rowCount={totalCount}
-            rows={examList}
+            rows={examSubjectList}
             columns={columns}
             page={page}
             pageSize={pageSize}
@@ -320,16 +227,7 @@ function ExamManagement(props) {
           />
         </CardContent>
       </Card>
-      {
-        openDetailsDialog && (
-          <ExamDetails
-            open={openDetailsDialog}
-            setOpen={setOpenDetailsDialog}
-            dataExam={examDetails}
-          />
-        )
-      }
-      <ExamDelete
+      <ExamSubjectDelete
         open={openDeleteDialog}
         setOpen={setOpenDeleteDialog}
         id={idDelete}
@@ -341,6 +239,6 @@ function ExamManagement(props) {
   );
 }
 
-const screenName = "MENU_EXAM_MANAGEMENT";
-export default withScreenSecurity(ExamManagement, screenName, true);
+const screenName = "MENU_EXAM_SUBJECT";
+export default withScreenSecurity(ExamSubjectManagement, screenName, true);
 // export default ExamManagement;

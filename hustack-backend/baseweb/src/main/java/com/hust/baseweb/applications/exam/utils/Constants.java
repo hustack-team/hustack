@@ -2,6 +2,11 @@ package com.hust.baseweb.applications.exam.utils;
 
 public class Constants {
 
+    public static class Status {
+        public static final String ACTIVE = "ACTIVE";
+        public static final String INACTIVE = "INACTIVE";
+    }
+
     public static class ExamQuestionType {
         public static final Integer TN = 0;
         public static final Integer TL = 1;
