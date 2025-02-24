@@ -1,16 +1,16 @@
-import { LoadingButton } from "@mui/lab";
-import { Alert, Box, Button, Divider, Stack, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import {LoadingButton} from "@mui/lab";
+import {Alert, Box, Button, Divider, Stack, Typography} from "@mui/material";
+import {styled} from "@mui/material/styles";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import HustModal from "component/common/HustModal";
-import { ContentState, EditorState } from "draft-js";
+import {ContentState, EditorState} from "draft-js";
 import htmlToDraft from "html-to-draftjs";
-import React, { forwardRef, useEffect, useRef, useState } from "react";
-import { Editor } from "react-draft-wysiwyg";
-import { useParams } from "react-router";
-import { randomImageName } from "utils/FileUpload/covert";
-import { errorNoti, successNoti } from "utils/notification";
-import { request } from "../../../api";
+import React, {forwardRef, useEffect, useRef, useState} from "react";
+import {Editor} from "react-draft-wysiwyg";
+import {useParams} from "react-router";
+import {randomImageName} from "utils/FileUpload/covert";
+import {errorNoti, successNoti} from "utils/notification";
+import {request} from "../../../api";
 import FileUploadZone from "../../../utils/FileUpload/FileUploadZone";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustCodeLanguagePicker from "../../common/HustCodeLanguagePicker";
@@ -26,6 +26,7 @@ import {
 } from "./Constant";
 import StudentViewSubmission from "./StudentViewSubmission";
 import {useTranslation} from "react-i18next";
+import _ from "lodash";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -40,12 +41,12 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export const InputFileUpload = forwardRef((props, ref) => {
-  const { label, buttonProps, ...otherProps } = props;
+  const {label, buttonProps, ...otherProps} = props;
   return (
     <Button
       component="label"
       variant="outlined"
-      sx={{ textTransform: "none" }}
+      sx={{textTransform: "none"}}
       {...buttonProps}
     >
       {label}
@@ -66,6 +67,7 @@ const ERR_STATUS = [
   "PARTICIPANT_NOT_APPROVED_OR_REGISTERED",
   "PARTICIPANT_HAS_NOT_PERMISSION_TO_SUBMIT",
   "MAX_NUMBER_SUBMISSIONS_REACHED",
+  "SOURCE_CODE_REQUIRED",
   "MAX_SOURCE_CODE_LENGTH_VIOLATIONS",
   "SUBMISSION_INTERVAL_VIOLATIONS",
   "SUBMISSION_NOT_ALLOWED",
@@ -103,7 +105,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
   const [sampleTestCase, setSampleTestCase] = useState(
     null//EditorState.createEmpty()
   );
-  
+
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
 
   const inputRef = useRef();
@@ -118,24 +120,43 @@ export default function StudentViewProgrammingContestProblemDetail() {
     setFile(name);
   };
 
+  async function isFileBlank(file) {
+    if (!file) return true;
+
+    const content = await readFileAsText(file);
+    return _.isEmpty(_.trim(content));
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => {
+        errorNoti(tTestcase("errorReadingFile"));
+        ;reject(e)
+      };
+      reader.readAsText(file);
+    });
+  }
+
   const handleFormSubmit = async (event) => {
     if (event) event.preventDefault();
     setIsProcessing(true);
 
-    let body = {
+    const body = {
       problemId: problemId,
       contestId: contestId,
       language: language,
     };
 
-    if (file == null) {
-      errorNoti("Please choose a file to submit", 2000);
+    if (await isFileBlank(file)) {
+      errorNoti("Source code is required", 3000);
       setIsProcessing(false);
       return;
     }
 
-    let formData = new FormData();
-    formData.append("inputJson", JSON.stringify(body));
+    const formData = new FormData();
+    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
     formData.append("file", file);
 
     const config = {
@@ -155,7 +176,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
         if (ERR_STATUS.includes(res.status)) {
           errorNoti(res.message, 3000);
-        } else successNoti("Submitted!", 3000);
+        } else successNoti("Submitted", 3000);
 
         setStatus(res.status);
         setMessage(res.message);
@@ -204,7 +225,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
         // setProblemDescription(res?.problemStatement || "");
         let problemDescriptionHtml = htmlToDraft(res.problemStatement);
-        let { contentBlocks, entityMap } = problemDescriptionHtml;
+        let {contentBlocks, entityMap} = problemDescriptionHtml;
         let contentDescriptionState = ContentState.createFromBlockArray(
           contentBlocks,
           entityMap
@@ -227,10 +248,10 @@ export default function StudentViewProgrammingContestProblemDetail() {
         );
         //setSampleTestCase(editorSampleTestCase);
         */
-        setSampleTestCase(res.sampleTestCase);    
+        setSampleTestCase(res.sampleTestCase);
         //console.log('GetProblemDetail, res = ',res);
       },
-      { onError: (e) => console.log(e) }
+      {onError: (e) => console.log(e)}
     );
   }
 
@@ -280,12 +301,12 @@ export default function StudentViewProgrammingContestProblemDetail() {
   };
 
   async function submitCode() {
-    const blob = new Blob([codeSolution], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([codeSolution], {type: "text/plain;charset=utf-8"});
     const now = new Date();
     const file = new File(
       [blob],
-      "SourceCode_" + problemId + now.toLocaleTimeString() + ".txt",
-      { type: "text/plain;charset=utf-8" }
+      `${problemId}_${now.getTime()}.txt`,
+      {type: "text/plain;charset=utf-8"}
     );
     setFile(file);
     setIsSubmitCode(isSubmitCode + 1);
@@ -322,23 +343,23 @@ export default function StudentViewProgrammingContestProblemDetail() {
       */}
         {/*ReactHtmlParser(sampleTestCase)*/}
         {/*sampleTestCase*/}
-        
+
         <HustCodeEditor
-        title={t("sampleTestCase")}
-        language={COMPUTER_LANGUAGES.C}
-        sourceCode={sampleTestCase}
-         /> 
+          title={t("sampleTestCase")}
+          language={COMPUTER_LANGUAGES.C}
+          sourceCode={sampleTestCase}
+        />
 
         {fetchedImageArray.length !== 0 &&
           fetchedImageArray.map((file) => (
-            <FileUploadZone file={file} removable={false} />
+            <FileUploadZone file={file} removable={false}/>
           ))}
       </Box>
 
-      <Divider />
+      <Divider/>
 
-      <ModalPreview chosenTestcase={selectedTestcase} />
-      <Box sx={{ mt: 2 }}>
+      <ModalPreview chosenTestcase={selectedTestcase}/>
+      <Box sx={{mt: 2}}>
         <Box>
           <HustCodeEditor
             title={"Source code"}
@@ -365,7 +386,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{ width: 160, mt: 1, mb: 1 }}
+              sx={{width: 160, mt: 1, mb: 1}}
               // loading={isProcessing}
               // loadingIndicator="Submitting…"
               variant="contained"
@@ -387,7 +408,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         <Divider>Or</Divider>
 
         <form onSubmit={handleFormSubmit}>
-          <Stack alignItems={"center"} spacing={2} sx={{ mt: 1 }}>
+          <Stack alignItems={"center"} spacing={2} sx={{mt: 1}}>
             <Stack
               direction="row"
               justifyContent={"center"}
@@ -415,7 +436,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{ width: 128 }}
+              sx={{width: 128}}
               // loading={isProcessing}
               // loadingIndicator="Submitting…"
               variant="contained"
@@ -452,8 +473,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
           <b>public class Main {"{...}"}</b>
         </Alert>
       )}
-      <Box sx={{ mt: 3 }}>
-        <StudentViewSubmission problemId={problemId} ref={listSubmissionRef} />
+      <Box sx={{mt: 3}}>
+        <StudentViewSubmission problemId={problemId} ref={listSubmissionRef}/>
       </Box>
     </HustContainerCard>
   );

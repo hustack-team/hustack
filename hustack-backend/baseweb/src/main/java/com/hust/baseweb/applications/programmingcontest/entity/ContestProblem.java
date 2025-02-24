@@ -1,9 +1,9 @@
 package com.hust.baseweb.applications.programmingcontest.entity;
 
 import com.hust.baseweb.applications.programmingcontest.composite.CompositeContestProblemId;
+import jakarta.persistence.*;
 import lombok.*;
 
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

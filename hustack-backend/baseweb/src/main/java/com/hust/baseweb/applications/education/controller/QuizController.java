@@ -8,14 +8,10 @@ import com.hust.baseweb.applications.education.model.quiz.*;
 import com.hust.baseweb.applications.education.repo.QuizQuestionTagRepo;
 import com.hust.baseweb.applications.education.repo.QuizQuestionUserRoleRepo;
 import com.hust.baseweb.applications.education.repo.QuizTagRepo;
-import com.hust.baseweb.applications.education.service.CommentOnQuizQuestionService;
-import com.hust.baseweb.applications.education.service.QuizChoiceAnswerService;
-import com.hust.baseweb.applications.education.service.QuizCourseTopicService;
-import com.hust.baseweb.applications.education.service.QuizQuestionService;
-import com.hust.baseweb.applications.education.service.QuizQuestionTagService;
-import com.hust.baseweb.applications.education.service.QuizTagService;
+import com.hust.baseweb.applications.education.service.*;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +23,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
 import java.security.Principal;
 import java.util.*;
 
@@ -199,11 +194,10 @@ public class QuizController {
     @PostMapping("/update-quiz-question/{questionId}")
     public ResponseEntity<?> updateQuizQuestion(
         Principal principal,
-        //@RequestBody QuizQuestionCreateInputModel input,
         @PathVariable UUID questionId,
         @RequestParam("QuizQuestionUpdateInputModel") String json,
-        @RequestParam("files") MultipartFile[] files,
-        @RequestParam("addedSolutionAttachments") MultipartFile[] addedSolutionAttachments
+        @RequestParam(required = false) MultipartFile[] files,
+        @RequestParam(required = false) MultipartFile[] addedSolutionAttachments
     ) {
 
 //        Gson g = new Gson();
@@ -294,10 +288,10 @@ public class QuizController {
     @PostMapping("/create-quiz-question")
     public ResponseEntity<?> createQuizQuestion(
         Principal principal,
-        //@RequestBody QuizQuestionCreateInputModel input,
         @RequestParam("QuizQuestionCreateInputModel") String json,
-        @RequestParam("files") MultipartFile[] files,
-        @RequestParam("solutionAttachments") MultipartFile[] solutionAttachments
+        @RequestParam(required = false) MultipartFile[] files,
+        @RequestParam(required = false) MultipartFile[] solutionAttachments
+
     ) {
         UserLogin u = userService.findById(principal.getName());
 

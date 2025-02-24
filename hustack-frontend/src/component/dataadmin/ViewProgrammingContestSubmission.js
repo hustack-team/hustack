@@ -34,7 +34,7 @@ const getStatuses = (t) => [
   {label: t('Compile Error'), value: "Compile Error"},
   {label: t('Evaluated'), value: "Evaluated"},
   {label: t('Failed'), value: "Failed"},
-  {label: t('In progress'), value: "In progress"},
+  {label: t('In Progress'), value: "In Progress"},
   {label: t('N/E Forbidden Ins.'), value: "N/E Forbidden Ins."},
   {label: t('Partial'), value: "Partial"},
   {label: t('Pending Evaluation'), value: "Pending Evaluation"}

@@ -26,7 +26,7 @@ import java.util.List;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 @Service
 @Transactional
-@javax.transaction.Transactional
+@jakarta.transaction.Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
 

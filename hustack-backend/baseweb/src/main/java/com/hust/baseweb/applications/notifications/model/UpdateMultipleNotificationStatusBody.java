@@ -1,10 +1,10 @@
 package com.hust.baseweb.applications.notifications.model;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 
-import javax.validation.constraints.NotBlank;
 import java.util.Date;
 
 /**

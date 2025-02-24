@@ -8,7 +8,6 @@ import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputStreamUtils;
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
-import com.hust.baseweb.applications.programmingcontest.docker.DockerClientBase;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
@@ -18,7 +17,6 @@ import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
 import com.hust.baseweb.applications.programmingcontest.utils.DateTimeUtils;
-import com.hust.baseweb.applications.programmingcontest.utils.TempDir;
 import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritycheckingalgorithms.CodeSimilarityCheck;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
@@ -28,6 +26,7 @@ import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -54,13 +53,12 @@ import vn.edu.hust.soict.judge0client.config.Judge0Config;
 import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
 import vn.edu.hust.soict.judge0client.service.Judge0Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.hust.baseweb.config.rabbitmq.ProblemContestRoutingKey.JUDGE_PROBLEM;
-import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
 
 @Slf4j
 @Service
@@ -72,10 +70,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     private final ProblemRepo problemRepo;
 
     private TestCaseRepo testCaseRepo;
-
-    private DockerClientBase dockerClientBase;
-
-    private TempDir tempDir;
 
     private UserLoginRepo userLoginRepo;
 
@@ -152,7 +146,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = dto.getFileId();
-        List<MultipartFile> fileArray = Arrays.asList(files);
+        List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList);
 
         fileArray.forEach((file) -> {
             ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
@@ -294,7 +290,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         List<String> attachmentId = new ArrayList<>();
         attachmentId.add(problem.getAttachment());
         String[] fileId = dto.getFileId();
-        List<MultipartFile> fileArray = Arrays.asList(files);
+        List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                .map(Arrays::asList)
+                                                .orElseGet(Collections::emptyList);
 
         List<String> removedFilesId = dto.getRemovedFilesId();
         if (problem.getAttachment() != null && !problem.getAttachment().isEmpty()) {
@@ -2797,7 +2795,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     }
 
     @Override
-    public void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission, ContestEntity contest) {
+    public void evaluateSubmissionUsingQueue(ContestSubmissionEntity submission) {
         contestService.updateContestSubmissionStatus(
             submission.getContestSubmissionId(),
             ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
@@ -2814,7 +2812,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (sub != null) {
             // QUEUE MODE
             if (contest.getJudgeMode().equals(ContestEntity.ASYNCHRONOUS_JUDGE_MODE_QUEUE)) {
-                evaluateSubmissionUsingQueue(sub, contest);
+                evaluateSubmissionUsingQueue(sub);
             }
         }
     }
@@ -2842,24 +2840,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         return null;
 
-    }
-
-    private ModelEvaluateBatchSubmissionResponse judgeAllInProgressSubmissionsOfContest(String contestId) {
-        List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestIdAndStatus(
-            contestId,
-            ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
-        ContestEntity contest = contestService.findContestWithCache(contestId);
-        for (ContestSubmissionEntity sub : submissions) {// take the last submission in the sorted list
-            evaluateSubmission(sub, contest);
-        }
-        return null;
-
-
-    }
-
-    @Override
-    public ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContest(String contestId) {
-        return judgeAllInProgressSubmissionsOfContest(contestId);
     }
 
     private ModelGetContestPageResponse getModelGetContestPageResponse(Page<ContestEntity> contestPage, long count) {

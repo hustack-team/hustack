@@ -705,5 +705,5 @@ function MyExamDetails(props) {
 }
 
 const screenName = "MENU_EXAMINEE_PARTICIPANT";
-// export default withScreenSecurity(QuestionBank, screenName, true);
+//export default withScreenSecurity(MyExamDetails, screenName, true);
 export default MyExamDetails;

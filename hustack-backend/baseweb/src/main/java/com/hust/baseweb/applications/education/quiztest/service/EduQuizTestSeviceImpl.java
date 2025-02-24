@@ -29,21 +29,20 @@ import com.hust.baseweb.config.rabbitmq.QuizRoutingKey;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.PersonModel;
 import com.hust.baseweb.repo.UserLoginRepo;
-import com.hust.baseweb.repo.UserRegisterRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.QUIZ_EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.QUIZ_EXCHANGE;
 
 @Log4j2
 @Service
@@ -51,7 +50,6 @@ import static com.hust.baseweb.config.rabbitmq.RabbitProgrammingContestConfig.QU
 public class EduQuizTestSeviceImpl implements QuizTestService {
 
     UserLoginRepo userLoginRepo;
-    UserRegisterRepo userRegisterRepo;
     EduQuizTestRepo repo;
     EduTestQuizParticipantRepo eduTestQuizParticipantRepo;
     EduQuizTestGroupRepo eduQuizTestGroupRepo;

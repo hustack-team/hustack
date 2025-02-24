@@ -1,4 +1,4 @@
-import {Avatar, Badge, IconButton} from "@material-ui/core";
+import {Avatar, Badge, IconButton, Typography} from "@material-ui/core";
 import {grey} from "@material-ui/core/colors";
 import {makeStyles} from "@material-ui/core/styles";
 import NotificationsIcon from "@material-ui/icons/Notifications";
@@ -10,6 +10,11 @@ import React from "react";
 import {BASE_URL, bearerAuth, request} from "../../api";
 import {useNotificationState} from "../../state/NotificationState";
 import NotificationMenu from "./NotificationMenu";
+import {infoNoti} from "../../utils/notification";
+import {useTranslation} from "react-i18next";
+import {toast} from "react-toastify";
+import {Box} from "@mui/material";
+import {Link} from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
   avatar: {
@@ -24,10 +29,15 @@ const useStyles = makeStyles((theme) => ({
   },
   avatarOpen: {
     backgroundColor: "#e7f3ff",
-    "&:hover": { backgroundColor: "rgba(187, 222, 251, 0.54)" },
+    "&:hover": {backgroundColor: "rgba(187, 222, 251, 0.54)"},
   },
-  badge: { top: -3, right: -3 },
+  badge: {top: -3, right: -3},
 }));
+
+const NOTIFICATION_TYPE = {
+  EPHEMERAL: 'EPHEMERAL',
+  PERSISTENT: 'PERSISTENT',
+}
 
 const SSE_EVENTS = {
   HEARTBEAT: "HEARTBEAT",
@@ -37,6 +47,7 @@ const SSE_EVENTS = {
 const processNotificationsContent = (notifications) => {
   return notifications.map((notification) => ({
     id: notification.id,
+    type: notification.type,
     url: notification.url,
     avatar: notification.avatar,
     content: notification.content,
@@ -51,9 +62,10 @@ const processNotificationsContent = (notifications) => {
 
 function NotificationButton() {
   const classes = useStyles();
+  const {t} = useTranslation(["education/programmingcontest/contest"]);
 
   //
-  const { open, notifications, numUnRead, hasMore } = useNotificationState();
+  const {open, notifications, numUnRead, hasMore} = useNotificationState();
 
   // return focus to the button when we transitioned from !open -> open
   const prevOpen = React.useRef(open.get());
@@ -92,7 +104,10 @@ function NotificationButton() {
         numUnRead.set(data.numUnRead);
         hasMore.set(!data.notifications.last);
       },
-      { 401: () => {} }
+      {
+        401: () => {
+        }
+      }
     );
   };
 
@@ -118,37 +133,59 @@ function NotificationButton() {
     };
 
     const handleNewNotificationEvent = function (e) {
+      const notification = JSON.parse(e.data);
+
+      if (notification.type === NOTIFICATION_TYPE.EPHEMERAL && notification.content === "SUBMISSION_GRADED") {
+        toast(<Box p={1} sx={{color: '#1a1e23'}}>
+          <Typography variant={"subtitle2"} component={'span'}>{t('submissionGradedHead')} </Typography>
+          <Link to={`/programming-contest/manager-view-contest-problem-submission-detail/${notification.id}`}>
+            {notification.id?.substring(0, 6) || ''}
+          </Link>
+          <Typography variant={"subtitle2"} component={'span'}> {t('submissionGradedTail')} </Typography>
+        </Box>, {
+          position: "bottom-right",
+          autoClose: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else {
+        infoNoti(notification.content)
+      }
+
       if (notifications.get()) {
-        let newNotification = processNotificationsContent([JSON.parse(e.data)]);
-        const len = notifications.get().length;
+        if (notification.type !== NOTIFICATION_TYPE.EPHEMERAL) {
+          let newNotification = processNotificationsContent([notification]);
+          const len = notifications.get().length;
 
-        if (len === 0) {
-          // Notification list is empty
-          notifications.set(newNotification);
-          numUnRead.set(1);
-        } else {
-          newNotification = newNotification[0];
-          const newCreatedTime = new Date(newNotification.time).getTime();
-          let consideredCreatedTime;
+          if (len === 0) {
+            // Notification list is empty
+            notifications.set(newNotification);
+            numUnRead.set(1);
+          } else {
+            newNotification = newNotification[0];
+            const newCreatedTime = new Date(newNotification.time).getTime();
+            let consideredCreatedTime;
 
-          // case 1: new is later than the considered one -> insert at that position and stop
-          // case 2: new is the same as the considered one -> stop
-          // case 3: new is earlier than the considered one -> continuously iterate
-          for (let i = 0; i < len; i++) {
-            consideredCreatedTime = new Date(
-              notifications[i].time.get()
-            ).getTime();
+            // case 1: new is later than the considered one -> insert at that position and stop
+            // case 2: new is the same as the considered one -> stop
+            // case 3: new is earlier than the considered one -> continuously iterate
+            for (let i = 0; i < len; i++) {
+              consideredCreatedTime = new Date(
+                notifications[i].time.get()
+              ).getTime();
 
-            if (newCreatedTime > consideredCreatedTime) {
-              notifications.set((p) => {
-                p.splice(i, 0, newNotification);
-                return p;
-              });
+              if (newCreatedTime > consideredCreatedTime) {
+                notifications.set((p) => {
+                  p.splice(i, 0, newNotification);
+                  return p;
+                });
 
-              numUnRead.set(numUnRead.get() + 1);
-              return;
-            } else if (newCreatedTime === consideredCreatedTime) {
-              return;
+                numUnRead.set(numUnRead.get() + 1);
+                return;
+              } else if (newCreatedTime === consideredCreatedTime) {
+                return;
+              }
             }
           }
         }
@@ -262,17 +299,17 @@ function NotificationButton() {
       >
         <Avatar
           alt="notification button"
-          className={clsx(classes.avatar, { [classes.avatarOpen]: open.get() })}
+          className={clsx(classes.avatar, {[classes.avatarOpen]: open.get()})}
         >
           {open.get() ? (
-            <NotificationsIcon color="primary" />
+            <NotificationsIcon color="primary"/>
           ) : (
             <Badge
               badgeContent={numUnRead.get() < 10 ? numUnRead.get() : "+9"}
               color="secondary"
-              classes={{ badge: classes.badge }}
+              classes={{badge: classes.badge}}
             >
-              <NotificationsIcon />
+              <NotificationsIcon/>
             </Badge>
           )}
         </Avatar>

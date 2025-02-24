@@ -18,8 +18,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        System.out.println(
-            "==================================================================================================");
         registry
             .addResourceHandler("/resources/backlog/**")
             .addResourceLocations("file:///" + fs.getFilesystemRoot() + fs.getBacklogDataPath());

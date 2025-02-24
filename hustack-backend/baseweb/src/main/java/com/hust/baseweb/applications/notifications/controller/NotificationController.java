@@ -5,6 +5,8 @@ import com.hust.baseweb.applications.notifications.model.UpdateMultipleNotificat
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -17,8 +19,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Map;
@@ -62,7 +62,10 @@ public class NotificationController {
             log.debug("onCompletion fired on connection: {}", toUser);
         }); // OK
         subscription.onError((e) -> { // Must consider carefully, but currently OK
-            log.error("onError fired on connection {} with exception: {}", toUser, e.getMessage());
+            if (e.getMessage() != null &&
+                !e.getMessage().contains("Broken pipe")) {
+                log.error("onError fired on connection {} with exception: {}", toUser, e.getMessage());
+            }
             subscription.completeWithError(e);
         });
 
@@ -71,9 +74,10 @@ public class NotificationController {
             subscriptions.get(toUser).add(subscription);
             log.info("{} RE-SUBSCRIBES --> #CURRENT CONNECTION = {}", toUser, subscriptions.get(toUser).size());
         } else {
-            subscriptions.put(toUser, new ArrayList<SseEmitter>() {{
-                add(subscription);
-            }});
+            subscriptions.put(
+                toUser, new ArrayList<>() {{
+                    add(subscription);
+                }});
             log.info("{} SUBSCRIBES", toUser);
         }
 
@@ -90,11 +94,7 @@ public class NotificationController {
     @Async
     @Scheduled(fixedRate = 40000)
     public void sendHeartbeatSignal() {
-//        log.info("#CURRENT ACTIVE USER = {}, START SENDING HEARTBEAT EVENT", subscriptions.size());
-//        long start = System.currentTimeMillis();
-
         subscriptions.forEach((toUser, subscription) -> {
-            // Use iterator to avoid ConcurrentModificationException.
             ListIterator<SseEmitter> iterator = subscription.listIterator();
             int size = subscription.size();
 
@@ -110,20 +110,25 @@ public class NotificationController {
                 } catch (Exception e) {
                     iterator.remove();
                     size--;
-//                    log.error("FAILED WHEN SENDING HEARTBEAT SIGNAL TO {}, MAY BE USER CLOSED A CONNECTION", toUser);
-                    log.error("Failed to send heartbeat on connection {} because of error: {}", toUser, e.getMessage());
-                    try {
-                        if (e.getMessage().equals("ResponseBodyEmitter is already set complete")) {
-//                            log.info("ResponseBodyEmitter on connection {} is already set complete", toUser);
-                        } else {
-                            emitter.completeWithError(e);
-                            log.debug("Marked SseEmitter on connection {} as complete with an error", toUser);
-                        }
-                    } catch (Exception completionException) {
-                        log.error(
-                            "Error occurred when attempting to mark SseEmitter: {}",
-                            completionException.getMessage());
-                    }
+//                    if (e.getMessage() != null &&
+//                        !e.getMessage().contains("ResponseBodyEmitter has already completed") &&
+//                        !e.getMessage().contains("Broken pipe")) {
+//                        log.error(
+//                            "Failed to send heartbeat on connection {} because of error: {}",
+//                            toUser,
+//                            e.getMessage());
+//                    }
+//
+//                    try {
+//                        if (!"ResponseBodyEmitter is already set complete".equals(e.getMessage())) {
+//                            emitter.completeWithError(e);
+//                            log.debug("Marked SseEmitter on connection {} as complete with an error", toUser);
+//                        }
+//                    } catch (Exception completionException) {
+//                        log.error(
+//                            "Error occurred when attempting to mark SseEmitter: {}",
+//                            completionException.getMessage());
+//                    }
                 }
             }
 
@@ -131,11 +136,6 @@ public class NotificationController {
                 subscriptions.remove(toUser);
             }
         });
-
-//        log.info(
-//            "#CURRENT ACTIVE USER = {}, SENDING HEARTBEAT EVENT DONE IN: {} MS",
-//            subscriptions.size(),
-//            (System.currentTimeMillis() - start) * 1.0);
     }
 
     /**
@@ -148,7 +148,7 @@ public class NotificationController {
     @GetMapping(params = {"fromId", "page", "size"})
     public ResponseEntity<?> getNotifications(
         @CurrentSecurityContext(expression = "authentication.name") String toUser,
-        @RequestParam UUID fromId,
+        @RequestParam(required = false) UUID fromId,
         @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
         @RequestParam(defaultValue = "10") @Positive Integer size
     ) {

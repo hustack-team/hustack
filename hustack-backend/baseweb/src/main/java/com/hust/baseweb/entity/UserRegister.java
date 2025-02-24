@@ -1,11 +1,10 @@
 package com.hust.baseweb.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import javax.persistence.*;
 
 /**
  * @author Hien Hoang (hienhoang2702@gmail.com)
