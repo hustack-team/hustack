@@ -84,7 +84,7 @@ function QuestionInInteractiveQuiz({ testId, isCourse }) {
       // token,
       // history,
       "post",
-      `/update-status-of-interactive-quiz/`,
+      `/update-status-of-interactive-quiz`,
       (res) => {
         successNoti("Update success");
       },
