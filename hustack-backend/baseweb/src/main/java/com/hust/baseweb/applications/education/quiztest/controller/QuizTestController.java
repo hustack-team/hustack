@@ -213,7 +213,8 @@ public class QuizTestController {
     
     @Secured({"ROLE_TEACHER"})
     @PostMapping("/update-status-of-interactive-quiz")
-    public ResponseEntity<?> updateStatusOfInteractiveQuiz(Principal principal, @RequestBody ModelUpdateStatusOfInteractiveQuiz input) {
+    public ResponseEntity<?> updateStatusOfInteractiveQuiz(Principal principal,
+                                                           @RequestBody ModelUpdateStatusOfInteractiveQuiz input) {
         InteractiveQuiz interactiveQuiz = interactiveQuizRepo.findById(input.getInteractiveQuizId()).orElse(null);
         if (interactiveQuiz != null) {
             interactiveQuiz.setStatusId(input.getStatus());
