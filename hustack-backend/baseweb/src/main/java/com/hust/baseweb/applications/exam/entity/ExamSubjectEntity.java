@@ -1,5 +1,6 @@
 package com.hust.baseweb.applications.exam.entity;
 
+import com.hust.baseweb.applications.exam.utils.Constants;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,5 +23,6 @@ public class ExamSubjectEntity extends BaseEntity {
     private String name;
 
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Constants.Status status;
 }

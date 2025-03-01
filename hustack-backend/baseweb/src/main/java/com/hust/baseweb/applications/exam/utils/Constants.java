@@ -2,9 +2,9 @@ package com.hust.baseweb.applications.exam.utils;
 
 public class Constants {
 
-    public static class Status {
-        public static final String ACTIVE = "ACTIVE";
-        public static final String INACTIVE = "INACTIVE";
+    public enum Status {
+        ACTIVE,
+        INACTIVE,
     }
 
     public static class ExamQuestionType {
