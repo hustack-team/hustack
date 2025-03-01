@@ -21,6 +21,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import StyleIcon from '@mui/icons-material/Style';
 import withScreenSecurity from "../../../withScreenSecurity";
 import QuestionTagManagement from "./QuestionTagManagement";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -461,7 +462,7 @@ function QuestionBankCreateUpdate(props) {
                     )}
                   />
 
-                  <Button
+                  <PrimaryButton
                     variant="outlined"
                     color="primary"
                     style={{height: "55px"}}
@@ -469,7 +470,7 @@ function QuestionBankCreateUpdate(props) {
                     onClick={() => setOpenQuestionTagManagementDialog(true)}
                   >
                     Manage Tags
-                  </Button>
+                  </PrimaryButton>
                 </div>
 
                 <div>
