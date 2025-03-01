@@ -15,6 +15,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import {parseHTMLToString, parseToString} from "../ultils/DataUltils";
+import {errorNoti} from "../../../../utils/notification";
 
 const baseColumn = {
   sortable: false,
@@ -207,10 +208,10 @@ function QuestionBank(props) {
           setQuestionList(res.data.content);
           setTotalCount(res.data.totalElements);
         }else {
-          toast.error(res)
+          errorNoti(res)
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e) },
       body
     );
   }
@@ -224,7 +225,7 @@ function QuestionBank(props) {
           setQuestionTags(res.data)
         }
       },
-      { onError: (e) => toast.error(e) }
+      { onError: (e) => errorNoti(e) }
     );
   }
 
@@ -242,7 +243,7 @@ function QuestionBank(props) {
           setExamSubjects(tmpData)
         }
       },
-      { onError: (e) => toast.error(e) }
+      { onError: (e) => errorNoti(e) }
     );
   }
 
@@ -261,7 +262,7 @@ function QuestionBank(props) {
           toast.error(res.data.resultMsg)
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e) },
     );
   }
 
