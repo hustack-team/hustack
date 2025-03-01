@@ -105,12 +105,12 @@ function ExamDetails(props) {
   const [examDetailsMarking, setExamDetailsMarking] = useState(null)
 
   const handleOpenPopupTestDetails = (test) =>{
-    const body = {
+    const queryParams = new URLSearchParams({
       id: test.id
-    }
+    })
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -120,7 +120,6 @@ function ExamDetails(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 
 @Getter
 @Setter

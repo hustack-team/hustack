@@ -26,9 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,7 +123,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             count.setParameter("keyword", DataUtils.escapeSpecialCharacters(examQuestionFilterReq.getKeyword()));
         }
 
-        long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
+        long totalRecord = ((Number) count.getSingleResult()).longValue();
         List<Object[]> result = query.getResultList();
         List<ExamQuestionFilterRes> list = new ArrayList<>();
         if (!Objects.isNull(result) && !result.isEmpty()) {

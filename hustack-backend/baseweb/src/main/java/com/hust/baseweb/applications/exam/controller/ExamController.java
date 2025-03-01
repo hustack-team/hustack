@@ -29,15 +29,15 @@ public class ExamController {
     private final ExamService examService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/filter")
+    @GetMapping("/filter")
     public ResponseEntity<Page<ExamEntity>> filter(
-        Pageable pageable, @RequestBody ExamFilterReq examFilterReq) {
+        Pageable pageable, @ModelAttribute ExamFilterReq examFilterReq) {
         return ResponseEntity.ok(examService.filter(pageable, examFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/details")
-    public ResponseEntity<ResponseData<ExamDetailsRes>> details(@RequestBody ExamDetailsReq examDetailsReq) {
+    @GetMapping("/details")
+    public ResponseEntity<ResponseData<ExamDetailsRes>> details(@ModelAttribute ExamDetailsReq examDetailsReq) {
         return ResponseEntity.ok(examService.details(examDetailsReq));
     }
 
@@ -71,14 +71,14 @@ public class ExamController {
         return ResponseEntity.ok(examService.delete(examDeleteReq));
     }
 
-    @PostMapping("/filter-my-exam")
+    @GetMapping("/filter-my-exam")
     public ResponseEntity<Page<MyExamFilterRes>> filter(
-        Pageable pageable, @RequestBody MyExamFilterReq myExamFilterReq) {
+        Pageable pageable, @ModelAttribute MyExamFilterReq myExamFilterReq) {
         return ResponseEntity.ok(examService.filterMyExam(pageable, myExamFilterReq));
     }
 
-    @PostMapping("/details-my-exam")
-    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@RequestBody MyExamDetailsReq myExamDetailsReq) {
+    @GetMapping("/details-my-exam")
+    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@ModelAttribute MyExamDetailsReq myExamDetailsReq) {
         return ResponseEntity.ok(examService.detailsMyExam(myExamDetailsReq));
     }
 

@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -24,9 +24,9 @@ public class ExamSubjectController {
     private final ExamSubjectService examSubjectService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/filter")
+    @GetMapping("/filter")
     public ResponseEntity<Page<ExamSubjectEntity>> filter(
-        Pageable pageable, @RequestBody ExamSubjectFilterReq examSubjectFilterReq) {
+        Pageable pageable, @ModelAttribute ExamSubjectFilterReq examSubjectFilterReq) {
         return ResponseEntity.ok(examSubjectService.filter(pageable, examSubjectFilterReq));
     }
 

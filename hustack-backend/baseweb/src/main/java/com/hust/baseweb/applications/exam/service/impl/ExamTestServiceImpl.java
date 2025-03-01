@@ -97,7 +97,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             count.setParameter("createdTo", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false));
         }
 
-        long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
+        long totalRecord = ((Number) count.getSingleResult()).longValue();
         List<ExamTestEntity> list = query.getResultList();
         return new PageImpl<>(list, pageable, totalRecord);
     }

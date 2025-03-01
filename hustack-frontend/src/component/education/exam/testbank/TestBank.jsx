@@ -98,14 +98,16 @@ function TestBank(props) {
   }, [page, pageSize, debouncedKeywordFilter, createdFromFilter, createdToFilter]);
 
   const filter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      createdFrom: formatDateApi(createdFromFilter),
-      createdTo: formatDateApi(createdToFilter)
-    }
+    })
+    if (formatDateApi(createdFromFilter) != null) queryParams.append('createdFrom', formatDateApi(createdFromFilter))
+    if (formatDateApi(createdToFilter) != null) queryParams.append('createdTo', formatDateApi(createdToFilter))
     request(
-      "post",
-      `/exam-test/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam-test/filter?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setData(res.data.content);
@@ -115,17 +117,16 @@ function TestBank(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
   const detailsTest = (id) =>{
-    const body = {
+    const queryParams = new URLSearchParams({
       id: id
-    }
+    })
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -135,7 +136,6 @@ function TestBank(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -155,12 +155,12 @@ function TestBank(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const body = {
-      id: rowData.id
-    }
+    const queryParams = new URLSearchParams({
+      id: id
+    })
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -206,7 +206,6 @@ function TestBank(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 

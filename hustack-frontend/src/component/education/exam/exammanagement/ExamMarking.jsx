@@ -102,12 +102,12 @@ function ExamMarking(props) {
   }
 
   const handleExamDetails = () => {
-    const body = {
+    const queryParams = new URLSearchParams({
       id: data?.examId
-    }
+    })
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setDataDetails(res.data.data)
@@ -117,7 +117,6 @@ function ExamMarking(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 

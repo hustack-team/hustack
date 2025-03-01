@@ -2,8 +2,7 @@ package com.hust.baseweb.applications.exam.entity;
 
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Getter

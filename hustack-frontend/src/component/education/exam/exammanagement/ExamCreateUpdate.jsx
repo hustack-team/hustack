@@ -229,12 +229,12 @@ function ExamCreateUpdate(props) {
   };
 
   const detailsTest = (id) =>{
-    const body = {
+    const queryParams = new URLSearchParams({
       id: id
-    }
+    })
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -244,7 +244,6 @@ function ExamCreateUpdate(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 

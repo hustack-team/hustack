@@ -103,13 +103,15 @@ function ExamSubjectManagement(props) {
   }, [page, pageSize, debouncedKeywordFilter, statusFilter]);
 
   const handleFilter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      status: statusFilter === 'all' ? null : statusFilter
-    }
+    })
+    if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
-      "post",
-      `/exam-subject/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam-subject/filter?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setExamSubjectList(res.data.content);
@@ -119,7 +121,6 @@ function ExamSubjectManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 

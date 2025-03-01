@@ -21,7 +21,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -33,14 +33,14 @@ public class ExamQuestionController {
     private final ExamQuestionService examQuestionService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/filter")
-    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @RequestBody ExamQuestionFilterReq examQuestionFilterReq) {
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @ModelAttribute ExamQuestionFilterReq examQuestionFilterReq) {
         return ResponseEntity.ok(examQuestionService.filter(pageable, examQuestionFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/details")
-    public ResponseEntity<ResponseData<ExamQuestionDetailsRes>> details(@RequestBody ExamQuestionDetailsReq examQuestionDetailsReq) {
+    @GetMapping("/details")
+    public ResponseEntity<ResponseData<ExamQuestionDetailsRes>> details(@ModelAttribute ExamQuestionDetailsReq examQuestionDetailsReq) {
         return ResponseEntity.ok(examQuestionService.details(examQuestionDetailsReq));
     }
 

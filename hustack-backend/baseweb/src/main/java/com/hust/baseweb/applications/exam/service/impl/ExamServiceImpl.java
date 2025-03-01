@@ -132,7 +132,7 @@ public class ExamServiceImpl implements ExamService {
             count.setParameter("endTimeTo", DataUtils.formatStringValueSqlToLocalDateTime(examFilterReq.getEndTimeTo(), false));
         }
 
-        long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
+        long totalRecord = ((Number) count.getSingleResult()).longValue();
         List<ExamEntity> list = query.getResultList();
         return new PageImpl<>(list, pageable, totalRecord);
     }
@@ -334,7 +334,7 @@ public class ExamServiceImpl implements ExamService {
             count.setParameter("keyword", DataUtils.escapeSpecialCharacters(myExamFilterReq.getKeyword()));
         }
 
-        long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
+        long totalRecord = ((Number) count.getSingleResult()).longValue();
         List<Object[]> result = query.getResultList();
         List<MyExamFilterRes> list = new ArrayList<>();
         if (!Objects.isNull(result) && !result.isEmpty()) {

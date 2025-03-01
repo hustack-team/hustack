@@ -154,13 +154,15 @@ function ExamManagement(props) {
   }, [page, pageSize, debouncedKeywordFilter, statusFilter]);
 
   const handleFilter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      status: statusFilter === 'all' ? null : statusFilter
-    }
+    })
+    if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
-      "post",
-      `/exam/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam/filter?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setExamList(res.data.content);
@@ -170,7 +172,6 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -196,12 +197,12 @@ function ExamManagement(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const body = {
+    const queryParams = new URLSearchParams({
       id: rowData.id
-    }
+    })
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           history.push({
@@ -216,17 +217,16 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 
   const handleDetails = (rowData) => {
-    const body = {
+    const queryParams = new URLSearchParams({
       id: rowData.id
-    }
+    })
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetails(res.data.data)
@@ -236,7 +236,6 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 

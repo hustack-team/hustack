@@ -23,9 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import java.math.BigInteger;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,7 +75,7 @@ public class ExamSubjectServiceImpl implements ExamSubjectService {
             count.setParameter("keyword", DataUtils.escapeSpecialCharacters(examSubjectFilterReq.getKeyword()));
         }
 
-        long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
+        long totalRecord = ((Number) count.getSingleResult()).longValue();
         List<ExamSubjectEntity> list = query.getResultList();
         return new PageImpl<>(list, pageable, totalRecord);
     }
