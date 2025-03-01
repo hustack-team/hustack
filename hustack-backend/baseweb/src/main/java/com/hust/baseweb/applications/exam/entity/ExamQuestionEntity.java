@@ -25,7 +25,7 @@ public class ExamQuestionEntity extends BaseEntity {
     @Column(name = "type")
     private Integer type;
 
-    @Column(name = "\"level\"")
+    @Column(name = "level")
     private String level;
 
     @Column(name = "content")
