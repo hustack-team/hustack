@@ -14,133 +14,133 @@ import java.util.Optional;
 @Repository
 public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String> {
 
-    @Query(value = "select\n" +
-                   "    etq.id as examTestQuestionId,\n" +
-                   "    eq.id as questionId,\n" +
-                   "    eq.code as questionCode,\n" +
-                   "    eq.type as questionType,\n" +
-                   "    eq.content as questionContent,\n" +
-                   "    eq.file_path as questionFile,\n" +
-                   "    eq.number_answer as questionNumberAnswer,\n" +
-                   "    eq.content_answer1 as questionContentAnswer1,\n" +
-                   "    eq.content_answer2 as questionContentAnswer2,\n" +
-                   "    eq.content_answer3 as questionContentAnswer3,\n" +
-                   "    eq.content_answer4 as questionContentAnswer4,\n" +
-                   "    eq.content_answer5 as questionContentAnswer5,\n" +
-                   "    eq.multichoice as questionMultichoice,\n" +
-                   "    eq.answer as questionAnswer,\n" +
-                   "    eq.explain as questionExplain,\n" +
-                   "    etq.order as questionOrder,\n" +
-                   "    es.name as examSubjectName,\n" +
-                   "    eq.level as questionLevel,\n" +
-                   "    string_agg(eta.id, ',') as examTagIdStr,\n" +
-                   "    string_agg(eta.name, ',') as examTagNameStr\n" +
-                   "from\n" +
-                   "    exam_test et\n" +
-                   "left join exam_test_question etq on\n" +
-                   "    et.id = etq.exam_test_id\n" +
-                   "left join exam_question eq on\n" +
-                   "    etq.exam_question_id = eq.id\n" +
-                   "left join exam_subject es on\n" +
-                   "    es.id = eq.exam_subject_id\n" +
-                   "left join exam_question_tag eqt on\n" +
-                   "    eqt.exam_question_id = eq.id\n" +
-                   "left join exam_tag eta on\n" +
-                   "    eta.id = eqt.exam_tag_id\n" +
-                   "where\n" +
-                   "    et.created_by = :userLogin\n" +
-                   "    and et.id = :examTestId\n" +
-                   "group by etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer,\n" +
-                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3, eq.content_answer4,\n" +
-                   "    eq.content_answer5, eq.multichoice, eq.answer, eq.explain, etq.order, es.name, eq.level\n" +
-                   "order by\n" +
+    @Query(value = "select " +
+                   "    etq.id as examTestQuestionId, " +
+                   "    eq.id as questionId, " +
+                   "    eq.code as questionCode, " +
+                   "    eq.type as questionType, " +
+                   "    eq.content as questionContent, " +
+                   "    eq.file_path as questionFile, " +
+                   "    eq.number_answer as questionNumberAnswer, " +
+                   "    eq.content_answer1 as questionContentAnswer1, " +
+                   "    eq.content_answer2 as questionContentAnswer2, " +
+                   "    eq.content_answer3 as questionContentAnswer3, " +
+                   "    eq.content_answer4 as questionContentAnswer4, " +
+                   "    eq.content_answer5 as questionContentAnswer5, " +
+                   "    eq.multichoice as questionMultichoice, " +
+                   "    eq.answer as questionAnswer, " +
+                   "    eq.explain as questionExplain, " +
+                   "    etq.order as questionOrder, " +
+                   "    es.name as examSubjectName, " +
+                   "    eq.level as questionLevel, " +
+                   "    string_agg(eta.id, ',') as examTagIdStr, " +
+                   "    string_agg(eta.name, ',') as examTagNameStr " +
+                   "from " +
+                   "    exam_test et " +
+                   "left join exam_test_question etq on " +
+                   "    et.id = etq.exam_test_id " +
+                   "left join exam_question eq on " +
+                   "    etq.exam_question_id = eq.id " +
+                   "left join exam_subject es on " +
+                   "    es.id = eq.exam_subject_id " +
+                   "left join exam_question_tag eqt on " +
+                   "    eqt.exam_question_id = eq.id " +
+                   "left join exam_tag eta on " +
+                   "    eta.id = eqt.exam_tag_id " +
+                   "where " +
+                   "    et.created_by = :userLogin " +
+                   "    and et.id = :examTestId " +
+                   "group by etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
+                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3, eq.content_answer4, " +
+                   "    eq.content_answer5, eq.multichoice, eq.answer, eq.explain, etq.order, es.name, eq.level " +
+                   "order by " +
                    "    etq.order", nativeQuery = true)
     List<ExamTestQuestionDetailsRes> details(@Param("userLogin") String userLogin,
                                              @Param("examTestId") String examTestId);
 
-    @Query(value = "select\n" +
-                   "    etq.id as examTestQuestionId,\n" +
-                   "    eq.id as questionId,\n" +
-                   "    eq.code as questionCode,\n" +
-                   "    eq.type as questionType,\n" +
-                   "    eq.content as questionContent,\n" +
-                   "    eq.file_path as questionFile,\n" +
-                   "    eq.number_answer as questionNumberAnswer,\n" +
-                   "    eq.content_answer1 as questionContentAnswer1,\n" +
-                   "    eq.content_answer2 as questionContentAnswer2,\n" +
-                   "    eq.content_answer3 as questionContentAnswer3,\n" +
-                   "    eq.content_answer4 as questionContentAnswer4,\n" +
-                   "    eq.content_answer5 as questionContentAnswer5,\n" +
-                   "    eq.multichoice as questionMultichoice,\n" +
-                   "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.answer else null end as questionAnswer,\n" +
-                   "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.explain else null end as questionExplain,\n" +
-                   "    etq.order as questionOrder,\n" +
-                   "    erd.answer as answer,\n" +
-                   "    erd.file_path as filePathAnswer,\n" +
-                   "    erd.pass as pass,\n" +
-                   "    erd.score as score\n" +
-                   "from\n" +
-                   "    exam_test et\n" +
-                   "left join exam_test_question etq on\n" +
-                   "    et.id = etq.exam_test_id\n" +
-                   "left join exam_question eq on\n" +
-                   "    etq.exam_question_id = eq.id\n" +
-                   "left join exam_student es on\n" +
-                   "    es.exam_test_id = et.id\n" +
-                   "left join exam e on\n" +
-                   "    e.id = es.exam_id\n" +
-                   "left join exam_result er on\n" +
-                   "    es.id = er.exam_student_id\n" +
-                   "left join exam_result_details erd on\n" +
-                   "    erd.exam_result_id = er.id\n" +
-                   "    and erd.exam_question_id = eq.id\n" +
-                   "where\n" +
-                   "    et.id = :examTestId\n" +
-                   "    and es.id = :examStudentId\n" +
-                   "order by\n" +
+    @Query(value = "select " +
+                   "    etq.id as examTestQuestionId, " +
+                   "    eq.id as questionId, " +
+                   "    eq.code as questionCode, " +
+                   "    eq.type as questionType, " +
+                   "    eq.content as questionContent, " +
+                   "    eq.file_path as questionFile, " +
+                   "    eq.number_answer as questionNumberAnswer, " +
+                   "    eq.content_answer1 as questionContentAnswer1, " +
+                   "    eq.content_answer2 as questionContentAnswer2, " +
+                   "    eq.content_answer3 as questionContentAnswer3, " +
+                   "    eq.content_answer4 as questionContentAnswer4, " +
+                   "    eq.content_answer5 as questionContentAnswer5, " +
+                   "    eq.multichoice as questionMultichoice, " +
+                   "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.answer else null end as questionAnswer, " +
+                   "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.explain else null end as questionExplain, " +
+                   "    etq.order as questionOrder, " +
+                   "    erd.answer as answer, " +
+                   "    erd.file_path as filePathAnswer, " +
+                   "    erd.pass as pass, " +
+                   "    erd.score as score " +
+                   "from " +
+                   "    exam_test et " +
+                   "left join exam_test_question etq on " +
+                   "    et.id = etq.exam_test_id " +
+                   "left join exam_question eq on " +
+                   "    etq.exam_question_id = eq.id " +
+                   "left join exam_student es on " +
+                   "    es.exam_test_id = et.id " +
+                   "left join exam e on " +
+                   "    e.id = es.exam_id " +
+                   "left join exam_result er on " +
+                   "    es.id = er.exam_student_id " +
+                   "left join exam_result_details erd on " +
+                   "    erd.exam_result_id = er.id " +
+                   "    and erd.exam_question_id = eq.id " +
+                   "where " +
+                   "    et.id = :examTestId " +
+                   "    and es.id = :examStudentId " +
+                   "order by " +
                    "    etq.order", nativeQuery = true)
     List<MyExamQuestionDetailsRes> getMyExamQuestionDetails(@Param("examTestId") String examTestId,
                                                             @Param("examStudentId") String examStudentId);
 
-    @Query(value = "select\n" +
-                   "    etq.id as examTestQuestionId,\n" +
-                   "    eq.id as questionId,\n" +
-                   "    eq.code as questionCode,\n" +
-                   "    eq.type as questionType,\n" +
-                   "    eq.content as questionContent,\n" +
-                   "    eq.file_path as questionFile,\n" +
-                   "    eq.number_answer as questionNumberAnswer,\n" +
-                   "    eq.content_answer1 as questionContentAnswer1,\n" +
-                   "    eq.content_answer2 as questionContentAnswer2,\n" +
-                   "    eq.content_answer3 as questionContentAnswer3,\n" +
-                   "    eq.content_answer4 as questionContentAnswer4,\n" +
-                   "    eq.content_answer5 as questionContentAnswer5,\n" +
-                   "    eq.multichoice as questionMultichoice,\n" +
-                   "    eq.answer as questionAnswer,\n" +
-                   "    eq.explain as questionExplain,\n" +
-                   "    etq.order as questionOrder,\n" +
-                   "    erd.id as examResultDetailsId,\n" +
-                   "    erd.answer as answer,\n" +
-                   "    erd.file_path as filePathAnswer,\n" +
-                   "    erd.pass as pass,\n" +
-                   "    erd.score as score\n" +
-                   "from\n" +
-                   "    exam_test et\n" +
-                   "left join exam_test_question etq on\n" +
-                   "    et.id = etq.exam_test_id\n" +
-                   "left join exam_question eq on\n" +
-                   "    etq.exam_question_id = eq.id\n" +
-                   "left join exam_student es on\n" +
-                   "    es.exam_test_id = et.id\n" +
-                   "left join exam_result er on\n" +
-                   "    es.id = er.exam_student_id\n" +
-                   "left join exam_result_details erd on\n" +
-                   "    erd.exam_result_id = er.id\n" +
-                   "    and erd.exam_question_id = eq.id\n" +
-                   "where\n" +
-                   "    et.id = :examTestId\n" +
-                   "    and es.id = :examStudentId\n" +
-                   "order by\n" +
+    @Query(value = "select " +
+                   "    etq.id as examTestQuestionId, " +
+                   "    eq.id as questionId, " +
+                   "    eq.code as questionCode, " +
+                   "    eq.type as questionType, " +
+                   "    eq.content as questionContent, " +
+                   "    eq.file_path as questionFile, " +
+                   "    eq.number_answer as questionNumberAnswer, " +
+                   "    eq.content_answer1 as questionContentAnswer1, " +
+                   "    eq.content_answer2 as questionContentAnswer2, " +
+                   "    eq.content_answer3 as questionContentAnswer3, " +
+                   "    eq.content_answer4 as questionContentAnswer4, " +
+                   "    eq.content_answer5 as questionContentAnswer5, " +
+                   "    eq.multichoice as questionMultichoice, " +
+                   "    eq.answer as questionAnswer, " +
+                   "    eq.explain as questionExplain, " +
+                   "    etq.order as questionOrder, " +
+                   "    erd.id as examResultDetailsId, " +
+                   "    erd.answer as answer, " +
+                   "    erd.file_path as filePathAnswer, " +
+                   "    erd.pass as pass, " +
+                   "    erd.score as score " +
+                   "from " +
+                   "    exam_test et " +
+                   "left join exam_test_question etq on " +
+                   "    et.id = etq.exam_test_id " +
+                   "left join exam_question eq on " +
+                   "    etq.exam_question_id = eq.id " +
+                   "left join exam_student es on " +
+                   "    es.exam_test_id = et.id " +
+                   "left join exam_result er on " +
+                   "    es.id = er.exam_student_id " +
+                   "left join exam_result_details erd on " +
+                   "    erd.exam_result_id = er.id " +
+                   "    and erd.exam_question_id = eq.id " +
+                   "where " +
+                   "    et.id = :examTestId " +
+                   "    and es.id = :examStudentId " +
+                   "order by " +
                    "    etq.order", nativeQuery = true)
     List<MyExamQuestionDetailsRes> getExamMarkingDetails(@Param("examTestId") String examTestId,
                                                             @Param("examStudentId") String examStudentId);

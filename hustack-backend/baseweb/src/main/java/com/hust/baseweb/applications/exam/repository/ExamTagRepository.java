@@ -16,13 +16,13 @@ public interface ExamTagRepository extends JpaRepository<ExamTagEntity, String> 
 
     Optional<ExamTagEntity> findByName(String name);
 
-    @Query(value = "select\n" +
-                   "    et.*\n" +
-                   "from\n" +
-                   "    exam_tag et\n" +
-                   "left join exam_question_tag eqt on\n" +
-                   "    et.id = eqt.exam_tag_id\n" +
-                   "where\n" +
+    @Query(value = "select " +
+                   "    et.* " +
+                   "from " +
+                   "    exam_tag et " +
+                   "left join exam_question_tag eqt on " +
+                   "    et.id = eqt.exam_tag_id " +
+                   "where " +
                    "    eqt.exam_question_id = :examQuestionId", nativeQuery = true)
     List<ExamTagEntity> findAllByExamQuestionId(@Param("examQuestionId") String examQuestionId);
 }
