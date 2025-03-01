@@ -156,7 +156,7 @@ function TestBank(props) {
 
   const handleUpdate = (rowData) => {
     const queryParams = new URLSearchParams({
-      id: id
+      id: rowData.id
     })
     request(
       "get",

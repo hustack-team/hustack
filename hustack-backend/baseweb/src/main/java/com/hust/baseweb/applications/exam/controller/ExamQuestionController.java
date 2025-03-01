@@ -49,22 +49,16 @@ public class ExamQuestionController {
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/create")
-    public ResponseEntity<ResponseData<ExamQuestionEntity>> create(@RequestParam("body") String questions,
-                                                                   @RequestParam("files") MultipartFile[] files) {
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-            .create();
-        return ResponseEntity.ok(examQuestionService.create(gson.fromJson(questions, ExamQuestionSaveReq.class), files));
+    public ResponseEntity<ResponseData<ExamQuestionEntity>> create(@RequestPart("body") ExamQuestionSaveReq examQuestionSaveReq,
+                                                                   @RequestPart(value = "files", required = false) MultipartFile[] files) {
+        return ResponseEntity.ok(examQuestionService.create(examQuestionSaveReq, files));
     }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/update")
-    public ResponseEntity<ResponseData<ExamQuestionEntity>> update(@RequestParam("body") String questions,
-                                                                   @RequestParam("files") MultipartFile[] files) {
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-            .create();
-        return ResponseEntity.ok(examQuestionService.update(gson.fromJson(questions, ExamQuestionSaveReq.class), files));
+    public ResponseEntity<ResponseData<ExamQuestionEntity>> update(@RequestPart("body") ExamQuestionSaveReq examQuestionSaveReq,
+                                                                   @RequestPart(value = "files", required = false) MultipartFile[] files) {
+        return ResponseEntity.ok(examQuestionService.update(examQuestionSaveReq, files));
     }
 
     @Secured("ROLE_TEACHER")

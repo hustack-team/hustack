@@ -180,10 +180,16 @@ function QuestionBankCreateUpdate(props) {
     }
 
     let formData = new FormData();
-    formData.append("body", JSON.stringify(body));
+    formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
     for (const file of contentFiles) {
       formData.append("files", file);
     }
+
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
 
     setIsLoading(true)
     request(
@@ -205,7 +211,8 @@ function QuestionBankCreateUpdate(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      formData
+      formData,
+      config,
     );
   }
 

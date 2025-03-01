@@ -141,10 +141,16 @@ function MyExamDetails(props) {
     }
 
     let formData = new FormData();
-    formData.append("body", JSON.stringify(body));
+    formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
     for (const file of tmpAnswersFiles) {
       formData.append("files", file);
     }
+
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
 
     setIsLoading(true)
     request(
@@ -166,7 +172,8 @@ function MyExamDetails(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      formData
+      formData,
+      config,
     );
   }
 

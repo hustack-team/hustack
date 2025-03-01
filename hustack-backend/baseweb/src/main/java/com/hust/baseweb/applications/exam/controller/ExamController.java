@@ -86,9 +86,8 @@ public class ExamController {
     }
 
     @PostMapping("/doing-my-exam")
-    public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestParam("body") String body,
-                                                                      @RequestParam("files") MultipartFile[] files) {
-        Gson gson = new Gson();
-        return ResponseEntity.ok(examService.doingMyExam(gson.fromJson(body, MyExamResultSaveReq.class), files));
+    public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
+                                                                      @RequestPart("files") MultipartFile[] files) {
+        return ResponseEntity.ok(examService.doingMyExam(myExamResultSaveReq, files));
     }
 }

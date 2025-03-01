@@ -208,7 +208,10 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             return responseData;
         }
 
-        List<String> filePaths = mongoFileService.storeFiles(files);
+        List<String> filePaths = new ArrayList<>();
+        if(files != null && files.length > 0){
+            filePaths = mongoFileService.storeFiles(files);
+        }
 
         ExamQuestionEntity examQuestionEntity = modelMapper.map(examQuestionSaveReq, ExamQuestionEntity.class);
         examQuestionEntity.setFilePath(String.join(";", filePaths));
@@ -241,7 +244,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         }
 
         List<String> filePaths = new ArrayList<>();
-        if(files.length > 0){
+        if(files != null && files.length > 0){
             filePaths = mongoFileService.storeFiles(files);
         }
 
@@ -306,11 +309,18 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             return responseData;
         }
 
-        String[] filePaths = examQuestionExist.get().getFilePath().split(";");
-        for(String filePath: filePaths){
-            if(DataUtils.stringIsNotNullOrEmpty(filePath)){
-                mongoFileService.deleteByPath(filePath);
+        if(examQuestionExist.get().getFilePath() != null){
+            String[] filePaths = examQuestionExist.get().getFilePath().split(";");
+            for(String filePath: filePaths){
+                if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                    mongoFileService.deleteByPath(filePath);
+                }
             }
+        }
+
+        List<ExamQuestionTagEntity> examQuestionTagEntityList = examQuestionTagRepository.findALLById_ExamQuestionId(examQuestionDeleteReq.getId());
+        if(!examQuestionTagEntityList.isEmpty()){
+            examQuestionTagRepository.deleteAll(examQuestionTagEntityList);
         }
 
         examQuestionRepository.delete(examQuestionExist.get());
