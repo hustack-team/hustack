@@ -18,7 +18,9 @@ import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -36,14 +38,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamTestServiceImpl implements ExamTestService {
 
-    private final ExamRepository examRepository;
-    private final ExamTestRepository examTestRepository;
-    private final ExamTestQuestionRepository examTestQuestionRepository;
-    private final EntityManager entityManager;
-    private final ModelMapper modelMapper;
-    private final ObjectMapper objectMapper;
+    ExamRepository examRepository;
+    ExamTestRepository examTestRepository;
+    ExamTestQuestionRepository examTestQuestionRepository;
+    EntityManager entityManager;
+    ModelMapper modelMapper;
+    ObjectMapper objectMapper;
 
     @Override
     public Page<ExamTestEntity> filter(Pageable pageable, ExamTestFilterReq examTestFilterReq) {

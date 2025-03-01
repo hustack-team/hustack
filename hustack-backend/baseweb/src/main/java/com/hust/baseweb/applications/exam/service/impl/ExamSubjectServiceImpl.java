@@ -14,7 +14,9 @@ import com.hust.baseweb.applications.exam.service.ExamSubjectService;
 import com.hust.baseweb.applications.exam.utils.Constants;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -31,13 +33,14 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamSubjectServiceImpl implements ExamSubjectService {
 
-    private final ExamSubjectRepository examSubjectRepository;
-    private final ExamQuestionRepository examQuestionRepository;
-    private final EntityManager entityManager;
-    private final ModelMapper modelMapper;
-    private final ObjectMapper objectMapper;
+    ExamSubjectRepository examSubjectRepository;
+    ExamQuestionRepository examQuestionRepository;
+    EntityManager entityManager;
+    ModelMapper modelMapper;
+    ObjectMapper objectMapper;
 
     @Override
     public Page<ExamSubjectEntity> filter(Pageable pageable, ExamSubjectFilterReq examSubjectFilterReq) {

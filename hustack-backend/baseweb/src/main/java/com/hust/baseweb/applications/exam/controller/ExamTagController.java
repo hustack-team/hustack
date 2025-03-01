@@ -4,7 +4,9 @@ import com.hust.baseweb.applications.exam.entity.ExamTagEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
 import com.hust.baseweb.applications.exam.service.ExamTagService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -17,9 +19,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/exam-tag")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamTagController {
 
-    private final ExamTagService examTagService;
+    ExamTagService examTagService;
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/get-all")

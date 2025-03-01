@@ -12,7 +12,9 @@ import com.hust.baseweb.applications.exam.model.response.ExamQuestionDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionFilterRes;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
 import com.hust.baseweb.applications.exam.utils.LocalDateTimeAdapter;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,13 +30,14 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/exam-question")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamQuestionController {
 
-    private final ExamQuestionService examQuestionService;
+    ExamQuestionService examQuestionService;
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/filter")
-    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @ModelAttribute ExamQuestionFilterReq examQuestionFilterReq) {
+    @PostMapping("/filter")
+    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @RequestBody ExamQuestionFilterReq examQuestionFilterReq) {
         return ResponseEntity.ok(examQuestionService.filter(pageable, examQuestionFilterReq));
     }
 

@@ -5,7 +5,9 @@ import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
 import com.hust.baseweb.applications.exam.repository.*;
 import com.hust.baseweb.applications.exam.service.ExamTagService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -17,10 +19,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamTagServiceImpl implements ExamTagService {
 
-    private final ExamTagRepository examTagRepository;
-    private final ModelMapper modelMapper;
+    ExamTagRepository examTagRepository;
+    ModelMapper modelMapper;
 
 
     @Override

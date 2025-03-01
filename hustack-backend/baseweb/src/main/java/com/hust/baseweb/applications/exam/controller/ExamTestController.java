@@ -9,7 +9,9 @@ import com.hust.baseweb.applications.exam.model.request.ExamTestSaveReq;
 import com.hust.baseweb.applications.exam.model.response.ExamTestDetailsRes;
 import com.hust.baseweb.applications.exam.service.ExamTestService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +23,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/exam-test")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamTestController {
 
-    private final ExamTestService examTestService;
+    ExamTestService examTestService;
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/filter")

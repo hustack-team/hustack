@@ -11,7 +11,9 @@ import com.hust.baseweb.applications.exam.model.response.MyExamDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.MyExamFilterRes;
 import com.hust.baseweb.applications.exam.service.ExamService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +26,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/exam")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamController {
 
-    private final ExamService examService;
+    ExamService examService;
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/filter")

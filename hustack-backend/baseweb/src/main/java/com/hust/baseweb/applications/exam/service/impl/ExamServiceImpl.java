@@ -16,7 +16,9 @@ import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -36,18 +38,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamServiceImpl implements ExamService {
 
-    private final ExamRepository examRepository;
-    private final ExamTestRepository examTestRepository;
-    private final ExamStudentRepository examStudentRepository;
-    private final ExamResultRepository examResultRepository;
-    private final ExamResultDetailsRepository examResultDetailsRepository;
-    private final EntityManager entityManager;
-    private final ModelMapper modelMapper;
-    private final ObjectMapper objectMapper;
-    private final ExamTestService examTestService;
-    private final MongoFileService mongoFileService;
+    ExamRepository examRepository;
+    ExamTestRepository examTestRepository;
+    ExamStudentRepository examStudentRepository;
+    ExamResultRepository examResultRepository;
+    ExamResultDetailsRepository examResultDetailsRepository;
+    EntityManager entityManager;
+    ModelMapper modelMapper;
+    ObjectMapper objectMapper;
+    ExamTestService examTestService;
+    MongoFileService mongoFileService;
 
 
     @Override

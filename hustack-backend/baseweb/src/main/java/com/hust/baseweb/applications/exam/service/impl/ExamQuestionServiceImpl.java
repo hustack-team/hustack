@@ -16,7 +16,9 @@ import com.hust.baseweb.applications.exam.service.ExamQuestionService;
 import com.hust.baseweb.applications.exam.service.MongoFileService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -39,16 +41,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamQuestionServiceImpl implements ExamQuestionService {
 
-    private final ExamQuestionRepository examQuestionRepository;
-    private final ExamTagRepository examTagRepository;
-    private final ExamQuestionTagRepository examQuestionTagRepository;
-    private final ExamTestQuestionRepository examTestQuestionRepository;
-    private final MongoFileService mongoFileService;
-    private final ModelMapper modelMapper;
-    private final EntityManager entityManager;
-    private final ObjectMapper objectMapper;
+    ExamQuestionRepository examQuestionRepository;
+    ExamTagRepository examTagRepository;
+    ExamQuestionTagRepository examQuestionTagRepository;
+    ExamTestQuestionRepository examTestQuestionRepository;
+    MongoFileService mongoFileService;
+    ModelMapper modelMapper;
+    EntityManager entityManager;
+    ObjectMapper objectMapper;
 
     @Override
     public Page<ExamQuestionFilterRes> filter(Pageable pageable, ExamQuestionFilterReq examQuestionFilterReq) {
