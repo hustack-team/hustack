@@ -116,11 +116,11 @@ function ExamCreateUpdate(props) {
   const answerStatusList = [
     {
       value: 'NO_OPEN',
-      name: 'Không được xem'
+      name: 'Ẩn'
     },
     {
       value: 'OPEN',
-      name: 'Được xem'
+      name: 'Hiện'
     }
   ]
 

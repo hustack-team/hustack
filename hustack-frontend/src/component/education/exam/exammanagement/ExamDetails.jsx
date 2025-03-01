@@ -159,7 +159,7 @@ function ExamDetails(props) {
             </div>
             <div style={{display: "flex"}}>
               <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái đáp án:</h4>
-              <span>{data?.answerStatus === 'NO_OPEN' ? 'Không được xem' : 'Được xem'}</span>
+              <span>{data?.answerStatus === 'NO_OPEN' ? 'Ẩn' : 'Hiện'}</span>
             </div>
             <div style={{display: "flex"}}>
               <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian bắt đầu:</h4>

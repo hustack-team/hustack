@@ -91,11 +91,11 @@ function ExamManagement(props) {
       renderCell: (rowData) => {
         if(rowData.value === 'NO_OPEN'){
           return (
-            <strong style={{color: '#f50000c9'}}>Không được xem</strong>
+            <strong style={{color: '#f50000c9'}}>Ẩn</strong>
           )
         }else if(rowData.value === 'OPEN'){
           return (
-            <strong style={{color: '#61bd6d'}}>Được xem</strong>
+            <strong style={{color: '#61bd6d'}}>Hiện</strong>
           )
         }else{
           return ''
