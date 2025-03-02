@@ -3,16 +3,57 @@ package com.hust.baseweb.applications.exam.repository;
 import com.hust.baseweb.applications.exam.entity.ExamTestEntity;
 import com.hust.baseweb.applications.exam.model.response.ExamTestQuestionDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.MyExamQuestionDetailsRes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String> {
+
+    @Query(value = "select " +
+                   "    * " +
+                   "from " +
+                   "    exam_test et " +
+                   "where " +
+                   "    et.created_by = :userLogin " +
+                   "and " +
+                   "    (:keyword is null or  " +
+                   "    (lower(et.code) like CONCAT('%', lower(:keyword),'%')) or " +
+                   "    (lower(et.name) like CONCAT('%', lower(:keyword),'%'))) " +
+                   "and " +
+                   "    (cast(cast(:createdFrom as text) as timestamp) is null or et.created_at >= cast(cast(:createdFrom as text) as timestamp)) " +
+                   "and " +
+                   "    (cast(cast(:createdTo as text) as timestamp) is null or et.created_at <= cast(cast(:createdTo as text) as timestamp)) " +
+                   "order by et.created_at desc",
+           countQuery = "select " +
+                        "    count(1) " +
+                        "from " +
+                        "    exam_test et " +
+                        "where " +
+                        "    et.created_by = :userLogin " +
+                        "and " +
+                        "    (:keyword is null or  " +
+                        "    (lower(et.code) like CONCAT('%', lower(:keyword),'%')) or " +
+                        "    (lower(et.name) like CONCAT('%', lower(:keyword),'%'))) " +
+                        "and " +
+                        "    (cast(cast(:createdFrom as text) as timestamp) is null or et.created_at >= cast(cast(:createdFrom as text) as timestamp)) " +
+                        "and " +
+                        "    (cast(cast(:createdTo as text) as timestamp) is null or et.created_at <= cast(cast(:createdTo as text) as timestamp)) ",
+           nativeQuery = true)
+    Page<ExamTestEntity> filter(
+        Pageable pageable,
+        @Param("userLogin") String userLogin,
+        @Param("createdFrom") LocalDateTime createdFrom,
+        @Param("createdTo") LocalDateTime createdTo,
+        @Param("keyword") String keyword
+    );
 
     @Query(value = "select " +
                    "    etq.id as examTestQuestionId, " +

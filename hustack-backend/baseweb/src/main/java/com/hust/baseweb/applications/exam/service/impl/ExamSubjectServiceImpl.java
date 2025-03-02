@@ -1,6 +1,5 @@
 package com.hust.baseweb.applications.exam.service.impl;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hust.baseweb.applications.exam.entity.ExamQuestionEntity;
 import com.hust.baseweb.applications.exam.entity.ExamSubjectEntity;
@@ -12,7 +11,6 @@ import com.hust.baseweb.applications.exam.repository.ExamQuestionRepository;
 import com.hust.baseweb.applications.exam.repository.ExamSubjectRepository;
 import com.hust.baseweb.applications.exam.service.ExamSubjectService;
 import com.hust.baseweb.applications.exam.utils.Constants;
-import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +18,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,43 +40,12 @@ public class ExamSubjectServiceImpl implements ExamSubjectService {
 
     @Override
     public Page<ExamSubjectEntity> filter(Pageable pageable, ExamSubjectFilterReq examSubjectFilterReq) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("select\n" +
-                   "    *\n" +
-                   "from\n" +
-                   "    exam_subject es\n" +
-                   "where\n" +
-                   "    es.created_by = :userLogin \n");
-        if(examSubjectFilterReq.getStatus() != null){
-            sql.append("and\n" +
-                       "    es.status = :status \n");
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examSubjectFilterReq.getKeyword())){
-            sql.append("and\n" +
-                       "    ((lower(es.code) like CONCAT('%', LOWER(:keyword),'%')) or \n" +
-                       "    (lower(es.name) like CONCAT('%', LOWER(:keyword),'%'))) \n");
-        }
-        sql.append("order by es.name asc\n");
-
-        Query query = entityManager.createNativeQuery(sql.toString(), ExamSubjectEntity.class);
-        Query count = entityManager.createNativeQuery("select count(1) FROM (" + sql + ") as count");
-        query.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
-        query.setMaxResults(pageable.getPageSize());
-
-        query.setParameter("userLogin", SecurityUtils.getUserLogin());
-        count.setParameter("userLogin", SecurityUtils.getUserLogin());
-        if(examSubjectFilterReq.getStatus() != null){
-            query.setParameter("status", examSubjectFilterReq.getStatus());
-            count.setParameter("status", examSubjectFilterReq.getStatus());
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examSubjectFilterReq.getKeyword())){
-            query.setParameter("keyword", DataUtils.escapeSpecialCharacters(examSubjectFilterReq.getKeyword()));
-            count.setParameter("keyword", DataUtils.escapeSpecialCharacters(examSubjectFilterReq.getKeyword()));
-        }
-
-        long totalRecord = ((Number) count.getSingleResult()).longValue();
-        List<ExamSubjectEntity> list = query.getResultList();
-        return new PageImpl<>(list, pageable, totalRecord);
+        return examSubjectRepository.filter(
+            pageable,
+            SecurityUtils.getUserLogin(),
+            examSubjectFilterReq.getStatus() != null ? examSubjectFilterReq.getStatus().name() : null,
+            examSubjectFilterReq.getKeyword()
+        );
     }
 
     @Override

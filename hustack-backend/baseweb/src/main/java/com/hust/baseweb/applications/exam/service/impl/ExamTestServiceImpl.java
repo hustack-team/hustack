@@ -16,7 +16,6 @@ import com.hust.baseweb.applications.exam.service.ExamTestService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +23,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,59 +47,13 @@ public class ExamTestServiceImpl implements ExamTestService {
 
     @Override
     public Page<ExamTestEntity> filter(Pageable pageable, ExamTestFilterReq examTestFilterReq) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("select\n" +
-                   "    *\n" +
-                   "from\n" +
-                   "    exam_test et\n" +
-                   "where\n" +
-                   "    et.created_by = :userLogin \n");
-
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getKeyword())){
-            sql.append("and\n" +
-                       "    ((lower(et.code) like CONCAT('%', LOWER(:keyword),'%')) or \n" +
-                       "    (lower(et.name) like CONCAT('%', LOWER(:keyword),'%'))) \n");
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom()) &&
-           DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            sql.append("and\n" +
-                       "    et.created_at between :createdFrom and :createdTo \n");
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom()) &&
-           !DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            sql.append("and\n" +
-                       "    et.created_at >= :createdFrom \n");
-        }
-        if(!DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom()) &&
-           DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            sql.append("and\n" +
-                       "    et.created_at <= :createdTo \n");
-        }
-        sql.append("order by created_at desc\n");
-
-        Query query = entityManager.createNativeQuery(sql.toString(), ExamTestEntity.class);
-        Query count = entityManager.createNativeQuery("select count(1) FROM (" + sql + ") as count");
-        query.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
-        query.setMaxResults(pageable.getPageSize());
-
-        query.setParameter("userLogin", SecurityUtils.getUserLogin());
-        count.setParameter("userLogin", SecurityUtils.getUserLogin());
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getKeyword())){
-            query.setParameter("keyword", DataUtils.escapeSpecialCharacters(examTestFilterReq.getKeyword()));
-            count.setParameter("keyword", DataUtils.escapeSpecialCharacters(examTestFilterReq.getKeyword()));
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom())){
-            query.setParameter("createdFrom", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedFrom(), true));
-            count.setParameter("createdFrom", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedFrom(), true));
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            query.setParameter("createdTo", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false));
-            count.setParameter("createdTo", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false));
-        }
-
-        long totalRecord = ((Number) count.getSingleResult()).longValue();
-        List<ExamTestEntity> list = query.getResultList();
-        return new PageImpl<>(list, pageable, totalRecord);
+        return examTestRepository.filter(
+            pageable,
+            SecurityUtils.getUserLogin(),
+            DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedFrom(), true),
+            DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false),
+            examTestFilterReq.getKeyword()
+        );
     }
 
     @Override
