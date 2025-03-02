@@ -113,6 +113,17 @@ function ExamCreateUpdate(props) {
     }
   ]
 
+  const answerStatusList = [
+    {
+      value: 'NO_OPEN',
+      name: 'Ẩn'
+    },
+    {
+      value: 'OPEN',
+      name: 'Hiện'
+    }
+  ]
+
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
@@ -126,7 +137,8 @@ function ExamCreateUpdate(props) {
   const [code, setCode] = useState(data?.code);
   const [name, setName] = useState(data?.name);
   const [status, setStatus] = useState(data?.status);
-  const [description, setDescription] = useState(data?.description);
+  const [answerStatus, setAnswerStatus] = useState(data?.answerStatus);
+  const [description, setDescription] = useState(data?.description ? data?.description : '');
   const [examTestId, setExamTestId] = useState(data?.examTestId);
   const [startTime, setStartTime] = useState(data?.startTime);
   const [endTime, setEndTime] = useState(data?.endTime);
@@ -144,13 +156,16 @@ function ExamCreateUpdate(props) {
       name: name,
       description: description,
       status: status,
+      answerStatus: answerStatus,
       examTestId: examTestId,
       startTime: formatDateTimeApi(startTime),
       endTime: formatDateTimeApi(endTime),
       examStudents: examStudents,
       examStudentDeletes: examStudentDeletes
     }
-    validateBody(body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
@@ -179,24 +194,25 @@ function ExamCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã kỳ thi không được bỏ trống')
-      return
+      return false
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên kỳ thi không được bỏ trống')
-      return
+      return false
     }
     if(body.examTestId == null || body.examTestId === ''){
       toast.error('Chọn đề thi cho kỳ thi')
-      return
+      return false
     }
     if(body.startTime == null || body.startTime === ''){
       toast.error('Thời gian bắt đầu không được bỏ trống')
-      return
+      return false
     }
     if(body.endTime == null || body.endTime === ''){
       toast.error('Thời gian kết thúc không được bỏ trống')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {
@@ -213,12 +229,12 @@ function ExamCreateUpdate(props) {
   };
 
   const detailsTest = (id) =>{
-    const body = {
+    const queryParams = new URLSearchParams({
       id: id
-    }
+    })
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -228,7 +244,6 @@ function ExamCreateUpdate(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -340,6 +355,26 @@ function ExamCreateUpdate(props) {
                   >
                     {
                       statusList.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+
+                  <TextField
+                    required
+                    autoFocus
+                    id="ExamAnswerstatus"
+                    select
+                    label="Trạng thái đáp án"
+                    value={answerStatus}
+                    onChange={(event) => {
+                      setAnswerStatus(event.target.value);
+                    }}
+                  >
+                    {
+                      answerStatusList.map(item => {
                         return (
                           <MenuItem value={item.value}>{item.name}</MenuItem>
                         )

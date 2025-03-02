@@ -11,7 +11,9 @@ import com.hust.baseweb.applications.exam.model.response.MyExamDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.MyExamFilterRes;
 import com.hust.baseweb.applications.exam.service.ExamService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,20 +26,21 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/exam")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamController {
 
-    private final ExamService examService;
+    ExamService examService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/filter")
+    @GetMapping("/filter")
     public ResponseEntity<Page<ExamEntity>> filter(
-        Pageable pageable, @RequestBody ExamFilterReq examFilterReq) {
+        Pageable pageable, @ModelAttribute ExamFilterReq examFilterReq) {
         return ResponseEntity.ok(examService.filter(pageable, examFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/details")
-    public ResponseEntity<ResponseData<ExamDetailsRes>> details(@RequestBody ExamDetailsReq examDetailsReq) {
+    @GetMapping("/details")
+    public ResponseEntity<ResponseData<ExamDetailsRes>> details(@ModelAttribute ExamDetailsReq examDetailsReq) {
         return ResponseEntity.ok(examService.details(examDetailsReq));
     }
 
@@ -71,21 +74,20 @@ public class ExamController {
         return ResponseEntity.ok(examService.delete(examDeleteReq));
     }
 
-    @PostMapping("/filter-my-exam")
+    @GetMapping("/filter-my-exam")
     public ResponseEntity<Page<MyExamFilterRes>> filter(
-        Pageable pageable, @RequestBody MyExamFilterReq myExamFilterReq) {
+        Pageable pageable, @ModelAttribute MyExamFilterReq myExamFilterReq) {
         return ResponseEntity.ok(examService.filterMyExam(pageable, myExamFilterReq));
     }
 
-    @PostMapping("/details-my-exam")
-    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@RequestBody MyExamDetailsReq myExamDetailsReq) {
+    @GetMapping("/details-my-exam")
+    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@ModelAttribute MyExamDetailsReq myExamDetailsReq) {
         return ResponseEntity.ok(examService.detailsMyExam(myExamDetailsReq));
     }
 
     @PostMapping("/doing-my-exam")
-    public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestParam("body") String body,
-                                                                      @RequestParam("files") MultipartFile[] files) {
-        Gson gson = new Gson();
-        return ResponseEntity.ok(examService.doingMyExam(gson.fromJson(body, MyExamResultSaveReq.class), files));
+    public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
+                                                                      @RequestPart("files") MultipartFile[] files) {
+        return ResponseEntity.ok(examService.doingMyExam(myExamResultSaveReq, files));
     }
 }

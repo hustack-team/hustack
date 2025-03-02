@@ -9,34 +9,34 @@ import com.hust.baseweb.applications.exam.model.request.ExamTestSaveReq;
 import com.hust.baseweb.applications.exam.model.response.ExamTestDetailsRes;
 import com.hust.baseweb.applications.exam.service.ExamTestService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/exam-test")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamTestController {
 
-    private final ExamTestService examTestService;
+    ExamTestService examTestService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/filter")
-    public ResponseEntity<Page<ExamTestEntity>> filter(Pageable pageable, @RequestBody ExamTestFilterReq examTestFilterReq) {
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ExamTestEntity>> filter(Pageable pageable, @ModelAttribute ExamTestFilterReq examTestFilterReq) {
         return ResponseEntity.ok(examTestService.filter(pageable, examTestFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/details")
-    public ResponseEntity<ResponseData<ExamTestDetailsRes>> details(@RequestBody ExamTestDetailsReq examTestDetailsReq) {
+    @GetMapping("/details")
+    public ResponseEntity<ResponseData<ExamTestDetailsRes>> details(@ModelAttribute ExamTestDetailsReq examTestDetailsReq) {
         return ResponseEntity.ok(examTestService.details(examTestDetailsReq));
     }
 

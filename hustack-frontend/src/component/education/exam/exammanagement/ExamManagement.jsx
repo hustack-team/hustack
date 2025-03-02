@@ -70,7 +70,7 @@ function ExamManagement(props) {
       field: "status",
       headerName: "Trạng thái",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 120,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return (
@@ -80,6 +80,25 @@ function ExamManagement(props) {
           return (
             <strong style={{color: '#61bd6d'}}>Kích hoạt</strong>
           )
+        }
+      },
+    },
+    {
+      field: "answerStatus",
+      headerName: "Trạng thái đáp án",
+      ...baseColumn,
+      minWidth: 170,
+      renderCell: (rowData) => {
+        if(rowData.value === 'NO_OPEN'){
+          return (
+            <strong style={{color: '#f50000c9'}}>Ẩn</strong>
+          )
+        }else if(rowData.value === 'OPEN'){
+          return (
+            <strong style={{color: '#61bd6d'}}>Hiện</strong>
+          )
+        }else{
+          return ''
         }
       },
     },
@@ -135,13 +154,15 @@ function ExamManagement(props) {
   }, [page, pageSize, debouncedKeywordFilter, statusFilter]);
 
   const handleFilter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      status: statusFilter === 'all' ? null : statusFilter
-    }
+    })
+    if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
-      "post",
-      `/exam/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam/filter?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setExamList(res.data.content);
@@ -151,7 +172,6 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -166,6 +186,7 @@ function ExamManagement(props) {
           name: "",
           description: "",
           status: 1,
+          answerStatus: "NO_OPEN",
           startTime: "",
           endTime: "",
           examStudents: []
@@ -176,12 +197,12 @@ function ExamManagement(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const body = {
+    const queryParams = new URLSearchParams({
       id: rowData.id
-    }
+    })
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           history.push({
@@ -196,17 +217,16 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 
   const handleDetails = (rowData) => {
-    const body = {
+    const queryParams = new URLSearchParams({
       id: rowData.id
-    }
+    })
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/details?${queryParams}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetails(res.data.data)
@@ -216,7 +236,6 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 
