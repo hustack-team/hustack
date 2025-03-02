@@ -10,6 +10,7 @@ import {
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {DialogActions} from "@mui/material";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 
 function QuestionBankDelete(props) {
 
@@ -42,28 +43,32 @@ function QuestionBankDelete(props) {
 
   return (
     <div>
-      <Dialog open={open}>
-        <DialogTitle>Xoá câu hỏi</DialogTitle>
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        title="Xoá câu hỏi"
+        content={
           <p style={{marginBottom: "30px"}}>Bạn có chắc chắn muốn xoá câu hỏi?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={closeDialog}
-          >
-            Hủy
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            style={{marginLeft: "15px"}}
-            onClick={deleteQuestion}
-          >
-            Lưu
-          </Button>
-        </DialogActions>
-      </Dialog>
+        }
+        actions={
+          <div>
+            <Button
+              variant="contained"
+              onClick={closeDialog}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              style={{marginLeft: "15px"}}
+              onClick={deleteQuestion}
+            >
+              Lưu
+            </Button>
+          </div>
+        }
+      />
     </div>
   );
 }

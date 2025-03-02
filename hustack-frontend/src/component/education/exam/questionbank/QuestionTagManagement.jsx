@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
 import {
   Box,
-  Button, Card, CardContent, CardHeader,
+  Button, Card, CardContent, CardHeader, CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -17,12 +17,17 @@ import useDebounceValue from "../hooks/use-debounce";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import QuestionTagCreateUpdate from "./QuestionTagCreateUpdate";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
 
 const baseColumn = {
   sortable: false,
 };
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {minWidth: 576},
+}));
 function QuestionTagManagement(props) {
-
+  const classes = useStyles();
   const columns = [
     {
       field: "name",
@@ -104,9 +109,12 @@ function QuestionTagManagement(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="sm">
-        <DialogTitle>Danh sách Tag câu hỏi</DialogTitle>
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        classNames={{paper: classes.dialogContent}}
+        title='Danh sách Tag câu hỏi'
+        content={
           <div>
             <Box display="flex" justifyContent="space-between" alignItems="end" width="100%" marginBottom="20px">
               <Box display="flex" flexDirection="column" width="70%">
@@ -117,7 +125,7 @@ function QuestionTagManagement(props) {
                     label="Nội dung tìm kiếm"
                     placeholder="Tìm kiếm theo tên"
                     value={keywordFilter}
-                    style={{ width: "300px", marginRight: "16px"}}
+                    style={{width: "300px", marginRight: "16px"}}
                     onChange={(event) => {
                       setKeywordFilter(event.target.value);
                     }}
@@ -133,7 +141,7 @@ function QuestionTagManagement(props) {
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
-                  startIcon={<AddCircleIcon />}
+                  startIcon={<AddCircleIcon/>}
                 >
                   Thêm mới
                 </Button>
@@ -145,23 +153,23 @@ function QuestionTagManagement(props) {
               disableColumnMenu
               autoHeight
             />
+            <QuestionTagCreateUpdate
+              open={openQuestionTagCreateUpdateDialog}
+              setOpen={setOpenQuestionTagCreateUpdateDialog}
+              data={dataRowSelected}
+              isCreate={isCreateQuestionTag}
+            ></QuestionTagCreateUpdate>
           </div>
-        </DialogContent>
-        <DialogActions>
+        }
+        actions={
           <Button
             variant="contained"
             onClick={closeDialog}
           >
             Thoát
           </Button>
-        </DialogActions>
-        <QuestionTagCreateUpdate
-          open={openQuestionTagCreateUpdateDialog}
-          setOpen={setOpenQuestionTagCreateUpdateDialog}
-          data={dataRowSelected}
-          isCreate={isCreateQuestionTag}
-        ></QuestionTagCreateUpdate>
-      </Dialog>
+        }
+      />
     </div>
   );
 }

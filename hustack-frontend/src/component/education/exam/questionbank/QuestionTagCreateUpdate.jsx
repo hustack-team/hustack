@@ -17,6 +17,7 @@ import useDebounceValue from "../hooks/use-debounce";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {makeStyles} from "@material-ui/core/styles";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -30,6 +31,7 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 120,
     maxWidth: 300,
   },
+  dialogContent: {minWidth: 576},
 }));
 function QuestionTagCreateUpdate(props) {
 
@@ -94,9 +96,12 @@ function QuestionTagCreateUpdate(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="sm">
-        <DialogTitle>{isCreate ? 'Thêm mới Tag câu hỏi' : 'Cập nhật Tag câu hỏi'}</DialogTitle>
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        classNames={{paper: classes.dialogContent}}
+        title={`${isCreate ? 'Thêm mới Tag câu hỏi' : 'Cập nhật Tag câu hỏi'}`}
+        content={
           <form className={classes.root} noValidate autoComplete="off">
             <div>
               <div>
@@ -118,26 +123,28 @@ function QuestionTagCreateUpdate(props) {
               </div>
             </div>
           </form>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={closeDialog}
-          >
-            Huỷ
-          </Button>
-          <Button
-            disabled={isLoading}
-            variant="contained"
-            color="primary"
-            style={{marginLeft: "15px"}}
-            onClick={handleSave}
-            type="submit"
-          >
-            {isLoading ? <CircularProgress/> : "Lưu"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        }
+        actions={
+          <div>
+            <Button
+              variant="contained"
+              onClick={closeDialog}
+            >
+              Huỷ
+            </Button>
+            <Button
+              disabled={isLoading}
+              variant="contained"
+              color="primary"
+              style={{marginLeft: "15px"}}
+              onClick={handleSave}
+              type="submit"
+            >
+              {isLoading ? <CircularProgress/> : "Lưu"}
+            </Button>
+          </div>
+        }
+      />
     </div>
   );
 }

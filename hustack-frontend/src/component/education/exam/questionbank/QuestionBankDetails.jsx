@@ -13,9 +13,15 @@ import {DialogActions, MenuItem} from "@mui/material";
 import {AttachFileOutlined} from "@material-ui/icons";
 import QuestionFilePreview from "./QuestionFilePreview";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {minWidth: '70vw'},
+}));
 
 function QuestionBankDetails(props) {
-
+  const classes = useStyles();
   const { open, setOpen, question} = props;
 
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
@@ -32,9 +38,12 @@ function QuestionBankDetails(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="md">
-        <DialogTitle>Chi tiết câu hỏi - {question?.code}</DialogTitle>
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        classNames={{paper: classes.dialogContent}}
+        handleClose={closeDialog}
+        title={`Chi tiết câu hỏi - ${question?.code}`}
+        content={
           <div>
             <div style={{display: 'flex', alignItems: 'center', marginBottom: '18px'}}>
               {
@@ -155,22 +164,22 @@ function QuestionBankDetails(props) {
               <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung giải thích:</h4>
               <p>{parseHTMLToString(question?.explain)}</p>
             </div>
+            <QuestionFilePreview
+              open={openFilePreviewDialog}
+              setOpen={setOpenFilePreviewDialog}
+              file={filePreview}>
+            </QuestionFilePreview>
           </div>
-          <QuestionFilePreview
-            open={openFilePreviewDialog}
-            setOpen={setOpenFilePreviewDialog}
-            file={filePreview}>
-          </QuestionFilePreview>
-        </DialogContent>
-        <DialogActions>
+        }
+        actions={
           <Button
             variant="contained"
             onClick={closeDialog}
           >
             Hủy
           </Button>
-        </DialogActions>
-      </Dialog>
+        }
+      />
     </div>
   );
 }
