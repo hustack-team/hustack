@@ -16,5 +16,5 @@ public class ExamQuestionFilterReq {
     private Integer type;
     private String level;
     private String examSubjectId;
-    private List<ExamTagEntity> examTags;
+    private String examTagIds;
 }

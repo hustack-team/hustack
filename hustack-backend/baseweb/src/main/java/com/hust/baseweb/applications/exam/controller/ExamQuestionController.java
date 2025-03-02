@@ -36,8 +36,8 @@ public class ExamQuestionController {
     ExamQuestionService examQuestionService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/filter")
-    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @RequestBody ExamQuestionFilterReq examQuestionFilterReq) {
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, @ModelAttribute ExamQuestionFilterReq examQuestionFilterReq) {
         return ResponseEntity.ok(examQuestionService.filter(pageable, examQuestionFilterReq));
     }
 

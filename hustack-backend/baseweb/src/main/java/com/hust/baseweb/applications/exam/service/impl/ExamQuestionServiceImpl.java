@@ -54,7 +54,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             pageable,
             SecurityUtils.getUserLogin(),
             examQuestionFilterReq.getType(),
-            getIdInListExamTag(examQuestionFilterReq.getExamTags()),
+            examQuestionFilterReq.getExamTagIds() != null ? List.of(examQuestionFilterReq.getExamTagIds().split(",")) : new ArrayList<>(),
             examQuestionFilterReq.getLevel(),
             examQuestionFilterReq.getExamSubjectId(),
             examQuestionFilterReq.getKeyword()

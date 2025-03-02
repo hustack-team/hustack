@@ -193,16 +193,21 @@ function QuestionBank(props) {
   }, [page, pageSize, debouncedKeywordFilter, typeFilter, levelFilter, examSubjectIdFilter, examTagsFilter]);
 
   const filterQuestion = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      type: typeFilter === 'all' ? null : typeFilter,
-      level: levelFilter === 'all' ? null : levelFilter,
-      examSubjectId: examSubjectIdFilter === 'all' ? null : examSubjectIdFilter,
-      examTags: examTagsFilter,
+    })
+    if (typeFilter != null && typeFilter !== "all") queryParams.append('type', typeFilter)
+    if (levelFilter != null && levelFilter !== "all") queryParams.append('level', levelFilter)
+    if (examSubjectIdFilter != null && examSubjectIdFilter !== "all") queryParams.append('examSubjectId', examSubjectIdFilter)
+    if(examTagsFilter.length > 0){
+      const ids = examTagsFilter.map(item => item?.id).join(',')
+      queryParams.append('examTagIds', ids)
     }
     request(
-      "post",
-      `/exam-question/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam-question/filter?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setQuestionList(res.data.content);
@@ -212,7 +217,6 @@ function QuestionBank(props) {
         }
       },
       { onError: (e) => errorNoti(e) },
-      body
     );
   }
 
