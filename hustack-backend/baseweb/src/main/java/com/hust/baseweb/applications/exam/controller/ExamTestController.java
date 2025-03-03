@@ -30,13 +30,13 @@ public class ExamTestController {
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/filter")
-    public ResponseEntity<Page<ExamTestEntity>> filter(Pageable pageable, @ModelAttribute ExamTestFilterReq examTestFilterReq) {
+    public ResponseEntity<Page<ExamTestEntity>> filter(Pageable pageable, ExamTestFilterReq examTestFilterReq) {
         return ResponseEntity.ok(examTestService.filter(pageable, examTestFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/details")
-    public ResponseEntity<ResponseData<ExamTestDetailsRes>> details(@ModelAttribute ExamTestDetailsReq examTestDetailsReq) {
+    public ResponseEntity<ResponseData<ExamTestDetailsRes>> details(ExamTestDetailsReq examTestDetailsReq) {
         return ResponseEntity.ok(examTestService.details(examTestDetailsReq));
     }
 

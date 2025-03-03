@@ -29,7 +29,7 @@ public class ExamSubjectController {
     @Secured("ROLE_TEACHER")
     @GetMapping("/filter")
     public ResponseEntity<Page<ExamSubjectEntity>> filter(
-        Pageable pageable, @ModelAttribute ExamSubjectFilterReq examSubjectFilterReq) {
+        Pageable pageable, ExamSubjectFilterReq examSubjectFilterReq) {
         return ResponseEntity.ok(examSubjectService.filter(pageable, examSubjectFilterReq));
     }
 

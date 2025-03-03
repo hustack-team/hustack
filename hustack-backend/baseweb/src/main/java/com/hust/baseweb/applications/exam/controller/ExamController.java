@@ -34,13 +34,13 @@ public class ExamController {
     @Secured("ROLE_TEACHER")
     @GetMapping("/filter")
     public ResponseEntity<Page<ExamEntity>> filter(
-        Pageable pageable, @ModelAttribute ExamFilterReq examFilterReq) {
+        Pageable pageable, ExamFilterReq examFilterReq) {
         return ResponseEntity.ok(examService.filter(pageable, examFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/details")
-    public ResponseEntity<ResponseData<ExamDetailsRes>> details(@ModelAttribute ExamDetailsReq examDetailsReq) {
+    public ResponseEntity<ResponseData<ExamDetailsRes>> details(ExamDetailsReq examDetailsReq) {
         return ResponseEntity.ok(examService.details(examDetailsReq));
     }
 
@@ -76,12 +76,12 @@ public class ExamController {
 
     @GetMapping("/filter-my-exam")
     public ResponseEntity<Page<MyExamFilterRes>> filter(
-        Pageable pageable, @ModelAttribute MyExamFilterReq myExamFilterReq) {
+        Pageable pageable, MyExamFilterReq myExamFilterReq) {
         return ResponseEntity.ok(examService.filterMyExam(pageable, myExamFilterReq));
     }
 
     @GetMapping("/details-my-exam")
-    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@ModelAttribute MyExamDetailsReq myExamDetailsReq) {
+    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(MyExamDetailsReq myExamDetailsReq) {
         return ResponseEntity.ok(examService.detailsMyExam(myExamDetailsReq));
     }
 
