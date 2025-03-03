@@ -19,6 +19,7 @@ import {getFilenameFromString} from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '70vw'},
@@ -174,12 +175,12 @@ function TestBankDetails(props) {
           </div>
         }
         actions={
-          <Button
-            variant="contained"
+          <TertiaryButton
+            variant="outlined"
             onClick={closeDialog}
           >
             Hủy
-          </Button>
+          </TertiaryButton>
         }
       />
     </div>

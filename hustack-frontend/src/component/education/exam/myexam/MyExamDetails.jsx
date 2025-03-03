@@ -23,6 +23,8 @@ import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import FormGroup from "@material-ui/core/FormGroup";
 import CheckIcon from "@mui/icons-material/Check";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -237,7 +239,7 @@ function MyExamDetails(props) {
               </div>
               {
                 data?.examResultId == null && !startDoing && (
-                  <Button
+                  <PrimaryButton
                     variant="contained"
                     color="primary"
                     style={{margin: "16px 0"}}
@@ -245,7 +247,7 @@ function MyExamDetails(props) {
                     type="submit"
                   >
                     Bắt đầu làm bài
-                  </Button>
+                  </PrimaryButton>
                 )
               }
             </div>
@@ -679,15 +681,15 @@ function MyExamDetails(props) {
 
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/my-exam")}
             >
               Hủy
-            </Button>
+            </TertiaryButton>
             {
               data?.examResultId == null && startDoing && (
-                <Button
+                <PrimaryButton
                   disabled={isLoading}
                   variant="contained"
                   color="primary"
@@ -696,7 +698,7 @@ function MyExamDetails(props) {
                   type="submit"
                 >
                   {isLoading ? <CircularProgress/> : "Nộp bài"}
-                </Button>
+                </PrimaryButton>
               )
             }
           </CardActions>

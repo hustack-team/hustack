@@ -16,6 +16,7 @@ import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import {parseHTMLToString, parseToString} from "../ultils/DataUltils";
 import {errorNoti} from "../../../../utils/notification";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -441,7 +442,7 @@ function QuestionBank(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="20%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
@@ -449,7 +450,7 @@ function QuestionBank(props) {
                   style={{ marginRight: 16 }}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
           }/>

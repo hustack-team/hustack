@@ -12,6 +12,8 @@ import {makeStyles} from "@material-ui/core/styles";
 import {useHistory} from "react-router-dom";
 import {useLocation} from "react-router";
 import withScreenSecurity from "../../../withScreenSecurity";
+import TertiaryButton from "../../../button/TertiaryButton";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -193,13 +195,13 @@ function ExamSubjectCreateUpdate(props) {
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/subject")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -208,7 +210,7 @@ function ExamSubjectCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
         </Card>
       </MuiPickersUtilsProvider>

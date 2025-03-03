@@ -16,6 +16,7 @@ import {formatDateTime} from "../ultils/DateUltils";
 import ExamDelete from "./ExamDelete";
 import ExamDetails from "./ExamDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -290,7 +291,7 @@ function ExamManagement(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="20%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
@@ -298,7 +299,7 @@ function ExamManagement(props) {
                   style={{ marginRight: 16 }}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
           }/>

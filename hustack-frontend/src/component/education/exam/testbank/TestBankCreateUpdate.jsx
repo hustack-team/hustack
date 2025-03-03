@@ -18,6 +18,8 @@ import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import TestBankAddQuestion from "./TestBankAddQuestion";
 import withScreenSecurity from "../../../withScreenSecurity";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -224,7 +226,7 @@ function TestBankCreateUpdate(props) {
                     onSortEnd={onSortEnd}
                     setQuestionDelete={setQuestionDelete}/>
 
-                  <Button
+                  <PrimaryButton
                     variant="contained"
                     color="primary"
                     onClick={() => setOpenAddQuestionDialog(true)}
@@ -232,19 +234,19 @@ function TestBankCreateUpdate(props) {
                     style={{ marginRight: 16 , width: '200px'}}
                   >
                     Thêm câu hỏi
-                  </Button>
+                  </PrimaryButton>
                 </Box>
               </div>
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/test-bank")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -253,7 +255,7 @@ function TestBankCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
           <TestBankAddQuestion
             open={openAddQuestionDialog}

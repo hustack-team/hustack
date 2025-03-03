@@ -29,6 +29,8 @@ import XLSX from "xlsx";
 import {DataGrid} from "@material-ui/data-grid";
 import withScreenSecurity from "../../../withScreenSecurity";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -405,7 +407,7 @@ function ExamCreateUpdate(props) {
                   {
                     testList.length < 1 ?
                       (
-                        <Button
+                        <PrimaryButton
                           variant="contained"
                           color="primary"
                           onClick={() => setOpenSelectTestDialog(true)}
@@ -413,7 +415,7 @@ function ExamCreateUpdate(props) {
                           style={{marginRight: 16, width: '200px'}}
                         >
                           Chọn đề thi
-                        </Button>
+                        </PrimaryButton>
                       )
                       :
                       (
@@ -550,13 +552,13 @@ function ExamCreateUpdate(props) {
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/management")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -565,7 +567,7 @@ function ExamCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
           {
             openTestDetailsDialog && (

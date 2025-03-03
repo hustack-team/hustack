@@ -30,6 +30,8 @@ import indexEsm from "@heroicons/react";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -576,13 +578,13 @@ function ExamMarking(props) {
         }
         actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -591,7 +593,7 @@ function ExamMarking(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Chấm bài"}
-            </Button>
+            </PrimaryButton>
           </div>
         }
       />

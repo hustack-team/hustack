@@ -12,6 +12,8 @@ import {DialogActions} from "@mui/material";
 import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import TertiaryButton from "../../../button/TertiaryButton";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -52,19 +54,19 @@ function QuestionFilePreview(props) {
         }
         actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               variant="contained"
               color="primary"
               onClick={handleDownload}
             >
               Tải xuống
-            </Button>
+            </PrimaryButton>
           </div>
         }
       />

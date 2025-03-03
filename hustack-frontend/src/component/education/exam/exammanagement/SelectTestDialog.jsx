@@ -25,6 +25,8 @@ import {getFilenameFromString} from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -276,7 +278,7 @@ function SelectTestDialog(props) {
                     </Box>
 
                     <Box display="flex" justifyContent="flex-end" width="20%">
-                      <Button
+                      <PrimaryButton
                         variant="contained"
                         disabled={dataSelectionList.length < 1}
                         color="primary"
@@ -284,7 +286,7 @@ function SelectTestDialog(props) {
                         startIcon={<AddCircleIcon />}
                       >
                         Thêm vào danh sách
-                      </Button>
+                      </PrimaryButton>
                     </Box>
                   </Box>
                 }/>
@@ -327,13 +329,13 @@ function SelectTestDialog(props) {
         }
         actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               variant="contained"
               color="primary"
               disabled={dataSelectedList.length < 1}
@@ -341,7 +343,7 @@ function SelectTestDialog(props) {
               onClick={handleAdd}
             >
               Lưu
-            </Button>
+            </PrimaryButton>
           </div>
         }
       />

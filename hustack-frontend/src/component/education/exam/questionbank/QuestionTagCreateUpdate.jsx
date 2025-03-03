@@ -18,6 +18,8 @@ import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {makeStyles} from "@material-ui/core/styles";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -126,13 +128,13 @@ function QuestionTagCreateUpdate(props) {
         }
         actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Huỷ
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -141,7 +143,7 @@ function QuestionTagCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </div>
         }
       />

@@ -21,6 +21,8 @@ import {getFilenameFromString} from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -82,13 +84,13 @@ function ExamDetails(props) {
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
             {
               rowData?.row?.examResultId ? (
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={(data) => handleMarking(rowData?.row)}
                 >
                   Chấm điểm
-                </Button>
+                </PrimaryButton>
               ) : (
                 <Button
                   variant="outlined"
@@ -254,12 +256,12 @@ function ExamDetails(props) {
           </div>
         }
         actions={
-          <Button
-            variant="contained"
+          <TertiaryButton
+            variant="outlined"
             onClick={closeDialog}
           >
             Hủy
-          </Button>
+          </TertiaryButton>
         }
       />
       {

@@ -22,6 +22,7 @@ import StyleIcon from '@mui/icons-material/Style';
 import withScreenSecurity from "../../../withScreenSecurity";
 import QuestionTagManagement from "./QuestionTagManagement";
 import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -657,13 +658,13 @@ function QuestionBankCreateUpdate(props) {
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/question-bank")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -672,7 +673,7 @@ function QuestionBankCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
           <QuestionFilePreview
             open={openFilePreviewDialog}

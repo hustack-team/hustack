@@ -11,6 +11,8 @@ import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {DialogActions} from "@mui/material";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import TertiaryButton from "../../../button/TertiaryButton";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 function QuestionBankDelete(props) {
 
@@ -52,20 +54,20 @@ function QuestionBankDelete(props) {
         }
         actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               variant="contained"
               color="primary"
               style={{marginLeft: "15px"}}
               onClick={deleteQuestion}
             >
               Lưu
-            </Button>
+            </PrimaryButton>
           </div>
         }
       />

@@ -19,6 +19,8 @@ import {toast} from "react-toastify";
 import QuestionTagCreateUpdate from "./QuestionTagCreateUpdate";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -137,14 +139,14 @@ function QuestionTagManagement(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="30%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
                   startIcon={<AddCircleIcon/>}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
             <DataGrid
@@ -162,12 +164,12 @@ function QuestionTagManagement(props) {
           </div>
         }
         actions={
-          <Button
-            variant="contained"
+          <TertiaryButton
+            variant="outlined"
             onClick={closeDialog}
           >
             Thoát
-          </Button>
+          </TertiaryButton>
         }
       />
     </div>

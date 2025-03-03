@@ -16,6 +16,8 @@ import {parseHTMLToString} from "../ultils/DataUltils";
 import {errorNoti} from "../../../../utils/notification";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -496,7 +498,7 @@ function TestBankAddQuestion(props) {
                       </Box>
                     </Box>
                     <Box display="flex" justifyContent="flex-end" width="20%">
-                      <Button
+                      <PrimaryButton
                         variant="contained"
                         disabled={questionSelectionList.length < 1}
                         color="primary"
@@ -504,7 +506,7 @@ function TestBankAddQuestion(props) {
                         startIcon={<AddCircleIcon />}
                       >
                         Thêm vào danh sách
-                      </Button>
+                      </PrimaryButton>
                     </Box>
                   </Box>
                 }/>
@@ -547,13 +549,13 @@ function TestBankAddQuestion(props) {
         }
         actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               variant="contained"
               color="primary"
               disabled={questionSelectedList.length < 1}
@@ -561,7 +563,7 @@ function TestBankAddQuestion(props) {
               onClick={handleAdd}
             >
               Lưu
-            </Button>
+            </PrimaryButton>
           </div>
         }
       />

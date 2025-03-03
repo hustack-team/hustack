@@ -13,6 +13,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import ExamSubjectDelete from "./ExamSubjectDelete";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -199,7 +200,7 @@ function ExamSubjectManagement(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="20%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
@@ -207,7 +208,7 @@ function ExamSubjectManagement(props) {
                   style={{ marginRight: 16 }}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
           }/>

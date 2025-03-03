@@ -19,6 +19,7 @@ import {vi} from "date-fns/locale";
 import TestBankDelete from "./TestBankDelete";
 import TestBankDetails from "./TestBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -263,7 +264,7 @@ function TestBank(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="20%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
@@ -271,7 +272,7 @@ function TestBank(props) {
                   style={{ marginRight: 16 }}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
           }/>
