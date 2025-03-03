@@ -68,7 +68,7 @@ public class ExamSubjectServiceImpl implements ExamSubjectService {
         examSubjectRepository.save(examSubjectEntity);
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
-        responseData.setResultMsg("Thêm mới môn hc thành công");
+        responseData.setResultMsg("Thêm mới môn học thành công");
         return responseData;
     }
 

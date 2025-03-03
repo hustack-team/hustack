@@ -309,7 +309,7 @@ function TestBankAddQuestion(props) {
   const getAllQuestionTag = () => {
     request(
       "get",
-      `/exam-tag/get-all`,
+      `/exam-tag`,
       (res) => {
         if(res.status === 200){
           setQuestionTags(res.data)

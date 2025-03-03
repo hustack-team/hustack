@@ -25,7 +25,7 @@ public class ExamTagController {
     ExamTagService examTagService;
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/get-all")
+    @GetMapping
     public ResponseEntity<List<ExamTagEntity>> getAll() {
         return ResponseEntity.ok(examTagService.getAll());
     }
