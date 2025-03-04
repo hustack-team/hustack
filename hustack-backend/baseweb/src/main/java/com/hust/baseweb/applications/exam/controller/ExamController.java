@@ -1,6 +1,5 @@
 package com.hust.baseweb.applications.exam.controller;
 
-import com.google.gson.Gson;
 import com.hust.baseweb.applications.exam.entity.ExamEntity;
 import com.hust.baseweb.applications.exam.entity.ExamResultEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
@@ -32,60 +31,61 @@ public class ExamController {
     ExamService examService;
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/filter")
+    @GetMapping
     public ResponseEntity<Page<ExamEntity>> filter(
         Pageable pageable, ExamFilterReq examFilterReq) {
         return ResponseEntity.ok(examService.filter(pageable, examFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/details")
-    public ResponseEntity<ResponseData<ExamDetailsRes>> details(ExamDetailsReq examDetailsReq) {
-        return ResponseEntity.ok(examService.details(examDetailsReq));
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamDetailsRes>> details(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examService.details(id));
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/details-marking/{examStudentId}")
+    @GetMapping("/teacher/submissions/{examStudentId}")
     public ResponseEntity<ResponseData<ExamMarkingDetailsRes>> detailsExamMarking(@PathVariable String examStudentId) {
         return ResponseEntity.ok(examService.detailsExamMarking(examStudentId));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/marking-exam")
+    @PostMapping("/teacher/submissions")
     public ResponseEntity<ResponseData<ExamResultEntity>> markingExam(@RequestBody ExamMarkingSaveReq examMarkingSaveReq) {
         return ResponseEntity.ok(examService.markingExam(examMarkingSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ResponseData<ExamEntity>> create(@RequestBody @Valid ExamSaveReq examSaveReq) {
         return ResponseEntity.ok(examService.create(examSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/update")
+    @PutMapping
     public ResponseEntity<ResponseData<ExamEntity>> update(@RequestBody @Valid ExamSaveReq examSaveReq) {
         return ResponseEntity.ok(examService.update(examSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/delete")
-    public ResponseEntity<ResponseData<ExamEntity>> delete(@RequestBody @Valid ExamDeleteReq examDeleteReq) {
-        return ResponseEntity.ok(examService.delete(examDeleteReq));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamEntity>> delete(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examService.delete(id));
     }
 
-    @GetMapping("/filter-my-exam")
-    public ResponseEntity<Page<MyExamFilterRes>> filter(
+    @GetMapping("/student/submissions")
+    public ResponseEntity<Page<MyExamFilterRes>> filterMyExam(
         Pageable pageable, MyExamFilterReq myExamFilterReq) {
         return ResponseEntity.ok(examService.filterMyExam(pageable, myExamFilterReq));
     }
 
-    @GetMapping("/details-my-exam")
-    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(MyExamDetailsReq myExamDetailsReq) {
-        return ResponseEntity.ok(examService.detailsMyExam(myExamDetailsReq));
+    @GetMapping("/student/submissions/{examId}/{examStudentId}")
+    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@PathVariable("examId") String examId,
+                                                                        @PathVariable("examStudentId") String examStudentId) {
+        return ResponseEntity.ok(examService.detailsMyExam(examId, examStudentId));
     }
 
-    @PostMapping("/doing-my-exam")
+    @PostMapping("/student/submissions")
     public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
                                                                       @RequestPart("files") MultipartFile[] files) {
         return ResponseEntity.ok(examService.doingMyExam(myExamResultSaveReq, files));

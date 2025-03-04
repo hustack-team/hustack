@@ -24,6 +24,7 @@ public interface ExamQuestionFilterRes {
     LocalDateTime getCreatedAt();
     String getUpdatedBy();
     LocalDateTime getUpdatedAt();
+    String getExamSubjectId();
     String getExamSubjectName();
     @JsonRawValue
     String getExamTags();

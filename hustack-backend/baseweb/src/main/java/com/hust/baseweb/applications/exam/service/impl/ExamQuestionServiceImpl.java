@@ -67,10 +67,10 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     }
 
     @Override
-    public ResponseData<ExamQuestionDetailsRes> details(ExamQuestionDetailsReq examQuestionDetailsReq) {
+    public ResponseData<ExamQuestionDetailsRes> details(String id) {
         ResponseData<ExamQuestionDetailsRes> responseData = new ResponseData<>();
-        if(DataUtils.stringIsNotNullOrEmpty(examQuestionDetailsReq.getId())){
-            Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneById(examQuestionDetailsReq.getId());
+        if(DataUtils.stringIsNotNullOrEmpty(id)){
+            Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneById(id);
             if(examQuestionEntity.isPresent()){
                 responseData.setHttpStatus(HttpStatus.OK);
                 responseData.setResultCode(HttpStatus.OK.value());
@@ -80,16 +80,16 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             }
         }
 
-        if(DataUtils.stringIsNotNullOrEmpty(examQuestionDetailsReq.getCode())){
-            Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneByCode(examQuestionDetailsReq.getCode());
-            if(examQuestionEntity.isPresent()){
-                responseData.setHttpStatus(HttpStatus.OK);
-                responseData.setResultCode(HttpStatus.OK.value());
-                responseData.setResultMsg("Success");
-                responseData.setData(examQuestionEntity.get());
-                return responseData;
-            }
-        }
+//        if(DataUtils.stringIsNotNullOrEmpty(code)){
+//            Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneByCode(code);
+//            if(examQuestionEntity.isPresent()){
+//                responseData.setHttpStatus(HttpStatus.OK);
+//                responseData.setResultCode(HttpStatus.OK.value());
+//                responseData.setResultMsg("Success");
+//                responseData.setData(examQuestionEntity.get());
+//                return responseData;
+//            }
+//        }
 
         responseData.setHttpStatus(HttpStatus.NOT_FOUND);
         responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -191,9 +191,9 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
 
     @Override
     @Transactional
-    public ResponseData<ExamQuestionEntity> delete(ExamQuestionDeleteReq examQuestionDeleteReq) {
+    public ResponseData<ExamQuestionEntity> delete(String id) {
         ResponseData<ExamQuestionEntity> responseData = new ResponseData<>();
-        Optional<ExamQuestionEntity> examQuestionExist = examQuestionRepository.findById(examQuestionDeleteReq.getId());
+        Optional<ExamQuestionEntity> examQuestionExist = examQuestionRepository.findById(id);
         if(!examQuestionExist.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -201,7 +201,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             return responseData;
         }
 
-        List<ExamTestQuestionEntity> examTestQuestionEntityList = examTestQuestionRepository.findAllByExamQuestionId(examQuestionDeleteReq.getId());
+        List<ExamTestQuestionEntity> examTestQuestionEntityList = examTestQuestionRepository.findAllByExamQuestionId(id);
         if(!examTestQuestionEntityList.isEmpty()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -218,7 +218,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             }
         }
 
-        List<ExamQuestionTagEntity> examQuestionTagEntityList = examQuestionTagRepository.findALLById_ExamQuestionId(examQuestionDeleteReq.getId());
+        List<ExamQuestionTagEntity> examQuestionTagEntityList = examQuestionTagRepository.findALLById_ExamQuestionId(id);
         if(!examQuestionTagEntityList.isEmpty()){
             examQuestionTagRepository.deleteAll(examQuestionTagEntityList);
         }

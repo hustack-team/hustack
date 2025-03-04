@@ -19,12 +19,9 @@ function QuestionBankDelete(props) {
   const { open, setOpen, id , onReloadQuestions} = props;
 
   const deleteQuestion = () =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-question/delete`,
+      "delete",
+      `/exam-question/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           onReloadQuestions()
@@ -35,7 +32,6 @@ function QuestionBankDelete(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 

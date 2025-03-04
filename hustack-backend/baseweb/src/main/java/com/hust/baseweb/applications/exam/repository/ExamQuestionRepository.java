@@ -101,6 +101,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
 
     @Query(value = "select " +
                    "    eq.*, " +
+                   "    es.id as examSubjectId, " +
                    "    es.name as examSubjectName, " +
                    "    COALESCE(json_agg(json_build_object('id', et.id, 'name', et.name)) FILTER (WHERE et.id IS NOT NULL), '[]') AS examTags " +
                    "from " +
@@ -130,7 +131,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.content_answer1, eq.content_answer2, eq.content_answer3, " +
                    "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by, " +
-                   "    eq.exam_subject_id, eq.level ,es.name " +
+                   "    eq.exam_subject_id, eq.level ,es.id, es.name " +
                    "order by eq.created_at desc",
            countQuery = "select " +
                         "    count(1) " +
@@ -161,7 +162,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                         "    eq.content_answer1, eq.content_answer2, eq.content_answer3, " +
                         "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer, " +
                         "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by, " +
-                        "    eq.exam_subject_id, eq.level ,es.name ",
+                        "    eq.exam_subject_id, eq.level ,es.id, es.name ",
            nativeQuery = true)
     Page<ExamQuestionFilterRes> filter(
         Pageable pageable,

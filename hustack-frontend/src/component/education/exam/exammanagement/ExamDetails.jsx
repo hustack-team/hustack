@@ -117,12 +117,9 @@ function ExamDetails(props) {
   const [examDetailsMarking, setExamDetailsMarking] = useState(null)
 
   const handleOpenPopupTestDetails = (test) =>{
-    const queryParams = new URLSearchParams({
-      id: test.id
-    })
     request(
       "get",
-      `/exam-test/details?${queryParams}`,
+      `/exam-test/${test.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -142,7 +139,7 @@ function ExamDetails(props) {
   const handleMarking = (rowData) => {
     request(
       "get",
-      `/exam/details-marking/${rowData?.id}`,
+      `/exam/teacher/submissions/${rowData?.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetailsMarking(res.data.data)

@@ -194,8 +194,8 @@ function QuestionBankCreateUpdate(props) {
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam-question/create` : '/exam-question/update',
+      isCreate ? "post" : "put",
+      "/exam-question",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -233,7 +233,7 @@ function QuestionBankCreateUpdate(props) {
   const getAllExamSubject = () => {
     request(
       "get",
-      `/exam-subject/get-all`,
+      `/exam-subject/all`,
       (res) => {
         if(res.status === 200){
           setExamSubjects(res.data)

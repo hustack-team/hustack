@@ -57,10 +57,10 @@ public class ExamTestServiceImpl implements ExamTestService {
     }
 
     @Override
-    public ResponseData<ExamTestDetailsRes> details(ExamTestDetailsReq examTestDetailsReq) {
+    public ResponseData<ExamTestDetailsRes> details(String id) {
         ResponseData<ExamTestDetailsRes> responseData = new ResponseData<>();
 
-        Optional<ExamTestEntity> examTestEntity = examTestRepository.findById(examTestDetailsReq.getId());
+        Optional<ExamTestEntity> examTestEntity = examTestRepository.findById(id);
         if(!examTestEntity.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -68,8 +68,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             return responseData;
         }
 
-        List<ExamTestQuestionDetailsRes> list = examTestRepository.details(SecurityUtils.getUserLogin(),
-                                                                           examTestDetailsReq.getId());
+        List<ExamTestQuestionDetailsRes> list = examTestRepository.details(SecurityUtils.getUserLogin(), id);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -159,9 +158,9 @@ public class ExamTestServiceImpl implements ExamTestService {
 
     @Override
     @Transactional
-    public ResponseData<ExamTestEntity> delete(ExamTestDeleteReq examTestDeleteReq) {
+    public ResponseData<ExamTestEntity> delete(String id) {
         ResponseData<ExamTestEntity> responseData = new ResponseData<>();
-        Optional<ExamTestEntity> examTestExist = examTestRepository.findById(examTestDeleteReq.getId());
+        Optional<ExamTestEntity> examTestExist = examTestRepository.findById(id);
         if(!examTestExist.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -169,7 +168,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             return responseData;
         }
 
-        List<ExamEntity> examEntityList = examRepository.findALlByExamTestId(examTestDeleteReq.getId());
+        List<ExamEntity> examEntityList = examRepository.findALlByExamTestId(id);
         if(!examEntityList.isEmpty()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -177,7 +176,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             return responseData;
         }
 
-        List<ExamTestQuestionEntity> testQuestionEntityList = examTestQuestionRepository.findAllByExamTestId(examTestDeleteReq.getId());
+        List<ExamTestQuestionEntity> testQuestionEntityList = examTestQuestionRepository.findAllByExamTestId(id);
         examTestQuestionRepository.deleteAll(testQuestionEntityList);
         examTestRepository.delete(examTestExist.get());
         responseData.setHttpStatus(HttpStatus.OK);

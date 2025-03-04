@@ -157,7 +157,7 @@ function MyExamDetails(props) {
     setIsLoading(true)
     request(
       "post",
-      '/exam/doing-my-exam',
+      '/exam/student/submissions',
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){

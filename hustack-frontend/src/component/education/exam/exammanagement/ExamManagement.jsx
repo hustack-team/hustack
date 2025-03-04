@@ -163,7 +163,7 @@ function ExamManagement(props) {
     if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
       "get",
-      `/exam/filter?${queryParams}`,
+      `/exam?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setExamList(res.data.content);
@@ -198,12 +198,9 @@ function ExamManagement(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const queryParams = new URLSearchParams({
-      id: rowData.id
-    })
     request(
       "get",
-      `/exam/details?${queryParams}`,
+      `/exam/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           history.push({
@@ -222,12 +219,9 @@ function ExamManagement(props) {
   };
 
   const handleDetails = (rowData) => {
-    const queryParams = new URLSearchParams({
-      id: rowData.id
-    })
     request(
       "get",
-      `/exam/details?${queryParams}`,
+      `/exam/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetails(res.data.data)

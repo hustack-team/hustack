@@ -31,13 +31,13 @@ public class ExamTagController {
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ResponseData<ExamTagEntity>> create(@RequestBody @Valid ExamTagSaveReq examTagSaveReq) {
         return ResponseEntity.ok(examTagService.create(examTagSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/update")
+    @PutMapping
     public ResponseEntity<ResponseData<ExamTagEntity>> update(@RequestBody @Valid ExamTagSaveReq examTagSaveReq) {
         return ResponseEntity.ok(examTagService.update(examTagSaveReq));
     }

@@ -1,17 +1,12 @@
 package com.hust.baseweb.applications.exam.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.hust.baseweb.applications.exam.entity.ExamQuestionEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
-import com.hust.baseweb.applications.exam.model.request.ExamQuestionDeleteReq;
-import com.hust.baseweb.applications.exam.model.request.ExamQuestionDetailsReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionFilterReq;
 import com.hust.baseweb.applications.exam.model.request.ExamQuestionSaveReq;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionFilterRes;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
-import com.hust.baseweb.applications.exam.utils.LocalDateTimeAdapter;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,9 +18,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.validation.Valid;
-import java.time.LocalDateTime;
-
 @Slf4j
 @RestController
 @RequestMapping("/exam-question")
@@ -36,34 +28,34 @@ public class ExamQuestionController {
     ExamQuestionService examQuestionService;
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/filter")
+    @GetMapping
     public ResponseEntity<Page<ExamQuestionFilterRes>> filter(Pageable pageable, ExamQuestionFilterReq examQuestionFilterReq) {
         return ResponseEntity.ok(examQuestionService.filter(pageable, examQuestionFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/details")
-    public ResponseEntity<ResponseData<ExamQuestionDetailsRes>> details(ExamQuestionDetailsReq examQuestionDetailsReq) {
-        return ResponseEntity.ok(examQuestionService.details(examQuestionDetailsReq));
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamQuestionDetailsRes>> details(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examQuestionService.details(id));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ResponseData<ExamQuestionEntity>> create(@RequestPart("body") ExamQuestionSaveReq examQuestionSaveReq,
                                                                    @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(examQuestionService.create(examQuestionSaveReq, files));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/update")
+    @PutMapping
     public ResponseEntity<ResponseData<ExamQuestionEntity>> update(@RequestPart("body") ExamQuestionSaveReq examQuestionSaveReq,
                                                                    @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(examQuestionService.update(examQuestionSaveReq, files));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/delete")
-    public ResponseEntity<ResponseData<ExamQuestionEntity>> delete(@RequestBody @Valid ExamQuestionDeleteReq examQuestionDeleteReq) {
-        return ResponseEntity.ok(examQuestionService.delete(examQuestionDeleteReq));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamQuestionEntity>> delete(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examQuestionService.delete(id));
     }
 }

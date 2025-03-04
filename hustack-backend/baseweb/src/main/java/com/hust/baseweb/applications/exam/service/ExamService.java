@@ -16,17 +16,17 @@ public interface ExamService {
 
     Page<ExamEntity> filter(Pageable pageable, ExamFilterReq examFilterReq);
 
-    ResponseData<ExamDetailsRes> details(ExamDetailsReq examDetailsReq);
+    ResponseData<ExamDetailsRes> details(String id);
 
     ResponseData<ExamEntity> create(ExamSaveReq examSaveReq);
 
     ResponseData<ExamEntity> update(ExamSaveReq examSaveReq);
 
-    ResponseData<ExamEntity> delete(ExamDeleteReq examDeleteReq);
+    ResponseData<ExamEntity> delete(String id);
 
     Page<MyExamFilterRes> filterMyExam(Pageable pageable, MyExamFilterReq myExamFilterReq);
 
-    ResponseData<MyExamDetailsRes> detailsMyExam(MyExamDetailsReq myExamDetailsReq);
+    ResponseData<MyExamDetailsRes> detailsMyExam(String examId, String examStudentId);
 
     ResponseData<ExamResultEntity> doingMyExam(MyExamResultSaveReq myExamResultSaveReq, MultipartFile[] files);
 

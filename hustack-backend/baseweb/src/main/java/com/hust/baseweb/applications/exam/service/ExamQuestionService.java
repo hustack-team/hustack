@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ExamQuestionService {
 
     Page<ExamQuestionFilterRes> filter(Pageable pageable, ExamQuestionFilterReq examQuestionFilterReq);
-    ResponseData<ExamQuestionDetailsRes> details(ExamQuestionDetailsReq examQuestionDetailsReq);
+    ResponseData<ExamQuestionDetailsRes> details(String id);
     ResponseData<ExamQuestionEntity> create(ExamQuestionSaveReq examQuestionSaveReq, MultipartFile[] files);
     ResponseData<ExamQuestionEntity> update(ExamQuestionSaveReq examQuestionSaveReq, MultipartFile[] files);
-    ResponseData<ExamQuestionEntity> delete(ExamQuestionDeleteReq examQuestionDeleteReq);
+    ResponseData<ExamQuestionEntity> delete(String id);
 }

@@ -82,8 +82,8 @@ function ExamSubjectCreateUpdate(props) {
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam-subject/create` : '/exam-subject/update',
+      isCreate ? "post" : "put",
+      "/exam-subject",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){

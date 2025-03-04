@@ -96,9 +96,9 @@ public class ExamSubjectServiceImpl implements ExamSubjectService {
     }
 
     @Override
-    public ResponseData<ExamSubjectEntity> delete(ExamSubjectDeleteReq examSubjectDeleteReq) {
+    public ResponseData<ExamSubjectEntity> delete(String id) {
         ResponseData<ExamSubjectEntity> responseData = new ResponseData<>();
-        Optional<ExamSubjectEntity> examSubjectExist = examSubjectRepository.findById(examSubjectDeleteReq.getId());
+        Optional<ExamSubjectEntity> examSubjectExist = examSubjectRepository.findById(id);
         if(!examSubjectExist.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -106,7 +106,7 @@ public class ExamSubjectServiceImpl implements ExamSubjectService {
             return responseData;
         }
 
-        List<ExamQuestionEntity> examQuestionEntityList = examQuestionRepository.findAllByExamSubjectId(examSubjectDeleteReq.getId());
+        List<ExamQuestionEntity> examQuestionEntityList = examQuestionRepository.findAllByExamSubjectId(id);
         if(!examQuestionEntityList.isEmpty()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());

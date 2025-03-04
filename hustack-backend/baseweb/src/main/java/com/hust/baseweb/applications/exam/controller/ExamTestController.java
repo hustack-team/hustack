@@ -29,32 +29,32 @@ public class ExamTestController {
     ExamTestService examTestService;
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/filter")
+    @GetMapping
     public ResponseEntity<Page<ExamTestEntity>> filter(Pageable pageable, ExamTestFilterReq examTestFilterReq) {
         return ResponseEntity.ok(examTestService.filter(pageable, examTestFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/details")
-    public ResponseEntity<ResponseData<ExamTestDetailsRes>> details(ExamTestDetailsReq examTestDetailsReq) {
-        return ResponseEntity.ok(examTestService.details(examTestDetailsReq));
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamTestDetailsRes>> details(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examTestService.details(id));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ResponseData<ExamTestEntity>> create(@RequestBody @Valid ExamTestSaveReq examTestSaveReq) {
         return ResponseEntity.ok(examTestService.create(examTestSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/update")
+    @PutMapping
     public ResponseEntity<ResponseData<ExamTestEntity>> update(@RequestBody @Valid ExamTestSaveReq examTestSaveReq) {
         return ResponseEntity.ok(examTestService.update(examTestSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/delete")
-    public ResponseEntity<ResponseData<ExamTestEntity>> delete(@RequestBody @Valid ExamTestDeleteReq examTestDeleteReq) {
-        return ResponseEntity.ok(examTestService.delete(examTestDeleteReq));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamTestEntity>> delete(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examTestService.delete(id));
     }
 }

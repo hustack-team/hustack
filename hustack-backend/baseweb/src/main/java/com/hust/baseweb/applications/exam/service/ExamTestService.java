@@ -14,11 +14,11 @@ public interface ExamTestService {
 
     Page<ExamTestEntity> filter(Pageable pageable, ExamTestFilterReq examTestFilterReq);
 
-    ResponseData<ExamTestDetailsRes> details(ExamTestDetailsReq examTestDetailsReq);
+    ResponseData<ExamTestDetailsRes> details(String id);
 
     ResponseData<ExamTestEntity> create(ExamTestSaveReq examTestSaveReq);
 
     ResponseData<ExamTestEntity> update(ExamTestSaveReq examTestSaveReq);
 
-    ResponseData<ExamTestEntity> delete(ExamTestDeleteReq examTestDeleteReq);
+    ResponseData<ExamTestEntity> delete(String id);
 }

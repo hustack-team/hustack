@@ -63,6 +63,7 @@ function QuestionFilePreview(props) {
             <PrimaryButton
               variant="contained"
               color="primary"
+              style={{marginLeft: "15px"}}
               onClick={handleDownload}
             >
               Tải xuống

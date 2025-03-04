@@ -19,12 +19,9 @@ function ExamSubjectDelete(props) {
   const { open, setOpen, id , onReload} = props;
 
   const handleDelete = () =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-subject/delete`,
+      "delete",
+      `/exam-subject/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           onReload()
@@ -35,7 +32,6 @@ function ExamSubjectDelete(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 

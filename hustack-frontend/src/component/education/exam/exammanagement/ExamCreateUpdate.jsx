@@ -171,8 +171,8 @@ function ExamCreateUpdate(props) {
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam/create` : '/exam/update',
+      isCreate ? "post" : "put",
+      "/exam",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -231,12 +231,9 @@ function ExamCreateUpdate(props) {
   };
 
   const detailsTest = (id) =>{
-    const queryParams = new URLSearchParams({
-      id: id
-    })
     request(
       "get",
-      `/exam-test/details?${queryParams}`,
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)

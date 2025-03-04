@@ -108,7 +108,7 @@ function TestBank(props) {
     if (formatDateApi(createdToFilter) != null) queryParams.append('createdTo', formatDateApi(createdToFilter))
     request(
       "get",
-      `/exam-test/filter?${queryParams}`,
+      `/exam-test?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setData(res.data.content);
@@ -122,12 +122,9 @@ function TestBank(props) {
   }
 
   const detailsTest = (id) =>{
-    const queryParams = new URLSearchParams({
-      id: id
-    })
     request(
       "get",
-      `/exam-test/details?${queryParams}`,
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -156,12 +153,9 @@ function TestBank(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const queryParams = new URLSearchParams({
-      id: rowData.id
-    })
     request(
       "get",
-      `/exam-test/details?${queryParams}`,
+      `/exam-test/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)

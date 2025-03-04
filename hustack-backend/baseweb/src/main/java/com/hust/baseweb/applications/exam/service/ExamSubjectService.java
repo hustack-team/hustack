@@ -20,5 +20,5 @@ public interface ExamSubjectService {
 
     ResponseData<ExamSubjectEntity> update(ExamSubjectSaveReq examSubjectSaveReq);
 
-    ResponseData<ExamSubjectEntity> delete(ExamSubjectDeleteReq examSubjectDeleteReq);
+    ResponseData<ExamSubjectEntity> delete(String id);
 }

@@ -62,8 +62,8 @@ function QuestionTagCreateUpdate(props) {
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam-tag/create` : '/exam-tag/update',
+      isCreate ? "post" : "put",
+      '/exam-tag',
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){

@@ -27,33 +27,33 @@ public class ExamSubjectController {
     ExamSubjectService examSubjectService;
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/filter")
+    @GetMapping
     public ResponseEntity<Page<ExamSubjectEntity>> filter(
         Pageable pageable, ExamSubjectFilterReq examSubjectFilterReq) {
         return ResponseEntity.ok(examSubjectService.filter(pageable, examSubjectFilterReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/get-all")
+    @GetMapping("/all")
     public ResponseEntity<List<ExamSubjectEntity>> getAll() {
         return ResponseEntity.ok(examSubjectService.getAll());
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ResponseData<ExamSubjectEntity>> create(@RequestBody @Valid ExamSubjectSaveReq examSubjectSaveReq) {
         return ResponseEntity.ok(examSubjectService.create(examSubjectSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/update")
+    @PutMapping
     public ResponseEntity<ResponseData<ExamSubjectEntity>> update(@RequestBody @Valid ExamSubjectSaveReq examSubjectSaveReq) {
         return ResponseEntity.ok(examSubjectService.update(examSubjectSaveReq));
     }
 
     @Secured("ROLE_TEACHER")
-    @PostMapping("/delete")
-    public ResponseEntity<ResponseData<ExamSubjectEntity>> delete(@RequestBody @Valid ExamSubjectDeleteReq examSubjectDeleteReq) {
-        return ResponseEntity.ok(examSubjectService.delete(examSubjectDeleteReq));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseData<ExamSubjectEntity>> delete(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examSubjectService.delete(id));
     }
 }

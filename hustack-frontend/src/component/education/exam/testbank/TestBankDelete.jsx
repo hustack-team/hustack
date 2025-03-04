@@ -19,12 +19,9 @@ function TestBankDelete(props) {
   const { open, setOpen, id , onReloadData} = props;
 
   const handleDelete = () =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-test/delete`,
+      "delete",
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           onReloadData()
@@ -35,7 +32,6 @@ function TestBankDelete(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 

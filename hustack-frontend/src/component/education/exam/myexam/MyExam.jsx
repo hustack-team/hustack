@@ -132,7 +132,7 @@ function MyExam(props) {
     if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
       "get",
-      `/exam/filter-my-exam?${queryParams}`,
+      `/exam/student/submissions?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setDataList(res.data.content);
@@ -146,13 +146,9 @@ function MyExam(props) {
   }
 
   const handleDoingExam = (rowData) => {
-    const queryParams = new URLSearchParams({
-      examId: rowData?.examId,
-      examStudentId: rowData?.examStudentId
-    })
     request(
       "get",
-      `/exam/details-my-exam?${queryParams}`,
+      `/exam/student/submissions/${rowData?.examId}/${rowData?.examStudentId}`,
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){

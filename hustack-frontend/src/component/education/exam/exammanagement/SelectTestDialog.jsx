@@ -168,7 +168,7 @@ function SelectTestDialog(props) {
     if (formatDateApi(createdToFilter) != null) queryParams.append('createdTo', formatDateApi(createdToFilter))
     request(
       "get",
-      `/exam-test/filter?${queryParams}`,
+      `/exam-test?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setDataList(res.data.content);
@@ -182,12 +182,9 @@ function SelectTestDialog(props) {
   }
 
   const detailsTest = (id) =>{
-    const queryParams = new URLSearchParams({
-      id: id
-    })
     request(
       "get",
-      `/exam-test/details?${queryParams}`,
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)

@@ -100,8 +100,8 @@ function TestBankCreateUpdate(props) {
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam-test/create` : '/exam-test/update',
+      isCreate ? "post" : "put",
+      "/exam-test",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){

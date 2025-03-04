@@ -208,7 +208,7 @@ function QuestionBank(props) {
     }
     request(
       "get",
-      `/exam-question/filter?${queryParams}`,
+      `/exam-question?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setQuestionList(res.data.content);
@@ -237,7 +237,7 @@ function QuestionBank(props) {
   const getAllExamSubject = () => {
     request(
       "get",
-      `/exam-subject/get-all`,
+      `/exam-subject/all`,
       (res) => {
         if(res.status === 200){
           let tmpData = res.data
@@ -253,12 +253,9 @@ function QuestionBank(props) {
   }
 
   const detailsQuestion = (id) =>{
-    const queryParams = new URLSearchParams({
-      id: id
-    })
     request(
       "get",
-      `/exam-question/details?${queryParams}`,
+      `/exam-question/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setQuestionDetails(res.data.data)
@@ -447,7 +444,6 @@ function QuestionBank(props) {
                   color="primary"
                   onClick={onClickCreateNewButton}
                   startIcon={<AddCircleIcon />}
-                  style={{ marginRight: 16 }}
                 >
                   Thêm mới
                 </PrimaryButton>

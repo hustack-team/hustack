@@ -88,7 +88,7 @@ function ExamMarking(props) {
     setIsLoading(true)
     request(
       "post",
-      '/exam/marking-exam',
+      '/exam/teacher/submissions',
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -110,12 +110,9 @@ function ExamMarking(props) {
   }
 
   const handleExamDetails = () => {
-    const queryParams = new URLSearchParams({
-      id: data?.examId
-    })
     request(
       "get",
-      `/exam/details?${queryParams}`,
+      `/exam/${data?.examId}`,
       (res) => {
         if(res.data.resultCode === 200){
           setDataDetails(res.data.data)

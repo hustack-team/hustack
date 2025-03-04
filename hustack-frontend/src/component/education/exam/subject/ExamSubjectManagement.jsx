@@ -112,7 +112,7 @@ function ExamSubjectManagement(props) {
     if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
       "get",
-      `/exam-subject/filter?${queryParams}`,
+      `/exam-subject?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setExamSubjectList(res.data.content);
