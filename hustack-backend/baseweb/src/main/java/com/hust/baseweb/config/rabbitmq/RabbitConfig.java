@@ -1,5 +1,8 @@
 package com.hust.baseweb.config.rabbitmq;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -15,27 +18,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Configuration
 public class RabbitConfig {
 
     public static final String EXCHANGE = "programming_contest_exchange";
 
-    public static final String QUIZ_EXCHANGE = "quiz_exchange";
-
     public static final String DEAD_LETTER_EXCHANGE = "programming_contest_dead_letter_exchange";
 
+    public static final String QUIZ_EXCHANGE = "quiz_exchange";
+
     public static final String QUIZ_DEAD_LETTER_EXCHANGE = "quiz_dead_letter_exchange";
-
-    public static final String JUDGE_PROBLEM_QUEUE = "judge_problem_queue";
-
-    public static final String JUDGE_PROBLEM_DEAD_LETTER_QUEUE = "judge_problem_dead_letter_queue";
-
-    public static final String JUDGE_CUSTOM_PROBLEM_QUEUE = "judge_custom_problem_queue";
-
-    public static final String JUDGE_CUSTOM_PROBLEM_DEAD_LETTER_QUEUE = "judge_custom_problem_dead_letter_queue";
 
     public static final String QUIZ_QUEUE = "quiz_queue";
 
@@ -113,40 +105,6 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Queue judgeProblemQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-queue-type", "quorum");
-        args.put("x-overflow", "reject-publish");
-
-        return new Queue(JUDGE_PROBLEM_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Binding judgeProblemBinding() {
-        return BindingBuilder
-            .bind(judgeProblemQueue())
-            .to(exchange())
-            .with(RabbitRoutingKey.JUDGE_PROBLEM);
-    }
-
-    @Bean
-    public Queue judgeCustomProblemQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-queue-type", "quorum");
-        args.put("x-overflow", "reject-publish");
-
-        return new Queue(JUDGE_CUSTOM_PROBLEM_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Binding judgeCustomProblemBinding() {
-        return BindingBuilder
-            .bind(judgeCustomProblemQueue())
-            .to(exchange())
-            .with(RabbitRoutingKey.JUDGE_CUSTOM_PROBLEM);
-    }
-
-    @Bean
     public Queue notificationQueue() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-queue-type", "quorum");
@@ -170,44 +128,6 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Queue judgeProblemDeadLetterQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-queue-type", "quorum");
-        args.put("x-dead-letter-exchange", EXCHANGE);
-        args.put("x-dead-letter-routing-key", RabbitRoutingKey.JUDGE_PROBLEM);
-        args.put("x-message-ttl", rabbitConfig.getQuiz().getDeadMessageTtl());
-
-        return new Queue(JUDGE_PROBLEM_DEAD_LETTER_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Binding judgeProblemDeadLetterBinding() {
-        return BindingBuilder
-            .bind(judgeProblemDeadLetterQueue())
-            .to(deadLetterExchange())
-            .with(RabbitRoutingKey.JUDGE_PROBLEM_DL);
-    }
-
-    @Bean
-    public Queue judgeCustomProblemDeadLetterQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-queue-type", "quorum");
-        args.put("x-dead-letter-exchange", EXCHANGE);
-        args.put("x-dead-letter-routing-key", RabbitRoutingKey.JUDGE_CUSTOM_PROBLEM);
-        args.put("x-message-ttl", rabbitConfig.getQuiz().getDeadMessageTtl());
-
-        return new Queue(JUDGE_CUSTOM_PROBLEM_DEAD_LETTER_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Binding judgeCustomProblemDeadLetterBinding() {
-        return BindingBuilder
-            .bind(judgeCustomProblemDeadLetterQueue())
-            .to(deadLetterExchange())
-            .with(RabbitRoutingKey.JUDGE_CUSTOM_PROBLEM_DL);
-    }
-
-    @Bean
     public Queue notificationDeadLetterQueue() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-queue-type", "quorum");
@@ -227,17 +147,17 @@ public class RabbitConfig {
     }
 
     @Bean
+    public DirectExchange quizExchange() {
+        return new DirectExchange(QUIZ_EXCHANGE, true, false);
+    }
+
+    @Bean
     public Queue quizQueue() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-queue-type", "quorum");
         args.put("x-overflow", "reject-publish");
 
         return new Queue(QUIZ_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public DirectExchange quizExchange() {
-        return new DirectExchange(QUIZ_EXCHANGE, true, false);
     }
 
     @Bean
@@ -249,6 +169,11 @@ public class RabbitConfig {
     }
 
     @Bean
+    public DirectExchange quizDeadLetterExchange() {
+        return new DirectExchange(QUIZ_DEAD_LETTER_EXCHANGE, true, false);
+    }
+
+    @Bean
     public Queue judgeQuizDeadLetterQueue() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-queue-type", "quorum");
@@ -257,11 +182,6 @@ public class RabbitConfig {
         args.put("x-message-ttl", rabbitConfig.getQuiz().getDeadMessageTtl());
 
         return new Queue(QUIZ_DEAD_LETTER_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public DirectExchange quizDeadLetterExchange() {
-        return new DirectExchange(QUIZ_DEAD_LETTER_EXCHANGE, true, false);
     }
 
     @Bean

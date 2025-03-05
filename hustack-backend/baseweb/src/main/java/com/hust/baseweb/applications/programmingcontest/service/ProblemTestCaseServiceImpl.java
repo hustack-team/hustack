@@ -1,5 +1,13 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.MULTI_THREADED_PROGRAM;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hust.baseweb.applications.contentmanager.model.ContentHeaderModel;
@@ -52,13 +60,7 @@ import org.springframework.web.server.ResponseStatusException;
 import vn.edu.hust.soict.judge0client.config.Judge0Config;
 import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
 import vn.edu.hust.soict.judge0client.service.Judge0Service;
-
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
-import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
+import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
 @Slf4j
 @Service
@@ -127,9 +129,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     private ProblemTagRepo problemTagRepo;
 
-    Judge0Config judge0Config;
-
     ObjectMapper objectMapper;
+
+    Judge0Utils judge0Utils;
 
     @Override
     @Transactional
@@ -523,28 +525,30 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
 
         // Thực tế chỉ cần biên dịch, không cần chạy nên thiết lập giới hạn thời gian đủ nhỏ
+        String sourceCode = modelCheckCompile.getSource();
+        Judge0Config.ServerConfig serverConfig = judge0Utils.getServerConfig(languageId, sourceCode);
         Judge0Submission submission = Judge0Submission.builder()
-                                                      .sourceCode(modelCheckCompile.getSource())
+                                                      .sourceCode(sourceCode)
                                                       .languageId(languageId)
                                                       .compilerOptions(compilerOptions)
                                                       .commandLineArguments(null)
                                                       .cpuTimeLimit(0.05F)
                                                       .cpuExtraTime(0.05F)
                                                       .wallTimeLimit(1.0F)
-                                                      .memoryLimit(Float.valueOf(judge0Config
+                                                      .memoryLimit(Float.valueOf(serverConfig
                                                                                      .getSubmission()
                                                                                      .getMaxMemoryLimit()))
-                                                      .stackLimit(judge0Config.getSubmission().getMaxStackLimit())
-                                                      .maxProcessesAndOrThreads(2 + (languageId != 62 ? 0 : judge0Config.getSubmission().getJavaMaxProcessesAndOrThreadsExtra()))
+                                                      .stackLimit(serverConfig.getSubmission().getMaxStackLimit())
+                                                      .maxProcessesAndOrThreads(judge0Utils.getMaxProcessesAndOrThreads(languageId, sourceCode))
                                                       .enablePerProcessAndThreadTimeLimit(false)
                                                       .enablePerProcessAndThreadMemoryLimit(false)
-                                                      .maxFileSize(judge0Config.getSubmission().getMaxMaxFileSize())
+                                                      .maxFileSize(serverConfig.getSubmission().getMaxMaxFileSize())
                                                       .redirectStderrToStdout(false)
                                                       .enableNetwork(false)
                                                       .numberOfRuns(1)
                                                       .build();
 
-        submission = judge0Service.createASubmission(submission, true, true);
+        submission = judge0Service.createASubmission(serverConfig, submission, true, true);
         submission.decodeBase64();
 
         return ModelCheckCompileResponse.builder()
@@ -1147,16 +1151,49 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         //log.info("submitContestProblemTestCaseByTestCaseWithFile, save submission to DB");
         submission = contestSubmissionRepo.saveAndFlush(submission);
 
-        rabbitTemplate.convertAndSend(
-            EXCHANGE,
-            JUDGE_PROBLEM,
-            submission.getContestSubmissionId()
-        );
-
+        sendSubmissionToQueue(submission);
         return ModelContestSubmissionResponse.builder()
                                              .status("IN_PROGRESS")
                                              .message("Submission is being evaluated")
                                              .build();
+    }
+
+    private void sendSubmissionToQueue(ContestSubmissionEntity submission) {
+        int languageId = -1;
+        switch (ComputerLanguage.Languages.valueOf(submission.getSourceCodeLanguage())) {
+            case C:
+                languageId = 50;
+                break;
+            case CPP11:
+                languageId = 54;
+                break;
+            case CPP14:
+                languageId = 54;
+                break;
+            case CPP:
+            case CPP17:
+                languageId = 54;
+                break;
+            case JAVA:
+                languageId = 62;
+                break;
+            case PYTHON3:
+                languageId = 71;
+                break;
+        }
+
+        String routingKey;
+        if(judge0Utils.isMultiThreadedProgram(languageId, submission.getSourceCode())) {
+            routingKey = MULTI_THREADED_PROGRAM;
+        } else {
+            routingKey = JUDGE_PROBLEM;
+        }
+
+        rabbitTemplate.convertAndSend(
+            EXCHANGE,
+            routingKey,
+            submission.getContestSubmissionId()
+        );
     }
 
     @Override
@@ -2799,11 +2836,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         contestService.updateContestSubmissionStatus(
             submission.getContestSubmissionId(),
             ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
-        rabbitTemplate.convertAndSend(
-            EXCHANGE,
-            JUDGE_PROBLEM,
-            submission.getContestSubmissionId()
-        );
+
+        sendSubmissionToQueue(submission);
     }
 
 
@@ -2991,6 +3025,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 throw new Exception("Language not supported");
         }
 
+        Judge0Config.ServerConfig serverConfig = judge0Utils.getServerConfig(languageId, sourceCode);
         Judge0Submission submission = Judge0Submission.builder()
                                                       .sourceCode(sourceCode)
                                                       .languageId(languageId)
@@ -3006,17 +3041,17 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                       .cpuExtraTime((float) (timeLimit + 2.0))
                                                       .wallTimeLimit((float) (timeLimit + 10.0))
                                                       .memoryLimit(memoryLimit * 1024)
-                                                      .stackLimit(judge0Config.getSubmission().getMaxStackLimit())
-                                                      .maxProcessesAndOrThreads(2 + (languageId != 62 ? 0 : judge0Config.getSubmission().getJavaMaxProcessesAndOrThreadsExtra()))
+                                                      .stackLimit(serverConfig.getSubmission().getMaxStackLimit())
+                                                      .maxProcessesAndOrThreads(judge0Utils.getMaxProcessesAndOrThreads(languageId, sourceCode))
                                                       .enablePerProcessAndThreadTimeLimit(false)
                                                       .enablePerProcessAndThreadMemoryLimit(false)
-                                                      .maxFileSize(judge0Config.getSubmission().getMaxMaxFileSize())
+                                                      .maxFileSize(serverConfig.getSubmission().getMaxMaxFileSize())
                                                       .redirectStderrToStdout(false)
                                                       .enableNetwork(false)
                                                       .numberOfRuns(1)
                                                       .build();
 
-        submission = judge0Service.createASubmission(submission, true, true);
+        submission = judge0Service.createASubmission(serverConfig, submission, true, true);
         submission.decodeBase64();
 
         return submission;
