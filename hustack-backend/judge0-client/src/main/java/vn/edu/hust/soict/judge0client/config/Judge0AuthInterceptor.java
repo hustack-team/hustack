@@ -25,9 +25,22 @@ public class Judge0AuthInterceptor implements ClientHttpRequestInterceptor {
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
         HttpHeaders headers = request.getHeaders();
-        headers.add(judge0Config.getAuthn().getHeader(), judge0Config.getAuthn().getToken());
-        headers.add(judge0Config.getAuthz().getHeader(), judge0Config.getAuthz().getToken());
+        Judge0Config.ServerConfig serverConfig = getServerConfig(request.getURI().toString());
+
+        headers.add(serverConfig.getAuthn().getHeader(), serverConfig.getAuthn().getToken());
+        headers.add(serverConfig.getAuthz().getHeader(), serverConfig.getAuthz().getToken());
 
         return execution.execute(request, body);
     }
+
+    private Judge0Config.ServerConfig getServerConfig(String requestUri) {
+        if (requestUri.startsWith(judge0Config.getSingleThreaded().getUri())) {
+            return judge0Config.getSingleThreaded();
+        } else if (requestUri.startsWith(judge0Config.getMultiThreaded().getUri())) {
+            return judge0Config.getMultiThreaded();
+        } else {
+            throw new IllegalArgumentException("Unknown Judge0 server for request URI: " + requestUri);
+        }
+    }
+
 }
