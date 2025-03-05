@@ -7,21 +7,30 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 
-
 @Getter
 @AllArgsConstructor
 @ConstructorBinding
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@ConfigurationProperties(prefix = "judge0")
+@ConfigurationProperties(prefix = "judge0.servers")
 public class Judge0Config {
 
-    String uri;
+    ServerConfig singleThreaded;
 
-    Auth authn;
+    ServerConfig multiThreaded;
 
-    Auth authz;
+    @Getter
+    @AllArgsConstructor
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    public static class ServerConfig {
 
-    Submission submission;
+        String uri;
+
+        Auth authn;
+
+        Auth authz;
+
+        Submission submission;
+    }
 
     @Getter
     @AllArgsConstructor
@@ -31,7 +40,6 @@ public class Judge0Config {
         String header;
 
         String token;
-
     }
 
     @Getter
@@ -51,7 +59,8 @@ public class Judge0Config {
 
         Integer maxMaxFileSize;
 
-        Integer javaMaxProcessesAndOrThreadsExtra;
+        Integer javaMaxProcessesAndOrThreads;
 
+        String javaCommandLineArguments;
     }
 }

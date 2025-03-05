@@ -19,14 +19,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(onConstructor_ = {@Autowired})
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @EnableConfigurationProperties(Judge0Config.class)
 public class Judge0ServiceImpl implements Judge0Service {
 
     RestTemplate restTemplate;
-
-    Judge0Config judge0Config;
 
     /**
      * @param submission    If submission’s source_code, stdin or expected_output contains non-printable characters, or characters which cannot be sent with JSON, then set base64_encoded parameter to true and send these attributes Base64 encoded
@@ -37,11 +35,11 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @throws HttpServerErrorException
      */
     @Override
-    public Judge0Submission createASubmission(Judge0Submission submission, Boolean base64Encoded, Boolean wait) throws HttpClientErrorException, HttpServerErrorException {
+    public Judge0Submission createASubmission(Judge0Config.ServerConfig serverConfig, Judge0Submission submission, Boolean base64Encoded, Boolean wait) throws HttpClientErrorException, HttpServerErrorException {
         if (submission == null) {
             return null;
         } else {
-            String urlTemplate = judge0Config.getUri() + "/submissions";
+            String urlTemplate = serverConfig.getUri() + "/submissions";
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(urlTemplate);
             uriBuilder = addBase64Encoded(uriBuilder, base64Encoded);
             uriBuilder = addWait(uriBuilder, wait);
@@ -111,8 +109,8 @@ public class Judge0ServiceImpl implements Judge0Service {
 
 
     @Override
-    public Judge0Submission getASubmission(String token, Boolean base64Encoded, List<Judge0SubmissionFields> fields) {
-        String urlTemplate = judge0Config.getUri() + "/submissions/{token}";
+    public Judge0Submission getASubmission(Judge0Config.ServerConfig serverConfig, String token, Boolean base64Encoded, List<Judge0SubmissionFields> fields) {
+        String urlTemplate = serverConfig.getUri() + "/submissions/{token}";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(urlTemplate);
         uriBuilder = addBase64Encoded(uriBuilder, base64Encoded);
         uriBuilder = addFields(uriBuilder, fields);
@@ -134,8 +132,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public Judge0SubmissionsPage getSubmissions(Boolean base64Encoded, Integer page, Integer perPage, List<Judge0SubmissionFields> fields) {
-        String urlTemplate = judge0Config.getUri() + "/submissions/";
+    public Judge0SubmissionsPage getSubmissions(Judge0Config.ServerConfig serverConfig, Boolean base64Encoded, Integer page, Integer perPage, List<Judge0SubmissionFields> fields) {
+        String urlTemplate = serverConfig.getUri() + "/submissions/";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(urlTemplate);
         uriBuilder = addBase64Encoded(uriBuilder, base64Encoded);
         uriBuilder = addPage(uriBuilder, page);
@@ -156,8 +154,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public Judge0Submission deleteASubmission(String token, List<Judge0SubmissionFields> fields) {
-        String urlTemplate = judge0Config.getUri() + "/submissions/{token}";
+    public Judge0Submission deleteASubmission(Judge0Config.ServerConfig serverConfig, String token, List<Judge0SubmissionFields> fields) {
+        String urlTemplate = serverConfig.getUri() + "/submissions/{token}";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(urlTemplate);
         uriBuilder = addFields(uriBuilder, fields);
 
@@ -168,11 +166,11 @@ public class Judge0ServiceImpl implements Judge0Service {
     }
 
     @Override
-    public List<Judge0Submission> createASubmissionBatch(Boolean base64Encoded, Judge0Submission... submissions) {
+    public List<Judge0Submission> createASubmissionBatch(Judge0Config.ServerConfig serverConfig, Boolean base64Encoded, Judge0Submission... submissions) {
         if (submissions == null || submissions.length == 0) {
             return null;
         } else {
-            String urlTemplate = judge0Config.getUri() + "/submissions/batch";
+            String urlTemplate = serverConfig.getUri() + "/submissions/batch";
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(urlTemplate);
             uriBuilder = addBase64Encoded(uriBuilder, base64Encoded);
 
@@ -200,8 +198,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public Judge0SubmissionBatch getASubmissionBatch(List<String> tokens, Boolean base64Encoded, List<Judge0SubmissionFields> fields) {
-        UriComponentsBuilder urlTemplate = UriComponentsBuilder.fromHttpUrl(judge0Config.getUri() + "/submissions/batch");
+    public Judge0SubmissionBatch getASubmissionBatch(Judge0Config.ServerConfig serverConfig, List<String> tokens, Boolean base64Encoded, List<Judge0SubmissionFields> fields) {
+        UriComponentsBuilder urlTemplate = UriComponentsBuilder.fromHttpUrl(serverConfig.getUri() + "/submissions/batch");
         urlTemplate = addTokens(urlTemplate, tokens);
         urlTemplate = addBase64Encoded(urlTemplate, base64Encoded);
         urlTemplate = addFields(urlTemplate, fields);
@@ -216,8 +214,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public List<Judge0Language> getLanguages() {
-        Judge0Language[] languages = restTemplate.getForObject(judge0Config.getUri() + "/languages", Judge0Language[].class);
+    public List<Judge0Language> getLanguages(Judge0Config.ServerConfig serverConfig) {
+        Judge0Language[] languages = restTemplate.getForObject(serverConfig.getUri() + "/languages", Judge0Language[].class);
         return Arrays.stream(languages).collect(Collectors.toList());
     }
 
@@ -226,8 +224,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public Judge0Language getALanguages(Integer id) {
-        String urlTemplate = judge0Config.getUri() + "/languages/{id}";
+    public Judge0Language getALanguages(Judge0Config.ServerConfig serverConfig, Integer id) {
+        String urlTemplate = serverConfig.getUri() + "/languages/{id}";
         Map<String, Integer> uriVariables = new HashMap<>();
         uriVariables.put("id", id);
 
@@ -238,8 +236,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public List<Judge0Language> getActiveAndArchivedLanguages() {
-        Judge0Language[] languages = restTemplate.getForObject(judge0Config.getUri() + "/languages/all", Judge0Language[].class);
+    public List<Judge0Language> getActiveAndArchivedLanguages(Judge0Config.ServerConfig serverConfig) {
+        Judge0Language[] languages = restTemplate.getForObject(serverConfig.getUri() + "/languages/all", Judge0Language[].class);
         return Arrays.stream(languages).collect(Collectors.toList());
     }
 
@@ -247,8 +245,8 @@ public class Judge0ServiceImpl implements Judge0Service {
      * @return
      */
     @Override
-    public List<Judge0Status> getStatuses() {
-        Judge0Status[] statuses = restTemplate.getForObject(judge0Config.getUri() + "/statuses", Judge0Status[].class);
+    public List<Judge0Status> getStatuses(Judge0Config.ServerConfig serverConfig) {
+        Judge0Status[] statuses = restTemplate.getForObject(serverConfig.getUri() + "/statuses", Judge0Status[].class);
         return Arrays.stream(statuses).collect(Collectors.toList());
     }
 
