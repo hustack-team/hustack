@@ -149,23 +149,24 @@ public class SubmissionServiceImpl implements SubmissionService {
             ModelContestSubmissionResponse resp;
 
             if (cp != null && cp.getForbiddenInstructions() != null) {
-                log.info("contestSubmitProblemViaUploadFileV2, forbidden instructions = " +
-                         cp.getForbiddenInstructions());
+                //log.info("contestSubmitProblemViaUploadFileV2, forbidden instructions = " +
+                //         cp.getForbiddenInstructions());
+
                 String[] fis = cp.getForbiddenInstructions().split(",");
                 boolean ok = true;
                 if (fis != null) {
                     for (String fi : fis) {
                         String i = fi.trim();
-                        log.info("contestSubmitProblemViaUploadFileV2, forbidden instructions i = " +
-                                 i +
-                                 " source = " +
-                                 source);
+                        //log.info("contestSubmitProblemViaUploadFileV2, forbidden instructions i = " +
+                        //         i +
+                        //         " source = " +
+                        //         source);
                         if (i != null) {
                             if (!i.equals("") && i.length() > 0 && source.contains(i)) {
-                                log.info("contestSubmitProblemViaUploadFileV2, has forbidden instructions i = " +
-                                         i +
-                                         " source = " +
-                                         source);
+                                //log.info("contestSubmitProblemViaUploadFileV2, has forbidden instructions i = " +
+                                //         i +
+                                //         " source = " +
+                                //         source);
 
                                 ok = false;
                                 break;
@@ -189,7 +190,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                     cp.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_SOLUTION_OUTPUT)) {
                     resp = problemTestCaseService.submitContestProblemStoreOnlyNotExecute(request, userId, userId);
                 } else {
-                    log.info("contestSubmitProblemViaUploadFileV2, SUBMIT NORMAL");
+                    //log.info("contestSubmitProblemViaUploadFileV2, SUBMIT NORMAL");
                     resp = problemTestCaseService.submitContestProblemTestCaseByTestCaseWithFile(
                         request,
                         userId,
@@ -221,9 +222,9 @@ public class SubmissionServiceImpl implements SubmissionService {
     ) {
         ContestEntity contestEntity = contestRepo.findContestByContestId(model.getContestId());
         String filename = file.getOriginalFilename();
-        log.info("ManagerSubmitCodeOfParticipant, filename = " + file.getOriginalFilename());
+        //log.info("ManagerSubmitCodeOfParticipant, filename = " + file.getOriginalFilename());
         String[] s = filename.split("\\.");
-        log.info("ManagerSubmitCodeOfParticipant, extract from filename, s.length = " + s.length);
+        //log.info("ManagerSubmitCodeOfParticipant, extract from filename, s.length = " + s.length);
         if (s.length < 2) {
             return "Filename " + filename + " Invalid";
         }
@@ -237,7 +238,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         String[] s1 = s[0].split("_");
-        log.info("ManagerSubmitCodeOfParticipant, extract from filename, s[0] = " + s[0] + " s1 = " + s1.length);
+        //log.info("ManagerSubmitCodeOfParticipant, extract from filename, s[0] = " + s[0] + " s1 = " + s1.length);
         if (s1.length < 2) {
             ModelContestSubmissionResponse resp = buildSubmissionResponseInvalidFilename(filename);
             return resp;
@@ -251,7 +252,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         if (cp != null) {
             problemId = cp.getProblemId();
         } else {
-            log.info("ManagerSubmitCodeOfParticipant, not found problem of code " + problemCode);
+            //log.info("ManagerSubmitCodeOfParticipant, not found problem of code " + problemCode);
             ModelContestSubmissionResponse resp = buildSubmissionResponseProblemNotFound();
             return resp;
         }
@@ -338,7 +339,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                     userId,
                     principal.getName());
             }
-            log.info("ManagerSubmitCodeOfParticipant, submitted successfully");
+            //log.info("ManagerSubmitCodeOfParticipant, submitted successfully");
             return resp;
         } catch (Exception e) {
             e.printStackTrace();

@@ -117,25 +117,29 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
 
-        fileArray.forEach((file) -> {
-            ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
-            log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
+            fileArray.forEach((file) -> {
+                ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
 
-            ObjectId id = null;
-            try {
-                id = mongoContentService.storeFileToGridFs(model);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(model);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 
-            if (id != null) {
-                ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
-                attachmentId.add(rs.getId());
-            }
-        });
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
 
-        List<String> solutionAttachmentStorageIds = mongoContentService.storeFiles(solutionAttachments);
+
+        List<String>    solutionAttachmentStorageIds = null;
+        if(solutionAttachments != null)
+            solutionAttachmentStorageIds = mongoContentService.storeFiles(solutionAttachments);
+
 
         QuizQuestion quizQuestion = new QuizQuestion();
         quizQuestion.setLevelId(input.getLevelId());
@@ -149,7 +153,8 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         quizQuestion.setStatusId(QuizQuestion.STATUS_PRIVATE);
         quizQuestion.setAttachment(String.join(";", attachmentId));
         quizQuestion.setSolutionContent(input.getSolutionContent());
-        quizQuestion.setSolutionAttachment(String.join(";", solutionAttachmentStorageIds));
+        if(solutionAttachmentStorageIds != null)
+            quizQuestion.setSolutionAttachment(String.join(";", solutionAttachmentStorageIds));
         quizQuestion.setCreatedStamp(new Date());
         quizQuestion = quizQuestionRepo.save(quizQuestion);
 
@@ -482,27 +487,29 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         QuizQuestionUpdateInputModel input = gson.fromJson(json, QuizQuestionUpdateInputModel.class);
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = input.getFileId();
+
+
         List<MultipartFile> fileArray = Optional.ofNullable(files)
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
+            fileArray.forEach((file) -> {
+                ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
 
-        fileArray.forEach((file) -> {
-            ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
-            log.info("createQuizQuestion, fileId: " + fileId[fileArray.indexOf(file)]);
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(model);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 
-            ObjectId id = null;
-            try {
-                id = mongoContentService.storeFileToGridFs(model);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
 
-            if (id != null) {
-                ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
-                attachmentId.add(rs.getId());
-            }
-        });
 
         QuizQuestion quizQuestionTemp = quizQuestionRepo.findById(questionId).orElse(null);
         if (quizQuestionTemp == null) {
@@ -526,17 +533,24 @@ public class QuizQuestionServiceImpl implements QuizQuestionService {
         quizQuestion.setStatusId(quizQuestionTemp.getStatusId());
         quizQuestion.setSolutionContent(input.getSolutionContent());
 
-        List<String> addedSolutionAttachmentIds = mongoContentService.storeFiles(addedSolutionAttachments);
+        List<String>  addedSolutionAttachmentIds = null;
+        if(addedSolutionAttachments != null)
+            addedSolutionAttachmentIds = mongoContentService.storeFiles(addedSolutionAttachments);
+
         String[] oldSolutionAttachments = {};
         if (quizQuestionTemp.getSolutionAttachment() != null) {
             oldSolutionAttachments = quizQuestionTemp.getSolutionAttachment().split(";");
         }
         List<String> solutionAttachmentIds = Arrays.stream(oldSolutionAttachments)
                                                    .collect(Collectors.toList());
+
         solutionAttachmentIds.removeAll(Optional.ofNullable(input.getDeletedAttachmentIds())
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList));
-        solutionAttachmentIds.addAll(addedSolutionAttachmentIds);
+
+        if(addedSolutionAttachmentIds != null)
+            solutionAttachmentIds.addAll(addedSolutionAttachmentIds);
+
         String newSolutionAttachmentIds = solutionAttachmentIds.size() == 0
             ? null
             : String.join(";", solutionAttachmentIds);
