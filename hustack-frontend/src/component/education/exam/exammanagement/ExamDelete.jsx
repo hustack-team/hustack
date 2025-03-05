@@ -10,18 +10,18 @@ import {
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {DialogActions} from "@mui/material";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import TertiaryButton from "../../../button/TertiaryButton";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 function ExamDelete(props) {
 
   const { open, setOpen, id , onReload} = props;
 
   const handleDelete = () =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam/delete`,
+      "delete",
+      `/exam/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           onReload()
@@ -32,7 +32,6 @@ function ExamDelete(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -42,28 +41,32 @@ function ExamDelete(props) {
 
   return (
     <div>
-      <Dialog open={open}>
-        <DialogTitle>Xoá kỳ thi</DialogTitle>
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        title="Xoá kỳ thi"
+        content={
           <p style={{marginBottom: "30px"}}>Bạn có chắc chắn muốn xoá kỳ thi?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={closeDialog}
-          >
-            Hủy
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            style={{marginLeft: "15px"}}
-            onClick={handleDelete}
-          >
-            Lưu
-          </Button>
-        </DialogActions>
-      </Dialog>
+        }
+        actions={
+          <div>
+            <TertiaryButton
+              variant="outlined"
+              onClick={closeDialog}
+            >
+              Hủy
+            </TertiaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{marginLeft: "15px"}}
+              onClick={handleDelete}
+            >
+              Lưu
+            </PrimaryButton>
+          </div>
+        }
+      />
     </div>
   );
 }

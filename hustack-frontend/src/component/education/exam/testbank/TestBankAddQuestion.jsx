@@ -3,7 +3,7 @@ import withScreenSecurity from "../../../withScreenSecurity";
 import {Box, Button, Card, CardContent, CardHeader, DialogTitle, Input} from "@material-ui/core";
 import {request} from "../../../../api";
 import {Link, useHistory} from "react-router-dom";
-import {Dialog, DialogActions, DialogContent, FormControl, MenuItem, Select} from "@mui/material";
+import {Autocomplete, Dialog, DialogActions, DialogContent, FormControl, MenuItem, Select} from "@mui/material";
 import useDebounceValue from "../hooks/use-debounce";
 import {toast} from "react-toastify";
 import TextField from "@material-ui/core/TextField";
@@ -13,6 +13,11 @@ import QuestionBankDetails from "../questionbank/QuestionBankDetails";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import DeleteIcon from "@material-ui/icons/Delete";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import {errorNoti} from "../../../../utils/notification";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -20,13 +25,35 @@ const baseColumn = {
 
 const rowsPerPage = [5, 10, 20];
 
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {minWidth: '90vw'},
+}));
+
 function TestBankAddQuestion(props) {
 
   const columns = [
     {
+      field: "examTagName",
+      headerName: "Tag",
+      minWidth: 150,
+      ...baseColumn,
+      renderCell: (rowData) => {
+        const result = rowData.row.examTags.map(item => item?.name).join(', ')
+        return (
+          <div style={{fontStyle: 'italic'}}>{result}</div>
+        )
+      }
+    },
+    {
       field: "code",
       headerName: "Mã câu hỏi",
-      minWidth: 170,
+      minWidth: 150,
+      ...baseColumn
+    },
+    {
+      field: "examSubjectName",
+      headerName: "Môn học",
+      minWidth: 150,
       ...baseColumn
     },
     {
@@ -42,7 +69,7 @@ function TestBankAddQuestion(props) {
       field: "type",
       headerName: "Loại câu hỏi",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 130,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return (
@@ -54,6 +81,29 @@ function TestBankAddQuestion(props) {
           )
         }else{
           return 'Tất cả'
+        }
+      },
+    },
+    {
+      field: "level",
+      headerName: "Mức độ",
+      ...baseColumn,
+      minWidth: 130,
+      renderCell: (rowData) => {
+        if(rowData.value === "EASY"){
+          return (
+            <strong style={{color: '#61bd6d'}}>Dễ</strong>
+          )
+        }else if(rowData.value === "MEDIUM"){
+          return (
+            <strong style={{color: '#716DF2'}}>Trung bình</strong>
+          )
+        }else if(rowData.value === "HARD"){
+          return (
+            <strong style={{color: 'red'}}>Khó</strong>
+          )
+        }else{
+          return ''
         }
       },
     },
@@ -75,9 +125,27 @@ function TestBankAddQuestion(props) {
 
   const columnsSelected = [
     {
+      field: "examTagName",
+      headerName: "Tag",
+      minWidth: 150,
+      ...baseColumn,
+      renderCell: (rowData) => {
+        const result = rowData.row.examTags.map(item => item?.name).join(', ')
+        return (
+          <div style={{fontStyle: 'italic'}}>{result}</div>
+        )
+      }
+    },
+    {
       field: "code",
       headerName: "Mã câu hỏi",
-      minWidth: 170,
+      minWidth: 150,
+      ...baseColumn
+    },
+    {
+      field: "examSubjectName",
+      headerName: "Môn học",
+      minWidth: 150,
       ...baseColumn
     },
     {
@@ -93,7 +161,7 @@ function TestBankAddQuestion(props) {
       field: "type",
       headerName: "Loại câu hỏi",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 130,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return (
@@ -105,6 +173,29 @@ function TestBankAddQuestion(props) {
           )
         }else{
           return 'Tất cả'
+        }
+      },
+    },
+    {
+      field: "level",
+      headerName: "Mức độ",
+      ...baseColumn,
+      minWidth: 130,
+      renderCell: (rowData) => {
+        if(rowData.value === "EASY"){
+          return (
+            <strong style={{color: '#61bd6d'}}>Dễ</strong>
+          )
+        }else if(rowData.value === "MEDIUM"){
+          return (
+            <strong style={{color: '#716DF2'}}>Trung bình</strong>
+          )
+        }else if(rowData.value === "HARD"){
+          return (
+            <strong style={{color: 'red'}}>Khó</strong>
+          )
+        }else{
+          return ''
         }
       },
     },
@@ -140,6 +231,25 @@ function TestBankAddQuestion(props) {
     }
   ]
 
+  const questionLevels = [
+    {
+      value: 'all',
+      name: 'Tất cả'
+    },
+    {
+      value: "EASY",
+      name: 'Dễ'
+    },
+    {
+      value: "MEDIUM",
+      name: 'Trung bình'
+    },
+    {
+      value: "HARD",
+      name: 'Khó'
+    },
+  ]
+
   const { open, setOpen, onSubmit} = props;
 
   const [questionList, setQuestionList] = useState([])
@@ -150,43 +260,89 @@ function TestBankAddQuestion(props) {
   const [totalCount, setTotalCount] = useState(0)
   const [keywordFilter, setKeywordFilter] = useState("")
   const [typeFilter, setTypeFilter] = useState('all')
+  const [levelFilter, setLevelFilter] = useState('all');
+  const [examSubjectIdFilter, setExamSubjectIdFilter] = useState('all');
+  const [examTagsFilter, setExamTagsFilter] = useState([]);
+  const [examSubjects, setExamSubjects] = useState([]);
+  const [questionTags, setQuestionTags] = useState([]);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [questionDetails, setQuestionDetails] = useState(null)
 
+  const classes = useStyles();
   const debouncedKeywordFilter = useDebounceValue(keywordFilter, 500)
 
   useEffect(() => {
+    getAllQuestionTag()
+    getAllExamSubject()
+  }, []);
+
+  useEffect(() => {
     filterQuestion()
-  }, [page, pageSize, debouncedKeywordFilter, typeFilter]);
+  }, [page, pageSize, debouncedKeywordFilter, typeFilter, levelFilter, examSubjectIdFilter, examTagsFilter]);
 
   const filterQuestion = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      type: typeFilter === 'all' ? null : typeFilter
+    })
+    if (typeFilter != null && typeFilter !== "all") queryParams.append('type', typeFilter)
+    if (levelFilter != null && levelFilter !== "all") queryParams.append('level', levelFilter)
+    if (examSubjectIdFilter != null && examSubjectIdFilter !== "all") queryParams.append('examSubjectId', examSubjectIdFilter)
+    if(examTagsFilter.length > 0){
+      const ids = examTagsFilter.map(item => item?.id).join(',')
+      queryParams.append('examTagIds', ids)
     }
     request(
-      "post",
-      `/exam-question/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam-question?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setQuestionList(res.data.content);
           setTotalCount(res.data.totalElements);
         }else {
-          toast.error(res)
+          errorNoti(res)
         }
       },
-      { onError: (e) => toast.error(e) },
-      body
+      { onError: (e) => errorNoti(e) },
+    );
+  }
+
+  const getAllQuestionTag = () => {
+    request(
+      "get",
+      `/exam-tag`,
+      (res) => {
+        if(res.status === 200){
+          setQuestionTags(res.data)
+        }
+      },
+      { onError: (e) => toast.error(e) }
+    );
+  }
+
+  const getAllExamSubject = () => {
+    request(
+      "get",
+      `/exam-subject/all`,
+      (res) => {
+        if(res.status === 200){
+          let tmpData = res.data
+          tmpData.unshift({
+            id: 'all',
+            name: 'Tất cả'
+          })
+          setExamSubjects(tmpData)
+        }
+      },
+      { onError: (e) => toast.error(e) }
     );
   }
 
   const detailsQuestion = (id) =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-question/details`,
+      "get",
+      `/exam-question/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setQuestionDetails(res.data.data)
@@ -196,7 +352,6 @@ function TestBankAddQuestion(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -228,109 +383,176 @@ function TestBankAddQuestion(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="lg">
-        <DialogTitle>Thêm câu hỏi vào đề thi</DialogTitle>
-        <DialogContent>
-          <Card elevation={5}>
-            <CardHeader
-              title={
-                <Box display="flex" justifyContent="space-between" alignItems="end" width="100%">
-                  <Box display="flex" flexDirection="column" width="80%">
-                    <h5 style={{marginTop: '0', paddingTop: '0'}}>Tìm kiếm trong Ngân hàng câu hỏi</h5>
-                    <Box display="flex" justifyContent="flex-start" width="100%">
-                      <TextField
-                        autoFocus
-                        id="questionCode"
-                        label="Nội dung tìm kiếm"
-                        placeholder="Tìm kiếm theo code hoặc nội dung"
-                        value={keywordFilter}
-                        style={{width: "300px", marginRight: "16px"}}
-                        onChange={(event) => {
-                          setKeywordFilter(event.target.value);
-                        }}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                      />
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        classNames={{paper: classes.dialogContent}}
+        title="Thêm câu hỏi vào đề thi"
+        content={
+          <div>
+            <Card elevation={5}>
+              <CardHeader
+                title={
+                  <Box display="flex" justifyContent="space-between" alignItems="end" width="100%">
+                    <Box display="flex" flexDirection="column" width="80%">
+                      <h5 style={{marginTop: '0', paddingTop: '0'}}>Tìm kiếm trong Ngân hàng câu hỏi</h5>
+                      <Box display="flex" justifyContent="flex-start" width="100%">
+                        <TextField
+                          autoFocus
+                          id="questionCode"
+                          label="Nội dung tìm kiếm"
+                          placeholder="Tìm kiếm theo code hoặc nội dung"
+                          value={keywordFilter}
+                          style={{width: "300px", marginRight: "16px"}}
+                          onChange={(event) => {
+                            setKeywordFilter(event.target.value);
+                          }}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
+                        />
 
-                      <TextField
-                        id="questionType"
-                        select
-                        label="Loại câu hỏi"
-                        style={{width: "150px"}}
-                        value={typeFilter}
-                        onChange={(event) => {
-                          setTypeFilter(event.target.value);
-                        }}
+                        <TextField
+                          id="questionType"
+                          select
+                          label="Loại câu hỏi"
+                          style={{width: "150px", marginRight: "16px"}}
+                          value={typeFilter}
+                          onChange={(event) => {
+                            setTypeFilter(event.target.value);
+                          }}
+                        >
+                          {
+                            questionTypes.map(item => {
+                              return (
+                                <MenuItem value={item.value}>{item.name}</MenuItem>
+                              )
+                            })
+                          }
+                        </TextField>
+
+                        <TextField
+                          required
+                          autoFocus
+                          id="questionLevel"
+                          select
+                          label="Mức độ"
+                          style={{ width: "150px", marginRight: "16px"}}
+                          value={levelFilter}
+                          onChange={(event) => {
+                            setLevelFilter(event.target.value);
+                          }}
+                        >
+                          {
+                            questionLevels.map(item => {
+                              return (
+                                <MenuItem value={item.value}>{item.name}</MenuItem>
+                              )
+                            })
+                          }
+                        </TextField>
+
+                        <TextField
+                          required
+                          autoFocus
+                          id="examSubjectId"
+                          select
+                          label="Môn học"
+                          style={{ width: "150px", marginRight: "16px"}}
+                          value={examSubjectIdFilter}
+                          onChange={(event) => {
+                            setExamSubjectIdFilter(event.target.value);
+                          }}
+                        >
+                          {
+                            examSubjects.map(item => {
+                              return (
+                                <MenuItem value={item.id}>{item.name}</MenuItem>
+                              )
+                            })
+                          }
+                        </TextField>
+                      </Box>
+                      <Box display="flex" justifyContent="flex-start" width="100%">
+                        <Autocomplete
+                          multiple
+                          id="examTagIds"
+                          options={questionTags}
+                          getOptionLabel={(item) => item?.name}
+                          value={examTagsFilter}
+                          onChange={(event, newValue) => {
+                            setExamTagsFilter(newValue);
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              style={{width: "300px", marginRight: "16px"}}
+                              variant="standard"
+                              label="Tag"
+                            />
+                          )}
+                        />
+                      </Box>
+                    </Box>
+                    <Box display="flex" justifyContent="flex-end" width="20%">
+                      <PrimaryButton
+                        variant="contained"
+                        disabled={questionSelectionList.length < 1}
+                        color="primary"
+                        onClick={onClickAddToSelectedList}
+                        startIcon={<AddCircleIcon />}
                       >
-                        {
-                          questionTypes.map(item => {
-                            return (
-                              <MenuItem value={item.value}>{item.name}</MenuItem>
-                            )
-                          })
-                        }
-                      </TextField>
+                        Thêm vào danh sách
+                      </PrimaryButton>
                     </Box>
                   </Box>
-                  <Box display="flex" justifyContent="flex-end" width="20%">
-                    <Button
-                      variant="contained"
-                      disabled={questionSelectionList.length < 1}
-                      color="primary"
-                      onClick={onClickAddToSelectedList}
-                      startIcon={<AddCircleIcon />}
-                    >
-                      Thêm vào danh sách
-                    </Button>
-                  </Box>
-                </Box>
-              }/>
-            <CardContent>
-              <DataGrid
-                rowCount={totalCount}
-                rows={questionList}
-                columns={columns}
-                page={page}
-                pageSize={pageSize}
-                pagination
-                paginationMode="server"
-                onPageChange={(page) => setPage(page)}
-                onPageSizeChange={(pageSize) => setPageSize(pageSize)}
-                rowsPerPageOptions={rowsPerPage}
-                disableColumnMenu
-                autoHeight
-                checkboxSelection
-                isRowSelectable={(params) => !questionSelectedList.includes(params.row)}
-                onSelectionModelChange = {(ids) => setQuestionSelectionList(ids)}
-                selectionModel={questionSelectionList}
-              />
-            </CardContent>
-          </Card>
+                }/>
+              <CardContent>
+                <DataGrid
+                  rowCount={totalCount}
+                  rows={questionList}
+                  columns={columns}
+                  page={page}
+                  pageSize={pageSize}
+                  pagination
+                  paginationMode="server"
+                  onPageChange={(page) => setPage(page)}
+                  onPageSizeChange={(pageSize) => setPageSize(pageSize)}
+                  rowsPerPageOptions={rowsPerPage}
+                  disableColumnMenu
+                  autoHeight
+                  checkboxSelection
+                  isRowSelectable={(params) => !questionSelectedList.includes(params.row)}
+                  onSelectionModelChange = {(ids) => setQuestionSelectionList(ids)}
+                  selectionModel={questionSelectionList}
+                />
+              </CardContent>
+            </Card>
 
-          <Card elevation={5} >
-            <CardHeader title={
-              <h5 style={{marginTop: '0', paddingTop: '0'}}>Danh sách câu hỏi đã chọn</h5>
-            }/>
-            <CardContent>
-              <DataGrid
-                rows={questionSelectedList}
-                columns={columnsSelected}
-                disableColumnMenu
-                autoHeight
-              />
-            </CardContent>
-          </Card>
-        </DialogContent>
-        <DialogActions>
+            <Card elevation={5} >
+              <CardHeader title={
+                <h5 style={{marginTop: '0', paddingTop: '0'}}>Danh sách câu hỏi đã chọn</h5>
+              }/>
+              <CardContent>
+                <DataGrid
+                  rows={questionSelectedList}
+                  columns={columnsSelected}
+                  disableColumnMenu
+                  autoHeight
+                />
+              </CardContent>
+            </Card>
+          </div>
+        }
+        actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               variant="contained"
               color="primary"
               disabled={questionSelectedList.length < 1}
@@ -338,10 +560,10 @@ function TestBankAddQuestion(props) {
               onClick={handleAdd}
             >
               Lưu
-            </Button>
+            </PrimaryButton>
           </div>
-        </DialogActions>
-      </Dialog>
+        }
+      />
 
       {
         openDetailsDialog && (

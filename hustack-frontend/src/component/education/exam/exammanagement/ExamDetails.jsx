@@ -16,10 +16,21 @@ import TestBankDetails from "../testbank/TestBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
 import ExamMarking from "./ExamMarking";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import {AttachFileOutlined} from "@material-ui/icons";
+import {getFilenameFromString} from "../ultils/FileUltils";
+import QuestionFilePreview from "../questionbank/QuestionFilePreview";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
 };
+
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {minWidth: '90vw'},
+}));
 
 function ExamDetails(props) {
 
@@ -73,13 +84,13 @@ function ExamDetails(props) {
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
             {
               rowData?.row?.examResultId ? (
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={(data) => handleMarking(rowData?.row)}
                 >
                   Chấm điểm
-                </Button>
+                </PrimaryButton>
               ) : (
                 <Button
                   variant="outlined"
@@ -96,6 +107,7 @@ function ExamDetails(props) {
     },
   ];
 
+  const classes = useStyles();
   const { open, setOpen, dataExam} = props;
 
   const [data, setData] = useState(dataExam)
@@ -105,12 +117,9 @@ function ExamDetails(props) {
   const [examDetailsMarking, setExamDetailsMarking] = useState(null)
 
   const handleOpenPopupTestDetails = (test) =>{
-    const body = {
-      id: test.id
-    }
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/${test.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -120,7 +129,6 @@ function ExamDetails(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -131,7 +139,7 @@ function ExamDetails(props) {
   const handleMarking = (rowData) => {
     request(
       "get",
-      `/exam/details-marking/${rowData?.id}`,
+      `/exam/teacher/submissions/${rowData?.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetailsMarking(res.data.data)
@@ -146,101 +154,113 @@ function ExamDetails(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="lg">
-        <DialogTitle>{data?.name}</DialogTitle>
-        <DialogContent>
-          <div style={{display: "flex", justifyContent: 'space-between'}}>
-            <div style={{display: "flex"}}>
-              <h4 style={{margin: '0 5px 0 0', padding: 0}}>Mã kỳ thi:</h4>
-              <span>{data?.code}</span>
-            </div>
-            <div style={{display: "flex"}}>
-              <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái:</h4>
-              <span>{data?.status === 0 ? 'Chưa kích hoạt' : 'Kích hoạt'}</span>
-            </div>
-            <div style={{display: "flex"}}>
-              <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian bắt đầu:</h4>
-              <span>{formatDateTime(data?.startTime)}</span>
-            </div>
-            <div style={{display: "flex"}}>
-              <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian kết thúc:</h4>
-              <span>{formatDateTime(data?.endTime)}</span>
-            </div>
-          </div>
-
-          <div style={{display: "flex", flexDirection: "column"}}>
-            <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Mô tả kỳ thi:</h4>
-            <p style={{margin: 0, padding: 0}}>{parseHTMLToString(data?.description)}</p>
-          </div>
-
-          <div style={{display: "flex", flexDirection: "column"}}>
-            <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Đề thi:</h4>
-            <div style={{
-              border: '2px solid #f5f5f5',
-              display: 'flex',
-              justifyContent: 'space-between',
-              borderRadius: '10px',
-              padding: '10px',
-              marginBottom: '10px',
-              marginTop: '10px'
-            }}>
-              <Box display="flex"
-                   flexDirection='column'
-                   width="calc(100% - 80px)"
-                   style={{
-                     userSelect: "none",
-                     WebkitUserSelect: "none",
-                     MozUserSelect: "none",
-                     msUserSelect: "none"
-                   }}>
-                <div style={{display: 'flex'}}>
-                  <span style={{fontStyle: 'italic', marginRight: '5px'}}>({data.examTests[0]?.code})</span>
-                  <span style={{display: "block", fontWeight: 'bold'}}>{data.examTests[0]?.name}</span>
-                </div>
-                <p>{parseHTMLToString(data.examTests[0]?.description)}</p>
-              </Box>
-
-              <Box display="flex" justifyContent='space-between' width="80px">
-                <button
-                  style={{
-                    height: 'max-content',
-                    padding: '8px',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                  onClick={(event) => {
-                    handleOpenPopupTestDetails(data?.examTests[0])
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}>
-                  Chi tiết
-                </button>
-              </Box>
-            </div>
-          </div>
-
+      <CustomizedDialogs
+        open={open}
+        classNames={{paper: classes.dialogContent}}
+        handleClose={closeDialog}
+        title={data?.name}
+        content={
           <div>
-            <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
-            <DataGrid
-              rows={data?.examStudents}
-              columns={columns}
-              getRowId={(row) => row.code}
-              disableColumnMenu
-              autoHeight
-            />
+            <div style={{display: "flex", justifyContent: 'space-between'}}>
+              <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Mã kỳ thi:</h4>
+                <span>{data?.code}</span>
+              </div>
+              <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái:</h4>
+                <span>{data?.status === 0 ? 'Chưa kích hoạt' : 'Kích hoạt'}</span>
+              </div>
+              <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái đáp án:</h4>
+                <span>{data?.answerStatus === 'NO_OPEN' ? 'Ẩn' : 'Hiện'}</span>
+              </div>
+            </div>
+
+            <div>
+              <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian bắt đầu:</h4>
+                <span>{formatDateTime(data?.startTime)}</span>
+              </div>
+              <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian kết thúc:</h4>
+                <span>{formatDateTime(data?.endTime)}</span>
+              </div>
+            </div>
+
+            <div style={{display: "flex", flexDirection: "column"}}>
+              <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Mô tả kỳ thi:</h4>
+              <p style={{margin: 0, padding: 0}}>{parseHTMLToString(data?.description)}</p>
+            </div>
+
+            <div style={{display: "flex", flexDirection: "column"}}>
+              <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Đề thi:</h4>
+              <div style={{
+                border: '2px solid #f5f5f5',
+                display: 'flex',
+                justifyContent: 'space-between',
+                borderRadius: '10px',
+                padding: '10px',
+                marginBottom: '10px',
+                marginTop: '10px'
+              }}>
+                <Box display="flex"
+                     flexDirection='column'
+                     width="calc(100% - 80px)"
+                     style={{
+                       userSelect: "none",
+                       WebkitUserSelect: "none",
+                       MozUserSelect: "none",
+                       msUserSelect: "none"
+                     }}>
+                  <div style={{display: 'flex'}}>
+                    <span style={{fontStyle: 'italic', marginRight: '5px'}}>({data.examTests[0]?.code})</span>
+                    <span style={{display: "block", fontWeight: 'bold'}}>{data.examTests[0]?.name}</span>
+                  </div>
+                  <p>{parseHTMLToString(data.examTests[0]?.description)}</p>
+                </Box>
+
+                <Box display="flex" justifyContent='space-between' width="80px">
+                  <button
+                    style={{
+                      height: 'max-content',
+                      padding: '8px',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                    onClick={(event) => {
+                      handleOpenPopupTestDetails(data?.examTests[0])
+                      event.preventDefault()
+                      event.stopPropagation()
+                    }}>
+                    Chi tiết
+                  </button>
+                </Box>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
+              <DataGrid
+                rows={data?.examStudents}
+                columns={columns}
+                getRowId={(row) => row.code}
+                disableColumnMenu
+                autoHeight
+              />
+            </div>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
+        }
+        actions={
+          <TertiaryButton
+            variant="outlined"
             onClick={closeDialog}
           >
             Hủy
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </TertiaryButton>
+        }
+      />
       {
         openTestDetailsDialog && (
           <TestBankDetails

@@ -1,27 +1,18 @@
 package com.hust.baseweb.applications.exam.model.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
+public interface MyExamFilterRes {
 
-@Getter
-@Setter
-@FieldNameConstants
-@Builder
-public class MyExamFilterRes {
-
-    private String examStudentId;
-    private String examId;
-    private String examCode;
-    private String examName;
-    private String examDescription;
-    private String startTime;
-    private String endTime;
-    private String examTestId;
-    private String examTestCode;
-    private String examTestName;
-    private String examResultId;
-    private Double totalScore;
+    String getExamStudentId();
+    String getExamId();
+    String getExamCode();
+    String getExamName();
+    String getExamDescription();
+    String getStartTime();
+    String getEndTime();
+    String getExamTestId();
+    String getExamTestCode();
+    String getExamTestName();
+    String getExamResultId();
+    Double getTotalScore();
 
 }

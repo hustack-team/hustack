@@ -6,6 +6,7 @@ public interface ExamTestQuestionDetailsRes {
     String getQuestionId();
     String getQuestionCode();
     Integer getQuestionType();
+    String getQuestionLevel();
     String getQuestionContent();
     String getQuestionFile();
     Integer getQuestionNumberAnswer();
@@ -18,4 +19,7 @@ public interface ExamTestQuestionDetailsRes {
     String getQuestionAnswer();
     String getQuestionExplain();
     Integer getQuestionOrder();
+    String getExamSubjectName();
+    String getExamTagIdStr();
+    String getExamTagNameStr();
 }

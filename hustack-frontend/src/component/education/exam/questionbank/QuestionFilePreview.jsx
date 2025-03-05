@@ -10,9 +10,17 @@ import {
 import FilePreviewUrl from "../../../common/uploader/FilePreviewUrl";
 import {DialogActions} from "@mui/material";
 import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+import TertiaryButton from "../../../button/TertiaryButton";
+import PrimaryButton from "../../../button/PrimaryButton";
+
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {minWidth: '90vw'},
+}));
 
 function QuestionFilePreview(props) {
-
+  const classes = useStyles();
   const { open, setOpen, file} = props;
 
   const closeDialog = () => {
@@ -35,28 +43,34 @@ function QuestionFilePreview(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="lg">
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        classNames={{paper: classes.dialogContent}}
+        content={
           <div>
             <FilePreviewUrl file={file}></FilePreviewUrl>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={closeDialog}
-          >
-            Hủy
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleDownload}
-          >
-            Tải xuống
-          </Button>
-        </DialogActions>
-      </Dialog>
+        }
+        actions={
+          <div>
+            <TertiaryButton
+              variant="outlined"
+              onClick={closeDialog}
+            >
+              Hủy
+            </TertiaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{marginLeft: "15px"}}
+              onClick={handleDownload}
+            >
+              Tải xuống
+            </PrimaryButton>
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Box, Button, Card, CardContent, CircularProgress, Input} from "@material-ui/core";
 import {request} from "../../../../api";
-import {FormControl, MenuItem, Select} from "@mui/material";
+import {Autocomplete, FormControl, InputLabel, MenuItem, OutlinedInput, Select} from "@mui/material";
 import DateFnsUtils from "@date-io/date-fns";
 import Typography from "@material-ui/core/Typography";
 import TextField from "@material-ui/core/TextField";
@@ -18,7 +18,11 @@ import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils
 import {AttachFileOutlined} from "@material-ui/icons";
 import QuestionFilePreview from "./QuestionFilePreview";
 import DeleteIcon from "@material-ui/icons/Delete";
+import StyleIcon from '@mui/icons-material/Style';
 import withScreenSecurity from "../../../withScreenSecurity";
+import QuestionTagManagement from "./QuestionTagManagement";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,6 +59,21 @@ function QuestionBankCreateUpdate(props) {
       value: 1,
       name: 'Tự luận'
     }
+  ]
+
+  const questionLevels = [
+    {
+      value: "EASY",
+      name: 'Dễ'
+    },
+    {
+      value: "MEDIUM",
+      name: 'Trung bình'
+    },
+    {
+      value: "HARD",
+      name: 'Khó'
+    },
   ]
 
   const numberAnswers = [
@@ -99,6 +118,9 @@ function QuestionBankCreateUpdate(props) {
 
   const [code, setCode] = useState(question?.code);
   const [type, setType] = useState(question?.type);
+  const [level, setLevel] = useState(question?.level);
+  const [examSubjectId, setExamSubjectId] = useState(question?.examSubjectId);
+  const [examTags, setExamTags] = useState(question?.examTags);
   const [content, setContent] = useState(question?.content);
   const [filePath, setFilePath] = useState(question?.filePath);
   const [deletePaths, setDeletePaths] = useState([]);
@@ -115,11 +137,32 @@ function QuestionBankCreateUpdate(props) {
   const [isLoading, setIsLoading] = useState(false);
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
+  const [examSubjects, setExamSubjects] = useState([]);
+  const [questionTags, setQuestionTags] = useState([]);
+  const [openQuestionTagManagementDialog, setOpenQuestionTagManagementDialog] = useState(false);
+
+  useEffect(() => {
+    getAllQuestionTag()
+    getAllExamSubject()
+  }, []);
+
+  useEffect(() => {
+    if(!openQuestionTagManagementDialog){
+      getAllQuestionTag()
+    }
+  }, [openQuestionTagManagementDialog]);
+
+  useEffect(() => {
+    console.log('examTags',examTags)
+  }, [examTags]);
 
   const saveQuestion = () =>{
     const body = {
       code: code,
       type:  type,
+      level: level,
+      examSubjectId: examSubjectId,
+      examTags: examTags,
       content:  content,
       filePath: filePath,
       deletePaths: isCreate ? null : deletePaths,
@@ -133,20 +176,26 @@ function QuestionBankCreateUpdate(props) {
       answer:  answer,
       explain:  explain
     }
-    validateBody(body)
+    if(!validateBody(body)){
+      return
+    }
 
     let formData = new FormData();
-    formData.append("body", JSON.stringify(body));
+    formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
     for (const file of contentFiles) {
       formData.append("files", file);
     }
 
-    console.log('formData',formData)
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam-question/create` : '/exam-question/update',
+      isCreate ? "post" : "put",
+      "/exam-question",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -163,45 +212,77 @@ function QuestionBankCreateUpdate(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      formData
+      formData,
+      config,
+    );
+  }
+
+  const getAllQuestionTag = () => {
+    request(
+      "get",
+      `/exam-tag`,
+      (res) => {
+        if(res.status === 200){
+          setQuestionTags(res.data)
+        }
+      },
+      { onError: (e) => toast.error(e) }
+    );
+  }
+
+  const getAllExamSubject = () => {
+    request(
+      "get",
+      `/exam-subject/all`,
+      (res) => {
+        if(res.status === 200){
+          setExamSubjects(res.data)
+        }
+      },
+      { onError: (e) => toast.error(e) }
     );
   }
 
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã câu hỏi không được bỏ trống')
-      return
+      return false
     }
     if(body.content == null || body.content === ''){
       toast.error('Nội dung câu hỏi không được bỏ trống')
-      return
+      return false
+    }
+    if(body.examSubjectId == null || body.examSubjectId === ''){
+      toast.error('Lựa chọn môn học')
+      return false
     }
     if(body.type === 0){
       if(body.contentAnswer1 == null || body.contentAnswer1 === ''){
         toast.error('Nội dung phương án 1 không được bỏ trống')
-        return
+        return false
       }
       if((body.contentAnswer2 == null || body.contentAnswer2 === '') && numberAnswer >= 2){
         toast.error('Nội dung phương án 2 không được bỏ trống')
-        return
+        return false
       }
       if((body.contentAnswer3 == null || body.contentAnswer3 === '') && numberAnswer >= 3){
         toast.error('Nội dung phương án 3 không được bỏ trống')
-        return
+        return false
       }
       if((body.contentAnswer4 == null || body.contentAnswer4 === '') && numberAnswer >= 4){
         toast.error('Nội dung phương án 4 không được bỏ trống')
-        return
+        return false
       }
       if((body.contentAnswer5 == null || body.contentAnswer5 === '') && numberAnswer >= 5){
         toast.error('Nội dung phương án 5 không được bỏ trống')
-        return
+        return false
       }
     }
     if(body.answer == null || body.answer === ''){
       toast.error('Đáp án không được bỏ trống')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {
@@ -325,6 +406,79 @@ function QuestionBankCreateUpdate(props) {
                       </TextField>
                     )
                   }
+                </div>
+
+                <div style={{display: "flex"}}>
+                  <TextField
+                    required
+                    autoFocus
+                    id="questionLevel"
+                    select
+                    label="Mức độ"
+                    value={level}
+                    onChange={(event) => {
+                      setLevel(event.target.value);
+                    }}
+                  >
+                    {
+                      questionLevels.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+
+                  <TextField
+                    required
+                    autoFocus
+                    id="examSubjectId"
+                    select
+                    label="Môn học"
+                    value={examSubjectId}
+                    onChange={(event) => {
+                      setExamSubjectId(event.target.value);
+                    }}
+                  >
+                    {
+                      examSubjects.map(item => {
+                        return (
+                          <MenuItem value={item.id}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+                </div>
+
+                <div style={{display: "flex"}}>
+                  <Autocomplete
+                    multiple
+                    id="examTagIds"
+                    options={questionTags}
+                    getOptionLabel={(item) => item?.name}
+                    value={examTags}
+                    onChange={(event, newValue) => {
+                      setExamTags(newValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        style={{width: "420px"}}
+                        variant="standard"
+                        label="Tag"
+                      />
+                    )}
+                  />
+
+                  <PrimaryButton
+                    variant="outlined"
+                    color="primary"
+                    style={{height: "55px"}}
+                    startIcon={<StyleIcon />}
+                    onClick={() => setOpenQuestionTagManagementDialog(true)}
+                  >
+                    Manage Tags
+                  </PrimaryButton>
                 </div>
 
                 <div>
@@ -479,7 +633,7 @@ function QuestionBankCreateUpdate(props) {
                   {
                     type === 1 && (
                       <div>
-                        <Typography variant="h6">Nội dung đáp án</Typography>
+                        <Typography variant="h6">Nội dung đáp án *</Typography>
                         <RichTextEditor
                           content={answer}
                           onContentChange={(answer) =>
@@ -504,13 +658,13 @@ function QuestionBankCreateUpdate(props) {
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/question-bank")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -519,13 +673,18 @@ function QuestionBankCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
           <QuestionFilePreview
             open={openFilePreviewDialog}
             setOpen={setOpenFilePreviewDialog}
             file={filePreview}>
           </QuestionFilePreview>
+          <QuestionTagManagement
+            open={openQuestionTagManagementDialog}
+            setOpen={setOpenQuestionTagManagementDialog}
+            data={questionTags}
+          ></QuestionTagManagement>
         </Card>
       </MuiPickersUtilsProvider>
     </div>

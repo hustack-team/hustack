@@ -16,18 +16,17 @@ import com.hust.baseweb.applications.exam.service.ExamTestService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,77 +35,32 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamTestServiceImpl implements ExamTestService {
 
-    private final ExamRepository examRepository;
-    private final ExamTestRepository examTestRepository;
-    private final ExamTestQuestionRepository examTestQuestionRepository;
-    private final EntityManager entityManager;
-    private final ModelMapper modelMapper;
-    private final ObjectMapper objectMapper;
+    ExamRepository examRepository;
+    ExamTestRepository examTestRepository;
+    ExamTestQuestionRepository examTestQuestionRepository;
+    EntityManager entityManager;
+    ModelMapper modelMapper;
+    ObjectMapper objectMapper;
 
     @Override
     public Page<ExamTestEntity> filter(Pageable pageable, ExamTestFilterReq examTestFilterReq) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("select\n" +
-                   "    *\n" +
-                   "from\n" +
-                   "    exam_test et\n" +
-                   "where\n" +
-                   "    et.created_by = :userLogin \n");
-
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getKeyword())){
-            sql.append("and\n" +
-                       "    ((lower(et.code) like CONCAT('%', LOWER(:keyword),'%')) or \n" +
-                       "    (lower(et.name) like CONCAT('%', LOWER(:keyword),'%'))) \n");
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom()) &&
-           DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            sql.append("and\n" +
-                       "    et.created_at between :createdFrom and :createdTo \n");
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom()) &&
-           !DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            sql.append("and\n" +
-                       "    et.created_at >= :createdFrom \n");
-        }
-        if(!DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom()) &&
-           DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            sql.append("and\n" +
-                       "    et.created_at <= :createdTo \n");
-        }
-        sql.append("order by created_at desc\n");
-
-        Query query = entityManager.createNativeQuery(sql.toString(), ExamTestEntity.class);
-        Query count = entityManager.createNativeQuery("select count(1) FROM (" + sql + ") as count");
-        query.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
-        query.setMaxResults(pageable.getPageSize());
-
-        query.setParameter("userLogin", SecurityUtils.getUserLogin());
-        count.setParameter("userLogin", SecurityUtils.getUserLogin());
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getKeyword())){
-            query.setParameter("keyword", DataUtils.escapeSpecialCharacters(examTestFilterReq.getKeyword()));
-            count.setParameter("keyword", DataUtils.escapeSpecialCharacters(examTestFilterReq.getKeyword()));
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedFrom())){
-            query.setParameter("createdFrom", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedFrom(), true));
-            count.setParameter("createdFrom", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedFrom(), true));
-        }
-        if(DataUtils.stringIsNotNullOrEmpty(examTestFilterReq.getCreatedTo())){
-            query.setParameter("createdTo", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false));
-            count.setParameter("createdTo", DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false));
-        }
-
-        long totalRecord = ((BigInteger) count.getSingleResult()).longValue();
-        List<ExamTestEntity> list = query.getResultList();
-        return new PageImpl<>(list, pageable, totalRecord);
+        return examTestRepository.filter(
+            pageable,
+            SecurityUtils.getUserLogin(),
+            DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedFrom(), true),
+            DataUtils.formatStringValueSqlToLocalDateTime(examTestFilterReq.getCreatedTo(), false),
+            examTestFilterReq.getKeyword()
+        );
     }
 
     @Override
-    public ResponseData<ExamTestDetailsRes> details(ExamTestDetailsReq examTestDetailsReq) {
+    public ResponseData<ExamTestDetailsRes> details(String id) {
         ResponseData<ExamTestDetailsRes> responseData = new ResponseData<>();
 
-        Optional<ExamTestEntity> examTestEntity = examTestRepository.findById(examTestDetailsReq.getId());
+        Optional<ExamTestEntity> examTestEntity = examTestRepository.findById(id);
         if(!examTestEntity.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -114,8 +68,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             return responseData;
         }
 
-        List<ExamTestQuestionDetailsRes> list = examTestRepository.details(SecurityUtils.getUserLogin(),
-                                                                           examTestDetailsReq.getId());
+        List<ExamTestQuestionDetailsRes> list = examTestRepository.details(SecurityUtils.getUserLogin(), id);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -205,9 +158,9 @@ public class ExamTestServiceImpl implements ExamTestService {
 
     @Override
     @Transactional
-    public ResponseData<ExamTestEntity> delete(ExamTestDeleteReq examTestDeleteReq) {
+    public ResponseData<ExamTestEntity> delete(String id) {
         ResponseData<ExamTestEntity> responseData = new ResponseData<>();
-        Optional<ExamTestEntity> examTestExist = examTestRepository.findById(examTestDeleteReq.getId());
+        Optional<ExamTestEntity> examTestExist = examTestRepository.findById(id);
         if(!examTestExist.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -215,7 +168,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             return responseData;
         }
 
-        List<ExamEntity> examEntityList = examRepository.findALlByExamTestId(examTestDeleteReq.getId());
+        List<ExamEntity> examEntityList = examRepository.findALlByExamTestId(id);
         if(!examEntityList.isEmpty()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -223,7 +176,7 @@ public class ExamTestServiceImpl implements ExamTestService {
             return responseData;
         }
 
-        List<ExamTestQuestionEntity> testQuestionEntityList = examTestQuestionRepository.findAllByExamTestId(examTestDeleteReq.getId());
+        List<ExamTestQuestionEntity> testQuestionEntityList = examTestQuestionRepository.findAllByExamTestId(id);
         examTestQuestionRepository.deleteAll(testQuestionEntityList);
         examTestRepository.delete(examTestExist.get());
         responseData.setHttpStatus(HttpStatus.OK);

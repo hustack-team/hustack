@@ -20,12 +20,23 @@ import {vi} from "date-fns/locale";
 import {DatePicker} from "@mui/x-date-pickers";
 import TestBankDetails from "../testbank/TestBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import {AttachFileOutlined} from "@material-ui/icons";
+import {getFilenameFromString} from "../ultils/FileUltils";
+import QuestionFilePreview from "../questionbank/QuestionFilePreview";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const baseColumn = {
   sortable: false,
 };
 
 const rowsPerPage = [5, 10, 20];
+
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {minWidth: '90vw'},
+}));
 
 function SelectTestDialog(props) {
 
@@ -126,6 +137,7 @@ function SelectTestDialog(props) {
     },
   ];
 
+  const classes = useStyles();
   const { open, setOpen, onSubmit} = props;
 
   const [dataList, setDataList] = useState([])
@@ -147,14 +159,16 @@ function SelectTestDialog(props) {
   }, [page, pageSize, debouncedKeywordFilter, createdFromFilter, createdToFilter]);
 
   const filter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      createdFrom: formatDateApi(createdFromFilter),
-      createdTo: formatDateApi(createdToFilter)
-    }
+    })
+    if (formatDateApi(createdFromFilter) != null) queryParams.append('createdFrom', formatDateApi(createdFromFilter))
+    if (formatDateApi(createdToFilter) != null) queryParams.append('createdTo', formatDateApi(createdToFilter))
     request(
-      "post",
-      `/exam-test/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam-test?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setDataList(res.data.content);
@@ -164,17 +178,13 @@ function SelectTestDialog(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
   const detailsTest = (id) =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -184,7 +194,6 @@ function SelectTestDialog(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -216,109 +225,114 @@ function SelectTestDialog(props) {
 
   return (
     <div>
-      <Dialog open={open} fullWidth maxWidth="lg">
-        <DialogTitle>Thêm đề thi cho kỳ thi</DialogTitle>
-        <DialogContent>
-          <Card elevation={5}>
-            <CardHeader
-              title={
-                <Box display="flex" justifyContent="space-between" alignItems="end" width="100%">
-                  <Box display="flex" flexDirection="column" width="80%">
-                    <h5 style={{margin: '0'}}>Ngân hàng đề thi</h5>
-                    <Box display="flex" justifyContent="flex-start" width="100%">
-                      <TextField
-                        autoFocus
-                        id="testCode"
-                        label="Nội dung tìm kiếm"
-                        placeholder="Tìm kiếm theo code hoặc tên"
-                        value={keywordFilter}
-                        style={{ width: "300px", marginRight: "16px"}}
-                        onChange={(event) => {
-                          setKeywordFilter(event.target.value);
-                        }}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                      />
-
-                      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
-                        <DatePicker
-                          label="Thời gian tạo từ"
-                          value={createdFromFilter}
-                          onChange={event => setCreatedFromFilter(event)}
-                          renderInput={(params) => <TextField {...params} error={false} style={{ marginRight: '16px' }}/>}
+      <CustomizedDialogs
+        open={open}
+        classNames={{paper: classes.dialogContent}}
+        handleClose={closeDialog}
+        title="Thêm đề thi cho kỳ thi"
+        content={
+          <div>
+            <Card elevation={5}>
+              <CardHeader
+                title={
+                  <Box display="flex" justifyContent="space-between" alignItems="end" width="100%">
+                    <Box display="flex" flexDirection="column" width="80%">
+                      <h5 style={{margin: '0'}}>Ngân hàng đề thi</h5>
+                      <Box display="flex" justifyContent="flex-start" width="100%">
+                        <TextField
+                          autoFocus
+                          id="testCode"
+                          label="Nội dung tìm kiếm"
+                          placeholder="Tìm kiếm theo code hoặc tên"
+                          value={keywordFilter}
+                          style={{ width: "300px", marginRight: "16px"}}
+                          onChange={(event) => {
+                            setKeywordFilter(event.target.value);
+                          }}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
                         />
-                      </LocalizationProvider>
 
-                      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
-                        <DatePicker
-                          label="Thời gian tạo đến"
-                          value={createdToFilter}
-                          onChange={event => setCreatedToFilter(event)}
-                          renderInput={(params) => <TextField {...params} error={false}/>}
-                        />
-                      </LocalizationProvider>
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
+                          <DatePicker
+                            label="Thời gian tạo từ"
+                            value={createdFromFilter}
+                            onChange={event => setCreatedFromFilter(event)}
+                            renderInput={(params) => <TextField {...params} error={false} style={{ marginRight: '16px' }}/>}
+                          />
+                        </LocalizationProvider>
+
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
+                          <DatePicker
+                            label="Thời gian tạo đến"
+                            value={createdToFilter}
+                            onChange={event => setCreatedToFilter(event)}
+                            renderInput={(params) => <TextField {...params} error={false}/>}
+                          />
+                        </LocalizationProvider>
+                      </Box>
+                    </Box>
+
+                    <Box display="flex" justifyContent="flex-end" width="20%">
+                      <PrimaryButton
+                        variant="contained"
+                        disabled={dataSelectionList.length < 1}
+                        color="primary"
+                        onClick={onClickAddToSelectedList}
+                        startIcon={<AddCircleIcon />}
+                      >
+                        Thêm vào danh sách
+                      </PrimaryButton>
                     </Box>
                   </Box>
+                }/>
+              <CardContent>
+                <DataGrid
+                  rowCount={totalCount}
+                  rows={dataList}
+                  columns={columns}
+                  page={page}
+                  pageSize={pageSize}
+                  pagination
+                  paginationMode="server"
+                  onPageChange={(page) => setPage(page)}
+                  onPageSizeChange={(pageSize) => setPageSize(pageSize)}
+                  rowsPerPageOptions={rowsPerPage}
+                  disableColumnMenu
+                  autoHeight
+                  checkboxSelection
+                  isRowSelectable={(params) => !dataSelectedList.includes(params.row)}
+                  onSelectionModelChange = {(ids) => setDataSelectionList(ids)}
+                  selectionModel={dataSelectionList}
+                />
+              </CardContent>
+            </Card>
 
-                  <Box display="flex" justifyContent="flex-end" width="20%">
-                    <Button
-                      variant="contained"
-                      disabled={dataSelectionList.length < 1}
-                      color="primary"
-                      onClick={onClickAddToSelectedList}
-                      startIcon={<AddCircleIcon />}
-                    >
-                      Thêm vào danh sách
-                    </Button>
-                  </Box>
-                </Box>
+            <Card elevation={5} >
+              <CardHeader title={
+                <h5 style={{margin: '0'}}>Danh sách đề thi đã chọn</h5>
               }/>
-            <CardContent>
-              <DataGrid
-                rowCount={totalCount}
-                rows={dataList}
-                columns={columns}
-                page={page}
-                pageSize={pageSize}
-                pagination
-                paginationMode="server"
-                onPageChange={(page) => setPage(page)}
-                onPageSizeChange={(pageSize) => setPageSize(pageSize)}
-                rowsPerPageOptions={rowsPerPage}
-                disableColumnMenu
-                autoHeight
-                checkboxSelection
-                isRowSelectable={(params) => !dataSelectedList.includes(params.row)}
-                onSelectionModelChange = {(ids) => setDataSelectionList(ids)}
-                selectionModel={dataSelectionList}
-              />
-            </CardContent>
-          </Card>
-
-          <Card elevation={5} >
-            <CardHeader title={
-              <h5 style={{margin: '0'}}>Danh sách đề thi đã chọn</h5>
-            }/>
-            <CardContent>
-              <DataGrid
-                rows={dataSelectedList}
-                columns={columnsSelected}
-                disableColumnMenu
-                autoHeight
-              />
-            </CardContent>
-          </Card>
-        </DialogContent>
-        <DialogActions>
+              <CardContent>
+                <DataGrid
+                  rows={dataSelectedList}
+                  columns={columnsSelected}
+                  disableColumnMenu
+                  autoHeight
+                />
+              </CardContent>
+            </Card>
+          </div>
+        }
+        actions={
           <div>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={closeDialog}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               variant="contained"
               color="primary"
               disabled={dataSelectedList.length < 1}
@@ -326,10 +340,10 @@ function SelectTestDialog(props) {
               onClick={handleAdd}
             >
               Lưu
-            </Button>
+            </PrimaryButton>
           </div>
-        </DialogActions>
-      </Dialog>
+        }
+      />
       {
         openDetailsDialog && (
           <TestBankDetails
