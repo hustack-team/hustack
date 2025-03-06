@@ -1,16 +1,13 @@
 package com.hust.baseweb.applications.exam.model.response;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
+import org.modelmapper.ModelMapper;
 
 import java.util.List;
 
 @Getter
 @Setter
-@FieldNameConstants
-@Builder
 public class ExamMarkingDetailsRes {
 
     private String examId;
@@ -28,4 +25,10 @@ public class ExamMarkingDetailsRes {
     private String comment;
     private List<MyExamQuestionDetailsRes> questionList;
 
+    public ExamMarkingDetailsRes(ExamMarkingDetailsResDB examMarkingDetailsResDB,
+                                 List<MyExamQuestionDetailsRes> questionList,
+                                 ModelMapper modelMapper){
+        modelMapper.map(examMarkingDetailsResDB, this);
+        this.questionList = questionList;
+    }
 }

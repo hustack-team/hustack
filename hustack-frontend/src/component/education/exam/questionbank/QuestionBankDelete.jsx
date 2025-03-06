@@ -10,18 +10,18 @@ import {
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {DialogActions} from "@mui/material";
+import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
+import TertiaryButton from "../../../button/TertiaryButton";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 function QuestionBankDelete(props) {
 
   const { open, setOpen, id , onReloadQuestions} = props;
 
   const deleteQuestion = () =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-question/delete`,
+      "delete",
+      `/exam-question/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           onReloadQuestions()
@@ -32,7 +32,6 @@ function QuestionBankDelete(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -42,28 +41,32 @@ function QuestionBankDelete(props) {
 
   return (
     <div>
-      <Dialog open={open}>
-        <DialogTitle>Xoá câu hỏi</DialogTitle>
-        <DialogContent>
+      <CustomizedDialogs
+        open={open}
+        handleClose={closeDialog}
+        title="Xoá câu hỏi"
+        content={
           <p style={{marginBottom: "30px"}}>Bạn có chắc chắn muốn xoá câu hỏi?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={closeDialog}
-          >
-            Hủy
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            style={{marginLeft: "15px"}}
-            onClick={deleteQuestion}
-          >
-            Lưu
-          </Button>
-        </DialogActions>
-      </Dialog>
+        }
+        actions={
+          <div>
+            <TertiaryButton
+              variant="outlined"
+              onClick={closeDialog}
+            >
+              Hủy
+            </TertiaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{marginLeft: "15px"}}
+              onClick={deleteQuestion}
+            >
+              Lưu
+            </PrimaryButton>
+          </div>
+        }
+      />
     </div>
   );
 }

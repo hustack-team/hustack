@@ -29,6 +29,8 @@ import XLSX from "xlsx";
 import {DataGrid} from "@material-ui/data-grid";
 import withScreenSecurity from "../../../withScreenSecurity";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -113,6 +115,17 @@ function ExamCreateUpdate(props) {
     }
   ]
 
+  const answerStatusList = [
+    {
+      value: 'NO_OPEN',
+      name: 'Ẩn'
+    },
+    {
+      value: 'OPEN',
+      name: 'Hiện'
+    }
+  ]
+
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
@@ -126,7 +139,8 @@ function ExamCreateUpdate(props) {
   const [code, setCode] = useState(data?.code);
   const [name, setName] = useState(data?.name);
   const [status, setStatus] = useState(data?.status);
-  const [description, setDescription] = useState(data?.description);
+  const [answerStatus, setAnswerStatus] = useState(data?.answerStatus);
+  const [description, setDescription] = useState(data?.description ? data?.description : '');
   const [examTestId, setExamTestId] = useState(data?.examTestId);
   const [startTime, setStartTime] = useState(data?.startTime);
   const [endTime, setEndTime] = useState(data?.endTime);
@@ -144,18 +158,21 @@ function ExamCreateUpdate(props) {
       name: name,
       description: description,
       status: status,
+      answerStatus: answerStatus,
       examTestId: examTestId,
       startTime: formatDateTimeApi(startTime),
       endTime: formatDateTimeApi(endTime),
       examStudents: examStudents,
       examStudentDeletes: examStudentDeletes
     }
-    validateBody(body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam/create` : '/exam/update',
+      isCreate ? "post" : "put",
+      "/exam",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -179,24 +196,25 @@ function ExamCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã kỳ thi không được bỏ trống')
-      return
+      return false
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên kỳ thi không được bỏ trống')
-      return
+      return false
     }
     if(body.examTestId == null || body.examTestId === ''){
       toast.error('Chọn đề thi cho kỳ thi')
-      return
+      return false
     }
     if(body.startTime == null || body.startTime === ''){
       toast.error('Thời gian bắt đầu không được bỏ trống')
-      return
+      return false
     }
     if(body.endTime == null || body.endTime === ''){
       toast.error('Thời gian kết thúc không được bỏ trống')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {
@@ -213,12 +231,9 @@ function ExamCreateUpdate(props) {
   };
 
   const detailsTest = (id) =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -228,7 +243,6 @@ function ExamCreateUpdate(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -347,6 +361,26 @@ function ExamCreateUpdate(props) {
                     }
                   </TextField>
 
+                  <TextField
+                    required
+                    autoFocus
+                    id="ExamAnswerstatus"
+                    select
+                    label="Trạng thái đáp án"
+                    value={answerStatus}
+                    onChange={(event) => {
+                      setAnswerStatus(event.target.value);
+                    }}
+                  >
+                    {
+                      answerStatusList.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+
                   <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
                     <DateTimePicker
                       label="Thời gian bắt đầu"
@@ -370,7 +404,7 @@ function ExamCreateUpdate(props) {
                   {
                     testList.length < 1 ?
                       (
-                        <Button
+                        <PrimaryButton
                           variant="contained"
                           color="primary"
                           onClick={() => setOpenSelectTestDialog(true)}
@@ -378,7 +412,7 @@ function ExamCreateUpdate(props) {
                           style={{marginRight: 16, width: '200px'}}
                         >
                           Chọn đề thi
-                        </Button>
+                        </PrimaryButton>
                       )
                       :
                       (
@@ -515,13 +549,13 @@ function ExamCreateUpdate(props) {
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/management")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -530,7 +564,7 @@ function ExamCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
           {
             openTestDetailsDialog && (

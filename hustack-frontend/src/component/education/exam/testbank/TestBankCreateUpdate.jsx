@@ -18,6 +18,8 @@ import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import TestBankAddQuestion from "./TestBankAddQuestion";
 import withScreenSecurity from "../../../withScreenSecurity";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -92,14 +94,14 @@ function TestBankCreateUpdate(props) {
       examTestQuestionSaveReqList: examTestQuestionSaveReqList,
       examTestQuestionDeleteReqList: questionDeleteList
     }
-    validateBody(body)
-
-    console.log('body',body)
+    if(!validateBody(body)){
+      return
+    }
 
     setIsLoading(true)
     request(
-      "post",
-      isCreate ? `/exam-test/create` : '/exam-test/update',
+      isCreate ? "post" : "put",
+      "/exam-test",
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -123,16 +125,17 @@ function TestBankCreateUpdate(props) {
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã đề thi không được bỏ trống')
-      return
+      return false
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên đề thi không được bỏ trống')
-      return
+      return false
     }
     if(body.examTestQuestionSaveReqList.length < 1){
       toast.error('Đề thi phải có ít nhất 1 câu hỏi')
-      return
+      return false
     }
+    return true
   }
 
   const handleKeyPress = (event) => {
@@ -223,7 +226,7 @@ function TestBankCreateUpdate(props) {
                     onSortEnd={onSortEnd}
                     setQuestionDelete={setQuestionDelete}/>
 
-                  <Button
+                  <PrimaryButton
                     variant="contained"
                     color="primary"
                     onClick={() => setOpenAddQuestionDialog(true)}
@@ -231,19 +234,19 @@ function TestBankCreateUpdate(props) {
                     style={{ marginRight: 16 , width: '200px'}}
                   >
                     Thêm câu hỏi
-                  </Button>
+                  </PrimaryButton>
                 </Box>
               </div>
             </form>
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/test-bank")}
             >
               Hủy
-            </Button>
-            <Button
+            </TertiaryButton>
+            <PrimaryButton
               disabled={isLoading}
               variant="contained"
               color="primary"
@@ -252,7 +255,7 @@ function TestBankCreateUpdate(props) {
               type="submit"
             >
               {isLoading ? <CircularProgress/> : "Lưu"}
-            </Button>
+            </PrimaryButton>
           </CardActions>
           <TestBankAddQuestion
             open={openAddQuestionDialog}

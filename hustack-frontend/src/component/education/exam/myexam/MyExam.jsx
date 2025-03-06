@@ -124,13 +124,15 @@ function MyExam(props) {
   }, [page, pageSize, debouncedKeywordFilter, statusFilter]);
 
   const handleFilter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      status: statusFilter === 'all' ? null : statusFilter
-    }
+    })
+    if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
-      "post",
-      `/exam/filter-my-exam?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam/student/submissions?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setDataList(res.data.content);
@@ -140,18 +142,13 @@ function MyExam(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
   const handleDoingExam = (rowData) => {
-    const body = {
-      examId: rowData?.examId,
-      examStudentId: rowData?.examStudentId
-    }
     request(
-      "post",
-      `/exam/details-my-exam`,
+      "get",
+      `/exam/student/submissions/${rowData?.examId}/${rowData?.examStudentId}`,
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -169,7 +166,6 @@ function MyExam(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 

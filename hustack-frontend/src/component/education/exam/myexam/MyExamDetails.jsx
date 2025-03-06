@@ -23,6 +23,8 @@ import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import FormGroup from "@material-ui/core/FormGroup";
 import CheckIcon from "@mui/icons-material/Check";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
+import TertiaryButton from "../../../button/TertiaryButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -58,6 +60,7 @@ function MyExamDetails(props) {
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [startLoadTime, setStartLoadTime] = useState(null);
+  const [startDoing, setStartDoing] = useState(false);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -75,7 +78,6 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
-    setStartLoadTime(new Date());
   }, []);
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
@@ -141,15 +143,21 @@ function MyExamDetails(props) {
     }
 
     let formData = new FormData();
-    formData.append("body", JSON.stringify(body));
+    formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
     for (const file of tmpAnswersFiles) {
       formData.append("files", file);
     }
 
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
+
     setIsLoading(true)
     request(
       "post",
-      '/exam/doing-my-exam',
+      '/exam/student/submissions',
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
@@ -166,7 +174,8 @@ function MyExamDetails(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      formData
+      formData,
+      config,
     );
   }
 
@@ -176,12 +185,17 @@ function MyExamDetails(props) {
   };
 
   const checkAnswerRadioAndCheckbox = (questionType, answerQuestion, answerStudent) => {
-    if(questionType === 0){
+    if(questionType === 0 && answerQuestion != null){
       const answerQuestions = answerQuestion.split(',').sort();
       const answerStudents = answerStudent.split(',').sort();
 
       return answerStudents.every(elem => answerQuestions.includes(elem));
     }
+  }
+
+  const handleStartDoing = () => {
+    setStartLoadTime(new Date());
+    setStartDoing(true)
   }
 
   // Checking focus tab
@@ -223,6 +237,19 @@ function MyExamDetails(props) {
                 <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>
                 <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>
               </div>
+              {
+                data?.examResultId == null && !startDoing && (
+                  <PrimaryButton
+                    variant="contained"
+                    color="primary"
+                    style={{margin: "16px 0"}}
+                    onClick={handleStartDoing}
+                    type="submit"
+                  >
+                    Bắt đầu làm bài
+                  </PrimaryButton>
+                )
+              }
             </div>
 
             {
@@ -265,7 +292,7 @@ function MyExamDetails(props) {
                     style={{
                       border: '2px solid #f5f5f5',
                       borderColor:
-                        (value?.questionType === 0 && data?.totalScore) ?
+                        (value?.questionType === 0 && data?.totalScore && data?.examAnswerStatus === 'OPEN') ?
                           (checkAnswerRadioAndCheckbox(value?.questionType, value?.questionAnswer, value?.answer) ? '#61bd6d' : '#f50000c9'):
                           '#f5f5f5',
                       display: 'flex',
@@ -290,7 +317,7 @@ function MyExamDetails(props) {
                         </div>
 
                         {
-                          data?.totalScore && (
+                          data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
                             <div style={{display: "flex", alignItems: "center"}} key={questionOrder}>
                               {
                                 value?.questionType === 0 ?
@@ -512,7 +539,7 @@ function MyExamDetails(props) {
                         value?.questionType === 1 && (
                           <div key={questionOrder}>
                             {
-                              data?.examResultId == null && (
+                              data?.examResultId == null && startDoing && (
                                 <div>
                                   <RichTextEditor
                                     content={tmpTextAnswer}
@@ -574,7 +601,7 @@ function MyExamDetails(props) {
                               )
                             }
                             {
-                              data?.totalScore && (
+                              data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
                                 <div style={{display: "flex", alignItems: "center"}}>
                                   <strong style={{marginRight: '10px'}}>Đáp án:</strong>{parseHTMLToString(value?.questionAnswer)}
                                 </div>
@@ -584,7 +611,7 @@ function MyExamDetails(props) {
                         )
                       }
                       {
-                        data?.totalScore && (
+                        data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
                           <div style={{display: "flex", alignItems: "center"}}>
                             <strong style={{marginRight: '10px'}}>Giải thích:</strong>{parseHTMLToString(value?.questionExplain)}
                           </div>
@@ -654,15 +681,15 @@ function MyExamDetails(props) {
 
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <Button
-              variant="contained"
+            <TertiaryButton
+              variant="outlined"
               onClick={() => history.push("/exam/my-exam")}
             >
               Hủy
-            </Button>
+            </TertiaryButton>
             {
-              data?.examResultId == null && (
-                <Button
+              data?.examResultId == null && startDoing && (
+                <PrimaryButton
                   disabled={isLoading}
                   variant="contained"
                   color="primary"
@@ -671,7 +698,7 @@ function MyExamDetails(props) {
                   type="submit"
                 >
                   {isLoading ? <CircularProgress/> : "Nộp bài"}
-                </Button>
+                </PrimaryButton>
               )
             }
           </CardActions>

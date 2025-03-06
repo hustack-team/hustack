@@ -16,6 +16,7 @@ import {formatDateTime} from "../ultils/DateUltils";
 import ExamDelete from "./ExamDelete";
 import ExamDetails from "./ExamDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -70,7 +71,7 @@ function ExamManagement(props) {
       field: "status",
       headerName: "Trạng thái",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 120,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return (
@@ -80,6 +81,25 @@ function ExamManagement(props) {
           return (
             <strong style={{color: '#61bd6d'}}>Kích hoạt</strong>
           )
+        }
+      },
+    },
+    {
+      field: "answerStatus",
+      headerName: "Trạng thái đáp án",
+      ...baseColumn,
+      minWidth: 170,
+      renderCell: (rowData) => {
+        if(rowData.value === 'NO_OPEN'){
+          return (
+            <strong style={{color: '#f50000c9'}}>Ẩn</strong>
+          )
+        }else if(rowData.value === 'OPEN'){
+          return (
+            <strong style={{color: '#61bd6d'}}>Hiện</strong>
+          )
+        }else{
+          return ''
         }
       },
     },
@@ -135,13 +155,15 @@ function ExamManagement(props) {
   }, [page, pageSize, debouncedKeywordFilter, statusFilter]);
 
   const handleFilter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      status: statusFilter === 'all' ? null : statusFilter
-    }
+    })
+    if (statusFilter != null && statusFilter !== "all") queryParams.append('status', statusFilter)
     request(
-      "post",
-      `/exam/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setExamList(res.data.content);
@@ -151,7 +173,6 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -166,6 +187,7 @@ function ExamManagement(props) {
           name: "",
           description: "",
           status: 1,
+          answerStatus: "NO_OPEN",
           startTime: "",
           endTime: "",
           examStudents: []
@@ -176,12 +198,9 @@ function ExamManagement(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const body = {
-      id: rowData.id
-    }
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           history.push({
@@ -196,17 +215,13 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 
   const handleDetails = (rowData) => {
-    const body = {
-      id: rowData.id
-    }
     request(
-      "post",
-      `/exam/details`,
+      "get",
+      `/exam/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetails(res.data.data)
@@ -216,7 +231,6 @@ function ExamManagement(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 
@@ -271,7 +285,7 @@ function ExamManagement(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="20%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
@@ -279,7 +293,7 @@ function ExamManagement(props) {
                   style={{ marginRight: 16 }}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
           }/>

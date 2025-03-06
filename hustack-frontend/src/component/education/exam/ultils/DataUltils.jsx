@@ -6,3 +6,10 @@ export function parseHTMLToString(value){
   }
   return ''
 }
+
+export function parseToString(value){
+  if(value){
+    return value
+  }
+  return ''
+}

@@ -19,6 +19,7 @@ import {vi} from "date-fns/locale";
 import TestBankDelete from "./TestBankDelete";
 import TestBankDetails from "./TestBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -98,14 +99,16 @@ function TestBank(props) {
   }, [page, pageSize, debouncedKeywordFilter, createdFromFilter, createdToFilter]);
 
   const filter = () =>{
-    const body = {
+    const queryParams = new URLSearchParams({
+      page: page,
+      size: pageSize,
       keyword: keywordFilter,
-      createdFrom: formatDateApi(createdFromFilter),
-      createdTo: formatDateApi(createdToFilter)
-    }
+    })
+    if (formatDateApi(createdFromFilter) != null) queryParams.append('createdFrom', formatDateApi(createdFromFilter))
+    if (formatDateApi(createdToFilter) != null) queryParams.append('createdTo', formatDateApi(createdToFilter))
     request(
-      "post",
-      `/exam-test/filter?page=${page}&size=${pageSize}`,
+      "get",
+      `/exam-test?${queryParams}`,
       (res) => {
         if(res.status === 200){
           setData(res.data.content);
@@ -115,17 +118,13 @@ function TestBank(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
   const detailsTest = (id) =>{
-    const body = {
-      id: id
-    }
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/${id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -135,7 +134,6 @@ function TestBank(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   }
 
@@ -155,12 +153,9 @@ function TestBank(props) {
   };
 
   const handleUpdate = (rowData) => {
-    const body = {
-      id: rowData.id
-    }
     request(
-      "post",
-      `/exam-test/details`,
+      "get",
+      `/exam-test/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           setTestDetails(res.data.data)
@@ -171,6 +166,7 @@ function TestBank(props) {
               id: question.questionId,
               code: question.questionCode,
               type: question.questionType,
+              level: question.questionLevel,
               content: question.questionContent,
               filePath: question.questionFile,
               numberAnswer: question.questionNumberAnswer,
@@ -182,7 +178,10 @@ function TestBank(props) {
               multichoice: question.questionMultichoice,
               answer: question.questionAnswer,
               explain: question.questionExplain,
-              order: question.questionOrder
+              order: question.questionOrder,
+              examSubjectName: question.examSubjectName,
+              examTagIdStr: question.examTagIdStr,
+              examTagNameStr: question.examTagNameStr,
             })
           }
           history.push({
@@ -202,7 +201,6 @@ function TestBank(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
     );
   };
 
@@ -260,7 +258,7 @@ function TestBank(props) {
               </Box>
 
               <Box display="flex" justifyContent="flex-end" width="20%">
-                <Button
+                <PrimaryButton
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
@@ -268,7 +266,7 @@ function TestBank(props) {
                   style={{ marginRight: 16 }}
                 >
                   Thêm mới
-                </Button>
+                </PrimaryButton>
               </Box>
             </Box>
           }/>

@@ -6,7 +6,11 @@ on:
       - main
     paths:
       - "hustack-backend/judge0-client/**"
-
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "hustack-backend/judge0-client/**"
 jobs:
   build:
     runs-on: ubuntu-latest
