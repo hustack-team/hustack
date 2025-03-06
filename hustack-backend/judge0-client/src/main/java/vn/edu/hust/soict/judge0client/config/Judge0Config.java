@@ -7,6 +7,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 
+import java.util.Set;
+
 @Getter
 @AllArgsConstructor
 @ConstructorBinding
@@ -30,6 +32,8 @@ public class Judge0Config {
         Auth authz;
 
         Submission submission;
+
+        Set<String> multiThreadedLibs;
     }
 
     @Getter
