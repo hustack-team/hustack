@@ -47,6 +47,7 @@ function ExamMarking(props) {
   const [comment, setComment] = useState(data?.comment ? data?.comment : '');
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
+  const [isComment, setIsComment] = useState(false);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -125,9 +126,10 @@ function ExamMarking(props) {
     );
   };
 
-  const handleOpenFilePreviewDialog = (data) => {
+  const handleOpenFilePreviewDialog = (data, isComment) => {
     setOpenFilePreviewDialog(true)
     setFilePreview(getFilePathFromString(data))
+    setIsComment(isComment)
   };
 
   const handleMarkingScore = (event, questionOrder) => {
@@ -260,7 +262,7 @@ function ExamMarking(props) {
                         </div>
                       </div>
 
-                      <p style={{display: "flex", alignItems: "center"}}>
+                      <p >
                         <strong style={{marginRight: '10px'}}>Câu hỏi: </strong>{parseHTMLToString(value?.questionContent)}
                       </p>
                       {
@@ -270,7 +272,7 @@ function ExamMarking(props) {
                               <div style={{display: 'flex', alignItems: 'center'}}>
                                 <AttachFileOutlined></AttachFileOutlined>
                                 <p style={{fontWeight: 'bold', cursor: 'pointer'}}
-                                   onClick={() => handleOpenFilePreviewDialog(item)}>{getFilenameFromString(item)}</p>
+                                   onClick={() => handleOpenFilePreviewDialog(item, false)}>{getFilenameFromString(item)}</p>
                               </div>
                             )
                           })
@@ -515,7 +517,7 @@ function ExamMarking(props) {
                                   <div style={{display: 'flex', alignItems: 'center'}}>
                                     <AttachFileOutlined></AttachFileOutlined>
                                     <p style={{fontWeight: 'bold', cursor: 'pointer'}}
-                                       onClick={() => handleOpenFilePreviewDialog(item)}>{getFilenameFromString(item)}</p>
+                                       onClick={() => handleOpenFilePreviewDialog(item, true)}>{getFilenameFromString(item)}</p>
                                   </div>
                                 )
                               })
@@ -525,7 +527,7 @@ function ExamMarking(props) {
                       }
                       {
                         value?.questionType === 1 && (
-                          <div style={{display: "flex", alignItems: "center"}}>
+                          <div>
                             <strong style={{marginRight: '10px'}}>Đáp
                               án:</strong>{parseHTMLToString(value?.questionAnswer)}
                           </div>
@@ -597,7 +599,9 @@ function ExamMarking(props) {
       <QuestionFilePreview
         open={openFilePreviewDialog}
         setOpen={setOpenFilePreviewDialog}
-        file={filePreview}>
+        file={filePreview}
+        isComment={isComment}
+      >
       </QuestionFilePreview>
     </div>
   );

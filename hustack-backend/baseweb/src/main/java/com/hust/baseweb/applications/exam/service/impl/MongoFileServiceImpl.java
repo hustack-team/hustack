@@ -4,6 +4,7 @@ import com.hust.baseweb.applications.exam.service.MongoFileService;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -12,6 +13,8 @@ import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -64,6 +67,20 @@ public class MongoFileServiceImpl implements MongoFileService {
             return null;
         }
         return operations.getResource(file);
+    }
+
+    @Override
+    public GridFSFile getFileMetadata(String id) {
+        return operations.findOne(Query.query(Criteria.where("_id").is(id)));
+    }
+
+    @Override
+    public byte[] getFileData(GridFSFile file) {
+        try (InputStream inputStream = operations.getResource(file).getInputStream()) {
+            return IOUtils.toByteArray(inputStream);  // Chuyển stream thành byte array
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading file from GridFS", e);
+        }
     }
 
     @Override

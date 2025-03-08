@@ -518,6 +518,7 @@ function QuestionBankCreateUpdate(props) {
                   <DropzoneArea
                     dropzoneClass={classes.dropZone}
                     filesLimit={20}
+                    maxFileSize={5000000}
                     showPreviews={true}
                     showPreviewsInDropzone={false}
                     useChipsForPreview

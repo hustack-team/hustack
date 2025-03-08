@@ -14,6 +14,8 @@ import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import TertiaryButton from "../../../button/TertiaryButton";
 import PrimaryButton from "../../../button/PrimaryButton";
+import ImageEditor from "../../../common/uploader/ImageEditor";
+import SecondaryButton from "../../../button/SecondaryButton";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -21,10 +23,15 @@ const useStyles = makeStyles((theme) => ({
 
 function QuestionFilePreview(props) {
   const classes = useStyles();
-  const { open, setOpen, file} = props;
+  const { open, setOpen, file, isComment} = props;
+
+  const [isEdit, setIsEdit] = useState(false)
+  const [isSave, setIsSave] = useState(false)
 
   const closeDialog = () => {
     setOpen(false)
+    setIsEdit(false)
+    setIsSave(false)
   }
 
   const handleDownload = () => {
@@ -49,25 +56,54 @@ function QuestionFilePreview(props) {
         classNames={{paper: classes.dialogContent}}
         content={
           <div>
-            <FilePreviewUrl file={file}></FilePreviewUrl>
+            {/*<FilePreviewUrl file={file}></FilePreviewUrl>*/}
+            <ImageEditor
+              file={file}
+              isEdit={isEdit}
+              isSave={isSave}
+            />
           </div>
         }
         actions={
-          <div>
+          <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "15px"}}>
             <TertiaryButton
               variant="outlined"
               onClick={closeDialog}
             >
               Hủy
             </TertiaryButton>
-            <PrimaryButton
-              variant="contained"
-              color="primary"
-              style={{marginLeft: "15px"}}
-              onClick={handleDownload}
-            >
-              Tải xuống
-            </PrimaryButton>
+            {
+              !isEdit && (
+                <PrimaryButton
+                  variant="contained"
+                  color="primary"
+                  onClick={handleDownload}
+                >
+                  Tải xuống
+                </PrimaryButton>
+              )
+            }
+            {
+              isComment && !isEdit && (
+                <SecondaryButton
+                  variant="outlined"
+                  onClick={() => setIsEdit(true)}
+                >
+                  Nhận xét
+                </SecondaryButton>
+              )
+            }
+            {
+              isComment && isEdit && (
+                <PrimaryButton
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setIsSave(true)}
+                >
+                  Lưu
+                </PrimaryButton>
+              )
+            }
           </div>
         }
       />

@@ -550,6 +550,7 @@ function MyExamDetails(props) {
                                   <DropzoneArea
                                     dropzoneClass={classes.dropZone}
                                     filesLimit={20}
+                                    maxFileSize={10000000}
                                     showPreviews={true}
                                     showPreviewsInDropzone={false}
                                     useChipsForPreview
@@ -602,7 +603,7 @@ function MyExamDetails(props) {
                             }
                             {
                               data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
-                                <div style={{display: "flex", alignItems: "center"}}>
+                                <div>
                                   <strong style={{marginRight: '10px'}}>Đáp án:</strong>{parseHTMLToString(value?.questionAnswer)}
                                 </div>
                               )
