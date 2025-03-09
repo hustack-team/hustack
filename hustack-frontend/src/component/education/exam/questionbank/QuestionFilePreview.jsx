@@ -23,10 +23,24 @@ const useStyles = makeStyles((theme) => ({
 
 function QuestionFilePreview(props) {
   const classes = useStyles();
-  const { open, setOpen, file, isComment} = props;
+  const {
+    open,
+    setOpen,
+    file,
+    examResultDetailsIdSelected,
+    isComment,
+    imageComment,
+    setImageComment,
+  } = props;
 
   const [isEdit, setIsEdit] = useState(false)
   const [isSave, setIsSave] = useState(false)
+
+  useEffect(() => {
+    if(imageComment){
+      closeDialog()
+    }
+  }, [imageComment]);
 
   const closeDialog = () => {
     setOpen(false)
@@ -59,8 +73,10 @@ function QuestionFilePreview(props) {
             {/*<FilePreviewUrl file={file}></FilePreviewUrl>*/}
             <ImageEditor
               file={file}
+              examResultDetailsIdSelected={examResultDetailsIdSelected}
               isEdit={isEdit}
               isSave={isSave}
+              setImageComment={setImageComment}
             />
           </div>
         }

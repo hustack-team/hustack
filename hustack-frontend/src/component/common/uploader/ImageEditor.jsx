@@ -2,6 +2,8 @@ import React, {useState, useRef, useEffect} from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import {ZoomIn, ZoomOut} from "@material-ui/icons";
 import {CircularProgress} from "@material-ui/core";
+import {getFilenameFromPath, getFilenameFromString} from "../../education/exam/ultils/FileUltils";
+import DeleteIcon from "@material-ui/icons/Delete";
 
 const useStyles = makeStyles((theme) => ({
   filePreview: {
@@ -15,7 +17,13 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ImageEditor(props) {
   const classes = useStyles();
-  const {file, isEdit, isSave} = props
+  const {
+    file,
+    examResultDetailsIdSelected,
+    isEdit,
+    isSave,
+    setImageComment
+  } = props
 
   const [widthImage, setWidthImage] = useState(600)
   const [isLoadingImage, setIsLoadingImage] = useState(true);
@@ -106,8 +114,8 @@ export default function ImageEditor(props) {
     // console.log(canvasRef.current.toDataURL('image/png'));
     canvasRef.current.toBlob((blob) => {
       if (blob) {
-        const file = new File([blob], "canvas_image.png", { type: "image/png" });
-        console.log(file.size);
+        const fileRes = new File([blob], `comment_${examResultDetailsIdSelected}_${getFilenameFromPath(file)}.png`, { type: "image/png" });
+        setImageComment(fileRes)
       }
     }, "image/png");
     // const link = document.createElement("a");
@@ -293,9 +301,11 @@ export default function ImageEditor(props) {
                 ></textarea>
                 <button
                   onClick={() => removeText(id)}
-                  style={{marginLeft: '4px', display: 'none'}}
+                  style={{display: 'none', background: "transparent", outline: "none", border: 'none'}}
                 >
-                  ❌
+                  <DeleteIcon
+                    style={{cursor: 'pointer', color: 'red'}}
+                  />
                 </button>
               </div>
             ))}

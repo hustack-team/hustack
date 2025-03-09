@@ -16,8 +16,12 @@ import Checkbox from "@material-ui/core/Checkbox";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import {Radio, RadioGroup} from "@mui/material";
 import {DropzoneArea} from "material-ui-dropzone";
-import {AccessTime, AttachFileOutlined, Cancel, Timer} from "@material-ui/icons";
-import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
+import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer} from "@material-ui/icons";
+import {
+  getFileCommentFromFileAnswerAndExamResultDetailsId,
+  getFilenameFromString,
+  getFilePathFromString
+} from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import FormGroup from "@material-ui/core/FormGroup";
@@ -25,6 +29,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import DeleteIcon from "@material-ui/icons/Delete";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -292,7 +297,7 @@ function MyExamDetails(props) {
                     style={{
                       border: '2px solid #f5f5f5',
                       borderColor:
-                        (value?.questionType === 0 && data?.totalScore && data?.examAnswerStatus === 'OPEN') ?
+                        (value?.questionType === 0 && data?.totalScore != null && data?.examAnswerStatus === 'OPEN') ?
                           (checkAnswerRadioAndCheckbox(value?.questionType, value?.questionAnswer, value?.answer) ? '#61bd6d' : '#f50000c9'):
                           '#f5f5f5',
                       display: 'flex',
@@ -317,7 +322,7 @@ function MyExamDetails(props) {
                         </div>
 
                         {
-                          data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
+                          data?.totalScore != null && data?.examAnswerStatus === 'OPEN' && (
                             <div style={{display: "flex", alignItems: "center"}} key={questionOrder}>
                               {
                                 value?.questionType === 0 ?
@@ -366,7 +371,7 @@ function MyExamDetails(props) {
                                 <FormGroup row>
                                   <Box display="flex" alignItems="center">
                                     <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                    {( data?.totalScore && value?.questionAnswer?.includes('1')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                    {( data?.totalScore != null && value?.questionAnswer?.includes('1')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                   </Box>
                                 </FormGroup>
                               }
@@ -383,7 +388,7 @@ function MyExamDetails(props) {
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                        {( data?.totalScore && value?.questionAnswer?.includes('2')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                        {( data?.totalScore != null && value?.questionAnswer?.includes('2')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -402,7 +407,7 @@ function MyExamDetails(props) {
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                        {( data?.totalScore && value?.questionAnswer?.includes('3')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                        {( data?.totalScore != null && value?.questionAnswer?.includes('3')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -421,7 +426,7 @@ function MyExamDetails(props) {
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                        {( data?.totalScore && value?.questionAnswer?.includes('4')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                        {( data?.totalScore != null && value?.questionAnswer?.includes('4')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -440,7 +445,7 @@ function MyExamDetails(props) {
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                        {( data?.totalScore && value?.questionAnswer?.includes('5')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                        {( data?.totalScore != null && value?.questionAnswer?.includes('5')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -471,7 +476,7 @@ function MyExamDetails(props) {
                                                   <FormGroup row>
                                                     <Box display="flex" alignItems="center">
                                                       <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                                      {( data?.totalScore && value?.questionAnswer?.includes('1')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                                      {( data?.totalScore != null && value?.questionAnswer?.includes('1')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                                     </Box>
                                                   </FormGroup>
                                                 }/>
@@ -483,7 +488,7 @@ function MyExamDetails(props) {
                                                       <FormGroup row>
                                                         <Box display="flex" alignItems="center">
                                                           <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                                          {( data?.totalScore && value?.questionAnswer?.includes('2')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('2')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                                         </Box>
                                                       </FormGroup>
                                                     }/>
@@ -497,7 +502,7 @@ function MyExamDetails(props) {
                                                       <FormGroup row>
                                                         <Box display="flex" alignItems="center">
                                                           <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                                          {( data?.totalScore && value?.questionAnswer?.includes('3')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('3')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                                         </Box>
                                                       </FormGroup>
                                                     }/>
@@ -511,7 +516,7 @@ function MyExamDetails(props) {
                                                       <FormGroup row>
                                                         <Box display="flex" alignItems="center">
                                                           <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                                          {( data?.totalScore && value?.questionAnswer?.includes('4')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('4')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                                         </Box>
                                                       </FormGroup>
                                                     }/>
@@ -525,7 +530,7 @@ function MyExamDetails(props) {
                                                       <FormGroup row>
                                                         <Box display="flex" alignItems="center">
                                                           <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                                          {( data?.totalScore && value?.questionAnswer?.includes('5')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
+                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('5')) && (<CheckIcon style={{ marginLeft: 8, color: 'green' }} />)}
                                                         </Box>
                                                       </FormGroup>
                                                     }/>
@@ -590,10 +595,24 @@ function MyExamDetails(props) {
                                   {
                                     value?.filePathAnswer.split(';').map(item => {
                                       return (
-                                        <div style={{display: 'flex', alignItems: 'center'}}>
-                                          <AttachFileOutlined></AttachFileOutlined>
-                                          <p style={{fontWeight: 'bold', cursor: 'pointer'}}
-                                             onClick={() => handleOpenFilePreviewDialog(item)}>{getFilenameFromString(item)}</p>
+                                        <div>
+                                          <div style={{display: 'flex', alignItems: 'center'}}>
+                                            <AttachFileOutlined></AttachFileOutlined>
+                                            <p style={{fontWeight: 'bold', cursor: 'pointer'}}
+                                               onClick={() => handleOpenFilePreviewDialog(item)}>{getFilenameFromString(item)}</p>
+                                          </div>
+                                          {
+                                            value?.filePathComment &&
+                                            getFileCommentFromFileAnswerAndExamResultDetailsId(value?.filePathComment, item, value?.examResultDetailsId) &&
+                                            data?.totalScore != null && data?.examAnswerStatus === 'OPEN' && (
+                                              <div style={{display: 'flex', alignItems: 'center', marginLeft: "22px"}}>
+                                                <Comment style={{color: 'green'}}/>
+                                                <p style={{color: 'green', fontWeight: 'bold', cursor: 'pointer', margin: "0 3px"}}
+                                                   onClick={() => handleOpenFilePreviewDialog(getFileCommentFromFileAnswerAndExamResultDetailsId(value?.filePathComment, item, value?.examResultDetailsId))}
+                                                >Xem nhận xét</p>
+                                              </div>
+                                            )
+                                          }
                                         </div>
                                       )
                                     })
@@ -602,7 +621,7 @@ function MyExamDetails(props) {
                               )
                             }
                             {
-                              data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
+                              data?.totalScore != null && data?.examAnswerStatus === 'OPEN' && (
                                 <div>
                                   <strong style={{marginRight: '10px'}}>Đáp án:</strong>{parseHTMLToString(value?.questionAnswer)}
                                 </div>
@@ -612,7 +631,7 @@ function MyExamDetails(props) {
                         )
                       }
                       {
-                        data?.totalScore && data?.examAnswerStatus === 'OPEN' && (
+                        data?.totalScore != null && data?.examAnswerStatus === 'OPEN' && (
                           <div style={{display: "flex", alignItems: "center"}}>
                             <strong style={{marginRight: '10px'}}>Giải thích:</strong>{parseHTMLToString(value?.questionExplain)}
                           </div>

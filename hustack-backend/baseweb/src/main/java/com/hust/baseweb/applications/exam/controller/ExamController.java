@@ -51,8 +51,9 @@ public class ExamController {
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/teacher/submissions")
-    public ResponseEntity<ResponseData<ExamResultEntity>> markingExam(@RequestBody ExamMarkingSaveReq examMarkingSaveReq) {
-        return ResponseEntity.ok(examService.markingExam(examMarkingSaveReq));
+    public ResponseEntity<ResponseData<ExamResultEntity>> markingExam(@RequestPart("body") ExamMarkingSaveReq examMarkingSaveReq,
+                                                                      @RequestPart("files") MultipartFile[] files) {
+        return ResponseEntity.ok(examService.markingExam(examMarkingSaveReq, files));
     }
 
     @Secured("ROLE_TEACHER")

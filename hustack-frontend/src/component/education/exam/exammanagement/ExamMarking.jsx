@@ -15,8 +15,12 @@ import {toast} from "react-toastify";
 import TestBankDetails from "../testbank/TestBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
 import {Scoreboard} from "@mui/icons-material";
-import {AccessTime, AttachFileOutlined, Cancel, Timer} from "@material-ui/icons";
-import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
+import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer} from "@material-ui/icons";
+import {
+  getFileCommentFromFileAnswerAndExamResultDetailsId, getFileFromListFileAndFileAnswerAndExamResultDetailsId,
+  getFilenameFromString,
+  getFilePathFromString
+} from "../ultils/FileUltils";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
@@ -32,6 +36,7 @@ import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import DeleteIcon from "@material-ui/icons/Delete";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -45,9 +50,12 @@ function ExamMarking(props) {
   const [dataAnswers, setDataAnswers] = useState([]);
   const [totalScore, setTotalScore] = useState(0);
   const [comment, setComment] = useState(data?.comment ? data?.comment : '');
+  const [fileComments, setFileComments] = useState([]);
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
+  const [examResultDetailsIdSelected, setExamResultDetailsIdSelected] = useState(null);
   const [isComment, setIsComment] = useState(false);
+  const [imageComment, setImageComment] = useState(null);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -69,6 +77,7 @@ function ExamMarking(props) {
         examQuestionId: item?.questionId,
         answer: item?.answer,
         filePath: item?.filePathAnswer,
+        commentFilePath: item?.filePathComment,
         score: score
       })
       totalScore += score
@@ -78,6 +87,17 @@ function ExamMarking(props) {
     setTotalScore(totalScore)
   }, []);
 
+  useEffect(() => {
+    if(imageComment){
+      setFileComments(fileComments.concat(imageComment))
+      setImageComment(null)
+    }
+  }, [imageComment]);
+
+  useEffect(() => {
+    console.log('fileComments',fileComments)
+  }, [fileComments]);
+
   const handleMarking = () => {
     const body = {
       examResultId: data?.examResultId,
@@ -85,6 +105,18 @@ function ExamMarking(props) {
       comment: comment,
       examResultDetails: dataAnswers
     }
+
+    let formData = new FormData();
+    formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    for (const file of fileComments) {
+      formData.append("files", file);
+    }
+
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
 
     setIsLoading(true)
     request(
@@ -106,7 +138,8 @@ function ExamMarking(props) {
         }
       },
       { onError: (e) => toast.error(e) },
-      body
+      formData,
+      config,
     );
   }
 
@@ -126,9 +159,10 @@ function ExamMarking(props) {
     );
   };
 
-  const handleOpenFilePreviewDialog = (data, isComment) => {
+  const handleOpenFilePreviewDialog = (data, isComment, examResultDetailsId) => {
     setOpenFilePreviewDialog(true)
     setFilePreview(getFilePathFromString(data))
+    setExamResultDetailsIdSelected(examResultDetailsId)
     setIsComment(isComment)
   };
 
@@ -166,6 +200,13 @@ function ExamMarking(props) {
     const regex = /^[0-9]+$/
     if (!regex.test(event.key)) {
       event.preventDefault();
+    }
+  }
+
+  const deleteCommentFileNew = (fileAnswer, examResultDetailsId) => {
+    const file = getFileFromListFileAndFileAnswerAndExamResultDetailsId(fileComments, fileAnswer, examResultDetailsId);
+    if(file){
+      setFileComments(fileComments.filter(f => f !== file));
     }
   }
 
@@ -272,7 +313,7 @@ function ExamMarking(props) {
                               <div style={{display: 'flex', alignItems: 'center'}}>
                                 <AttachFileOutlined></AttachFileOutlined>
                                 <p style={{fontWeight: 'bold', cursor: 'pointer'}}
-                                   onClick={() => handleOpenFilePreviewDialog(item, false)}>{getFilenameFromString(item)}</p>
+                                   onClick={() => handleOpenFilePreviewDialog(item, false, null)}>{getFilenameFromString(item)}</p>
                               </div>
                             )
                           })
@@ -514,10 +555,39 @@ function ExamMarking(props) {
                             {
                               value?.filePathAnswer.split(';').map(item => {
                                 return (
-                                  <div style={{display: 'flex', alignItems: 'center'}}>
-                                    <AttachFileOutlined></AttachFileOutlined>
-                                    <p style={{fontWeight: 'bold', cursor: 'pointer'}}
-                                       onClick={() => handleOpenFilePreviewDialog(item, true)}>{getFilenameFromString(item)}</p>
+                                  <div>
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                      <AttachFileOutlined></AttachFileOutlined>
+                                      <p style={{fontWeight: 'bold', cursor: 'pointer'}}
+                                         onClick={() => handleOpenFilePreviewDialog(item, true, value?.examResultDetailsId)}>{getFilenameFromString(item)}</p>
+                                    </div>
+                                    {
+                                      fileComments.length > 0 && getFileFromListFileAndFileAnswerAndExamResultDetailsId(fileComments, item, value?.examResultDetailsId) && (
+                                        <div style={{display: 'flex', alignItems: 'center', marginLeft: "22px"}}>
+                                          <Comment style={{color: '#1e88e5'}}/>
+                                          <p style={{
+                                            color: '#1e88e5',
+                                            fontWeight: 'bold',
+                                            margin: "0 3px"
+                                          }}>(New) Nhận xét về {getFilenameFromString(item)}</p>
+                                          <DeleteIcon
+                                            style={{cursor: 'pointer', color: 'red', marginLeft: "12px"}}
+                                            onClick={() => deleteCommentFileNew(item, value?.examResultDetailsId)}
+                                          />
+                                        </div>
+                                      )
+                                    }
+                                    {
+                                      getFileCommentFromFileAnswerAndExamResultDetailsId(value?.filePathComment, item, value?.examResultDetailsId) && (
+                                        <div style={{display: 'flex', alignItems: 'center', marginLeft: "22px"}}>
+                                          <Comment style={{color: 'green'}}/>
+                                          <p style={{color: 'green', fontWeight: 'bold', cursor: 'pointer', margin: "0 3px"}}
+                                             onClick={() => handleOpenFilePreviewDialog(getFileCommentFromFileAnswerAndExamResultDetailsId(value?.filePathComment, item, value?.examResultDetailsId))}
+                                          >Nhận xét về {getFilenameFromString(item)}</p>
+                                          <DeleteIcon style={{cursor: 'pointer', color: 'red', marginLeft: "12px"}}/>
+                                        </div>
+                                      )
+                                    }
                                   </div>
                                 )
                               })
@@ -600,7 +670,10 @@ function ExamMarking(props) {
         open={openFilePreviewDialog}
         setOpen={setOpenFilePreviewDialog}
         file={filePreview}
+        examResultDetailsIdSelected={examResultDetailsIdSelected}
         isComment={isComment}
+        imageComment={imageComment}
+        setImageComment={setImageComment}
       >
       </QuestionFilePreview>
     </div>
