@@ -56,6 +56,7 @@ function ExamMarking(props) {
   const [examResultDetailsIdSelected, setExamResultDetailsIdSelected] = useState(null);
   const [isComment, setIsComment] = useState(false);
   const [imageComment, setImageComment] = useState(null);
+  const [commentFilePathDeletes, setCommentFilePathDeletes] = useState([]);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -94,15 +95,12 @@ function ExamMarking(props) {
     }
   }, [imageComment]);
 
-  useEffect(() => {
-    console.log('fileComments',fileComments)
-  }, [fileComments]);
-
   const handleMarking = () => {
     const body = {
       examResultId: data?.examResultId,
       totalScore: totalScore,
       comment: comment,
+      commentFilePathDeletes: commentFilePathDeletes,
       examResultDetails: dataAnswers
     }
 
@@ -210,6 +208,27 @@ function ExamMarking(props) {
     }
   }
 
+  const deleteCommentFileExist = (filePath, index) => {
+    setDataAnswers(prevDataAnswers => {
+      return prevDataAnswers.map((item, i) => {
+        if (i === index && item?.commentFilePath) {
+          return {
+            ...item,
+            commentFilePath: item.commentFilePath
+              .split(";")
+              .filter(path => path !== filePath)
+              .join(";"),
+            commentFilePathDelete: item.commentFilePathDelete
+              ? item.commentFilePathDelete + ";" + filePath
+              : filePath
+          };
+        }
+        return item;
+      });
+    });
+    setCommentFilePathDeletes(commentFilePathDeletes.concat(filePath))
+  }
+
   return (
     <div>
       <CustomizedDialogs
@@ -248,7 +267,7 @@ function ExamMarking(props) {
             </div>
 
             {
-              data?.questionList?.map(value => {
+              data?.questionList?.map((value, index) => {
                 const questionOrder = value?.questionOrder;
                 return (
                   <div
@@ -578,13 +597,16 @@ function ExamMarking(props) {
                                       )
                                     }
                                     {
-                                      getFileCommentFromFileAnswerAndExamResultDetailsId(value?.filePathComment, item, value?.examResultDetailsId) && (
+                                      dataAnswers[index]?.commentFilePath && getFileCommentFromFileAnswerAndExamResultDetailsId(dataAnswers[index]?.commentFilePath, item, value?.examResultDetailsId) && (
                                         <div style={{display: 'flex', alignItems: 'center', marginLeft: "22px"}}>
                                           <Comment style={{color: 'green'}}/>
                                           <p style={{color: 'green', fontWeight: 'bold', cursor: 'pointer', margin: "0 3px"}}
-                                             onClick={() => handleOpenFilePreviewDialog(getFileCommentFromFileAnswerAndExamResultDetailsId(value?.filePathComment, item, value?.examResultDetailsId))}
+                                             onClick={() => handleOpenFilePreviewDialog(getFileCommentFromFileAnswerAndExamResultDetailsId(dataAnswers[index]?.commentFilePath, item, value?.examResultDetailsId))}
                                           >Nhận xét về {getFilenameFromString(item)}</p>
-                                          <DeleteIcon style={{cursor: 'pointer', color: 'red', marginLeft: "12px"}}/>
+                                          <DeleteIcon
+                                            style={{cursor: 'pointer', color: 'red', marginLeft: "12px"}}
+                                            onClick={() => deleteCommentFileExist(getFileCommentFromFileAnswerAndExamResultDetailsId(dataAnswers[index]?.commentFilePath, item, value?.examResultDetailsId), index)}
+                                          />
                                         </div>
                                       )
                                     }

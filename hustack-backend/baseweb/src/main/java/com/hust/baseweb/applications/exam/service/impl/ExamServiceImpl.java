@@ -350,6 +350,10 @@ public class ExamServiceImpl implements ExamService {
         examResult.setComment(examMarkingSaveReq.getComment());
         examResultRepository.save(examResult);
 
+        for(String filePath: examMarkingSaveReq.getCommentFilePathDeletes()){
+            mongoFileService.deleteByPath(filePath);
+        }
+
         if(files != null && files.length > 0){
             List<String> filePaths = mongoFileService.storeFiles(files);
             for(ExamMarkingDetailsSaveReq detailsSaveReq: examMarkingSaveReq.getExamResultDetails()){

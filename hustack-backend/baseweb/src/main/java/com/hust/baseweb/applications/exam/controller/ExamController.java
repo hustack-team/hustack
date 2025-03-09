@@ -52,7 +52,7 @@ public class ExamController {
     @Secured("ROLE_TEACHER")
     @PostMapping("/teacher/submissions")
     public ResponseEntity<ResponseData<ExamResultEntity>> markingExam(@RequestPart("body") ExamMarkingSaveReq examMarkingSaveReq,
-                                                                      @RequestPart("files") MultipartFile[] files) {
+                                                                      @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(examService.markingExam(examMarkingSaveReq, files));
     }
 
@@ -88,7 +88,7 @@ public class ExamController {
 
     @PostMapping("/student/submissions")
     public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
-                                                                      @RequestPart("files") MultipartFile[] files) {
+                                                                      @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(examService.doingMyExam(myExamResultSaveReq, files));
     }
 }
