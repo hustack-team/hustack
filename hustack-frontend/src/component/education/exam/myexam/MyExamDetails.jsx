@@ -584,7 +584,7 @@ function MyExamDetails(props) {
                             }
                             {
                               data?.examResultId != null && (
-                                <div style={{display: "flex", alignItems: "center"}}><strong style={{marginRight: '10px'}}>Trả
+                                <div><strong style={{marginRight: '10px'}}>Trả
                                   lời:</strong>{parseHTMLToString(value?.answer)}</div>
                               )
                             }
@@ -632,7 +632,7 @@ function MyExamDetails(props) {
                       }
                       {
                         data?.totalScore != null && data?.examAnswerStatus === 'OPEN' && (
-                          <div style={{display: "flex", alignItems: "center"}}>
+                          <div>
                             <strong style={{marginRight: '10px'}}>Giải thích:</strong>{parseHTMLToString(value?.questionExplain)}
                           </div>
                         )

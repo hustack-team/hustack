@@ -43,3 +43,11 @@ export function getFileCommentFromFileAnswerAndExamResultDetailsId(filePathComme
   }
   return null
 }
+
+export function getFilenameFromFileNew(files){
+  let res = []
+  for(let file of files){
+    res.push(file.name)
+  }
+  return res.join(";")
+}

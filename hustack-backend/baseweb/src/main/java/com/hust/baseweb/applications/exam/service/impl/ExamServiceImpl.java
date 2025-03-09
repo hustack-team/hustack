@@ -386,22 +386,7 @@ public class ExamServiceImpl implements ExamService {
         responseData.setResultMsg("Chấm bài thành công");
         return responseData;
     }
-    private String getFileIdFromFilePath(String filepath){
-        if(DataUtils.stringIsNotNullOrEmpty(filepath)){
-            String[] fileParts = filepath.split("/");
-            return fileParts[0];
-        }
-        return null;
-    }
-    private String getFileIdFromFilepathComment(String filepath){
-        if(DataUtils.stringIsNotNullOrEmpty(filepath)){
-            String[] filepaths = filepath.split("/");
-            String[] fileParts = filepaths[filepaths.length - 1].split("\\.");
-            String[] subFileParts = fileParts[0].split("_");
-            return subFileParts[subFileParts.length - 1];
-        }
-        return null;
-    }
+
     private String getExamResultDetailsIdFromFilepathComment(String filepath){
         if(DataUtils.stringIsNotNullOrEmpty(filepath)){
             String[] filepaths = filepath.split("/");
