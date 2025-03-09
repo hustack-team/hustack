@@ -9,7 +9,7 @@ import {
 } from "@material-ui/core";
 import FilePreviewUrl from "../../../common/uploader/FilePreviewUrl";
 import {DialogActions} from "@mui/material";
-import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
+import {checkFileImage, checkFilePdf, getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import TertiaryButton from "../../../button/TertiaryButton";
@@ -70,14 +70,19 @@ function QuestionFilePreview(props) {
         classNames={{paper: classes.dialogContent}}
         content={
           <div>
-            {/*<FilePreviewUrl file={file}></FilePreviewUrl>*/}
-            <ImageEditor
-              file={file}
-              examResultDetailsIdSelected={examResultDetailsIdSelected}
-              isEdit={isEdit}
-              isSave={isSave}
-              setImageComment={setImageComment}
-            />
+            {
+              checkFileImage(file) ? (
+                <ImageEditor
+                  file={file}
+                  examResultDetailsIdSelected={examResultDetailsIdSelected}
+                  isEdit={isEdit}
+                  isSave={isSave}
+                  setImageComment={setImageComment}
+                />
+              ) : (
+                <FilePreviewUrl file={file}/>
+              )
+            }
           </div>
         }
         actions={

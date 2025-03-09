@@ -51,3 +51,19 @@ export function getFilenameFromFileNew(files){
   }
   return res.join(";")
 }
+
+export function checkFilePdf(file){
+  if(file?.toLowerCase().includes(".pdf")){
+    return true
+  }
+  return false
+}
+
+export function checkFileImage(file){
+  if(file?.toLowerCase().includes(".png") ||
+    file?.toLowerCase().includes(".jpg")
+  ){
+    return true
+  }
+  return false
+}
