@@ -77,7 +77,7 @@ public class MongoFileServiceImpl implements MongoFileService {
     @Override
     public byte[] getFileData(GridFSFile file) {
         try (InputStream inputStream = operations.getResource(file).getInputStream()) {
-            return IOUtils.toByteArray(inputStream);  // Chuyển stream thành byte array
+            return IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
             throw new RuntimeException("Error reading file from GridFS", e);
         }
