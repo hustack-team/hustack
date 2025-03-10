@@ -14,5 +14,6 @@ public class ExamMarkingSaveReq {
     private String examResultId;
     private String comment;
     private Integer totalScore;
+    private List<String> commentFilePathDeletes;
     private List<ExamMarkingDetailsSaveReq> examResultDetails;
 }

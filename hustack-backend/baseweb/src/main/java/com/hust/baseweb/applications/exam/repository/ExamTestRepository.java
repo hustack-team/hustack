@@ -116,8 +116,10 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.answer else null end as questionAnswer, " +
                    "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.explain else null end as questionExplain, " +
                    "    etq.order as questionOrder, " +
+                   "    erd.id as examResultDetailsId, " +
                    "    erd.answer as answer, " +
                    "    erd.file_path as filePathAnswer, " +
+                   "    erd.comment_file_path as filePathComment, " +
                    "    erd.pass as pass, " +
                    "    erd.score as score " +
                    "from " +
@@ -163,6 +165,7 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    erd.id as examResultDetailsId, " +
                    "    erd.answer as answer, " +
                    "    erd.file_path as filePathAnswer, " +
+                   "    erd.comment_file_path as filePathComment, " +
                    "    erd.pass as pass, " +
                    "    erd.score as score " +
                    "from " +

@@ -1,6 +1,7 @@
 package com.hust.baseweb.applications.exam.controller;
 
 import com.hust.baseweb.applications.exam.service.MongoFileService;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.springframework.core.io.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +19,15 @@ public class MongoFileController {
     private final MongoFileService mongoFileService;
 
     @GetMapping("/files/{fileId}/{fileName}")
-    public ResponseEntity<Resource> filter(@PathVariable String fileId, @PathVariable String fileName) {
-        GridFsResource resource = mongoFileService.getFile(fileId);
+    public ResponseEntity<byte[]> filter(@PathVariable String fileId, @PathVariable String fileName) {
+        GridFSFile file = mongoFileService.getFileMetadata(fileId);
+        if (file == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        byte[] fileData = mongoFileService.getFileData(file);
         return ResponseEntity.ok()
-                             .contentType(MediaType.parseMediaType(resource.getContentType()))
-                             .body(resource);
+                             .contentType(MediaType.parseMediaType(file.getMetadata().getString("_contentType")))
+                             .body(fileData);
     }
 }

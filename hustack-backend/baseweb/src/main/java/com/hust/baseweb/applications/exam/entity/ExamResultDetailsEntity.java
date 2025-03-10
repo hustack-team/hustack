@@ -32,6 +32,9 @@ public class ExamResultDetailsEntity {
     @Column(name = "file_path")
     private String filePath;
 
+    @Column(name = "comment_file_path")
+    private String commentFilePath;
+
     @Column(name = "pass")
     private boolean pass;
 

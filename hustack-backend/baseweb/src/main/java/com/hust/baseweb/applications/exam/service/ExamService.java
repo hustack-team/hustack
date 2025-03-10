@@ -32,5 +32,5 @@ public interface ExamService {
 
     ResponseData<ExamMarkingDetailsRes> detailsExamMarking(String examStudentId);
 
-    ResponseData<ExamResultEntity> markingExam(ExamMarkingSaveReq examMarkingSaveReq);
+    ResponseData<ExamResultEntity> markingExam(ExamMarkingSaveReq examMarkingSaveReq, MultipartFile[] files);
 }

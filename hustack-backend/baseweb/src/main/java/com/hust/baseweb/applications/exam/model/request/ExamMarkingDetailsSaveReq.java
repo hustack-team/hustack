@@ -14,5 +14,6 @@ public class ExamMarkingDetailsSaveReq {
     private String examQuestionId;
     private String answer;
     private String filePath;
+    private String commentFilePath;
     private Integer score;
 }

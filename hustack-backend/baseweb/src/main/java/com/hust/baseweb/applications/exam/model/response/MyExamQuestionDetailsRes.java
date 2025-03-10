@@ -21,5 +21,6 @@ public interface MyExamQuestionDetailsRes {
     Integer getQuestionOrder();
     String getAnswer();
     String getFilePathAnswer();
+    String getFilePathComment();
     Integer getScore();
 }
