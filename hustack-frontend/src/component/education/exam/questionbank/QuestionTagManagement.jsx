@@ -1,17 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import withScreenSecurity from "../../../withScreenSecurity";
 import {
   Box,
-  Button, Card, CardContent, CardHeader, CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
-} from "@material-ui/core";
-import {DialogActions, MenuItem} from "@mui/material";
-import EditIcon from "@material-ui/icons/Edit";
-import TextField from "@material-ui/core/TextField";
-import AddCircleIcon from "@material-ui/icons/AddCircle";
+  TextField,
+} from "@mui/material";
+import {Edit, AddCircle} from "@mui/icons-material";
 import {DataGrid} from "@material-ui/data-grid";
 import useDebounceValue from "../hooks/use-debounce";
 import {request} from "../../../../api";
@@ -47,7 +39,7 @@ function QuestionTagManagement(props) {
       renderCell: (rowData) => {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
-            <EditIcon style={{cursor: 'pointer'}} onClick={(data) => handleUpdate(rowData?.row)}/>
+            <Edit style={{cursor: 'pointer'}} onClick={(data) => handleUpdate(rowData?.row)}/>
           </Box>
         )
       }
@@ -128,6 +120,7 @@ function QuestionTagManagement(props) {
                     placeholder="Tìm kiếm theo tên"
                     value={keywordFilter}
                     style={{width: "300px", marginRight: "16px"}}
+                    size="small"
                     onChange={(event) => {
                       setKeywordFilter(event.target.value);
                     }}
@@ -143,7 +136,7 @@ function QuestionTagManagement(props) {
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
-                  startIcon={<AddCircleIcon/>}
+                  startIcon={<AddCircle/>}
                 >
                   Thêm mới
                 </PrimaryButton>

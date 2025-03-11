@@ -1,15 +1,11 @@
 import React, {useState, useRef, useEffect} from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import {ZoomIn, ZoomOut} from "@material-ui/icons";
-import {CircularProgress} from "@material-ui/core";
-import {getFilenameFromPath, getFilenameFromString} from "../FileUltils";
-import DeleteIcon from "@material-ui/icons/Delete";
+import { ZoomIn, ZoomOut, Delete } from "@mui/icons-material";
+import { CircularProgress } from "@mui/material";
+import {getFilenameFromPath} from "../FileUltils";
 
 const useStyles = makeStyles((theme) => ({
   filePreview: {
-    // maxHeight: "60vh",
-    // maxWidth: '70vw',
-    // objectFit: 'contain',
     border: '1px solid black',
     borderRadius: '8px'
   },
@@ -303,7 +299,7 @@ export default function ImageEditor(props) {
                   onClick={() => removeText(id)}
                   style={{display: 'none', background: "transparent", outline: "none", border: 'none'}}
                 >
-                  <DeleteIcon
+                  <Delete
                     style={{cursor: 'pointer', color: 'red'}}
                   />
                 </button>

@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import {CircularProgress} from "@material-ui/core";
-import {checkFilePdf} from "../../education/exam/ultils/FileUltils";
+import {CircularProgress} from "@mui/material";
+import {checkFilePdf} from "../FileUltils";
 
 const useStyles = makeStyles((theme) => ({
   filePreview: {

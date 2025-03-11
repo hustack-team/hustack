@@ -1,19 +1,22 @@
 import React, {useEffect, useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
-import {Box, Button, Card, CardContent, CardHeader, Input} from "@material-ui/core";
-import AddCircleIcon from "@material-ui/icons/AddCircle";
+import {
+  Box, 
+  Autocomplete,
+  TextField,
+  Card, 
+  CardContent, 
+  CardHeader, 
+  MenuItem
+} from "@mui/material";
+import {AddCircle, Info, Edit, Delete} from "@mui/icons-material";
 import {request} from "../../../../api";
-import {Link, useHistory} from "react-router-dom";
-import {Autocomplete, FormControl, MenuItem, Select} from "@mui/material";
+import {useHistory} from "react-router-dom";
 import useDebounceValue from "../hooks/use-debounce";
 import {toast} from "react-toastify";
-import TextField from "@material-ui/core/TextField";
 import QuestionBankDelete from "./QuestionBankDelete";
 import QuestionBankDetails from "./QuestionBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
-import InfoIcon from "@mui/icons-material/Info";
-import EditIcon from "@material-ui/icons/Edit";
-import DeleteIcon from "@material-ui/icons/Delete";
 import {parseHTMLToString, parseToString} from "../ultils/DataUltils";
 import {errorNoti} from "../../../../utils/notification";
 import PrimaryButton from "../../../button/PrimaryButton";
@@ -122,9 +125,9 @@ function QuestionBank(props) {
       renderCell: (rowData) => {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
-            <InfoIcon style={{cursor: 'pointer'}} onClick={(data) => handleDetailsQuestion(rowData?.row)}/>
-            <EditIcon style={{cursor: 'pointer'}} onClick={(data) => handleUpdateQuestion(rowData?.row)}/>
-            <DeleteIcon style={{cursor: 'pointer', color: 'red'}} onClick={(data) => handleDeleteQuestion(rowData?.row)}/>
+            <Info style={{cursor: 'pointer'}} onClick={(data) => handleDetailsQuestion(rowData?.row)}/>
+            <Edit style={{cursor: 'pointer'}} onClick={(data) => handleUpdateQuestion(rowData?.row)}/>
+            <Delete style={{cursor: 'pointer', color: 'red'}} onClick={(data) => handleDeleteQuestion(rowData?.row)}/>
           </Box>
         )
       }
@@ -347,6 +350,7 @@ function QuestionBank(props) {
                     placeholder="Tìm kiếm theo code hoặc nội dung"
                     value={keywordFilter}
                     style={{ width: "300px", marginRight: "16px"}}
+                    size="small"
                     onChange={(event) => {
                       setKeywordFilter(event.target.value);
                     }}
@@ -360,6 +364,7 @@ function QuestionBank(props) {
                     select
                     label="Loại câu hỏi"
                     style={{ width: "150px", marginRight: "16px"}}
+                    size="small"
                     value={typeFilter}
                     onChange={(event) => {
                       setTypeFilter(event.target.value);
@@ -381,6 +386,7 @@ function QuestionBank(props) {
                     select
                     label="Mức độ"
                     style={{ width: "150px", marginRight: "16px"}}
+                    size="small"
                     value={levelFilter}
                     onChange={(event) => {
                       setLevelFilter(event.target.value);
@@ -402,6 +408,7 @@ function QuestionBank(props) {
                     select
                     label="Môn học"
                     style={{ width: "150px", marginRight: "16px"}}
+                    size="small"
                     value={examSubjectIdFilter}
                     onChange={(event) => {
                       setExamSubjectIdFilter(event.target.value);
@@ -430,6 +437,7 @@ function QuestionBank(props) {
                       <TextField
                         {...params}
                         style={{width: "300px", marginRight: "16px"}}
+                        size="small"
                         variant="standard"
                         label="Tag"
                       />
@@ -443,7 +451,7 @@ function QuestionBank(props) {
                   variant="contained"
                   color="primary"
                   onClick={onClickCreateNewButton}
-                  startIcon={<AddCircleIcon />}
+                  startIcon={<AddCircle />}
                 >
                   Thêm mới
                 </PrimaryButton>

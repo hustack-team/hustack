@@ -1,24 +1,27 @@
 import React, {useEffect, useState} from 'react';
-import {Box, Button, Card, CardContent, CircularProgress, Input} from "@material-ui/core";
+import {
+  Box, 
+  Autocomplete, 
+  Card, 
+  CardContent, 
+  CircularProgress, 
+  MenuItem, 
+  Typography, 
+  TextField, 
+  CardActions
+} from "@mui/material";
 import {request} from "../../../../api";
-import {Autocomplete, FormControl, InputLabel, MenuItem, OutlinedInput, Select} from "@mui/material";
 import DateFnsUtils from "@date-io/date-fns";
-import Typography from "@material-ui/core/Typography";
-import TextField from "@material-ui/core/TextField";
-import CardActions from "@material-ui/core/CardActions";
 import {MuiPickersUtilsProvider} from "@material-ui/pickers";
 import {toast} from "react-toastify";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
-import FileUploader from "../../../common/uploader/FileUploader";
 import {DropzoneArea} from "material-ui-dropzone";
 import {makeStyles} from "@material-ui/core/styles";
 import {useHistory} from "react-router-dom";
 import {useLocation} from "react-router";
 import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
-import {AttachFileOutlined} from "@material-ui/icons";
+import {AttachFileOutlined, Delete, Style} from "@mui/icons-material";
 import QuestionFilePreview from "./QuestionFilePreview";
-import DeleteIcon from "@material-ui/icons/Delete";
-import StyleIcon from '@mui/icons-material/Style';
 import withScreenSecurity from "../../../withScreenSecurity";
 import QuestionTagManagement from "./QuestionTagManagement";
 import PrimaryButton from "../../../button/PrimaryButton";
@@ -332,6 +335,7 @@ function QuestionBankCreateUpdate(props) {
                     id="questionCode"
                     label="Mã câu hỏi"
                     placeholder="Nhập mã câu hỏi"
+                    size="small"
                     value={code}
                     onChange={(event) => {
                       setCode(event.target.value);
@@ -347,6 +351,7 @@ function QuestionBankCreateUpdate(props) {
                     id="questionType"
                     select
                     label="Loại câu hỏi"
+                    size="small"
                     value={type}
                     onChange={(event) => {
                       setType(event.target.value);
@@ -368,6 +373,7 @@ function QuestionBankCreateUpdate(props) {
                         id="numberAnswer"
                         select
                         label="Số đáp án"
+                        size="small"
                         value={numberAnswer}
                         onChange={(event) => {
                           setNumberAnswer(event.target.value);
@@ -391,6 +397,7 @@ function QuestionBankCreateUpdate(props) {
                         id="multichoice"
                         select
                         label="Số đáp án đúng"
+                        size="small"
                         value={multichoice}
                         onChange={(event) => {
                           setMultichoice(event.target.value);
@@ -415,6 +422,7 @@ function QuestionBankCreateUpdate(props) {
                     id="questionLevel"
                     select
                     label="Mức độ"
+                    size="small"
                     value={level}
                     onChange={(event) => {
                       setLevel(event.target.value);
@@ -435,6 +443,7 @@ function QuestionBankCreateUpdate(props) {
                     id="examSubjectId"
                     select
                     label="Môn học"
+                    size="small"
                     value={examSubjectId}
                     onChange={(event) => {
                       setExamSubjectId(event.target.value);
@@ -466,6 +475,7 @@ function QuestionBankCreateUpdate(props) {
                         style={{width: "420px"}}
                         variant="standard"
                         label="Tag"
+                        size="small"
                       />
                     )}
                   />
@@ -474,7 +484,7 @@ function QuestionBankCreateUpdate(props) {
                     variant="outlined"
                     color="primary"
                     style={{height: "55px"}}
-                    startIcon={<StyleIcon />}
+                    startIcon={<Style/>}
                     onClick={() => setOpenQuestionTagManagementDialog(true)}
                   >
                     Manage Tags
@@ -499,7 +509,7 @@ function QuestionBankCreateUpdate(props) {
                           <div style={{display: 'flex', alignItems : 'center'}}>
                             <AttachFileOutlined></AttachFileOutlined>
                             <p style={{fontWeight : 'bold', cursor : 'pointer'}} onClick={() => handleOpenFilePreviewDialog(item)}>{getFilenameFromString(item)}</p>
-                            <DeleteIcon style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteFile(item)}></DeleteIcon>
+                            <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteFile(item)}/>
                           </div>
                         )
                       })
@@ -621,6 +631,7 @@ function QuestionBankCreateUpdate(props) {
                           placeholder="Ví dụ: 2,3"
                           value={answer}
                           style={{width: '350px'}}
+                          size="small"
                           onChange={(event) => {
                             setAnswer(event.target.value);
                           }}

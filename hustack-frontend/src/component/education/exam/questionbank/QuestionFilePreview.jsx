@@ -1,15 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import withScreenSecurity from "../../../withScreenSecurity";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
-} from "@material-ui/core";
-import FilePreviewUrl from "../../../common/uploader/FilePreviewUrl";
-import {DialogActions} from "@mui/material";
-import {checkFileImage, checkFilePdf, getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
+import FilePreviewUrl from "../ultils/component/FilePreviewUrl";
+import {checkFileImage, getFilenameFromString} from "../ultils/FileUltils";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import TertiaryButton from "../../../button/TertiaryButton";

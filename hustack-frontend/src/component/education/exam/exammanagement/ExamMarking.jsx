@@ -1,44 +1,34 @@
 import React, {useEffect, useState} from 'react';
-import withScreenSecurity from "../../../withScreenSecurity";
 import {
   Box,
-  Button, CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
-} from "@material-ui/core";
-import {DialogActions, Radio, RadioGroup} from "@mui/material";
+  CircularProgress,
+  FormControlLabel,
+  Checkbox,
+  FormGroup,
+  TextField,
+  Radio,
+  RadioGroup
+} from "@mui/material";
 import {formatDateTime} from "../ultils/DateUltils";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
-import TestBankDetails from "../testbank/TestBankDetails";
-import {DataGrid} from "@material-ui/data-grid";
 import {Scoreboard} from "@mui/icons-material";
-import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer} from "@material-ui/icons";
+import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer, CheckCircle, Check, Delete} from "@mui/icons-material";
 import {
   getFileCommentFromFileAnswerAndExamResultDetailsId,
   getFileFromListFileAndFileAnswerAndExamResultDetailsId,
-  getFileIdFromString, getFilenameFromFileNew,
+  getFileIdFromString,
+  getFilenameFromFileNew,
   getFilenameFromString,
   getFilePathFromString
 } from "../ultils/FileUltils";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Checkbox from "@material-ui/core/Checkbox";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
-import {DropzoneArea} from "material-ui-dropzone";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
-import CheckIcon from '@mui/icons-material/Check';
-import FormGroup from "@material-ui/core/FormGroup";
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
-import TextField from "@material-ui/core/TextField";
-import indexEsm from "@heroicons/react";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
-import DeleteIcon from "@material-ui/icons/Delete";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -306,7 +296,7 @@ function ExamMarking(props) {
                           {
                             value?.questionType === 0 ?
                               (checkAnswerRadioAndCheckbox(value?.questionType, value?.questionAnswer, value?.answer) ?
-                                <CheckCircleIcon style={{color: '#61bd6d'}}/> :
+                                <CheckCircle style={{color: '#61bd6d'}}/> :
                                 <Cancel style={{color: '#f50000c9'}}/>) :
                               (<></>)
                           }
@@ -314,7 +304,8 @@ function ExamMarking(props) {
                             id={`scoreInput-${questionOrder}`}
                             label="Nhập điểm"
                             onKeyPress={handleKeyPress}
-                            style={{width: "80px", marginLeft: "16px"}}
+                            style={{width: "90px", marginLeft: "16px"}}
+                            size="small"
                             value={dataAnswers[questionOrder - 1]?.score}
                             onChange={(event) => {
                               handleMarkingScore(event, questionOrder);
@@ -353,7 +344,7 @@ function ExamMarking(props) {
                                   <Box display="flex" alignItems="center">
                                     <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
                                     {value?.questionAnswer?.includes('1') && (
-                                      <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                      <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                   </Box>
                                 </FormGroup>
                               }
@@ -371,7 +362,7 @@ function ExamMarking(props) {
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
                                         {value?.questionAnswer?.includes('2') && (
-                                          <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -391,7 +382,7 @@ function ExamMarking(props) {
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
                                         {value?.questionAnswer?.includes('3') && (
-                                          <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -411,7 +402,7 @@ function ExamMarking(props) {
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
                                         {value?.questionAnswer?.includes('4') && (
-                                          <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -431,7 +422,7 @@ function ExamMarking(props) {
                                       <Box display="flex" alignItems="center">
                                         <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
                                         {value?.questionAnswer?.includes('5') && (
-                                          <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
                                     </FormGroup>
                                   }
@@ -467,7 +458,7 @@ function ExamMarking(props) {
                                     <Box display="flex" alignItems="center">
                                       <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
                                       {value?.questionAnswer?.includes('1') && (
-                                        <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                        <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                     </Box>
                                   </FormGroup>
                                 }
@@ -487,7 +478,7 @@ function ExamMarking(props) {
                                         <Box display="flex" alignItems="center">
                                           <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
                                           {value?.questionAnswer?.includes('2') && (
-                                            <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
                                       </FormGroup>
                                     }
@@ -509,7 +500,7 @@ function ExamMarking(props) {
                                         <Box display="flex" alignItems="center">
                                           <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
                                           {value?.questionAnswer?.includes('3') && (
-                                            <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
                                       </FormGroup>
                                     }
@@ -531,7 +522,7 @@ function ExamMarking(props) {
                                         <Box display="flex" alignItems="center">
                                           <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
                                           {value?.questionAnswer?.includes('4') && (
-                                            <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
                                       </FormGroup>
                                     }
@@ -553,7 +544,7 @@ function ExamMarking(props) {
                                         <Box display="flex" alignItems="center">
                                           <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
                                           {value?.questionAnswer?.includes('5') && (
-                                            <CheckIcon style={{marginLeft: 8, color: 'green'}}/>)}
+                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
                                       </FormGroup>
                                     }
@@ -593,7 +584,7 @@ function ExamMarking(props) {
                                             fontWeight: 'bold',
                                             margin: "0 3px"
                                           }}>(New) Nhận xét về {getFilenameFromString(item)}</p>
-                                          <DeleteIcon
+                                          <Delete
                                             style={{cursor: 'pointer', color: 'red', marginLeft: "12px"}}
                                             onClick={() => deleteCommentFileNew(item, value?.examResultDetailsId)}
                                           />
@@ -607,7 +598,7 @@ function ExamMarking(props) {
                                           <p style={{color: 'green', fontWeight: 'bold', cursor: 'pointer', margin: "0 3px"}}
                                              onClick={() => handleOpenFilePreviewDialog(getFileCommentFromFileAnswerAndExamResultDetailsId(dataAnswers[index]?.commentFilePath, item, value?.examResultDetailsId), index, false)}
                                           >Nhận xét về {getFilenameFromString(item)}</p>
-                                          <DeleteIcon
+                                          <Delete
                                             style={{cursor: 'pointer', color: 'red', marginLeft: "12px"}}
                                             onClick={() => deleteCommentFileExist(getFileCommentFromFileAnswerAndExamResultDetailsId(dataAnswers[index]?.commentFilePath, item, value?.examResultDetailsId), index)}
                                           />
