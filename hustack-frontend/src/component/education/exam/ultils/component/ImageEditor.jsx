@@ -2,7 +2,7 @@ import React, {useState, useRef, useEffect} from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import {ZoomIn, ZoomOut} from "@material-ui/icons";
 import {CircularProgress} from "@material-ui/core";
-import {getFilenameFromPath, getFilenameFromString} from "../../education/exam/ultils/FileUltils";
+import {getFilenameFromPath, getFilenameFromString} from "../FileUltils";
 import DeleteIcon from "@material-ui/icons/Delete";
 
 const useStyles = makeStyles((theme) => ({

@@ -23,13 +23,12 @@ import {
   getFilePathFromString
 } from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
-import FormGroup from "@material-ui/core/FormGroup";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import FormGroup from "@mui/material/FormGroup";
 import CheckIcon from "@mui/icons-material/Check";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
-import DeleteIcon from "@material-ui/icons/Delete";
 
 const useStyles = makeStyles((theme) => ({
   root: {

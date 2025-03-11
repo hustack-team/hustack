@@ -14,8 +14,8 @@ import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import TertiaryButton from "../../../button/TertiaryButton";
 import PrimaryButton from "../../../button/PrimaryButton";
-import ImageEditor from "../../../common/uploader/ImageEditor";
-import SecondaryButton from "../../../button/SecondaryButton";
+import ImageEditor from "../ultils/component/ImageEditor";
+import SecondaryButton from "../ultils/component/SecondaryButton";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},

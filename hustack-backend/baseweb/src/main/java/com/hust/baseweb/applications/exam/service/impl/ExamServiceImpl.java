@@ -20,6 +20,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -364,7 +365,7 @@ public class ExamServiceImpl implements ExamService {
                     }
                 }
 
-                if(DataUtils.stringIsNotNullOrEmpty(detailsSaveReq.getCommentFilePath())){
+                if(StringUtils.isNotBlank(detailsSaveReq.getCommentFilePath())){
                     if(!tmpFilePaths.isEmpty()){
                         detailsSaveReq.setCommentFilePath(detailsSaveReq.getCommentFilePath() +";"+ String.join(";", tmpFilePaths));
                     }
