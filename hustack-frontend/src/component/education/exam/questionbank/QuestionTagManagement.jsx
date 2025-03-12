@@ -4,7 +4,7 @@ import {
   TextField,
 } from "@mui/material";
 import {Edit, AddCircle} from "@mui/icons-material";
-import {DataGrid} from "@material-ui/data-grid";
+import {DataGrid} from "@mui/x-data-grid";
 import useDebounceValue from "../hooks/use-debounce";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
