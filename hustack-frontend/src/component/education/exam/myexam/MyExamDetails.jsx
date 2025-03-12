@@ -13,8 +13,8 @@ import {
   FormGroup
 } from "@mui/material";
 import {request} from "../../../../api";
-import DateFnsUtils from "@date-io/date-fns";
-import {MuiPickersUtilsProvider} from "@material-ui/pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {toast} from "react-toastify";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
 import {makeStyles} from "@material-ui/core/styles";
@@ -232,7 +232,7 @@ function MyExamDetails(props) {
   }
   return (
     <div>
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Card>
           <CardContent>
             <div style={{display: "flex", flexDirection: "column", alignItems: 'center', width: '100%'}}>
@@ -731,7 +731,7 @@ function MyExamDetails(props) {
           setOpen={setOpenFilePreviewDialog}
           file={filePreview}>
         </QuestionFilePreview>
-      </MuiPickersUtilsProvider>
+      </LocalizationProvider>
     </div>
   );
 }

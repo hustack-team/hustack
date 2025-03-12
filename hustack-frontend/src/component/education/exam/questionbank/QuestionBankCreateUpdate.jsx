@@ -11,8 +11,8 @@ import {
   CardActions
 } from "@mui/material";
 import {request} from "../../../../api";
-import DateFnsUtils from "@date-io/date-fns";
-import {MuiPickersUtilsProvider} from "@material-ui/pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {toast} from "react-toastify";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
 import {DropzoneArea} from "material-ui-dropzone";
@@ -316,7 +316,7 @@ function QuestionBankCreateUpdate(props) {
 
   return (
     <div>
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Card>
           <CardContent>
             <Typography variant="h5" component="h2">
@@ -698,7 +698,7 @@ function QuestionBankCreateUpdate(props) {
             data={questionTags}
           ></QuestionTagManagement>
         </Card>
-      </MuiPickersUtilsProvider>
+      </LocalizationProvider>
     </div>
   );
 }

@@ -16,7 +16,7 @@ import useDebounceValue from "../hooks/use-debounce";
 import {toast} from "react-toastify";
 import QuestionBankDelete from "./QuestionBankDelete";
 import QuestionBankDetails from "./QuestionBankDetails";
-import {DataGrid} from "@material-ui/data-grid";
+import {DataGrid} from "@mui/x-data-grid";
 import {parseHTMLToString, parseToString} from "../ultils/DataUltils";
 import {errorNoti} from "../../../../utils/notification";
 import PrimaryButton from "../../../button/PrimaryButton";

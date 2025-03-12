@@ -12,7 +12,7 @@ import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
 import useDebounceValue from "../hooks/use-debounce";
 import {toast} from "react-toastify";
-import {DataGrid} from "@material-ui/data-grid";
+import {DataGrid} from "@mui/x-data-grid";
 import {formatDateTime} from "../ultils/DateUltils";
 import { BorderColor } from "@mui/icons-material";
 
