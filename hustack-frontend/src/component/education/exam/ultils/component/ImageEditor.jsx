@@ -100,8 +100,35 @@ export default function ImageEditor(props) {
     const ctx = ctxRef.current;
     ctx.font = '16px Arial';
     ctx.fillStyle = 'red';
+    const lineHeight = 16;
+    const maxWidth = 200;
+
     texts.forEach(({ x, y, text }) => {
-      ctx.fillText(text, x, y);
+      const lines = text.split("\n");
+
+      let wrappedLines = [];
+      lines.forEach(line => {
+        let words = line.split(" ");
+        let currentLine = "";
+
+        words.forEach((word) => {
+          const testLine = currentLine ? currentLine + " " + word : word;
+          const testWidth = ctx.measureText(testLine).width;
+
+          if (testWidth > maxWidth) {
+            wrappedLines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        });
+
+        wrappedLines.push(currentLine);
+      });
+
+      wrappedLines.forEach((line, index) => {
+        ctx.fillText(line, x, y + index * lineHeight);
+      });
     });
   };
 
