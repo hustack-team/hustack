@@ -1,19 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import withScreenSecurity from "../../../withScreenSecurity";
 import {
-  Box,
-  Button, Card, CardContent, CardHeader, CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
-} from "@material-ui/core";
-import {DialogActions, MenuItem} from "@mui/material";
-import EditIcon from "@material-ui/icons/Edit";
-import TextField from "@material-ui/core/TextField";
-import AddCircleIcon from "@material-ui/icons/AddCircle";
-import {DataGrid} from "@material-ui/data-grid";
-import useDebounceValue from "../hooks/use-debounce";
+  CircularProgress,
+  TextField,
+} from "@mui/material";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {makeStyles} from "@material-ui/core/styles";
@@ -115,6 +104,7 @@ function QuestionTagCreateUpdate(props) {
                   placeholder="Nhập tên tag"
                   value={name}
                   style={{width: '100%'}}
+                  size="small"
                   onChange={(event) => {
                     setName(event.target.value);
                   }}

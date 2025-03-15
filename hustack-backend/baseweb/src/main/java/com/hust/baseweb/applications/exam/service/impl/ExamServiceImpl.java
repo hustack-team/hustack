@@ -20,6 +20,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -335,7 +336,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public ResponseData<ExamResultEntity> markingExam(ExamMarkingSaveReq examMarkingSaveReq) {
+    public ResponseData<ExamResultEntity> markingExam(ExamMarkingSaveReq examMarkingSaveReq, MultipartFile[] files) {
         ResponseData<ExamResultEntity> responseData = new ResponseData<>();
 
         Optional<ExamResultEntity> examResultExist = examResultRepository.findById(examMarkingSaveReq.getExamResultId());
@@ -350,6 +351,30 @@ public class ExamServiceImpl implements ExamService {
         examResult.setComment(examMarkingSaveReq.getComment());
         examResultRepository.save(examResult);
 
+        for(String filePath: examMarkingSaveReq.getCommentFilePathDeletes()){
+            mongoFileService.deleteByPath(filePath);
+        }
+
+        if(files != null && files.length > 0){
+            List<String> filePaths = mongoFileService.storeFiles(files);
+            for(ExamMarkingDetailsSaveReq detailsSaveReq: examMarkingSaveReq.getExamResultDetails()){
+                List<String> tmpFilePaths = new ArrayList<>();
+                for(String filePath: filePaths){
+                    if(Objects.equals(getExamResultDetailsIdFromFilepathComment(filePath), detailsSaveReq.getId())){
+                        tmpFilePaths.add(filePath);
+                    }
+                }
+
+                if(StringUtils.isNotBlank(detailsSaveReq.getCommentFilePath())){
+                    if(!tmpFilePaths.isEmpty()){
+                        detailsSaveReq.setCommentFilePath(detailsSaveReq.getCommentFilePath() +";"+ String.join(";", tmpFilePaths));
+                    }
+                }else{
+                    detailsSaveReq.setCommentFilePath(String.join(";", tmpFilePaths));
+                }
+            }
+        }
+
         List<ExamResultDetailsEntity> examResultDetailsEntities = new ArrayList<>();
         for(ExamMarkingDetailsSaveReq detailsSaveReq: examMarkingSaveReq.getExamResultDetails()){
             ExamResultDetailsEntity examResultDetailsEntity = modelMapper.map(detailsSaveReq, ExamResultDetailsEntity.class);
@@ -361,5 +386,15 @@ public class ExamServiceImpl implements ExamService {
         responseData.setResultCode(HttpStatus.OK.value());
         responseData.setResultMsg("Chấm bài thành công");
         return responseData;
+    }
+
+    private String getExamResultDetailsIdFromFilepathComment(String filepath){
+        if(DataUtils.stringIsNotNullOrEmpty(filepath)){
+            String[] filepaths = filepath.split("/");
+            String[] fileParts = filepaths[filepaths.length - 1].split("\\.");
+            String[] subFileParts = fileParts[0].split("_");
+            return subFileParts[1];
+        }
+        return null;
     }
 }

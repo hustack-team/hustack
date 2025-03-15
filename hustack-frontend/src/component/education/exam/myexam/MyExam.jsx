@@ -1,15 +1,20 @@
 import React, {useEffect, useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
-import {Box, Button, Card, CardContent, CardHeader, Input} from "@material-ui/core";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  MenuItem,
+  TextField
+} from "@mui/material";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
-import {MenuItem} from "@mui/material";
 import useDebounceValue from "../hooks/use-debounce";
 import {toast} from "react-toastify";
-import TextField from "@material-ui/core/TextField";
-import {DataGrid} from "@material-ui/data-grid";
+import {DataGrid} from "@mui/x-data-grid";
 import {formatDateTime} from "../ultils/DateUltils";
-import {BorderColor} from "@material-ui/icons";
+import { BorderColor } from "@mui/icons-material";
 
 const baseColumn = {
   sortable: false,
@@ -185,6 +190,7 @@ function MyExam(props) {
                     placeholder="Tìm kiếm theo tên kỳ thi hoặc tên đề thi"
                     value={keywordFilter}
                     style={{ width: "400px", marginRight: "16px"}}
+                    size="small"
                     onChange={(event) => {
                       setKeywordFilter(event.target.value);
                     }}
@@ -198,6 +204,7 @@ function MyExam(props) {
                     select
                     label="Trạng thái"
                     style={{ width: "150px"}}
+                    size="small"
                     value={statusFilter}
                     onChange={(event) => {
                       setStatusFilter(event.target.value);
