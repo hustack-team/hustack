@@ -1,16 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import withScreenSecurity from "../../../withScreenSecurity";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
-} from "@material-ui/core";
-import parse from "html-react-parser";
+import React, {useState} from 'react';
 import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
-import {DialogActions, MenuItem} from "@mui/material";
-import {AttachFileOutlined} from "@material-ui/icons";
+import {AttachFileOutlined} from "@mui/icons-material";
 import QuestionFilePreview from "./QuestionFilePreview";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
