@@ -6,10 +6,6 @@ import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionComment;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ModelInputGetContestSubmissionPageOfPeriod;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ModelResponseGetContestSubmissionOfPeriod;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ModelResponseGetContestSubmissionPage;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
 import com.hust.baseweb.applications.programmingcontest.service.*;
 import jakarta.validation.Valid;
@@ -51,8 +47,6 @@ public class SubmissionController {
     ContestSubmissionCommentService contestSubmissionCommentService;
 
     ProblemTestCaseService problemTestCaseService;
-
-    ContestRepo contestRepo;
 
     ContestSubmissionRepo contestSubmissionRepo;
 
@@ -113,30 +107,10 @@ public class SubmissionController {
     @GetMapping("/student/submissions/{submissionId}/general-info")
     public ResponseEntity<?> getContestSubmissionDetailViewedByParticipant(
         Principal principal,
-        @PathVariable("submissionId") UUID submissionId
+        @PathVariable("submissionId")
+        UUID submissionId
     ) {
-        ContestSubmissionEntity contestSubmission;
-        try {
-            contestSubmission = problemTestCaseService.getContestSubmissionDetailForStudent(
-                principal.getName(), submissionId);
-            if (contestSubmission != null) {
-                String contestId = contestSubmission.getContestId();
-                if (contestId != null) {
-                    ContestEntity contest = contestRepo.findContestByContestId(contestId);
-                    if (contest.getParticipantViewSubmissionMode() != null) {
-                        if (contest
-                            .getParticipantViewSubmissionMode()
-                            .equals(ContestEntity.PARTICIPANT_VIEW_SUBMISSION_MODE_DISABLED)) {
-                            contestSubmission.setSourceCode("HIDDEN");
-                        }
-                    }
-                }
-            }
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        }
-
-        return ResponseEntity.ok().body(contestSubmission);
+        return ResponseEntity.ok().body(submissionService.findById(principal.getName(), submissionId));
     }
 
     @Async
@@ -400,39 +374,6 @@ public class SubmissionController {
 
         return ResponseEntity.ok(comments);
     }
-
-    @PostMapping("/get-contest-submissions-date-between")
-    public ResponseEntity<?> getContestSubmissionDateBetween(
-        Principal principal, @RequestBody
-        ModelResponseGetContestSubmissionOfPeriod model
-    ) {
-        List<ContestSubmissionEntity> res = contestSubmissionRepo.findAllByCreatedAtBetween(
-            model.getFromDateTime(),
-            model.getToDateTime());
-        return ResponseEntity.ok().body(res);
-    }
-
-    @PostMapping("/get-contest-submissions-page-date-between")
-    public ResponseEntity<?> getContestSubmissionPageDateBetween(
-        Principal principal, @RequestBody
-        ModelInputGetContestSubmissionPageOfPeriod m
-    ) {
-        List<ContestSubmissionEntity> L = contestSubmissionRepo.findPageByCreatedAtBetween(
-            m.getFromDate(),
-            m.getToDate(),
-            m.getOffset(),
-            m.getLimit());
-        log.info(
-            "getContestSubmissionPageDateBetween, from {} to {}, Limit {} offset = {}, GOT sz = {}",
-            m.getFromDate(),
-            m.getToDate(),
-            m.getLimit(),
-            m.getOffset(),
-            L.size());
-        ModelResponseGetContestSubmissionPage res = new ModelResponseGetContestSubmissionPage(L);
-        return ResponseEntity.ok().body(res);
-    }
-
 
 //    @Secured("ROLE_TEACHER")
 //    @PutMapping("/teacher/submissions/{submissionId}/comments/{commentId}")

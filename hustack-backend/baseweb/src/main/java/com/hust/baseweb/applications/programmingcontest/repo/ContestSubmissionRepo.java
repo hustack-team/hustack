@@ -13,7 +13,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,12 +21,6 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
 //    long countAllByContestId(String contestId);
 //
 //    List<Integer> getListProblemSubmissionDistinctWithHighestScore(@Param("userLogin") UserLogin userLogin);
-
-    List<ContestSubmissionEntity> findAllByCreatedAtBetween(Date fromDate, Date toDate);
-
-    @Query(value = "select * from contest_submission_new where created_stamp between ?1 and ?2 order by created_stamp desc  offset ?3 limit ?4",
-           nativeQuery = true)
-    List<ContestSubmissionEntity> findPageByCreatedAtBetween(Date fromDate, Date toDate, int offset, int limit);
 
 //    @Query(value =
 //               "select user_submission_id as userId, sum(p) as point, email, first_name, middle_name, last_name from " +
