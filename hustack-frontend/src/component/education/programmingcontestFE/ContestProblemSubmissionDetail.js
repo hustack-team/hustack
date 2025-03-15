@@ -157,7 +157,7 @@ export default function ContestProblemSubmissionDetail() {
             ],
             [t("common:createdBy"), submission.submittedByUserId],
             [t("common:createdTime"), displayTime(submission.createdAt)],
-            [t("common:lastModified"), displayTime(submission.updateAt)],
+            // [t("common:lastModified"), displayTime(submission.updateAt)],
             [
               t("education/programmingcontest/problem:problem"),
               <Link

@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -45,6 +47,8 @@ public class SubmissionServiceImpl implements SubmissionService {
     ProblemTestCaseServiceCache cacheService;
 
     ContestService contestService;
+
+    ModelMapper mapper;
 
     /**
      * @param userId
@@ -364,6 +368,33 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         return null;
+    }
+
+    /**
+     *
+     * @param userId
+     * @param submissionId
+     * @return
+     */
+    @Override
+    public SubmissionDTO findById(String userId, UUID submissionId) {
+        ContestSubmissionEntity submission = problemTestCaseService.getContestSubmissionDetailForStudent(
+            userId,
+            submissionId);
+
+        if (submission != null) {
+            String contestId = submission.getContestId();
+
+            if (contestId != null) {
+                ContestEntity contest = contestRepo.findContestByContestId(contestId);
+                if (contest.getParticipantViewSubmissionMode() != null &&
+                    ContestEntity.PARTICIPANT_VIEW_SUBMISSION_MODE_DISABLED.equals(contest.getParticipantViewSubmissionMode())) {
+                    submission.setSourceCode("HIDDEN");
+                }
+            }
+        }
+
+        return mapper.map(submission, SubmissionDTO.class);
     }
 
     private ModelContestSubmissionResponse buildSubmissionResponseTimeOut() {
