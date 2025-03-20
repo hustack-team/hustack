@@ -223,7 +223,7 @@ const ViewProgrammingContestSubmission = () => {
   }, [page, pageSize]);
 
   return (
-    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}} square={false}>
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}} >
       <Typography variant="h6" sx={{marginBottom: "12px"}}>{t("search")}</Typography>
       <Grid container spacing={3}>
         <Grid item xs={3}>

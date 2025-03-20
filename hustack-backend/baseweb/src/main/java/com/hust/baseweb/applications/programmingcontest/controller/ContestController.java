@@ -684,7 +684,7 @@ public class ContestController {
     @GetMapping("/contests/users/submissions")
     public ResponseEntity<?> getContestSubmissionInProblemPagingOfCurrentUser(
         Principal principal,
-        @RequestParam("contestid") String contestId, @RequestParam("problemid") String problemId
+        @RequestParam("contestId") String contestId, @RequestParam("problemId") String problemId
     ) {
         Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by("createdAt").descending());
         Page<ContestSubmission> page = problemTestCaseService

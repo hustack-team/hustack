@@ -32,6 +32,7 @@ export default function RichTextEditor(props) {
 
   return (
     <Editor
+      toolbarHidden={props.toolbarHidden}
       editorState={editorState}
       contentState={editorState.getCurrentContent()}
       handlePastedText={() => false}

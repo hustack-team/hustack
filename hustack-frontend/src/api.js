@@ -119,17 +119,42 @@ export async function request(
 }
 
 export function extractErrorMessage(e) {
-  if(e?.response?.data?.message && e.response.data.message !== "No message available") {
+  if (e?.response?.data?.message && e.response.data.message !== "No message available") {
     return e?.response?.data?.message
   }
 
-  if(e?.response?.data?.error) {
+  if (e?.response?.data?.error) {
     return e?.response?.data?.error
   }
 
-  if(e?.response?.data) {
+  if (e?.response?.data) {
     return e?.response?.data
   }
 
   return null
 }
+
+export const saveFile = (fileName, data) => {
+  let blob = new Blob([data]);
+
+  //IE11 support
+  if (window.navigator.msSaveOrOpenBlob) {
+    window.navigator.msSaveBlob(blob, fileName);
+  } else {
+    let link = window.document.createElement("a");
+
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // other browsers
+    // Second approach but cannot specify saved name!
+    // let file = new File([data], fileName, { type: "application/zip" });
+    // let exportUrl = URL.createObjectURL(file);
+    // window.location.assign(exportUrl);
+    // URL.revokeObjectURL(exportUrl);
+  }
+}
+;
