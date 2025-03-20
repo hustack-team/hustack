@@ -14,7 +14,6 @@ import {request} from "../../../api";
 import FileUploadZone from "../../../utils/FileUpload/FileUploadZone";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustCodeLanguagePicker from "../../common/HustCodeLanguagePicker";
-import HustContainerCard from "../../common/HustContainerCard";
 import {
   COMPUTER_LANGUAGES,
   DEFAULT_CODE_SEGMENT_C,
@@ -27,6 +26,8 @@ import {
 import StudentViewSubmission from "./StudentViewSubmission";
 import {useTranslation} from "react-i18next";
 import _ from "lodash";
+import ProgrammingContestLayout from "./ProgrammingContestLayout";
+import {useHistory} from "react-router-dom";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -75,10 +76,9 @@ const ERR_STATUS = [
 ];
 
 export default function StudentViewProgrammingContestProblemDetail() {
-  const params = useParams();
-  const problemId = params.problemId;
-  const contestId = params.contestId;
-  const {t} = useTranslation(["education/programmingcontest/problem"]);
+  const {problemId, contestId} = useParams();
+  const history = useHistory();
+  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
 
   const [problem, setProblem] = useState(null);
   const [testCases, setTestCases] = useState([]);
@@ -316,21 +316,24 @@ export default function StudentViewProgrammingContestProblemDetail() {
     if (isSubmitCode > 0) handleFormSubmit(null);
   }, [isSubmitCode]);
 
+  const handleExit = () => {
+    history.push(`/programming-contest/student-view-contest-detail/${contestId}`);
+  }
+
   return (
-    <HustContainerCard
-      title={"Problem: " + (problem ? problem.problemName : "")}
-    >
-      <Box>
-        <Typography variant="h5">Description</Typography>
-        {/*{ReactHtmlParser(problemDescription)}*/}
-        <Editor
-          toolbarHidden
-          editorState={editorStateDescription}
-          handlePastedText={() => false}
-          readOnly
-          editorStyle={editorStyle.editor}
-        />
-        {/*
+    <ProgrammingContestLayout title={problem ? problem.problemName : ""} onBack={handleExit}>
+      <Typography variant="h6" sx={{mb: 1}}>
+        {t("common:description")}
+      </Typography>
+      {/*{ReactHtmlParser(problemDescription)}*/}
+      <Editor
+        toolbarHidden
+        editorState={editorStateDescription}
+        handlePastedText={() => false}
+        readOnly
+        editorStyle={editorStyle.editor}
+      />
+      {/*
         <Typography variant="h5">Sample testcase</Typography>
         
         <Editor
@@ -341,28 +344,28 @@ export default function StudentViewProgrammingContestProblemDetail() {
           editorStyle={editorStyle.editor}
         />
       */}
-        {/*ReactHtmlParser(sampleTestCase)*/}
-        {/*sampleTestCase*/}
+      {/*ReactHtmlParser(sampleTestCase)*/}
+      {/*sampleTestCase*/}
 
-        <HustCodeEditor
+      {sampleTestCase && <>
+        <div style={{height: "10px"}}></div>
+        <HustCopyCodeBlock
           title={t("sampleTestCase")}
-          language={COMPUTER_LANGUAGES.C}
-          sourceCode={sampleTestCase}
+          text={sampleTestCase}
         />
+      </>}
 
-        {fetchedImageArray.length !== 0 &&
-          fetchedImageArray.map((file) => (
-            <FileUploadZone file={file} removable={false}/>
-          ))}
-      </Box>
-
-      <Divider/>
+      {fetchedImageArray.length !== 0 &&
+        fetchedImageArray.map((file) => (
+          <FileUploadZone file={file} removable={false}/>
+        ))}
 
       <ModalPreview chosenTestcase={selectedTestcase}/>
+
       <Box sx={{mt: 2}}>
         <Box>
           <HustCodeEditor
-            title={"Source code"}
+            title={t('common:sourceCode')}
             language={language}
             onChangeLanguage={(event) => {
               setLanguage(event.target.value);
@@ -386,7 +389,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{width: 160, mt: 1, mb: 1}}
+              sx={{width: 128, mt: 1, mb: 1, textTransform: 'none'}}
               // loading={isProcessing}
               // loadingIndicator="Submitting…"
               variant="contained"
@@ -394,7 +397,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               type="submit"
               onClick={submitCode}
             >
-              <span>SUBMIT CODE</span>
+              {t("common:submit")}
             </LoadingButton>
 
             {submissionMode === SUBMISSION_MODE_NOT_ALLOWED && (
@@ -423,7 +426,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               <Stack direction="row" spacing={1} alignItems="center">
                 <InputFileUpload
                   id="selected-upload-file"
-                  label="Select file"
+                  label={t("common:selectFile")}
                   accept=".c, .cpp, .java, .py"
                   onChange={onFileChange}
                   ref={inputRef}
@@ -436,7 +439,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{width: 128}}
+              sx={{width: 128, textTransform: 'none'}}
               // loading={isProcessing}
               // loadingIndicator="Submitting…"
               variant="contained"
@@ -444,7 +447,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               type="submit"
               onChange={onInputChange}
             >
-              <span>Submit</span>
+              {t("common:submit")}
             </LoadingButton>
           </Stack>
         </form>
@@ -476,6 +479,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
       <Box sx={{mt: 3}}>
         <StudentViewSubmission problemId={problemId} ref={listSubmissionRef}/>
       </Box>
-    </HustContainerCard>
+    </ProgrammingContestLayout>
   );
 }

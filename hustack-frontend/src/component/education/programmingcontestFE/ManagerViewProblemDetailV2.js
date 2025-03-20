@@ -300,12 +300,13 @@ function ManagerViewProblemDetailV2() {
 
       <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
         <Typography variant="h6" sx={{marginBottom: "8px"}}>
-          {t("problemDescription")}
+          {t("common:description")}
         </Typography>
         <RichTextEditor
           toolbarHidden
           content={problemDetail.description}
           readOnly
+          editorStyle={{editor: {}}}
         />
       </Box>
 

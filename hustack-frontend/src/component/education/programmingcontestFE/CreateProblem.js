@@ -30,15 +30,15 @@ const useStyles = makeStyles((theme) => ({
 
 export const getLevels = (t) => [
   {
-    label: t("easy"),
+    label: t("education/programmingcontest/problem:easy"),
     value: "easy",
   },
   {
-    label: t("medium"),
+    label: t("education/programmingcontest/problem:medium"),
     value: "medium",
   },
   {
-    label: t("hard"),
+    label: t("education/programmingcontest/problem:hard"),
     value: "hard",
   },
 ];

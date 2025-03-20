@@ -19,8 +19,9 @@ import ManagerViewParticipantProgramSubmissionDetailTestCaseByTestCase
   from "./ManagerViewParticipantProgramSubmissionDetailTestCaseByTestCase";
 import {getStatusColor} from "./lib";
 import {useTranslation} from "react-i18next";
-import TertiaryButton from "../../button/TertiaryButton";
 import {mapLanguageToDisplayName} from "./Constant";
+import {RejudgeButton} from "./RejudgeButton";
+import InsertCommentRoundedIcon from '@mui/icons-material/InsertCommentRounded';
 
 export const detail = (key, value, sx, helpText) => (
   <>
@@ -80,7 +81,7 @@ export const resolveLanguage = (str) => {
   return undefined;
 };
 
-function ContestProblemSubmissionDetailViewedByManager() {
+function ContestProblemSubmissionDetailViewedByManager({screenAuthorization}) {
   const {problemSubmissionId} = useParams();
   const {t} = useTranslation(["education/programmingcontest/testcase", "education/programmingcontest/problem", "education/programmingcontest/contest", 'common']);
 
@@ -235,9 +236,20 @@ function ContestProblemSubmissionDetailViewedByManager() {
           <Box sx={{mb: 4}}>
             <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1}}>
               <Typography variant="h6">{t('common:sourceCode')}</Typography>
-              <TertiaryButton variant='outlined' onClick={handleOpenDialog}>
-                {t('common:comment')}
-              </TertiaryButton>
+
+              <Stack direction='row' gap={1}>
+                {screenAuthorization?.has(`${screenName}.BTN_REJUDGE.VIEW`) &&
+                  <RejudgeButton submissionId={problemSubmissionId}/>}
+                <Tooltip title={t('common:comment')}>
+                  <IconButton
+                    variant="contained"
+                    color="primary"
+                    onClick={handleOpenDialog}
+                  >
+                    <InsertCommentRoundedIcon/>
+                  </IconButton>
+                </Tooltip>
+              </Stack>
             </Box>
             <HustCopyCodeBlock
               text={submission.sourceCode}

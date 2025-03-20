@@ -15,15 +15,51 @@ import {useTranslation} from "react-i18next";
 import {useParams} from "react-router-dom";
 import {errorNoti, successNoti} from "utils/notification";
 import HustContainerCard from "../../common/HustContainerCard";
+import {COMPUTER_LANGUAGES, mapLanguageToDisplayName} from "./Constant";
+
+export const getContestStatuses = (t) => [
+  {
+    label: t("education/programmingcontest/contest:status.created"),
+    value: "CREATED",
+  },
+  {
+    label: t("education/programmingcontest/contest:status.open"),
+    value: "OPEN",
+  },
+  {
+    label: t("education/programmingcontest/contest:status.running"),
+    value: "RUNNING",
+  },
+  {
+    label: t("education/programmingcontest/contest:status.over"),
+    value: "COMPLETED",
+  },
+  {
+    label: t("education/programmingcontest/contest:status.close"),
+    value: "CLOSED",
+  },
+  {
+    label: t("education/programmingcontest/contest:status.disabled"),
+    value: "DISABLED",
+  },
+];
+
+export const programmingLanguages = Object.values(COMPUTER_LANGUAGES).map((language) => (
+  {
+    label: mapLanguageToDisplayName(language),
+    value: language,
+  }
+))
 
 function EditContest() {
-  const { t } = useTranslation([
+  const {t} = useTranslation([
     "education/programmingcontest/contest",
     "common",
     "validation",
   ]);
+  const contestStatuses= getContestStatuses(t)
 
-  const { contestId } = useParams();
+  const {contestId} = useParams();
 
   const [loading, setLoading] = useState(true);
 
@@ -31,10 +67,10 @@ function EditContest() {
   const [contestTime, setContestTime] = useState(Number(0));
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
-  const [contestPublic, setContestPublic] = useState(false); 
+  const [contestPublic, setContestPublic] = useState(false);
 
   const [options, setOptions] = useState({
-    status: [],
+    // status: [],
     submissionActionType: [],
     participantViewResultMode: [],
     problemDescriptionViewType: [],
@@ -44,7 +80,7 @@ function EditContest() {
     participantViewProblemsTag: [],
     contestType: [],
     participantViewComment: [],
-    contestPublic: [], 
+    contestPublic: [],
   });
 
   const [contestType, setContestType] = useState("");
@@ -82,7 +118,7 @@ function EditContest() {
       contestType: contestType,
       contestShowTag: participantViewProblemsTag,
       contestShowComment: participantViewComment,
-      contestPublic: contestPublic, 
+      contestPublic: contestPublic,
     };
 
     request(
@@ -93,7 +129,7 @@ function EditContest() {
         // getContestInfo();
       },
       {
-        onError: () => errorNoti(t("error", { ns: "common" }), 3000),
+        onError: () => errorNoti(t("error", {ns: "common"}), 3000),
       },
       body
     );
@@ -106,10 +142,10 @@ function EditContest() {
       const data = res.data;
 
       setOptions({
-        status: data.listStatusIds.map((status) => ({
-          label: status,
-          value: status,
-        })),
+        // status: data.listStatusIds.map((status) => ({
+        //   label: status,
+        //   value: status,
+        // })),
         contestType: data.listContestTypes.map((atype) => ({
           label: atype,
           value: atype,
@@ -138,10 +174,11 @@ function EditContest() {
             label: mode,
             value: mode,
           })),
-        supportedLanguage: data.listLanguagesAllowed.map((language) => ({
-          label: language,
-          value: language,
-        })),
+        // supportedLanguage: data.listLanguagesAllowed.map((language) => ({
+        //   label: language,
+        //   value: language,
+        // })),
+        supportedLanguage: programmingLanguages,
         participantViewProblemsTag: data.listContestShowTags.map((mode) => ({
           label: mode,
           value: mode,
@@ -151,9 +188,9 @@ function EditContest() {
           value: mode,
         })),
         contestPublic: [
-          { label: "Yes", value: true },
-          { label: "No", value: false },
-        ], 
+          {label: "Yes", value: true},
+          {label: "No", value: false},
+        ],
       });
 
       setContestTime(data.contestTime);
@@ -179,7 +216,7 @@ function EditContest() {
       );
       setParticipantViewProblemsTag(data.contestShowTag);
       setParticipantViewComment(data.contestShowComment);
-      setContestPublic(data.contestPublic); 
+      setContestPublic(data.contestPublic);
     });
   }
 
@@ -192,7 +229,7 @@ function EditContest() {
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
         <HustContainerCard title={contestId}>
           {loading ? (
-            <LinearProgress />
+            <LinearProgress/>
           ) : (
             <>
               <Grid
@@ -220,7 +257,7 @@ function EditContest() {
                     key={"statusId"}
                     label="Status"
                     value={status}
-                    options={options.status}
+                    options={contestStatuses}
                     onChange={(event) => {
                       setStatus(event.target.value);
                     }}
@@ -306,7 +343,7 @@ function EditContest() {
                     id="languages"
                     key={"languages"}
                     label="Programming languages"
-                    SelectProps={{ multiple: true }}
+                    SelectProps={{multiple: true}}
                     value={allowedLanguages}
                     helperText="Leave blank to allow all supported languages"
                     options={options.supportedLanguage}
@@ -409,7 +446,7 @@ function EditContest() {
               <LoadingButton
                 loading={loading}
                 variant="contained"
-                sx={{ textTransform: "none", mt: 4 }}
+                sx={{textTransform: "none", mt: 4}}
                 onClick={handleSubmit}
               >
                 Save

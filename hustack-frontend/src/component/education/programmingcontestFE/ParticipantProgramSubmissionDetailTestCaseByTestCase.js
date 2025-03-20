@@ -32,7 +32,9 @@ export default function ParticipantProgramSubmissionDetailTestCaseByTestCase(pro
     {
       title: t('point'),
       field: "point",
-      type: 'numeric'
+      type: 'numeric',
+      render: (rowData) =>
+        rowData.point?.toLocaleString("fr-FR", localeOption) ,
     },
     {
       title: t("message"),
@@ -45,7 +47,7 @@ export default function ParticipantProgramSubmissionDetailTestCaseByTestCase(pro
       type: 'numeric',
       cellStyle: {minWidth: 190},
       render: (rowData) =>
-        rowData.runtime?.toLocaleString("fr-FR", localeOption),
+        rowData.runtime?.toLocaleString("fr-FR", localeOption) ,
     },
     {
       title: t("memory") + " (MB)",

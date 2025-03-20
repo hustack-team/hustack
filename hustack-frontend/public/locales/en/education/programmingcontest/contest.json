@@ -20,5 +20,13 @@
   "reJudge": "Rejudge",
   "reJudgingNotification": "Rejudging the submission with ID",
   "submissionGradedHead": "Submission",
-  "submissionGradedTail": "has been graded"
+  "submissionGradedTail": "has been graded",
+  "status": {
+    "created": "Created",
+    "open": "Open",
+    "close": "Close",
+    "disabled": "Deleted",
+    "running": "Running",
+    "over": "Over"
+  }
 }

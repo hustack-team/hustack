@@ -89,6 +89,10 @@ export const getStatusColor = (status) => {
       return "#2e7d32";
     case "Partial":
       return "#ed6c02";
+    case "Pending Evaluation":
+      return "#1976d2";
+    case "Evaluated":
+      return "#2e7d32";
     default:
       return "#d32f2f";
   }
