@@ -17,9 +17,7 @@ updates:
       - "maven"
     commit-message:
       prefix: "chore"
-      include: "everything"
-    versioning-strategy: "auto"
-    insecure-external-code-execution: allow
+      include: "scope"
     groups:
       spring-dependencies:
         patterns:
