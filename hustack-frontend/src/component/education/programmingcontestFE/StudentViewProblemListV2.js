@@ -52,7 +52,7 @@ export default function StudentViewProblemList() {
       cellStyle: {minWidth: 120, paddingRight: 40},
       render: (rowData) => (
         <Typography component="span" variant="subtitle2" sx={{color: getColorLevel(`${rowData.levelId}`)}}>
-          {`${levels.find(item => item.value === rowData.levelId).label}`}
+          {`${levels.find(item => item.value === rowData.levelId)?.label || ""}`}
         </Typography>
       ),
     },
