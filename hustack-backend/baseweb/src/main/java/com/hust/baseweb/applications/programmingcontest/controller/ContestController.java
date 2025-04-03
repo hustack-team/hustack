@@ -27,6 +27,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.annotation.Secured;
@@ -763,9 +765,11 @@ public class ContestController {
     @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/judged-submissions")
     public ResponseEntity<?> getUserJudgedProblemSubmission(@PathVariable String contestId) {
-        List<ModelUserJudgedProblemSubmissionResponse> res = problemTestCaseService
-            .getUserJudgedProblemSubmissions(contestId);
-        return ResponseEntity.ok().body(res);
+        byte[] pdfBytes = problemTestCaseService.getUserJudgedProblemSubmissions(contestId);
+        return ResponseEntity.ok()
+                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + contestId + ".pdf")
+                             .contentType(MediaType.APPLICATION_PDF)
+                             .body(pdfBytes);
     }
     @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/users/{userId}/roles")
