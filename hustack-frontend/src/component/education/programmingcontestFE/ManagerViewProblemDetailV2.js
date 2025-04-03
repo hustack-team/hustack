@@ -338,6 +338,7 @@ function ManagerViewProblemDetailV2() {
 
       <ListTestCase mode={2}/>
 
+      <Box sx={{height: "36px"}}></Box>
       <ContestsUsingAProblem problemId={problemId}/>
     </ProgrammingContestLayout>
   );
