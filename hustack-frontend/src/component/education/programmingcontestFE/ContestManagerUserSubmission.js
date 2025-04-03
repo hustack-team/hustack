@@ -1,24 +1,23 @@
-import { MuiThemeProvider } from "@material-ui/core/styles";
+import {MuiThemeProvider} from "@material-ui/core/styles";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { LoadingButton } from "@mui/lab";
-import { Box, IconButton, Tooltip, LinearProgress } from "@mui/material";
-import { pdf } from "@react-pdf/renderer";
-import { request } from "api";
+import {LoadingButton} from "@mui/lab";
+import {Box, IconButton, LinearProgress, Tooltip} from "@mui/material";
+import {request, saveFile} from "api";
 import HustModal from "component/common/HustModal";
 import StandardTable from "component/table/StandardTable";
-import FileSaver from "file-saver";
-import { MTableToolbar } from "material-table";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { errorNoti, infoNoti, successNoti } from "utils/notification";
+import {MTableToolbar} from "material-table";
+import {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {errorNoti, infoNoti, successNoti} from "utils/notification";
 import ContestManagerViewSubmissionOfAUserDialog from "./ContestManagerViewSubmissionOfAUserDialog";
 import ManagerSubmitCodeOfParticipant from "./ManagerSubmitCodeOfParticipant";
-import { RejudgeButton } from "./RejudgeButton";
-import { getStatusColor } from "./lib";
-import SubmissionOfParticipantPDFDocument from "./template/SubmissionOfParticipantPDFDocument";
+import {RejudgeButton} from "./RejudgeButton";
+import {getStatusColor} from "./lib";
+import {useTranslation} from "react-i18next";
 
 export default function ContestManagerUserSubmission(props) {
   const contestId = props.contestId;
+  const {t} = useTranslation(["common"]);
 
   const [loading, setLoading] = useState(true);
   const [contestSubmissions, setContestSubmissions] = useState([]);
@@ -54,17 +53,24 @@ export default function ContestManagerUserSubmission(props) {
 
   function getSubmission() {
     setLoading(true);
+
     request(
       "get",
       "/teacher/contests/" + contestId + "/submissions",
       (res) => {
+        setLoading(false)
         setContestSubmissions(res.data.content);
         setTotalSizeSubmission(res.data.totalElements);
       },
-      { onError: (error) => errorNoti("An error happened", 3000) },
+      {
+        onError: (error) => {
+          setLoading(false)
+          errorNoti(t("common:error", 3000))
+        }
+      },
       null,
-      { params: filterParams }
-    ).then(() => setLoading(false));
+      {params: filterParams}
+    );
   }
 
   function handleRejudgeAll() {
@@ -73,9 +79,13 @@ export default function ContestManagerUserSubmission(props) {
       "post",
       "/submissions/" + contestId + "/batch-evaluation",
       (res) => {
+        setIsProcessing(false)
         successNoti("Submissions will be rejudged", 5000);
       },
       {
+        onError: (e) => {
+          setIsProcessing(false)
+        },
         403: () => {
           infoNoti(
             "You don't have privilege to perform this action. Contact admin if needed",
@@ -83,7 +93,7 @@ export default function ContestManagerUserSubmission(props) {
           );
         },
       }
-    ).then(() => setIsProcessing(false));
+    );
   }
 
   function handleJudgeAll() {
@@ -92,9 +102,13 @@ export default function ContestManagerUserSubmission(props) {
       "post",
       "/submissions/" + contestId + "/batch-non-evaluated-evaluation",
       (res) => {
+        setIsProcessing(false)
         successNoti("Submissions will be judged", 5000);
       },
       {
+        onError: (e) => {
+          setIsProcessing(false)
+        },
         403: () => {
           infoNoti(
             "You don't have privilege to perform this action. Contact admin if needed",
@@ -102,22 +116,32 @@ export default function ContestManagerUserSubmission(props) {
           );
         },
       }
-    ).then(() => setIsProcessing(false));
+    );
   }
-
-  const generatePdfDocument = async (documentData, fileName) => {
-    const blob = await pdf(
-      <SubmissionOfParticipantPDFDocument data={documentData} />
-    ).toBlob();
-
-    FileSaver.saveAs(blob, fileName);
-  };
 
   function handleExportParticipantSubmission() {
     setIsProcessing(true);
-    request("get", "/contests/" + contestId + "/judged-submissions", (res) => {
-      generatePdfDocument(res.data, `USER_JUDGED_SUBMISSION-${contestId}.pdf`);
-    }).then(() => setIsProcessing(false));
+
+    request("get",
+      "/contests/" + contestId + "/judged-submissions",
+      (res) => {
+        setIsProcessing(false)
+        saveFile(`${contestId}.pdf`, res.data)
+      },
+      {
+        onError: e => {
+          setIsProcessing(false)
+          errorNoti(t("common:error", 3000))
+        }
+      },
+      {},
+      {
+        responseType: "blob",
+        headers: {
+          "Accept": "application/pdf"
+        }
+      }
+    );
   }
 
   const generateColumns = () => {
@@ -125,7 +149,7 @@ export default function ContestManagerUserSubmission(props) {
       {
         title: "ID",
         field: "contestSubmissionId",
-        cellStyle: { minWidth: "80px" },
+        cellStyle: {minWidth: "80px"},
         render: (rowData) => (
           <Link
             to={
@@ -137,11 +161,11 @@ export default function ContestManagerUserSubmission(props) {
           </Link>
         ),
       },
-      { title: "User ID", field: "userId" },
+      {title: "User ID", field: "userId"},
       {
         title: "Full name",
         field: "fullname",
-        cellStyle: { minWidth: "170px" },
+        cellStyle: {minWidth: "170px"},
       },
 
       {
@@ -160,19 +184,19 @@ export default function ContestManagerUserSubmission(props) {
         field: "testCasePass",
         // cellStyle: { textAlign: "center" },
       },
-      { title: "Lang", field: "sourceCodeLanguage" },
+      {title: "Lang", field: "sourceCodeLanguage"},
       {
         title: "Status",
         field: "status",
         // cellStyle: { textAlign: "center" },
         render: (rowData) => (
-          <span style={{ color: getStatusColor(`${rowData.status}`) }}>
+          <span style={{color: getStatusColor(`${rowData.status}`)}}>
             {`${rowData.status}`}
           </span>
         ),
       },
       // {title: "Message", field: "message"},
-      { title: "Point", field: "point" },
+      {title: "Point", field: "point"},
       {
         title: "Submitted At",
         field: "createAt",
@@ -184,19 +208,19 @@ export default function ContestManagerUserSubmission(props) {
       {
         title: "Rejudge",
         sortable: "false",
-        headerStyle: { textAlign: "center" },
-        cellStyle: { textAlign: "center" },
+        headerStyle: {textAlign: "center"},
+        cellStyle: {textAlign: "center"},
         render: (rowData) => (
-          <RejudgeButton submissionId={rowData.contestSubmissionId} />
+          <RejudgeButton submissionId={rowData.contestSubmissionId}/>
         ),
       },
-      { title: "Man. Status", field: "managementStatus" },
-      { title: "Violation", field: "violationForbiddenInstruction" },
+      {title: "Man. Status", field: "managementStatus"},
+      {title: "Violation", field: "violationForbiddenInstruction"},
       {
         title: "View By User",
         sortable: false,
-        headerStyle: { textAlign: "center" },
-        cellStyle: { textAlign: "center", minWidth: 96 },
+        headerStyle: {textAlign: "center"},
+        cellStyle: {textAlign: "center", minWidth: 96},
         render: (rowData) => (
           <IconButton
             variant="contained"
@@ -206,7 +230,7 @@ export default function ContestManagerUserSubmission(props) {
               setIsOpen(true);
             }}
           >
-            <VisibilityIcon />
+            <VisibilityIcon/>
           </IconButton>
         ),
       },
@@ -227,8 +251,8 @@ export default function ContestManagerUserSubmission(props) {
   }, [filterParams]);
 
   return (
-    <Box sx={{ marginTop: "12px" }}>
-      {loading && <LinearProgress />}
+    <Box sx={{marginTop: "12px"}}>
+      {loading && <LinearProgress/>}
       <StandardTable
         title={"Contest Submissions"}
         columns={generateColumns()}
@@ -250,28 +274,28 @@ export default function ContestManagerUserSubmission(props) {
         page={filterParams.page}
         totalCount={totalSizeSubmission}
         onChangePage={(page, size) =>
-          setFilterParams({ ...filterParams, page, size })
+          setFilterParams({...filterParams, page, size})
         }
         onSearchChange={(search) =>
-          setFilterParams({ page: 0, size: filterParams.size, search })
+          setFilterParams({page: 0, size: filterParams.size, search})
         }
         components={{
           Toolbar: (props) => (
             <div>
-              <MTableToolbar {...props} searchFieldStyle={{ width: 320 }} />
+              <MTableToolbar {...props} searchFieldStyle={{width: 320}}/>
               <MuiThemeProvider>
                 <Box
                   display="flex"
                   justifyContent="flex-end"
                   width="100%"
-                  sx={{ padding: "8px 0 16px 16px" }}
+                  sx={{padding: "8px 0 16px 16px"}}
                 >
                   <Tooltip title="Submit code as a participant" arrow>
                     <LoadingButton
                       loading={isProcessing}
                       loadingPosition="start"
                       variant="contained"
-                      sx={{ marginRight: "16px" }}
+                      sx={{marginRight: "16px"}}
                       color="primary"
                       onClick={handleSubmitCodeParticipant}
                     >
@@ -286,14 +310,14 @@ export default function ContestManagerUserSubmission(props) {
                       loading={isProcessing}
                       loadingPosition="start"
                       variant="contained"
-                      sx={{ marginRight: "16px" }}
+                      sx={{marginRight: "16px"}}
                       color="primary"
                       onClick={handleJudgeAll}
                     >
                       Judge All
                     </LoadingButton>
                   </Tooltip>
-                  <Tooltip
+                  {props.screenAuthorization?.has(`SCR_CONTEST_MANAGER.BTN_REJUDGE.VIEW`) && <Tooltip
                     title="Rejudge all submissions in this contest"
                     arrow
                   >
@@ -301,19 +325,19 @@ export default function ContestManagerUserSubmission(props) {
                       loading={isProcessing}
                       loadingPosition="start"
                       variant="contained"
-                      sx={{ marginRight: "16px" }}
+                      sx={{marginRight: "16px"}}
                       color="primary"
                       onClick={handleRejudgeAll}
                     >
                       Rejudge All
                     </LoadingButton>
-                  </Tooltip>
+                  </Tooltip>}
                   <Tooltip title="Export all submissions in this contest" arrow>
                     <LoadingButton
                       loading={isProcessing}
                       loadingPosition="start"
                       variant="contained"
-                      sx={{ marginRight: "16px" }}
+                      sx={{marginRight: "16px"}}
                       color="primary"
                       onClick={handleExportParticipantSubmission}
                     >
@@ -344,7 +368,7 @@ export default function ContestManagerUserSubmission(props) {
         onClose={handleCloseManagerSubmitParticipantCode}
         title={"Submit code of participant"}
       >
-        <ManagerSubmitCodeOfParticipant contestId={contestId} />
+        <ManagerSubmitCodeOfParticipant contestId={contestId}/>
       </HustModal>
     </Box>
   );
