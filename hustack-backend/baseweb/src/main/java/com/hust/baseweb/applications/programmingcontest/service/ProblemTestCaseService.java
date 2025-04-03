@@ -247,7 +247,7 @@ public interface ProblemTestCaseService {
         ModelProgrammingContestUploadTestCase modelUploadTestCase
     ) throws Exception;
 
-    List<ModelUserJudgedProblemSubmissionResponse> getUserJudgedProblemSubmissions(String contestId);
+    byte[] getUserJudgedProblemSubmissions(String contestId);
 
     ModelGetRolesOfUserInContestResponse getRolesOfUserInContest(String userId, String contestId);
 
