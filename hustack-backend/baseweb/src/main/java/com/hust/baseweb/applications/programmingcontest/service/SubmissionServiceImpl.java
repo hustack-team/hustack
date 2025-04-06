@@ -27,6 +27,9 @@ import java.security.Principal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -366,6 +369,32 @@ public class SubmissionServiceImpl implements SubmissionService {
         for (ContestSubmissionEntity sub : submissions) {// take the last submission in the sorted list
             problemTestCaseService.evaluateSubmission(sub, contest);
         }
+
+        return null;
+    }
+
+    /**
+     * Judge contest submission with 60 seconds delay time to avoid system congestion.
+     * @param contestId
+     * @return
+     */
+
+    public ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContestWithDelayTime(String contestId) {
+        List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestId(
+            contestId);
+        ContestEntity contest = contestService.findContestWithCache(contestId);
+
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        long delay = 0;
+
+        for (ContestSubmissionEntity sub : submissions) {
+            executor.schedule(() -> {
+                problemTestCaseService.evaluateSubmission(sub, contest);
+            }, delay, TimeUnit.SECONDS);
+            delay += 60;
+        }
+
+        executor.shutdown();
 
         return null;
     }

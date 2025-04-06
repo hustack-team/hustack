@@ -22,4 +22,6 @@ public interface SubmissionService {
     ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContest(String contestId);
 
     SubmissionDTO findById(String userId, UUID submissionId);
+
+    ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContestWithDelayTime(String contestId);
 }
