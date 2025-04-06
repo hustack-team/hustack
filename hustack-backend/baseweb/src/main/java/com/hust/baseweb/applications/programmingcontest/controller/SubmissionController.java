@@ -223,6 +223,7 @@ public class SubmissionController {
         return ResponseEntity.ok().body(submissionService.judgeAllSubmissionsOfContest(contestId));
     }
 
+    @Secured("ROLE_ADMIN")
     @PostMapping("/submissions/{contestId}/batch-non-evaluated-evaluation-with-delay-time")
     public ResponseEntity<?> evaluateBatchNotEvaluatedSubmissionContestWithDelayTime(
         @PathVariable String contestId
