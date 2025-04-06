@@ -223,6 +223,14 @@ public class SubmissionController {
         return ResponseEntity.ok().body(submissionService.judgeAllSubmissionsOfContest(contestId));
     }
 
+    @PostMapping("/submissions/{contestId}/batch-non-evaluated-evaluation-with-delay-time")
+    public ResponseEntity<?> evaluateBatchNotEvaluatedSubmissionContestWithDelayTime(
+        @PathVariable String contestId
+    ) {
+        log.info("evaluateBatchNotEvaluatedSubmissionContest, contestId = {}", contestId);
+        return ResponseEntity.ok().body(submissionService.judgeAllSubmissionsOfContestWithDelayTime(contestId));
+    }
+
 //    @PostMapping("/submissions/testcases/solution-output")
 //    public ResponseEntity<?> submitSolutionOutputOfATestCase(
 //        Principal principale,

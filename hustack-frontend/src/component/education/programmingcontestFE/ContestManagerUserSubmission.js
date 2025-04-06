@@ -119,6 +119,29 @@ export default function ContestManagerUserSubmission(props) {
     );
   }
 
+  function handleJudgeAllWithDelayTime() {
+    setIsProcessing(true);
+    request(
+      "post",
+      "/submissions/" + contestId + "/batch-non-evaluated-evaluation-with-delay-time",
+      (res) => {
+        setIsProcessing(false)
+        successNoti("Submissions will be judged with delay time", 5000);
+      },
+      {
+        onError: (e) => {
+          setIsProcessing(false)
+        },
+        403: () => {
+          infoNoti(
+            "You don't have privilege to perform this action. Contact admin if needed",
+            10000
+          );
+        },
+      }
+    );
+  }
+
   function handleExportParticipantSubmission() {
     setIsProcessing(true);
 
@@ -315,6 +338,21 @@ export default function ContestManagerUserSubmission(props) {
                       onClick={handleJudgeAll}
                     >
                       Judge All
+                    </LoadingButton>
+                  </Tooltip>
+                  <Tooltip
+                    title="Judge all submissions that are NOT EVALUATED"
+                    arrow
+                  >
+                    <LoadingButton
+                      loading={isProcessing}
+                      loadingPosition="start"
+                      variant="contained"
+                      sx={{marginRight: "16px"}}
+                      color="primary"
+                      onClick={handleJudgeAllWithDelayTime}
+                    >
+                      Judge All with delay time
                     </LoadingButton>
                   </Tooltip>
                   {props.screenAuthorization?.has(`SCR_CONTEST_MANAGER.BTN_REJUDGE.VIEW`) && <Tooltip
