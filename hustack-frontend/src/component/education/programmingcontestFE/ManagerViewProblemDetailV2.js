@@ -310,7 +310,7 @@ function ManagerViewProblemDetailV2() {
         />
       </Box>
 
-      <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>
+      {problemDetail.sampleTestCase && <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>}
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (

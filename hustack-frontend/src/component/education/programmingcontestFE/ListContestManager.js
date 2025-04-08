@@ -1,13 +1,13 @@
 import withScreenSecurity from "component/withScreenSecurity";
-import { ListContestAll } from "./ListContestAll";
-import { ListContestManagerByRegistration } from "./ListContestManagerByRegistration";
+import {ListContestManagerByRegistration} from "./ListContestManagerByRegistration";
+import {Paper} from "@mui/material";
 
 function ListContestManager() {
   return (
-    <div>
-      <ListContestManagerByRegistration />
-      <ListContestAll />
-    </div>
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
+      <ListContestManagerByRegistration/>
+      {/*<ListContestAll/>*/}
+    </Paper>
   );
 }
 

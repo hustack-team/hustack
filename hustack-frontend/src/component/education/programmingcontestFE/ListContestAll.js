@@ -1,18 +1,20 @@
 import AddIcon from "@material-ui/icons/Add";
-import { LinearProgress } from "@mui/material";
-import { request } from "api";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { toFormattedDateTime } from "utils/dateutils";
+import {Paper} from "@mui/material";
+import {request} from "api";
+import React, {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {toFormattedDateTime} from "utils/dateutils";
 import StandardTable from "../../table/StandardTable";
 
 export function ListContestAll() {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const {t} = useTranslation(["education/programmingcontest/contest", "education/programmingcontest/problem", 'common']);
+  const contestStatuses = getContestStatuses(t)
 
   const columns = [
     {
-      title: "Name",
+      title: t("contestName"),
       field: "contestName",
       render: (rowData) => (
         <Link
@@ -25,11 +27,18 @@ export function ListContestAll() {
         </Link>
       ),
     },
-    { title: "Status", field: "statusId" },
-    // { title: "Role", field: "roleId" },
-    { title: "Created By", field: "userId" },
     {
-      title: "Created At",
+      title: t("common:status"),
+      field: "statusId",
+      render: (rowData) => `${contestStatuses.find(item => item.value === rowData.statusId)?.label || ""}`
+    },
+    // { title: "Role", field: "roleId" },
+    {
+      title: t('common:manager'),
+      field: "userId"
+    },
+    {
+      title: t("common:createdTime"),
       field: "startAt",
       render: (rowData) => toFormattedDateTime(rowData["startAt"]),
     },
@@ -46,10 +55,8 @@ export function ListContestAll() {
   }, []);
 
   return (
-    <>
-      {loading && <LinearProgress />}
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
       <StandardTable
-        title="All Contests"
         columns={columns}
         data={contests}
         hideCommandBar
@@ -59,10 +66,13 @@ export function ListContestAll() {
           search: true,
           sorting: true,
         }}
+        components={{
+          Container: (props) => <Paper {...props} elevation={0}/>,
+        }}
         actions={[
           {
             icon: () => {
-              return <AddIcon fontSize="large" />;
+              return <AddIcon fontSize="large"/>;
             },
             tooltip: "Create new Contest",
             isFreeAction: true,
@@ -72,6 +82,6 @@ export function ListContestAll() {
           },
         ]}
       />
-    </>
+    </Paper>
   );
 }

@@ -34,6 +34,7 @@ export default function ContestStudentList() {
     },
     {
       title: t("common:status"),
+      field: "status",
       render: (rowData) => `${contestStatuses.find(item => item.value === rowData.status)?.label || ""}`
     },
     {title: t('common:manager'), field: "createdBy"},
