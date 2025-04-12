@@ -28,18 +28,20 @@ public class UserRegistrationContestEntity {
     public static final String PERMISSION_FORBIDDEN_SUBMIT = "FORBIDDEN_SUBMIT";
 
     public static List<String> getListPermissions() {
-        List<String> lst = new ArrayList();
-        lst.add(UserRegistrationContestEntity.PERMISSION_SUBMIT);
-        lst.add(UserRegistrationContestEntity.PERMISSION_FORBIDDEN_SUBMIT);
-        return lst;
+        List<String> permissions = new ArrayList<>();
+        permissions.add(UserRegistrationContestEntity.PERMISSION_SUBMIT);
+        permissions.add(UserRegistrationContestEntity.PERMISSION_FORBIDDEN_SUBMIT);
+
+        return permissions;
     }
 
     public static List<String> getListRoles() {
-        List<String> L = new ArrayList();
-        L.add(ROLE_MANAGER);
-        L.add(ROLE_PARTICIPANT);
-        L.add(ROLE_OWNER);
-        return L;
+        List<String> roles = new ArrayList<>();
+        roles.add(ROLE_MANAGER);
+        roles.add(ROLE_PARTICIPANT);
+        roles.add(ROLE_OWNER);
+
+        return roles;
     }
 
     @Id

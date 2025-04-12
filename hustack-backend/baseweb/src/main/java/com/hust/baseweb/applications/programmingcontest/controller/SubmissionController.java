@@ -6,8 +6,8 @@ import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionComment;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
 import com.hust.baseweb.applications.programmingcontest.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -37,7 +37,6 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SubmissionController {
 
-
     ContestSubmissionService contestSubmissionService;
 
     ContestService contestService;
@@ -47,8 +46,6 @@ public class SubmissionController {
     ContestSubmissionCommentService contestSubmissionCommentService;
 
     ProblemTestCaseService problemTestCaseService;
-
-    ContestSubmissionRepo contestSubmissionRepo;
 
     ApiService apiService;
 
@@ -304,12 +301,15 @@ public class SubmissionController {
     @PostMapping(value = "/submissions/file-upload",
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> contestSubmitProblemViaUploadFileV3(
+        HttpServletRequest request,
         Principal principal,
         @RequestPart("dto") ModelContestSubmitProgramViaUploadFile model,
         @RequestPart(value = "file") MultipartFile file
     ) {
         logStudentSubmitToAContest(principal.getName(), model.getContestId(), model);
-        return ResponseEntity.ok().body(submissionService.submitSubmission(principal.getName(), model, file));
+        model.setUserId(principal.getName());
+        model.setSubmittedByUserId(principal.getName());
+        return ResponseEntity.ok().body(submissionService.submit(request, model, file));
     }
 
 
@@ -317,11 +317,14 @@ public class SubmissionController {
     @PostMapping(value = "/teacher/submissions/participant-code",
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> ManagerSubmitCodeOfParticipant(
+        HttpServletRequest request,
         Principal principal,
         @RequestPart("dto") ModelInputManagerSubmitCodeOfParticipant dto,
         @RequestPart("file") MultipartFile file
     ) {
-        return ResponseEntity.ok().body(submissionService.managerSubmitCodeOfParticipant(principal, dto, file));
+        return ResponseEntity
+            .ok()
+            .body(submissionService.managerSubmitCodeOfParticipant(request, principal, dto, file));
     }
 
     @GetMapping("/submissions/users/{userLoginId}")

@@ -1,18 +1,23 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelContestSubmission {
 
-    private String contestId;
-    private String problemId;
-    private String source;
-    private String language;
+    String contestId;
+
+    String problemId;
+
+    String source;
+
+    String language;
+
+    String createdByIp;
 }

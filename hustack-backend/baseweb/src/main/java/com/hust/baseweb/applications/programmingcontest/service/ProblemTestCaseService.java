@@ -71,24 +71,7 @@ public interface ProblemTestCaseService {
         String userId, UUID submissionId
     );
 
-    ModelContestSubmissionResponse submitContestProblemTestCaseByTestCaseWithFile(
-        ModelContestSubmission modelContestSubmission,
-        String userName,
-        String submittedByUserId
-    ) throws Exception;
-
-    ModelContestSubmissionResponse submitContestProblemNotExecuteDueToForbiddenInstructions(
-        ModelContestSubmission modelContestSubmission,
-        String userName,
-        String submittedByUserId
-    ) throws Exception;
-
-    ModelContestSubmissionResponse submitContestProblemStoreOnlyNotExecute(
-        ModelContestSubmission modelContestSubmission,
-        String userName,
-        String submittedByUserId
-    ) throws Exception;
-
+    void sendSubmissionToQueue(ContestSubmissionEntity submission);
 
 //    ModelContestSubmissionResponse submitSolutionOutput(
 //        String solutionOutput,
@@ -199,8 +182,6 @@ public interface ProblemTestCaseService {
     List<ContestSubmission> getNewestSubmissionResults(String userLoginId);
 
     ContestSubmissionEntity getContestSubmissionDetailForTeacher(UUID submissionId);
-
-    ContestSubmissionEntity getContestSubmissionDetailForStudent(String userId, UUID submissionId);
 
     ModelGetContestInfosOfSubmissionOutput getContestInfosOfASubmission(UUID submissionId);
 

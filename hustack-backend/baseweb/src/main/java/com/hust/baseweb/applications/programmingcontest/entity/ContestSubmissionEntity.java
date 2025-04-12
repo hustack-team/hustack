@@ -31,8 +31,6 @@ public class ContestSubmissionEntity {
 
 
     public static final String LANGUAGE_CPP = "CPP";
-    public static final String LANGUAGE_JAVA = "JAVA";
-    public static final String LANGUAGE_PYTHON = "PYTHON3";
 
     public static final String MANAGEMENT_STATUS_ENABLED = "ENABLED";
     public static final String MANAGEMENT_STATUS_DISABLED = "DISABLED";
@@ -64,6 +62,7 @@ public class ContestSubmissionEntity {
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    private UserLogin userLogin;
 
+    // Author
     @Column(name = "user_submission_id")
     private String userId;
 
@@ -95,6 +94,7 @@ public class ContestSubmissionEntity {
     @Column(name = "management_status")
     private String managementStatus;
 
+    // Submitter (may differ from author)
     @Column(name = "submitted_by_user_id")
     private String submittedByUserId;
 
@@ -107,7 +107,6 @@ public class ContestSubmissionEntity {
     @Column(name = "last_updated_by_user_id")
     private String lastUpdatedByUserId;
 
-
     @Column(name = "message")
     private String message;
 
@@ -116,5 +115,8 @@ public class ContestSubmissionEntity {
 
     @Column(name="violate_forbidden_instruction_message")
     private String violateForbiddenInstructionMessage;
+
+    @Column(name="created_by_ip")
+    private String createdByIp;
 
 }
