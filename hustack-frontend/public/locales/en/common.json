@@ -45,5 +45,6 @@
   "submit": "Submit",
   "refresh": "Refresh",
   "registered": "Registered",
-  "complete": "Complete"
+  "complete": "Complete",
+  "reset": "Reset"
 }

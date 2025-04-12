@@ -15,6 +15,7 @@ import ContestManagerRankingPercentageNew from "./ContestManagerRankingPercentag
 import ContestManagerUserSubmission from "./ContestManagerUserSubmission";
 import ContestManagerUserSubmissionGroup from "./ContestManagerUserSubmissionGroup";
 import ContestResultDistribution from "./ContestResultDistribution";
+import {Paper} from "@mui/material";
 
 function ContestManager({screenAuthorization}) {
   const { contestId } = useParams();
@@ -80,8 +81,11 @@ function ContestManager({screenAuthorization}) {
       </TabPanel> */}
 
       <TabPanel value={selectedTab} index={4} dir={"ltr"}>
-        <ContestManagerUserSubmission contestId={contestId} screenAuthorization={screenAuthorization}/>
-        <ContestManagerUserSubmissionGroup contestId={contestId} />
+        <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
+          <ContestManagerUserSubmission contestId={contestId} screenAuthorization={screenAuthorization}/>
+          <div style={{height: 24}}></div>
+          <ContestManagerUserSubmissionGroup contestId={contestId}/>
+        </Paper>
       </TabPanel>
 
       <TabPanel value={selectedTab} index={5} dir={"ltr"}>
