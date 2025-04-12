@@ -59,6 +59,7 @@ export default function StudentViewProblemList() {
     {
       title: t("education/programmingcontest/testcase:point"),
       field: "maxSubmittedPoint",
+      type: 'numeric',
       render: (rowData) => (
         <>
           {

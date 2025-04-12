@@ -64,15 +64,16 @@ const editorStyle = {
 };
 
 const ERR_STATUS = [
-  "TIME_OUT",
-  "PARTICIPANT_NOT_APPROVED_OR_REGISTERED",
-  "PARTICIPANT_HAS_NOT_PERMISSION_TO_SUBMIT",
+  "NOT_FOUND",
+  "NOT_ALLOWED_TO_SUBMIT",
+  "NOT_ALLOWED_LANGUAGE",
+  "PARTICIPANT_NOT_REGISTERED_OR_APPROVED",
+  "PARTICIPANT_HAS_NO_PERMISSION_TO_SUBMIT",
+  "SUBMISSION_NOT_ALLOWED",
   "MAX_NUMBER_SUBMISSIONS_REACHED",
   "SOURCE_CODE_REQUIRED",
   "MAX_SOURCE_CODE_LENGTH_VIOLATIONS",
   "SUBMISSION_INTERVAL_VIOLATIONS",
-  "SUBMISSION_NOT_ALLOWED",
-  "ILLEGAL_LANGUAGE",
 ];
 
 export default function StudentViewProgrammingContestProblemDetail() {
@@ -85,8 +86,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [listLanguagesAllowed, setListLanguagesAllowed] = useState([]);
-  const [status, setStatus] = useState("");
-  const [message, setMessage] = useState("");
+  // const [status, setStatus] = useState("");
+  // const [message, setMessage] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
   const [submissionMode, setSubmissionMode] = useState(
     SUBMISSION_MODE_SOURCE_CODE
@@ -170,18 +171,20 @@ export default function StudentViewProgrammingContestProblemDetail() {
       "post",
       "/submissions/file-upload",
       (res) => {
+        setIsProcessing(false);
         res = res.data;
         listSubmissionRef.current.refreshSubmission();
         inputRef.current.value = null;
 
         if (ERR_STATUS.includes(res.status)) {
           errorNoti(res.message, 3000);
-        } else successNoti("Submitted", 3000);
+        } else {
+          successNoti("Submitted", 3000);
+        }
 
-        setStatus(res.status);
-        setMessage(res.message);
+        // setStatus(res.status);
+        // setMessage(res.message);
 
-        setIsProcessing(false);
         setFile(null);
         inputRef.current.value = null;
       },
@@ -191,7 +194,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setFile(null);
           inputRef.current.value = null;
 
-          console.error(e);
+          errorNoti(t("common:error", 3000))
         },
       },
       formData,

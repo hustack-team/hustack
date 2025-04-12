@@ -1,5 +1,7 @@
 package com.hust.baseweb.utils;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -105,4 +107,17 @@ public class CommonUtils {
         return PageRequest.of(page, size, sort);
     }
 
+    public static String getClientIp(HttpServletRequest request) {
+        String ip = StringUtils.trimToNull(request.getHeader("X-Real-IP"));
+        if (StringUtils.isNotBlank(ip) && !"unknown".equalsIgnoreCase(ip)) {
+            return ip;
+        }
+
+        ip = StringUtils.trimToNull(request.getHeader("X-Forwarded-For"));
+        if (StringUtils.isNotBlank(ip) && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
+    }
 }
