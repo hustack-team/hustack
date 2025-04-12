@@ -21,6 +21,7 @@ import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritychec
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.ProblemProjection;
+import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
@@ -2223,13 +2224,20 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Override
     public Page<ContestSubmission> findContestSubmissionByContestIdPaging(
-        Pageable pageable,
         String contestId,
-        String searchTerm
+        SubmissionFilter filter
     ) {
-        searchTerm = searchTerm.toLowerCase();
+        Pageable pageable = CommonUtils.getPageable(
+            filter.getPage(),
+            filter.getSize(),
+            Sort.by("createdAt").descending());
+
         return contestSubmissionPagingAndSortingRepo
-            .searchSubmissionInContestPaging(contestId, searchTerm, searchTerm, pageable)
+            .searchSubmissionInContestPaging(
+                contestId,
+                StringUtils.defaultString(filter.getUserId()),
+                StringUtils.defaultString(filter.getProblemId()),
+                pageable)
             .map(submission -> ContestSubmission
                 .builder()
                 .contestSubmissionId(submission.getContestSubmissionId())

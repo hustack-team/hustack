@@ -7,6 +7,7 @@ import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.model.ProblemFilter;
+import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.model.dto.ProblemDTO;
 import org.springframework.data.domain.Page;
@@ -152,9 +153,8 @@ public interface ProblemTestCaseService {
     void deleteUserContest(ModelAddUserToContest modelAddUserToContest) throws MiniLeetCodeException;
 
     Page<ContestSubmission> findContestSubmissionByContestIdPaging(
-        Pageable pageable,
         String contestId,
-        String searchTerm
+        SubmissionFilter filter
     );
 
     Page<ContestSubmission> findContestGroupSubmissionByContestIdPaging(
