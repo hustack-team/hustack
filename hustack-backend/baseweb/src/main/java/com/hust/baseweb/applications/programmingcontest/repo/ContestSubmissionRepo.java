@@ -154,7 +154,8 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
                    "    csn.test_case_pass as testCasePass, " +
                    "    csn.source_code_language as sourceCodeLanguage, " +
                    "    csn.created_stamp as createdAt, " +
-                   "    csn.status as status " +
+                   "    csn.status as status, " +
+                   "    csn.created_by_ip as createdByIp " +
                    "from " +
                    "    contest_submission_new csn " +
                    "left join user_login ul on " +
