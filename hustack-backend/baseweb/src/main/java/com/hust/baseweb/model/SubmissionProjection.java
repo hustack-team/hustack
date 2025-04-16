@@ -22,4 +22,6 @@ public interface SubmissionProjection {
 
     Date getCreatedAt();
 
+    String getCreatedByIp();
+
 }

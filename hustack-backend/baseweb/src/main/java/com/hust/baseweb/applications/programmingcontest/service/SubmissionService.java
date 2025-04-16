@@ -1,13 +1,11 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
-import com.hust.baseweb.applications.programmingcontest.model.ModelContestSubmitProgramViaUploadFile;
-import com.hust.baseweb.applications.programmingcontest.model.ModelEvaluateBatchSubmissionResponse;
-import com.hust.baseweb.applications.programmingcontest.model.ModelInputManagerSubmitCodeOfParticipant;
-import com.hust.baseweb.applications.programmingcontest.model.SubmissionDTO;
+import com.hust.baseweb.applications.programmingcontest.model.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 
 public interface SubmissionService {
@@ -24,4 +22,8 @@ public interface SubmissionService {
     ModelEvaluateBatchSubmissionResponse judgeAllSubmissionsOfContest(String contestId);
 
     SubmissionDTO findById(String userId, UUID submissionId);
+
+    CodeClassificationResult detectCodeAuthorshipOfSubmission(UUID submissionId);
+
+    CodeClassificationResponse detectCodeAuthorship(List<CodeClassificationRequest> requests);
 }

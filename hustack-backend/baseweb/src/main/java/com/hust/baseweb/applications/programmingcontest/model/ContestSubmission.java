@@ -43,4 +43,6 @@ public class ContestSubmission {
     String violationForbiddenInstructionMessage;
 
     String createdByIp;
+
+    String codeAuthorship;
 }

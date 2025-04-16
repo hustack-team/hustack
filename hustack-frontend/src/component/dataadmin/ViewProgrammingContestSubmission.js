@@ -133,6 +133,10 @@ const ViewProgrammingContestSubmission = () => {
       render: (rowData) => mapLanguageToDisplayName(rowData.sourceCodeLanguage)
     },
     {
+      title: "IP",
+      field: "createdByIp",
+    },
+    {
       title: t("common:createdTime"),
       cellStyle: {minWidth: 130},
       render: (rowData) => toFormattedDateTime(rowData.createdAt)

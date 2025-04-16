@@ -28,5 +28,6 @@
     "disabled": "Đã xoá",
     "running": "Đang diễn ra",
     "over": "Đã kết thúc"
-  }
+  },
+  "detectCodeAuthorship": "Kiểm tra mã nguồn được viết bởi con người hay AI"
 }

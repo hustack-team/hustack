@@ -46,5 +46,6 @@
   "refresh": "Refresh",
   "registered": "Registered",
   "complete": "Complete",
-  "reset": "Reset"
+  "reset": "Reset",
+  "codeAuthorship": "Authorship (prediction)"
 }

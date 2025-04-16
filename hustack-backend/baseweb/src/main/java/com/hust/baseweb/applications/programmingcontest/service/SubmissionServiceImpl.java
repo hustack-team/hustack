@@ -4,6 +4,8 @@ import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
+import com.hust.baseweb.config.HustackAiServiceConfig;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,19 +16,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.Tika;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.*;
 import static com.hust.baseweb.utils.CommonUtils.getClientIp;
@@ -57,6 +59,10 @@ public class SubmissionServiceImpl implements SubmissionService {
     TestCaseRepo testCaseRepo;
 
     ContestSubmissionTestCaseEntityRepo contestSubmissionTestCaseEntityRepo;
+
+    WebClient.Builder webClientBuilder;
+
+    HustackAiServiceConfig hustackAiServiceConfig;
 
     /**
      * @param model
@@ -280,6 +286,54 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         return mapper.map(submission, SubmissionDTO.class);
+    }
+
+    /**
+     * @param submissionId
+     * @return
+     */
+    @Override
+    public CodeClassificationResult detectCodeAuthorshipOfSubmission(UUID submissionId) {
+        ContestSubmissionEntity submission = contestSubmissionRepo
+            .findById(submissionId)
+            .orElseThrow(() -> new EntityNotFoundException("Submission with ID " + submissionId + " not found"));
+
+        CodeClassificationResponse response = detectCodeAuthorship(List.of(new CodeClassificationRequest(
+            submission.getSourceCode(),
+            submission.getSourceCodeLanguage(),
+            CodeClassificationMode.ADVANCED)));
+
+        CodeClassificationResult result = response.results().get(0);
+        submission.setCodeAuthorship("AI".equals(result.source()) ? result.aiModel() : result.source());
+        contestSubmissionRepo.save(submission);
+        return result;
+    }
+
+    /**
+     * Determine the authorship of a code snippet (whether it is written by a human or AI).
+     *
+     * @param requests List of {@link CodeClassificationRequest} objects containing code, language, and mode.
+     * @return {@link CodeClassificationResponse} containing the result of authorship analysis.
+     */
+    @Override
+    public CodeClassificationResponse detectCodeAuthorship(List<CodeClassificationRequest> requests) {
+        List<Map<String, Object>> requestBody = requests.stream().map(request -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("code", request.code());
+            map.put("language", request.language());
+            map.put("mode", request.mode().getValue());
+            return map;
+        }).collect(Collectors.toList());
+
+        WebClient webClient = webClientBuilder.baseUrl(hustackAiServiceConfig.getUri()).build();
+        return webClient.post()
+                        .uri("/classify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(requestBody)
+                        .retrieve()
+                        .bodyToMono(CodeClassificationResponse.class)
+                        .doOnError(error -> log.error(error.getMessage()))
+                        .block();
     }
 
     private ContestSubmissionEntity getContestSubmissionDetailForParticipant(String userId, UUID submissionId) {

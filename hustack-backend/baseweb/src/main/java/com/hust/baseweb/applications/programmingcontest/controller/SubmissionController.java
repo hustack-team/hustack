@@ -362,20 +362,22 @@ public class SubmissionController {
     @GetMapping("/submissions/{submissionId}/comments")
     public ResponseEntity<List<CommentDTO>> getComments(@PathVariable UUID submissionId) {
         ContestSubmissionEntity submission = contestSubmissionService.getSubmissionById(submissionId);
-
-        String contestId = submission.getContestId();
-
-        ContestEntity contest = contestService.findContest(contestId);
+        ContestEntity contest = contestService.findContest(submission.getContestId());
 
         if (!"Y".equals(contest.getContestShowComment())) {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
         List<CommentDTO> comments = commentService.getAllCommentsBySubmissionId(submissionId);
-
         Collections.reverse(comments);
 
         return ResponseEntity.ok(comments);
+    }
+
+    @Secured("ROLE_TEACHER")
+    @GetMapping("/submissions/{submissionId}/code-authorship")
+    public ResponseEntity<?> detectCodeAuthorshipOfSubmission(@PathVariable("submissionId") UUID submissionId) {
+        return ResponseEntity.ok().body(submissionService.detectCodeAuthorshipOfSubmission(submissionId));
     }
 
 //    @Secured("ROLE_TEACHER")
