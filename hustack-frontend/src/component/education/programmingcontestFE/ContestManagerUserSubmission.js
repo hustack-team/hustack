@@ -1,5 +1,5 @@
 import {LoadingButton} from "@mui/lab";
-import {Divider, Grid, Paper, Stack, TextField, Tooltip, Typography} from "@mui/material";
+import {Divider, Grid, IconButton, Paper, Stack, TextField, Tooltip, Typography} from "@mui/material";
 import {request, saveFile} from "api";
 import HustModal from "component/common/HustModal";
 import StandardTable from "component/table/StandardTable";
@@ -16,6 +16,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import PrimaryButton from "../../button/PrimaryButton";
 import SearchIcon from "@mui/icons-material/Search";
 import {localeOption} from "../../../utils/NumberFormat";
+import {RiCodeSSlashLine} from "react-icons/ri";
 
 const filterInitValue = {
   userId: "",
@@ -209,6 +210,13 @@ export default function ContestManagerUserSubmission(props) {
         title: "IP",
         field: "createdByIp",
       },
+      // {
+      //   title: t("common:codeAuthorship"),
+      //   field: "codeAuthorship",
+      //   cellStyle: {
+      //     minWidth: 110,
+      //   },
+      // },
       {
         title: t("common:createdTime"),
         field: "createAt",
@@ -219,9 +227,22 @@ export default function ContestManagerUserSubmission(props) {
       {
         title: t("common:action"),
         align: "center",
-        cellStyle: {minWidth: 100},
+        cellStyle: {minWidth: 120},
         render: (rowData) => (
-          <RejudgeButton submissionId={rowData.contestSubmissionId}/>
+          <Stack spacing={1} direction="row" justifyContent='center'>
+            <RejudgeButton submissionId={rowData.contestSubmissionId}/>
+            {/*<Tooltip title={t('education/programmingcontest/contest:detectCodeAuthorship')}>*/}
+            {/*  <IconButton*/}
+            {/*    variant="contained"*/}
+            {/*    color="primary"*/}
+            {/*    onClick={() => {*/}
+            {/*      detectCodeAuthorship(rowData.contestSubmissionId);*/}
+            {/*    }}*/}
+            {/*  >*/}
+            {/*    <RiCodeSSlashLine/>*/}
+            {/*  </IconButton>*/}
+            {/*</Tooltip>*/}
+          </Stack>
         ),
       },
     ];
@@ -302,6 +323,21 @@ export default function ContestManagerUserSubmission(props) {
 
   function handleSubmitCodeParticipant() {
     setIsOpenManagerSubmitCodeOfParticipant(true);
+  }
+
+  const detectCodeAuthorship = (submissionId) => {
+    request(
+      "GET",
+      `/submissions/${submissionId}/code-authorship`,
+      (res) => {
+        handleSearch()
+      },
+      {
+        onError: (e) => {
+          errorNoti(t("common:error"), 3000)
+        },
+      },
+    );
   }
 
   useEffect(() => {
