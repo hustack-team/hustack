@@ -210,13 +210,13 @@ export default function ContestManagerUserSubmission(props) {
         title: "IP",
         field: "createdByIp",
       },
-      {
-        title: t("common:codeAuthorship"),
-        field: "codeAuthorship",
-        cellStyle: {
-          minWidth: 110,
-        },
-      },
+      // {
+      //   title: t("common:codeAuthorship"),
+      //   field: "codeAuthorship",
+      //   cellStyle: {
+      //     minWidth: 110,
+      //   },
+      // },
       {
         title: t("common:createdTime"),
         field: "createAt",
@@ -231,17 +231,17 @@ export default function ContestManagerUserSubmission(props) {
         render: (rowData) => (
           <Stack spacing={1} direction="row">
             <RejudgeButton submissionId={rowData.contestSubmissionId}/>
-            <Tooltip title={t('education/programmingcontest/contest:detectCodeAuthorship')}>
-              <IconButton
-                variant="contained"
-                color="primary"
-                onClick={() => {
-                  detectCodeAuthorship(rowData.contestSubmissionId);
-                }}
-              >
-                <RiCodeSSlashLine/>
-              </IconButton>
-            </Tooltip>
+            {/*<Tooltip title={t('education/programmingcontest/contest:detectCodeAuthorship')}>*/}
+            {/*  <IconButton*/}
+            {/*    variant="contained"*/}
+            {/*    color="primary"*/}
+            {/*    onClick={() => {*/}
+            {/*      detectCodeAuthorship(rowData.contestSubmissionId);*/}
+            {/*    }}*/}
+            {/*  >*/}
+            {/*    <RiCodeSSlashLine/>*/}
+            {/*  </IconButton>*/}
+            {/*</Tooltip>*/}
           </Stack>
         ),
       },
