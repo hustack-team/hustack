@@ -229,7 +229,7 @@ export default function ContestManagerUserSubmission(props) {
         align: "center",
         cellStyle: {minWidth: 120},
         render: (rowData) => (
-          <Stack spacing={1} direction="row">
+          <Stack spacing={1} direction="row" justifyContent='center'>
             <RejudgeButton submissionId={rowData.contestSubmissionId}/>
             {/*<Tooltip title={t('education/programmingcontest/contest:detectCodeAuthorship')}>*/}
             {/*  <IconButton*/}
