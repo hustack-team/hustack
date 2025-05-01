@@ -1,41 +1,40 @@
-import {Document, Font, Image, Page, StyleSheet, Text, View,} from "@react-pdf/renderer";
+import {
+  Document,
+  Font,
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer";
 import parse from "html-react-parser";
 import Footer from "./Footer";
-import {createState} from "@hookstate/core";
+import { createState } from "@hookstate/core";
 
-export const subPageTotalPagesState = createState({
-  fulfilled: false,
-  totalPages: [],
-});
+const options = {
+  cMapUrl: "https://unpkg.com/pdfjs-dist@4.7.76/cmaps/", 
+  cMapPacked: true,
+};
 
 Font.register({
-  family: "Inter",
+  family: "Roboto",
   fonts: [
     {
-      src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf",
+      src: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf",
       fontWeight: "normal",
     },
     {
-      src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
+      src: "https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc9.ttf",
       fontWeight: "bold",
     },
   ],
-  // fonts: [
-  //   {
-  //     src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter (web)/Inter-Light.woff",
-  //     fontWeight: "normal",
-  //   },
-  //   {
-  //     src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter (web)/Inter-Regular.woff",
-  //     fontWeight: "bold",
-  //   },
-  // ],
 });
 
-// Create styles
+Font.registerHyphenationCallback((word) => [word]);
+
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Inter",
+    fontFamily: "Roboto",
     fontSize: "12px",
     padding: 40,
     flexGrow: 1,
@@ -72,10 +71,15 @@ const styles = StyleSheet.create({
 const checkBoxBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACoSURBVFhH7dexDcMgFEXRn6zADsxFh0TFFOxAx1zsQE3pBERK632chuKdBhkJ6wpZNn5dX3KQ9xqPwSCEQQiDkOOCVC/GWquUUqS1tmb2GGPEOSfW2jVzT7VD/8QMY+24h4Zqh7z3c8w5z3HXzno+1AiDEAYhDEIYhDAIOS5I9bWPMUrvfV09M85EKaV1dU+1QyGEecOnfgc0Df5KIwxCGIQwCDksSOQD5Zw1Tp9gAfMAAAAASUVORK5CYII=";
 
-// Create Document Component
+export const subPageTotalPagesState = createState({
+  fulfilled: false,
+  totalPages: [],
+});
+
+// Component tạo PDF document
 function ExamQuestionsOfParticipantPDFDocument({ data }) {
   return (
-    <Document>
+    <Document options={options}>
       {data?.map(
         (
           {
@@ -105,10 +109,9 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
                   Start Time: {scheduleDatetime}
                 </Text>
                 <Text style={styles.textLine}>
-                  Duration: {duration} minutes{" "}
+                  Duration: {duration} minutes
                 </Text>
 
-                {/* Questions */}
                 {listQuestion?.map((q, qIndex) => (
                   <View key={q.questionId} style={styles.question}>
                     {parse(q.statement).map((ele, eIndex) => {
@@ -126,7 +129,7 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
                                 if (ulChild.type === "li")
                                   return (
                                     <Text style={styles.ulChild}>
-                                      &#8226; {ulChild.props.children}
+                                      • {ulChild.props.children}
                                     </Text>
                                   );
                                 else if (ulChild !== "\n")
@@ -151,7 +154,6 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
                       }
                     })}
 
-                    {/* Question images */}
                     {q.attachment?.length > 0 &&
                       q.attachment.map((imageBase64, index) => (
                         <View key={index} style={styles.imageContainer}>
@@ -164,7 +166,6 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
                         </View>
                       ))}
 
-                    {/* Question answers */}
                     {q.quizChoiceAnswerList.map((ans) => (
                       <View
                         key={ans.choiceAnswerId}
@@ -192,7 +193,6 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
               </View>
               <Footer />
 
-              {/* Calculate value for subPageTotalPagesState[idx] */}
               <Text
                 render={({
                   pageNumber,
@@ -214,11 +214,10 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
                 }}
               />
             </Page>
-            {/* Blank pages */}
             {subPageTotalPagesState.totalPages[idx].get() > 0 &&
               Array.from(
-                new Array(subPageTotalPagesState.totalPages[idx].get())
-              ).map((_) => <Page size="A4" />)}
+                Array(subPageTotalPagesState.totalPages[idx].get())
+              ).map((_, i) => <Page key={i} size="A4" />)}
           </>
         )
       )}
