@@ -213,7 +213,7 @@
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>fontbox</artifactId>
-            <version>2.0.33</version>
+            <version>3.0.5</version>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.google.ortools</groupId>-->
