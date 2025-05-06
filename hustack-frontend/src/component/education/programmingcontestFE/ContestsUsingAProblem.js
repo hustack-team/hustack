@@ -2,12 +2,14 @@ import React, {useEffect, useState} from "react";
 import {request} from "api";
 import {Link} from "react-router-dom";
 import StandardTable from "../../table/StandardTable";
-import {Box, Paper, Stack, Typography} from "@mui/material";
+import {Paper, Stack, Typography} from "@mui/material";
 import {defaultDatetimeFormat} from "../../../utils/dateutils";
 import {useTranslation} from "react-i18next";
+import {getContestStatuses} from "./EditContest";
 
 export default function ContestsUsingAProblem(props) {
   const {t} = useTranslation(["education/programmingcontest/contest", "education/programmingcontest/problem", 'common']);
+  const contestStatuses = getContestStatuses(t)
   const problemId = props.problemId;
   const [contests, setContests] = useState([]);
   const columns = [
@@ -36,6 +38,7 @@ export default function ContestsUsingAProblem(props) {
     {
       title: t("common:status"),
       field: "statusId",
+      render: (rowData) => `${contestStatuses.find(item => item.value === rowData.statusId)?.label || ""}`
     },
     {
       title: t("common:createdTime"),
@@ -53,10 +56,13 @@ export default function ContestsUsingAProblem(props) {
   useEffect(() => {
     getContests();
   }, []);
+
   return (
-    <Box sx={{marginTop: "36px"}}>
+    <>
       <Stack direction="row" justifyContent='space-between'>
-        <Typography variant="h6" sx={{mb: 1.5}}>{t("education/programmingcontest/problem:contestUsingProblem")}</Typography>
+        <Typography variant="h6" sx={{mb: 1.5}}>
+          {t("education/programmingcontest/problem:contestUsingProblem")}
+        </Typography>
       </Stack>
       <StandardTable
         columns={columns}
@@ -73,6 +79,6 @@ export default function ContestsUsingAProblem(props) {
           Container: (props) => <Paper {...props} elevation={0}/>,
         }}
       />
-    </Box>
+    </>
   );
 }

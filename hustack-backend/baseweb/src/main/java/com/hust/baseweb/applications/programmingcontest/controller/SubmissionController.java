@@ -6,12 +6,8 @@ import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionComment;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ModelInputGetContestSubmissionPageOfPeriod;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ModelResponseGetContestSubmissionOfPeriod;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ModelResponseGetContestSubmissionPage;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
 import com.hust.baseweb.applications.programmingcontest.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,7 +37,6 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SubmissionController {
 
-
     ContestSubmissionService contestSubmissionService;
 
     ContestService contestService;
@@ -51,10 +46,6 @@ public class SubmissionController {
     ContestSubmissionCommentService contestSubmissionCommentService;
 
     ProblemTestCaseService problemTestCaseService;
-
-    ContestRepo contestRepo;
-
-    ContestSubmissionRepo contestSubmissionRepo;
 
     ApiService apiService;
 
@@ -113,30 +104,10 @@ public class SubmissionController {
     @GetMapping("/student/submissions/{submissionId}/general-info")
     public ResponseEntity<?> getContestSubmissionDetailViewedByParticipant(
         Principal principal,
-        @PathVariable("submissionId") UUID submissionId
+        @PathVariable("submissionId")
+        UUID submissionId
     ) {
-        ContestSubmissionEntity contestSubmission;
-        try {
-            contestSubmission = problemTestCaseService.getContestSubmissionDetailForStudent(
-                principal.getName(), submissionId);
-            if (contestSubmission != null) {
-                String contestId = contestSubmission.getContestId();
-                if (contestId != null) {
-                    ContestEntity contest = contestRepo.findContestByContestId(contestId);
-                    if (contest.getParticipantViewSubmissionMode() != null) {
-                        if (contest
-                            .getParticipantViewSubmissionMode()
-                            .equals(ContestEntity.PARTICIPANT_VIEW_SUBMISSION_MODE_DISABLED)) {
-                            contestSubmission.setSourceCode("HIDDEN");
-                        }
-                    }
-                }
-            }
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        }
-
-        return ResponseEntity.ok().body(contestSubmission);
+        return ResponseEntity.ok().body(submissionService.findById(principal.getName(), submissionId));
     }
 
     @Async
@@ -330,12 +301,15 @@ public class SubmissionController {
     @PostMapping(value = "/submissions/file-upload",
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> contestSubmitProblemViaUploadFileV3(
+        HttpServletRequest request,
         Principal principal,
         @RequestPart("dto") ModelContestSubmitProgramViaUploadFile model,
         @RequestPart(value = "file") MultipartFile file
     ) {
         logStudentSubmitToAContest(principal.getName(), model.getContestId(), model);
-        return ResponseEntity.ok().body(submissionService.submitSubmission(principal.getName(), model, file));
+        model.setUserId(principal.getName());
+        model.setSubmittedByUserId(principal.getName());
+        return ResponseEntity.ok().body(submissionService.submit(request, model, file));
     }
 
 
@@ -343,11 +317,14 @@ public class SubmissionController {
     @PostMapping(value = "/teacher/submissions/participant-code",
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> ManagerSubmitCodeOfParticipant(
+        HttpServletRequest request,
         Principal principal,
         @RequestPart("dto") ModelInputManagerSubmitCodeOfParticipant dto,
         @RequestPart("file") MultipartFile file
     ) {
-        return ResponseEntity.ok().body(submissionService.managerSubmitCodeOfParticipant(principal, dto, file));
+        return ResponseEntity
+            .ok()
+            .body(submissionService.managerSubmitCodeOfParticipant(request, principal, dto, file));
     }
 
     @GetMapping("/submissions/users/{userLoginId}")
@@ -385,54 +362,23 @@ public class SubmissionController {
     @GetMapping("/submissions/{submissionId}/comments")
     public ResponseEntity<List<CommentDTO>> getComments(@PathVariable UUID submissionId) {
         ContestSubmissionEntity submission = contestSubmissionService.getSubmissionById(submissionId);
-
-        String contestId = submission.getContestId();
-
-        ContestEntity contest = contestService.findContest(contestId);
+        ContestEntity contest = contestService.findContest(submission.getContestId());
 
         if (!"Y".equals(contest.getContestShowComment())) {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
         List<CommentDTO> comments = commentService.getAllCommentsBySubmissionId(submissionId);
-
         Collections.reverse(comments);
 
         return ResponseEntity.ok(comments);
     }
 
-    @PostMapping("/get-contest-submissions-date-between")
-    public ResponseEntity<?> getContestSubmissionDateBetween(
-        Principal principal, @RequestBody
-        ModelResponseGetContestSubmissionOfPeriod model
-    ) {
-        List<ContestSubmissionEntity> res = contestSubmissionRepo.findAllByCreatedAtBetween(
-            model.getFromDateTime(),
-            model.getToDateTime());
-        return ResponseEntity.ok().body(res);
+    @Secured("ROLE_TEACHER")
+    @GetMapping("/submissions/{submissionId}/code-authorship")
+    public ResponseEntity<?> detectCodeAuthorshipOfSubmission(@PathVariable("submissionId") UUID submissionId) {
+        return ResponseEntity.ok().body(submissionService.detectCodeAuthorshipOfSubmission(submissionId));
     }
-
-    @PostMapping("/get-contest-submissions-page-date-between")
-    public ResponseEntity<?> getContestSubmissionPageDateBetween(
-        Principal principal, @RequestBody
-        ModelInputGetContestSubmissionPageOfPeriod m
-    ) {
-        List<ContestSubmissionEntity> L = contestSubmissionRepo.findPageByCreatedAtBetween(
-            m.getFromDate(),
-            m.getToDate(),
-            m.getOffset(),
-            m.getLimit());
-        log.info(
-            "getContestSubmissionPageDateBetween, from {} to {}, Limit {} offset = {}, GOT sz = {}",
-            m.getFromDate(),
-            m.getToDate(),
-            m.getLimit(),
-            m.getOffset(),
-            L.size());
-        ModelResponseGetContestSubmissionPage res = new ModelResponseGetContestSubmissionPage(L);
-        return ResponseEntity.ok().body(res);
-    }
-
 
 //    @Secured("ROLE_TEACHER")
 //    @PutMapping("/teacher/submissions/{submissionId}/comments/{commentId}")

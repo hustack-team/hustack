@@ -40,5 +40,12 @@
   "id": "{{name}} ID",
   "user": "User",
   "fromDate": "From date",
-  "toDate": "To date"
+  "toDate": "To date",
+  "selectFile": "Select file",
+  "submit": "Submit",
+  "refresh": "Refresh",
+  "registered": "Registered",
+  "complete": "Complete",
+  "reset": "Reset",
+  "codeAuthorship": "Authorship (prediction)"
 }

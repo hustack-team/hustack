@@ -3,46 +3,51 @@ package com.hust.baseweb.applications.programmingcontest.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
 import java.util.UUID;
 
-@Data
-@Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ContestSubmission {
+public class SubmissionDTO {
 
     UUID contestSubmissionId;
 
     String problemId;
 
-    String problemName;
-
     String contestId;
 
     String userId;
 
-    String fullname;
-
     String testCasePass;
 
+    String sourceCode;
+
     String sourceCodeLanguage;
+
+    Long runtime;
+
+    float memoryUsage;
 
     Long point;
 
     String status;
 
-    String message;
-
-    String createAt;
-
     String managementStatus;
 
-    String violationForbiddenInstruction;
+    String submittedByUserId;
 
-    String violationForbiddenInstructionMessage;
+    Date createdAt;
 
-    String createdByIp;
+//    Date updateAt;
 
-    String codeAuthorship;
+//    String lastUpdatedByUserId;
+
+    String message;
+
+//    String violateForbiddenInstruction;
+
+//    String violateForbiddenInstructionMessage;
 }

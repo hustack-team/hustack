@@ -14,7 +14,6 @@ import {request} from "../../../api";
 import FileUploadZone from "../../../utils/FileUpload/FileUploadZone";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustCodeLanguagePicker from "../../common/HustCodeLanguagePicker";
-import HustContainerCard from "../../common/HustContainerCard";
 import {
   COMPUTER_LANGUAGES,
   DEFAULT_CODE_SEGMENT_C,
@@ -27,6 +26,8 @@ import {
 import StudentViewSubmission from "./StudentViewSubmission";
 import {useTranslation} from "react-i18next";
 import _ from "lodash";
+import ProgrammingContestLayout from "./ProgrammingContestLayout";
+import {useHistory} from "react-router-dom";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -63,30 +64,30 @@ const editorStyle = {
 };
 
 const ERR_STATUS = [
-  "TIME_OUT",
-  "PARTICIPANT_NOT_APPROVED_OR_REGISTERED",
-  "PARTICIPANT_HAS_NOT_PERMISSION_TO_SUBMIT",
+  "NOT_FOUND",
+  "NOT_ALLOWED_TO_SUBMIT",
+  "NOT_ALLOWED_LANGUAGE",
+  "PARTICIPANT_NOT_REGISTERED_OR_APPROVED",
+  "PARTICIPANT_HAS_NO_PERMISSION_TO_SUBMIT",
+  "SUBMISSION_NOT_ALLOWED",
   "MAX_NUMBER_SUBMISSIONS_REACHED",
   "SOURCE_CODE_REQUIRED",
   "MAX_SOURCE_CODE_LENGTH_VIOLATIONS",
   "SUBMISSION_INTERVAL_VIOLATIONS",
-  "SUBMISSION_NOT_ALLOWED",
-  "ILLEGAL_LANGUAGE",
 ];
 
 export default function StudentViewProgrammingContestProblemDetail() {
-  const params = useParams();
-  const problemId = params.problemId;
-  const contestId = params.contestId;
-  const {t} = useTranslation(["education/programmingcontest/problem"]);
+  const {problemId, contestId} = useParams();
+  const history = useHistory();
+  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
 
   const [problem, setProblem] = useState(null);
   const [testCases, setTestCases] = useState([]);
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [listLanguagesAllowed, setListLanguagesAllowed] = useState([]);
-  const [status, setStatus] = useState("");
-  const [message, setMessage] = useState("");
+  // const [status, setStatus] = useState("");
+  // const [message, setMessage] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
   const [submissionMode, setSubmissionMode] = useState(
     SUBMISSION_MODE_SOURCE_CODE
@@ -170,18 +171,20 @@ export default function StudentViewProgrammingContestProblemDetail() {
       "post",
       "/submissions/file-upload",
       (res) => {
+        setIsProcessing(false);
         res = res.data;
         listSubmissionRef.current.refreshSubmission();
         inputRef.current.value = null;
 
         if (ERR_STATUS.includes(res.status)) {
           errorNoti(res.message, 3000);
-        } else successNoti("Submitted", 3000);
+        } else {
+          successNoti("Submitted", 3000);
+        }
 
-        setStatus(res.status);
-        setMessage(res.message);
+        // setStatus(res.status);
+        // setMessage(res.message);
 
-        setIsProcessing(false);
         setFile(null);
         inputRef.current.value = null;
       },
@@ -191,7 +194,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setFile(null);
           inputRef.current.value = null;
 
-          console.error(e);
+          errorNoti(t("common:error", 3000))
         },
       },
       formData,
@@ -316,21 +319,24 @@ export default function StudentViewProgrammingContestProblemDetail() {
     if (isSubmitCode > 0) handleFormSubmit(null);
   }, [isSubmitCode]);
 
+  const handleExit = () => {
+    history.push(`/programming-contest/student-view-contest-detail/${contestId}`);
+  }
+
   return (
-    <HustContainerCard
-      title={"Problem: " + (problem ? problem.problemName : "")}
-    >
-      <Box>
-        <Typography variant="h5">Description</Typography>
-        {/*{ReactHtmlParser(problemDescription)}*/}
-        <Editor
-          toolbarHidden
-          editorState={editorStateDescription}
-          handlePastedText={() => false}
-          readOnly
-          editorStyle={editorStyle.editor}
-        />
-        {/*
+    <ProgrammingContestLayout title={problem ? problem.problemName : ""} onBack={handleExit}>
+      <Typography variant="h6" sx={{mb: 1}}>
+        {t("common:description")}
+      </Typography>
+      {/*{ReactHtmlParser(problemDescription)}*/}
+      <Editor
+        toolbarHidden
+        editorState={editorStateDescription}
+        handlePastedText={() => false}
+        readOnly
+        editorStyle={editorStyle.editor}
+      />
+      {/*
         <Typography variant="h5">Sample testcase</Typography>
         
         <Editor
@@ -341,28 +347,28 @@ export default function StudentViewProgrammingContestProblemDetail() {
           editorStyle={editorStyle.editor}
         />
       */}
-        {/*ReactHtmlParser(sampleTestCase)*/}
-        {/*sampleTestCase*/}
+      {/*ReactHtmlParser(sampleTestCase)*/}
+      {/*sampleTestCase*/}
 
-        <HustCodeEditor
+      {sampleTestCase && <>
+        <div style={{height: "10px"}}></div>
+        <HustCopyCodeBlock
           title={t("sampleTestCase")}
-          language={COMPUTER_LANGUAGES.C}
-          sourceCode={sampleTestCase}
+          text={sampleTestCase}
         />
+      </>}
 
-        {fetchedImageArray.length !== 0 &&
-          fetchedImageArray.map((file) => (
-            <FileUploadZone file={file} removable={false}/>
-          ))}
-      </Box>
-
-      <Divider/>
+      {fetchedImageArray.length !== 0 &&
+        fetchedImageArray.map((file) => (
+          <FileUploadZone file={file} removable={false}/>
+        ))}
 
       <ModalPreview chosenTestcase={selectedTestcase}/>
+
       <Box sx={{mt: 2}}>
         <Box>
           <HustCodeEditor
-            title={"Source code"}
+            title={t('common:sourceCode')}
             language={language}
             onChangeLanguage={(event) => {
               setLanguage(event.target.value);
@@ -386,7 +392,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{width: 160, mt: 1, mb: 1}}
+              sx={{width: 128, mt: 1, mb: 1, textTransform: 'none'}}
               // loading={isProcessing}
               // loadingIndicator="Submitting…"
               variant="contained"
@@ -394,7 +400,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               type="submit"
               onClick={submitCode}
             >
-              <span>SUBMIT CODE</span>
+              {t("common:submit")}
             </LoadingButton>
 
             {submissionMode === SUBMISSION_MODE_NOT_ALLOWED && (
@@ -423,7 +429,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               <Stack direction="row" spacing={1} alignItems="center">
                 <InputFileUpload
                   id="selected-upload-file"
-                  label="Select file"
+                  label={t("common:selectFile")}
                   accept=".c, .cpp, .java, .py"
                   onChange={onFileChange}
                   ref={inputRef}
@@ -436,7 +442,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{width: 128}}
+              sx={{width: 128, textTransform: 'none'}}
               // loading={isProcessing}
               // loadingIndicator="Submitting…"
               variant="contained"
@@ -444,7 +450,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               type="submit"
               onChange={onInputChange}
             >
-              <span>Submit</span>
+              {t("common:submit")}
             </LoadingButton>
           </Stack>
         </form>
@@ -476,6 +482,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
       <Box sx={{mt: 3}}>
         <StudentViewSubmission problemId={problemId} ref={listSubmissionRef}/>
       </Box>
-    </HustContainerCard>
+    </ProgrammingContestLayout>
   );
 }

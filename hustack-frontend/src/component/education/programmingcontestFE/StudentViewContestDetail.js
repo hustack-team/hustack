@@ -1,14 +1,17 @@
 import * as React from "react";
-import { useTranslation } from "react-i18next";
+import {useTranslation} from "react-i18next";
 // import StudentViewProblemList from "./StudentViewProblemList";
-import { AntTab, AntTabs, TabPanel, a11yProps } from "component/tab";
+import {a11yProps, AntTab, AntTabs, TabPanel} from "component/tab";
 import StudentViewProblemList from "./StudentViewProblemListV2";
 import StudentViewSubmission from "./StudentViewSubmission";
+import ProgrammingContestLayout from "./ProgrammingContestLayout";
+import {useHistory} from "react-router-dom";
 
 export default function StudentViewContestDetail() {
-  const { t } = useTranslation(
+  const {t} = useTranslation(
     "education/programmingcontest/studentviewcontestdetail"
   );
+  const history = useHistory();
 
   const [selectedTab, setSelectedTab] = React.useState(0);
 
@@ -16,8 +19,12 @@ export default function StudentViewContestDetail() {
     setSelectedTab(newTabValue);
   };
 
+  const handleExit = () => {
+    history.push(`/programming-contest/student-list-contest-registered`);
+  }
+
   return (
-    <>
+    <ProgrammingContestLayout title={""} onBack={handleExit}>
       <AntTabs
         value={selectedTab}
         onChange={handleChangeTab}
@@ -33,6 +40,6 @@ export default function StudentViewContestDetail() {
       <TabPanel value={selectedTab} index={1} dir={"ltr"}>
         <StudentViewSubmission />
       </TabPanel>
-    </>
+    </ProgrammingContestLayout>
   );
 }

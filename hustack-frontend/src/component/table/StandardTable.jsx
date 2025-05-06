@@ -133,7 +133,7 @@ export default function StandardTable(props) {
             ...props.options,
           }}
           onSelectionChange={(rows) => {
-            props.onSelectionChange(rows);
+            props.onSelectionChange?.(rows);
           }}
           onRowClick={props.onRowClick}
           components={{

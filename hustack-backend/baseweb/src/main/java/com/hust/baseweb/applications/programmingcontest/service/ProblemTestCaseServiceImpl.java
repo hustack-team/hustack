@@ -1,13 +1,5 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
-import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
-import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.MULTI_THREADED_PROGRAM;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hust.baseweb.applications.contentmanager.model.ContentHeaderModel;
@@ -29,6 +21,7 @@ import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritychec
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.ProblemProjection;
+import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
@@ -40,11 +33,18 @@ import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRLoader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -61,6 +61,16 @@ import vn.edu.hust.soict.judge0client.config.Judge0Config;
 import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
 import vn.edu.hust.soict.judge0client.service.Judge0Service;
 import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_JAVA;
+import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_PYTHON3;
+import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
+import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.MULTI_THREADED_PROGRAM;
 
 @Slf4j
 @Service
@@ -435,10 +445,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             case ContestSubmissionEntity.LANGUAGE_CPP:
                 timeLimit = problem.getTimeLimitCPP();
                 break;
-            case ContestSubmissionEntity.LANGUAGE_JAVA:
+            case PROG_LANGUAGES_JAVA:
                 timeLimit = problem.getTimeLimitJAVA();
                 break;
-            case ContestSubmissionEntity.LANGUAGE_PYTHON:
+            case PROG_LANGUAGES_PYTHON3:
                 timeLimit = problem.getTimeLimitPYTHON();
                 break;
             default:
@@ -539,7 +549,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                                                      .getSubmission()
                                                                                      .getMaxMemoryLimit()))
                                                       .stackLimit(serverConfig.getSubmission().getMaxStackLimit())
-                                                      .maxProcessesAndOrThreads(judge0Utils.getMaxProcessesAndOrThreads(languageId, sourceCode))
+                                                      .maxProcessesAndOrThreads(judge0Utils.getMaxProcessesAndOrThreads(
+                                                          languageId,
+                                                          sourceCode))
                                                       .enablePerProcessAndThreadTimeLimit(false)
                                                       .enablePerProcessAndThreadMemoryLimit(false)
                                                       .maxFileSize(serverConfig.getSubmission().getMaxMaxFileSize())
@@ -1128,37 +1140,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return result;
     }
 
-    @Transactional
     @Override
-    public ModelContestSubmissionResponse submitContestProblemTestCaseByTestCaseWithFile(
-        ModelContestSubmission modelContestSubmission,
-        String userId, String submittedByUserId
-    ) {
-        Date submitTime = new Date();
-        ContestSubmissionEntity submission = ContestSubmissionEntity.builder()
-                                                                    .contestId(modelContestSubmission.getContestId())
-                                                                    .problemId(modelContestSubmission.getProblemId())
-                                                                    .sourceCode(modelContestSubmission.getSource())
-                                                                    .sourceCodeLanguage(modelContestSubmission.getLanguage())
-                                                                    .status(ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS)
-                                                                    .point(0L)
-                                                                    .problemId(modelContestSubmission.getProblemId())
-                                                                    .userId(userId)
-                                                                    .submittedByUserId(submittedByUserId)
-                                                                    .runtime(0L)
-                                                                    .createdAt(submitTime)
-                                                                    .build();
-        //log.info("submitContestProblemTestCaseByTestCaseWithFile, save submission to DB");
-        submission = contestSubmissionRepo.saveAndFlush(submission);
-
-        sendSubmissionToQueue(submission);
-        return ModelContestSubmissionResponse.builder()
-                                             .status("IN_PROGRESS")
-                                             .message("Submission is being evaluated")
-                                             .build();
-    }
-
-    private void sendSubmissionToQueue(ContestSubmissionEntity submission) {
+    public void sendSubmissionToQueue(ContestSubmissionEntity submission) {
         int languageId = -1;
         switch (ComputerLanguage.Languages.valueOf(submission.getSourceCodeLanguage())) {
             case C:
@@ -1183,7 +1166,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
 
         String routingKey;
-        if(judge0Utils.isMultiThreadedProgram(languageId, submission.getSourceCode())) {
+        if (judge0Utils.isMultiThreadedProgram(languageId, submission.getSourceCode())) {
             routingKey = MULTI_THREADED_PROGRAM;
         } else {
             routingKey = JUDGE_PROBLEM;
@@ -1194,121 +1177,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             routingKey,
             submission.getContestSubmissionId()
         );
-    }
-
-    @Override
-    public ModelContestSubmissionResponse submitContestProblemNotExecuteDueToForbiddenInstructions(
-        ModelContestSubmission modelContestSubmission,
-        String userName,
-        String submittedByUserId
-    ) throws Exception {
-
-        Date submitTime = new Date();
-        ContestSubmissionEntity submission = ContestSubmissionEntity.builder()
-                                                                    .contestId(modelContestSubmission.getContestId())
-                                                                    .problemId(modelContestSubmission.getProblemId())
-                                                                    .sourceCode(modelContestSubmission.getSource())
-                                                                    .sourceCodeLanguage(modelContestSubmission.getLanguage())
-                                                                    .status(ContestSubmissionEntity.SUBMISSION_STATUS_NOT_EVALUATED_FORBIDDEN_INSTRUCTIONS)
-                                                                    .point(0L)
-                                                                    .problemId(modelContestSubmission.getProblemId())
-                                                                    .userId(userName)
-                                                                    .submittedByUserId(submittedByUserId)
-                                                                    .runtime(0L)
-                                                                    .createdAt(submitTime)
-                                                                    .build();
-        log.info("submitContestProblemNotExecuteDueToForbiddenInstructions, save submission to DB");
-        submission = contestSubmissionRepo.saveAndFlush(submission);
-
-        return ModelContestSubmissionResponse.builder()
-                                             .status("NO_EVALUATION_FORBIDDEN_INSTRUCTIONS")
-                                             .message("Submission is not evaluated due to forbidden instructions")
-                                             .build();
-    }
-
-    /**
-     * @param modelContestSubmission
-     * @param userName
-     * @param submittedByUserId
-     * @return
-     */
-    @Override
-    public ModelContestSubmissionResponse submitContestProblemStoreOnlyNotExecute(
-        ModelContestSubmission modelContestSubmission,
-        String userName,
-        String submittedByUserId
-    ) {
-        String problemId = modelContestSubmission.getProblemId();
-        String contestId = modelContestSubmission.getContestId();
-        ContestEntity contest = contestRepo.findContestByContestId(modelContestSubmission.getContestId());
-
-        ContestSubmissionEntity c = ContestSubmissionEntity.builder()
-                                                           .contestId(modelContestSubmission.getContestId())
-                                                           .status(ContestSubmissionEntity.SUBMISSION_STATUS_NOT_AVAILABLE)
-                                                           .point(0L)
-                                                           .problemId(modelContestSubmission.getProblemId())
-                                                           .userId(userName)
-                                                           .submittedByUserId(submittedByUserId)
-                                                           .testCasePass("")
-                                                           .sourceCode(modelContestSubmission.getSource())
-                                                           .sourceCodeLanguage(modelContestSubmission.getLanguage())
-                                                           .runtime(0L)
-                                                           .createdAt(new Date())
-                                                           .build();
-        c = contestSubmissionRepo.save(c);
-
-        // generated test-case with empty result
-        List<TestCaseEntity> testCaseEntityList = null;
-
-        if (contest.getEvaluateBothPublicPrivateTestcase() != null &&
-            contest
-                .getEvaluateBothPublicPrivateTestcase()
-                .equals(ContestEntity.EVALUATE_USE_BOTH_PUBLIC_PRIVATE_TESTCASE_YES)) {
-            testCaseEntityList = testCaseRepo.findAllByProblemId(problemId);
-        } else {
-            testCaseEntityList = testCaseRepo.findAllByProblemIdAndIsPublic(problemId, "N");
-        }
-        if (testCaseEntityList == null) {
-            testCaseEntityList = new ArrayList<>();
-        }
-
-        //   log.info("submitContestProblemStoreOnlyNotExecute, testCaseList.sz = " + testCaseEntityList.size());
-
-        for (int i = 0; i < testCaseEntityList.size(); i++) {
-
-            ContestSubmissionTestCaseEntity cste = null;
-            cste = ContestSubmissionTestCaseEntity.builder()
-                                                  .contestId(contestId)
-                                                  .problemId(problemId)
-                                                  .contestSubmissionId(c.getContestSubmissionId())
-                                                  .testCaseId(testCaseEntityList.get(i).getTestCaseId())
-                                                  .submittedByUserLoginId(userName)
-                                                  .point(0)
-                                                  .status("N/A")
-                                                  .participantSolutionOutput("")
-                                                  .runtime(null)
-                                                  .createdStamp(new Date())
-                                                  .build();
-            cste = contestSubmissionTestCaseEntityRepo.save(cste);
-            //  log.info("submitContestProblemStoreOnlyNotExecute, save submission_testcase " + cste.getTestCaseId() + " submission " + cste.getContestSubmissionId());
-
-        }
-
-
-        //log.info("c {}", c.getRuntime());
-        return ModelContestSubmissionResponse.builder()
-                                             .status("STORED")
-                                             .testCasePass(c.getTestCasePass())
-                                             //.runtime(new Long(0))
-                                             .runtime(0)
-                                             .memoryUsage(c.getMemoryUsage())
-                                             .problemName("")
-                                             .contestSubmissionID(c.getContestSubmissionId())
-                                             .submittedAt(c.getCreatedAt())
-                                             .score(0L)
-                                             .numberTestCasePassed(0)
-                                             .totalNumberTestCase(0)
-                                             .build();
     }
 
 //    @Transactional
@@ -1540,8 +1408,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             modelTeacherManageStudentRegisterContest.getUserId());
 
         UserRegistrationContestEntity userRegistrationContestEntity = null;
-        if(userRegistrationContestEntities != null && userRegistrationContestEntities.size() > 0)
-            userRegistrationContestEntity= userRegistrationContestEntities.get(0);
+        if (userRegistrationContestEntities != null && userRegistrationContestEntities.size() > 0) {
+            userRegistrationContestEntity = userRegistrationContestEntities.get(0);
+        }
 
         if (Constants.RegisterCourseStatus.SUCCESSES
             .getValue()
@@ -2007,7 +1876,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
 
             //contestSubmission.setFullname(userService.getUserFullName(userId));
-            contestSubmission.setFullname(getUserFullNameOfContest(contestId,userId));
+            contestSubmission.setFullname(getUserFullNameOfContest(contestId, userId));
             contestSubmission.setMapProblemsToPoints(mapProblemsToPoints);
             contestSubmission.setTotalPoint(totalPoint);
             contestSubmission.setTotalPercentagePoint(totalPercentage);
@@ -2119,7 +1988,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                                           .userId(modelAddUserToContest.getUserId())
                                                                           .status(Constants.RegistrationType.SUCCESSFUL.getValue())
                                                                           .roleId(modelAddUserToContest.getRole())
-                                                                            .fullname(modelAddUserToContest.getFullname())
+                                                                          .fullname(modelAddUserToContest.getFullname())
                                                                           .permissionId(UserRegistrationContestEntity.PERMISSION_SUBMIT)
                                                                           .build());
         } else {
@@ -2149,8 +2018,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         List<UserRegistrationContestEntity> userRegistrationContests = userRegistrationContestRepo
             .findUserRegistrationContestEntityByContestIdAndUserId(contestId, userId);
-        if(userRegistrationContests != null){
-            for(UserRegistrationContestEntity u: userRegistrationContests){
+        if (userRegistrationContests != null) {
+            for (UserRegistrationContestEntity u : userRegistrationContests) {
                 u.setFullname(modelAddUserToContest.getFullname());
                 u = userRegistrationContestRepo.save(u);
             }
@@ -2170,7 +2039,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             .forEach(userId -> addUserToContest(new ModelAddUserToContest(
                 contestId,
                 userId,
-                addUsers2Contest.getRole(),"")));
+                addUsers2Contest.getRole(), "")));
     }
 
     @Override
@@ -2214,7 +2083,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         //    modelAddUserToContest.getUserId());
         UserRegistrationContestEntity userRegistrationContest = userRegistrationContestRepo.findUserRegistrationContestEntityByContestIdAndUserIdAndRoleId(
             modelAddUserToContest.getContestId(),
-            modelAddUserToContest.getUserId(),modelAddUserToContest.getRole());
+            modelAddUserToContest.getUserId(), modelAddUserToContest.getRole());
 
         if (userRegistrationContest == null) {
             throw new MiniLeetCodeException("user not register contest");
@@ -2345,46 +2214,58 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return retList;
     }
 
-    private String getUserFullNameOfContest(String contestId, String userId){
-        String fullname = userRegistrationContestService.findUserFullnameOfContest(contestId,userId);
-        if(fullname == null) fullname = userService.getUserFullName(userId);
+    private String getUserFullNameOfContest(String contestId, String userId) {
+        String fullname = userRegistrationContestService.findUserFullnameOfContest(contestId, userId);
+        if (fullname == null) {
+            fullname = userService.getUserFullName(userId);
+        }
         return fullname;
     }
+
     @Override
     public Page<ContestSubmission> findContestSubmissionByContestIdPaging(
-        Pageable pageable,
         String contestId,
-        String searchTerm
+        SubmissionFilter filter
     ) {
-        searchTerm = searchTerm.toLowerCase();
+        Pageable pageable = CommonUtils.getPageable(
+            filter.getPage(),
+            filter.getSize(),
+            Sort.by("createdAt").descending());
+
         return contestSubmissionPagingAndSortingRepo
-            .searchSubmissionInContestPaging(contestId, searchTerm, searchTerm, pageable)
-            .map(contestSubmissionEntity -> ContestSubmission
+            .searchSubmissionInContestPaging(
+                contestId,
+                StringUtils.defaultString(filter.getUserId()),
+                StringUtils.defaultString(filter.getProblemId()),
+                pageable)
+            .map(submission -> ContestSubmission
                 .builder()
-                .contestSubmissionId(contestSubmissionEntity.getContestSubmissionId())
-                .contestId(contestSubmissionEntity.getContestId())
-                .createAt(contestSubmissionEntity.getCreatedAt() != null
+                .contestSubmissionId(submission.getContestSubmissionId())
+                .contestId(submission.getContestId())
+                .createAt(submission.getCreatedAt() != null
                               ? DateTimeUtils.dateToString(
-                    contestSubmissionEntity.getCreatedAt(),
+                    submission.getCreatedAt(),
                     DateTimeUtils.DateTimeFormat.DATE_TIME_ISO_FORMAT)
                               : null)
-                .sourceCodeLanguage(contestSubmissionEntity.getSourceCodeLanguage())
-                .point(contestSubmissionEntity.getPoint())
-                .problemId(contestSubmissionEntity.getProblemId())
-                //.problemName(problemService.getProblemName(contestSubmissionEntity.getProblemId()))
+                .sourceCodeLanguage(submission.getSourceCodeLanguage())
+                .point(submission.getPoint())
+                .problemId(submission.getProblemId())
+                //.problemName(problemService.getProblemName(submission.getProblemId()))
                 .problemName(contestService.getProblemNameInContest(
-                    contestSubmissionEntity.getContestId(),
-                    contestSubmissionEntity.getProblemId()))
-                .testCasePass(contestSubmissionEntity.getTestCasePass())
-                .status(contestSubmissionEntity.getStatus())
-                .managementStatus(contestSubmissionEntity.getManagementStatus())
-                .violationForbiddenInstruction(contestSubmissionEntity.getViolateForbiddenInstruction())
-                .violationForbiddenInstructionMessage(contestSubmissionEntity.getViolateForbiddenInstructionMessage())
-                .message(contestSubmissionEntity.getMessage())
-                .userId(contestSubmissionEntity.getUserId())
-                //.fullname(userService.getUserFullName(contestSubmissionEntity.getUserId()))
-                //.fullname(userRegistrationContestService.findUserFullnameOfContest(contestId,contestSubmissionEntity.getUserId()))
-                .fullname(getUserFullNameOfContest(contestId,contestSubmissionEntity.getUserId()))
+                    submission.getContestId(),
+                    submission.getProblemId()))
+                .testCasePass(submission.getTestCasePass())
+                .status(submission.getStatus())
+                .managementStatus(submission.getManagementStatus())
+                .violationForbiddenInstruction(submission.getViolateForbiddenInstruction())
+                .violationForbiddenInstructionMessage(submission.getViolateForbiddenInstructionMessage())
+                .message(submission.getMessage())
+                .userId(submission.getUserId())
+                //.fullname(userService.getUserFullName(submission.getUserId()))
+                //.fullname(userRegistrationContestService.findUserFullnameOfContest(contestId,submission.getUserId()))
+                .fullname(getUserFullNameOfContest(contestId, submission.getUserId()))
+                .createdByIp(submission.getCreatedByIp())
+                .codeAuthorship(submission.getCodeAuthorship())
                 .build());
     }
 
@@ -2421,16 +2302,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     @Override
     public ContestSubmissionEntity getContestSubmissionDetailForTeacher(UUID submissionId) {
         return contestSubmissionRepo.findContestSubmissionEntityByContestSubmissionId(submissionId);
-    }
-
-    @Override
-    public ContestSubmissionEntity getContestSubmissionDetailForStudent(String userId, UUID submissionId) {
-        ContestSubmissionEntity submission = contestSubmissionRepo.findContestSubmissionEntityByContestSubmissionId(
-            submissionId);
-        if (userId.equals(submission.getUserId())) {
-            return submission;
-        }
-        throw new AccessDeniedException("No permission");
     }
 
     @Override
@@ -2816,16 +2687,28 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Override
     public void evaluateSubmissions(String contestId, String problemId) {
-        List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestIdAndProblemId(contestId, problemId);
-        if(submissions == null){
+        List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestIdAndProblemId(
+            contestId,
+            problemId);
+        if (submissions == null) {
             log.info("evaluateSubmissions, contest " + contestId + " problem " + problemId + " -> NO Submissions");
             return;
         }
-        log.info("evaluateSubmissions, contest " + contestId + " problem " + problemId + " nbSubmissions = " + submissions.size());
+        log.info("evaluateSubmissions, contest " +
+                 contestId +
+                 " problem " +
+                 problemId +
+                 " nbSubmissions = " +
+                 submissions.size());
         ContestEntity contest = contestService.findContestWithCache(contestId);
 
-        for(ContestSubmissionEntity sub: submissions){
-            log.info("evaluateSubmissions, contest " + contestId + " problem " + problemId + " submission " + sub.getContestSubmissionId());
+        for (ContestSubmissionEntity sub : submissions) {
+            log.info("evaluateSubmissions, contest " +
+                     contestId +
+                     " problem " +
+                     problemId +
+                     " submission " +
+                     sub.getContestSubmissionId());
             evaluateSubmission(sub, contest);
         }
 
@@ -3042,7 +2925,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                       .wallTimeLimit((float) (timeLimit + 10.0))
                                                       .memoryLimit(memoryLimit * 1024)
                                                       .stackLimit(serverConfig.getSubmission().getMaxStackLimit())
-                                                      .maxProcessesAndOrThreads(judge0Utils.getMaxProcessesAndOrThreads(languageId, sourceCode))
+                                                      .maxProcessesAndOrThreads(judge0Utils.getMaxProcessesAndOrThreads(
+                                                          languageId,
+                                                          sourceCode))
                                                       .enablePerProcessAndThreadTimeLimit(false)
                                                       .enablePerProcessAndThreadMemoryLimit(false)
                                                       .maxFileSize(serverConfig.getSubmission().getMaxMaxFileSize())
@@ -3502,9 +3387,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     }
 
     @Override
-    public List<ModelUserJudgedProblemSubmissionResponse> getUserJudgedProblemSubmissions(String contestId) {
+    public byte[] getUserJudgedProblemSubmissions(String contestId) {
         List<ContestSubmissionEntity> submissions = contestSubmissionRepo.findAllByContestId(contestId);
-        List<ModelUserJudgedProblemSubmissionResponse> res = new ArrayList<>();
+        List<ModelUserJudgedProblemSubmissionResponse> dtos = new ArrayList<>();
         HashMap<String, List<ModelUserJudgedProblemSubmissionResponse>> mUserId2Submission = new HashMap<>();
         HashMap<String, ProblemEntity> mID2Problem = new HashMap<>();
         ContestEntity contest = contestRepo.findContestByContestId(contestId);
@@ -3517,10 +3402,24 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         for (String userId : mUserId2Submission.keySet()) {
             if (mUserId2Submission.get(userId) != null) {
-                res.addAll(mUserId2Submission.get(userId));
+                dtos.addAll(mUserId2Submission.get(userId));
             }
         }
-        return res;
+
+        return exportPdf(dtos, "reports/submission_report.jasper", new HashMap<>());
+    }
+
+    private byte[] exportPdf(Collection<?> collection, String reportPath, Map<String, Object> parameters) {
+        try {
+            InputStream is = new ClassPathResource(reportPath).getInputStream();
+            JasperReport jasperReport = (JasperReport) JRLoader.loadObject(is);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(collection);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+            return JasperExportManager.exportReportToPdf(jasperPrint);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating PDF", e);
+        }
     }
 
     @Override

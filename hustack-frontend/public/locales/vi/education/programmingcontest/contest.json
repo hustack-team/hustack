@@ -20,5 +20,14 @@
   "reJudge": "Chấm lại",
   "reJudgingNotification": "Đang chấm lại bài nộp có ID",
   "submissionGradedHead": "Bài nộp",
-  "submissionGradedTail": "đã được chấm xong"
+  "submissionGradedTail": "đã được chấm xong",
+  "status": {
+    "created": "Tạo mới",
+    "open": "Mở",
+    "close": "Đóng",
+    "disabled": "Đã xoá",
+    "running": "Đang diễn ra",
+    "over": "Đã kết thúc"
+  },
+  "detectCodeAuthorship": "Kiểm tra mã nguồn được viết bởi con người hay AI"
 }

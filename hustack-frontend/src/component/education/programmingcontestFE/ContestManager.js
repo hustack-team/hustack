@@ -1,13 +1,13 @@
-import { AntTab, AntTabs, TabPanel, a11yProps } from "component/tab";
+import {a11yProps, AntTab, AntTabs, TabPanel} from "component/tab";
 import withScreenSecurity from "component/withScreenSecurity";
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import {useState} from "react";
+import {useParams} from "react-router-dom";
 import CodeSimilarityCheck from "./CodeSimilarityCheck";
-import { ContestManagerDetail } from "./ContestManagerDetail";
+import {ContestManagerDetail} from "./ContestManagerDetail";
 import ContestManagerListMember from "./ContestManagerListMember";
 import ContestManagerListMemberOfGroup from "./ContestManagerListMemberOfGroup";
 import ContestManagerListRegisteredParticipant from "./ContestManagerListRegisteredParticipant";
-import { ContestManagerManageProblem } from "./ContestManagerManageProblem";
+import {ContestManagerManageProblem} from "./ContestManagerManageProblem";
 import ContestManagerRankingGroupNew from "./ContestManagerRankingGroupNew";
 import ContestManagerRankingNew from "./ContestManagerRankingNew";
 import ContestManagerRankingPercentageNew from "./ContestManagerRankingPercentageNew";
@@ -15,8 +15,9 @@ import ContestManagerRankingPercentageNew from "./ContestManagerRankingPercentag
 import ContestManagerUserSubmission from "./ContestManagerUserSubmission";
 import ContestManagerUserSubmissionGroup from "./ContestManagerUserSubmissionGroup";
 import ContestResultDistribution from "./ContestResultDistribution";
+import {Paper} from "@mui/material";
 
-function ContestManager() {
+function ContestManager({screenAuthorization}) {
   const { contestId } = useParams();
 
   const [selectedTab, setSelectedTab] = useState(0);
@@ -80,8 +81,11 @@ function ContestManager() {
       </TabPanel> */}
 
       <TabPanel value={selectedTab} index={4} dir={"ltr"}>
-        <ContestManagerUserSubmission contestId={contestId} />
-        <ContestManagerUserSubmissionGroup contestId={contestId} />
+        <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
+          <ContestManagerUserSubmission contestId={contestId} screenAuthorization={screenAuthorization}/>
+          <div style={{height: 24}}></div>
+          <ContestManagerUserSubmissionGroup contestId={contestId}/>
+        </Paper>
       </TabPanel>
 
       <TabPanel value={selectedTab} index={5} dir={"ltr"}>

@@ -4,7 +4,7 @@ import PublishRoundedIcon from "@mui/icons-material/PublishRounded";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import IconButton from "@mui/material/IconButton";
-import {request} from "api";
+import {request, saveFile} from "api";
 import StandardTable from "component/table/StandardTable";
 import React, {useEffect, useState} from "react";
 import {toast} from "react-toastify";
@@ -215,7 +215,7 @@ function ClassTeacherAssignmentSolutionList(props) {
   };
 
   function exportExcel() {
-    processingNoti(toastId, false, "Chúng tôi đang chuẩn bị file...");
+    processingNoti(toastId, false, "Hệ thống đang chuẩn bị file...");
     request(
       "GET",
       `/edu/teaching-assignment/plan/${planId}/solution/export-excel`,
@@ -231,30 +231,6 @@ function ClassTeacherAssignmentSolutionList(props) {
       { responseType: "blob" }
     );
   }
-
-  const saveFile = (fileName, data) => {
-    let blob = new Blob([data]);
-
-    //IE11 support
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, fileName);
-    } else {
-      let link = window.document.createElement("a");
-
-      link.href = window.URL.createObjectURL(blob);
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // other browsers
-      // Second approach but cannot specify saved name!
-      // let file = new File([data], fileName, { type: "application/zip" });
-      // let exportUrl = URL.createObjectURL(file);
-      // window.location.assign(exportUrl);
-      // URL.revokeObjectURL(exportUrl);
-    }
-  };
 
   useEffect(() => {
     getClassTeacherAssignmentSolutionList();

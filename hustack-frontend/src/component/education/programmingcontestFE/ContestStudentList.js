@@ -1,20 +1,24 @@
-import { LinearProgress } from "@mui/material";
-import { request } from "api";
+import {LinearProgress, Paper} from "@mui/material";
+import {request} from "api";
 import StandardTable from "component/table/StandardTable";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { toFormattedDateTime } from "utils/dateutils";
-import { AntTab, AntTabs, TabPanel, a11yProps } from "component/tab"; 
+import React, {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {toFormattedDateTime} from "utils/dateutils";
+import {a11yProps, AntTab, AntTabs, TabPanel} from "component/tab";
+import {useTranslation} from "react-i18next";
+import {getContestStatuses} from "./EditContest";
 
 export default function ContestStudentList() {
-  const [contests, setContests] = useState([]); 
-  const [publicContests, setPublicContests] = useState([]); 
-  const [loading, setLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState(0); 
+  const [contests, setContests] = useState([]);
+  const [publicContests, setPublicContests] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const {t} = useTranslation(["common", 'education/programmingcontest/contest']);
+  const contestStatuses = getContestStatuses(t)
 
   const registeredColumns = [
     {
-      title: "Contest",
+      title: t('education/programmingcontest/contest:contest'),
       field: "contestName",
       render: (rowData) => (
         <Link
@@ -28,14 +32,18 @@ export default function ContestStudentList() {
         </Link>
       ),
     },
-    { title: "Status", field: "status" },
-    { title: "Created By", field: "createdBy" },
-    { title: "Created At", field: "createdAt" },
+    {
+      title: t("common:status"),
+      field: "status",
+      render: (rowData) => `${contestStatuses.find(item => item.value === rowData.status)?.label || ""}`
+    },
+    {title: t('common:manager'), field: "createdBy"},
+    // {title: "Created At", field: "createdAt"},
   ];
 
   const publicColumns = [
     {
-      title: "Contest",
+      title: t('education/programmingcontest/contest:contest'),
       field: "contestName",
       render: (rowData) => (
         <Link
@@ -49,9 +57,12 @@ export default function ContestStudentList() {
         </Link>
       ),
     },
-    { title: "Status", field: "status" },
-    { title: "Created By", field: "createdBy" }, 
-    { title: "Created At", field: "createdAt" }, 
+    {
+      title: t("common:status"),
+      render: (rowData) => `${contestStatuses.find(item => item.value === rowData.status)?.label || ""}`
+    },
+    {title: t('common:manager'), field: "createdBy"},
+    // {title: "Created At", field: "createdAt"},
   ];
 
   function getContestList() {
@@ -65,11 +76,12 @@ export default function ContestStudentList() {
         createdAt: toFormattedDateTime(e.startAt),
       }));
       setContests(data);
-    }).then(() => setLoading(false));
+    })
+    // .then(() => setLoading(false));
   }
 
   function getPublicContestList() {
-    request("get", "/contests/public", (res) => { 
+    request("get", "/contests/public", (res) => {
       const data = res.data.contests.map((e, index) => ({
         index: index + 1,
         contestId: e.contestId,
@@ -80,21 +92,20 @@ export default function ContestStudentList() {
       }));
       setPublicContests(data);
     });
-    console.log("alo")
   }
 
   useEffect(() => {
-    getPublicContestList(); 
+    getPublicContestList();
     getContestList();
   }, []);
 
   const handleChange = (event, newValue) => {
-    setSelectedTab(newValue); 
+    setSelectedTab(newValue);
   };
 
   return (
-    <>
-      {loading && <LinearProgress />}
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
+      {loading && <LinearProgress/>}
       <AntTabs
         value={selectedTab}
         onChange={handleChange}
@@ -102,39 +113,43 @@ export default function ContestStudentList() {
         scrollButtons="auto"
         variant="scrollable"
       >
-        <AntTab label="Public Contest" {...a11yProps(0)} /> 
-        <AntTab label="Registered Contest" {...a11yProps(1)} />
+        <AntTab label={t("common:public")} {...a11yProps(0)} />
+        <AntTab label={t("common:registered")} {...a11yProps(1)} />
       </AntTabs>
 
       <TabPanel value={selectedTab} index={0} dir={"ltr"}>
-        <StandardTable
-          title={"Public Contest"}
-          columns={publicColumns} 
-          data={publicContests}
-          hideCommandBar
-          options={{
-            selection: false,
-            pageSize: 10,
-            search: true,
-            sorting: true,
-          }}
-        />
+          <StandardTable
+            columns={publicColumns}
+            data={publicContests}
+            hideCommandBar
+            options={{
+              selection: false,
+              pageSize: 5,
+              search: true,
+              sorting: true,
+            }}
+            components={{
+              Container: (props) => <Paper {...props} elevation={0}/>,
+            }}
+          />
       </TabPanel>
 
       <TabPanel value={selectedTab} index={1} dir={"ltr"}>
-        <StandardTable
-          title={"Registered Contest"}
-          columns={registeredColumns} 
-          data={contests}
-          hideCommandBar
-          options={{
-            selection: false,
-            pageSize: 10,
-            search: true,
-            sorting: true,
-          }}
-        />
+          <StandardTable
+            columns={registeredColumns}
+            data={contests}
+            hideCommandBar
+            options={{
+              selection: false,
+              pageSize: 5,
+              search: true,
+              sorting: true,
+            }}
+            components={{
+              Container: (props) => <Paper {...props} elevation={0}/>,
+            }}
+          />
       </TabPanel>
-    </>
+    </Paper>
   );
 }

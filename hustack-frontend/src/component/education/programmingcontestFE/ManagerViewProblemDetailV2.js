@@ -300,16 +300,17 @@ function ManagerViewProblemDetailV2() {
 
       <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
         <Typography variant="h6" sx={{marginBottom: "8px"}}>
-          {t("problemDescription")}
+          {t("common:description")}
         </Typography>
         <RichTextEditor
           toolbarHidden
           content={problemDetail.description}
           readOnly
+          editorStyle={{editor: {}}}
         />
       </Box>
 
-      <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>
+      {problemDetail.sampleTestCase && <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>}
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
@@ -337,6 +338,7 @@ function ManagerViewProblemDetailV2() {
 
       <ListTestCase mode={2}/>
 
+      <Box sx={{height: "36px"}}></Box>
       <ContestsUsingAProblem problemId={problemId}/>
     </ProgrammingContestLayout>
   );

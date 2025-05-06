@@ -40,5 +40,12 @@
   "id": "ID {{name}}",
   "user": "Người dùng",
   "fromDate": "Từ ngày",
-  "toDate": "Đến ngày"
+  "toDate": "Đến ngày",
+  "selectFile": "Chọn tệp",
+  "submit": "Nộp",
+  "refresh": "Làm mới",
+  "registered": "Đã đăng ký",
+  "complete": "Hoàn thành",
+  "reset": "Đặt lại",
+  "codeAuthorship": "Nguồn gốc (dự đoán)"
 }

@@ -33,4 +33,5 @@ build/
 .vscode/
 
 *.yml
+*.jrxml
 /src/main/resources/policy-enforcer.json

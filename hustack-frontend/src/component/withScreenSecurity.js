@@ -2,6 +2,8 @@ import {LinearProgress} from "@mui/material";
 import {useEffect, useState} from "react";
 import {request} from "../api";
 import NotAuthorized from "./common/NotAuthorzied";
+import {errorNoti} from "../utils/notification";
+import {useTranslation} from "react-i18next";
 
 /**
  * The function withScreenSecurity is a higher-order component that adds screen security to a component
@@ -15,7 +17,8 @@ import NotAuthorized from "./common/NotAuthorzied";
  * @returns The function `withScreenSecurity` is being returned.
  */
 function withScreenSecurity(SecuredComponent, id, viewError) {
-  return function ScreenSecurityComponent({ ...props }) {
+  return function ScreenSecurityComponent({...props}) {
+    const {t} = useTranslation(["common"]);
     const [checking, setChecking] = useState(true);
     const [screenAuthorization, setScreenAuthorization] = useState(new Set([]));
 
@@ -32,7 +35,7 @@ function withScreenSecurity(SecuredComponent, id, viewError) {
         {
           onError: (e) => {
             setChecking(false);
-            console.log(e);
+            errorNoti(t("common:error", 3000))
           },
         }
       );
@@ -57,7 +60,7 @@ function withScreenSecurity(SecuredComponent, id, viewError) {
           screenAuthorization={screenAuthorization}
         />
       );
-    else if (viewError) return <NotAuthorized />;
+    else if (viewError) return <NotAuthorized/>;
     else return "";
   };
 }

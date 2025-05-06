@@ -1,28 +1,24 @@
-import { MuiThemeProvider } from "@material-ui/core/styles";
+import {MuiThemeProvider} from "@material-ui/core/styles";
 import ReplayIcon from "@mui/icons-material/Replay";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import { LoadingButton } from "@mui/lab";
-import { Box, IconButton, Tooltip } from "@mui/material";
-import { pdf } from "@react-pdf/renderer";
+import {LoadingButton} from "@mui/lab";
+import {Box, IconButton, Paper, Tooltip} from "@mui/material";
+import {pdf} from "@react-pdf/renderer";
 import HustModal from "component/common/HustModal";
 import StandardTable from "component/table/StandardTable";
 import FileSaver from "file-saver";
-import { MTableToolbar } from "material-table";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { request } from "../../../api";
-import { errorNoti, successNoti } from "../../../utils/notification";
-import ContestManagerViewSubmissionOfAUserDialog from "./ContestManagerViewSubmissionOfAUserDialog";
+import {MTableToolbar} from "material-table";
+import React, {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {request} from "../../../api";
+import {errorNoti, successNoti} from "../../../utils/notification";
 import ManagerSubmitCodeOfParticipant from "./ManagerSubmitCodeOfParticipant";
-import { getStatusColor } from "./lib";
+import {getStatusColor} from "./lib";
 import SubmissionOfParticipantPDFDocument from "./template/SubmissionOfParticipantPDFDocument";
 
 export default function ContestManagerUserSubmissionGroup(props) {
   const contestId = props.contestId;
 
   const [contestSubmissions, setContestSubmissions] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
   const [
     isOpenManagerSubmitCodeOfParticipant,
     setIsOpenManagerSubmitCodeOfParticipant,
@@ -47,10 +43,6 @@ export default function ContestManagerUserSubmissionGroup(props) {
     getSubmission();
   }
 
-  function handleCloseDialog() {
-    setIsOpen(false);
-  }
-
   function getSubmission() {
     request(
       "get",
@@ -59,9 +51,9 @@ export default function ContestManagerUserSubmissionGroup(props) {
         setContestSubmissions(res.data.content);
         setTotalSizeSubmission(res.data.totalElements);
       },
-      { onError: (error) => errorNoti("An error happened", 3000) },
+      {onError: (error) => errorNoti("An error happened", 3000)},
       null,
-      { params: filterParams }
+      {params: filterParams}
     ).then();
   }
 
@@ -91,7 +83,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
 
   const generatePdfDocument = async (documentData, fileName) => {
     const blob = await pdf(
-      <SubmissionOfParticipantPDFDocument data={documentData} />
+      <SubmissionOfParticipantPDFDocument data={documentData}/>
     ).toBlob();
 
     FileSaver.saveAs(blob, fileName);
@@ -109,7 +101,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
       {
         title: "ID",
         field: "contestSubmissionId",
-        cellStyle: { minWidth: "80px" },
+        cellStyle: {minWidth: "80px"},
         render: (rowData) => (
           <Link
             to={
@@ -121,11 +113,11 @@ export default function ContestManagerUserSubmissionGroup(props) {
           </Link>
         ),
       },
-      { title: "User ID", field: "userId" },
+      {title: "User ID", field: "userId"},
       {
         title: "Full name",
         field: "fullname",
-        cellStyle: { minWidth: "170px" },
+        cellStyle: {minWidth: "170px"},
       },
       {
         title: "Problem ID",
@@ -136,19 +128,19 @@ export default function ContestManagerUserSubmissionGroup(props) {
           </Tooltip>
         ),
       },
-      { title: "Testcases Passed", field: "testCasePass" },
-      { title: "Lang", field: "sourceCodeLanguage" },
+      {title: "Testcases Passed", field: "testCasePass"},
+      {title: "Lang", field: "sourceCodeLanguage"},
       {
         title: "Status",
         field: "status",
         render: (rowData) => (
-          <span style={{ color: getStatusColor(`${rowData.status}`) }}>
+          <span style={{color: getStatusColor(`${rowData.status}`)}}>
             {`${rowData.status}`}
           </span>
         ),
       },
       // {title: "Message", field: "message"},
-      { title: "Point", field: "point" },
+      {title: "Point", field: "point"},
       {
         title: "Submitted At",
         field: "createAt",
@@ -160,8 +152,8 @@ export default function ContestManagerUserSubmissionGroup(props) {
       {
         title: "Rejudge",
         sortable: "false",
-        headerStyle: { textAlign: "center" },
-        cellStyle: { textAlign: "center" },
+        headerStyle: {textAlign: "center"},
+        cellStyle: {textAlign: "center"},
         render: (rowData) => (
           <IconButton
             variant="contained"
@@ -170,25 +162,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
               handleRejudge(rowData.contestSubmissionId);
             }}
           >
-            <ReplayIcon />
-          </IconButton>
-        ),
-      },
-      {
-        title: "View By User",
-        sortable: false,
-        headerStyle: { textAlign: "center" },
-        cellStyle: { textAlign: "center", minWidth: 96 },
-        render: (rowData) => (
-          <IconButton
-            variant="contained"
-            color="success"
-            onClick={() => {
-              setSelectedUserId(rowData.userId);
-              setIsOpen(true);
-            }}
-          >
-            <VisibilityIcon />
+            <ReplayIcon/>
           </IconButton>
         ),
       },
@@ -215,7 +189,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
   }, [filterParams]);
 
   return (
-    <Box sx={{ marginTop: "12px" }}>
+    <Box sx={{marginTop: "12px"}}>
       <StandardTable
         title={"My Group: Contest Submissions"}
         columns={generateColumns()}
@@ -237,21 +211,22 @@ export default function ContestManagerUserSubmissionGroup(props) {
         page={filterParams.page}
         totalCount={totalSizeSubmission}
         onChangePage={(page, size) =>
-          setFilterParams({ ...filterParams, page, size })
+          setFilterParams({...filterParams, page, size})
         }
         onSearchChange={(search) =>
-          setFilterParams({ page: 0, size: filterParams.size, search })
+          setFilterParams({page: 0, size: filterParams.size, search})
         }
         components={{
+          Container: (props) => <Paper {...props} elevation={0}/>,
           Toolbar: (props) => (
             <div>
-              <MTableToolbar {...props} searchFieldStyle={{ width: 320 }} />
+              <MTableToolbar {...props} searchFieldStyle={{width: 320}}/>
               <MuiThemeProvider>
                 <Box
                   display="flex"
                   justifyContent="flex-end"
                   width="100%"
-                  sx={{ padding: "8px 0 16px 16px" }}
+                  sx={{padding: "8px 0 16px 16px"}}
                 >
                   {/*
                   <Tooltip title="Submit code as a participant">
@@ -281,7 +256,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
                       loading={isProcessing}
                       loadingPosition="start"
                       variant="contained"
-                      sx={{ marginRight: "16px" }}
+                      sx={{marginRight: "16px"}}
                       color="primary"
                       onClick={handleExportParticipantSubmission}
                     >
@@ -295,12 +270,6 @@ export default function ContestManagerUserSubmissionGroup(props) {
         }}
       />
 
-      <ContestManagerViewSubmissionOfAUserDialog
-        open={isOpen}
-        onClose={handleCloseDialog}
-        contestId={contestId}
-        userId={selectedUserId}
-      />
       {/* <ManagerSubmitCodeOfParticipantDialog
         open={isOpenManagerSubmitCodeOfParticipant}
         onClose={handleCloseManagerSubmitParticipantCode}
@@ -312,7 +281,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
         onClose={handleCloseManagerSubmitParticipantCode}
         title={"Submit code of participant"}
       >
-        <ManagerSubmitCodeOfParticipant contestId={contestId} />
+        <ManagerSubmitCodeOfParticipant contestId={contestId}/>
       </HustModal>
     </Box>
   );

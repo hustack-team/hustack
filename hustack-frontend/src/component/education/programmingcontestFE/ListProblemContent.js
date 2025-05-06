@@ -1,7 +1,7 @@
 import {GetApp} from "@material-ui/icons";
 import AddIcon from "@material-ui/icons/Add";
 import {Box, Chip, Divider, Grid, IconButton, Paper, Stack, TextField, Tooltip, Typography,} from "@mui/material";
-import {BASE_URL, request} from "api";
+import {request, saveFile} from "api";
 import React, {useEffect, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {Link} from "react-router-dom";
@@ -128,34 +128,19 @@ function ListProblemContent({type}) {
   const levels = getLevels(t);
   const statuses = getStatuses(t)
 
-  const ACCESS_TOKEN = keycloak?.token;
-
   const onSingleDownload = async (problem) => {
-    try {
-      const url = `${BASE_URL}/problems/${problem.problemId}/export`;
-      console.log("Download URL:", url);
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${ACCESS_TOKEN}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to download file");
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = `${problem.problemId}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (error) {
-      console.error("Download error:", error);
-    }
+    request("GET",
+      `/problems/${problem.problemId}/export`,
+      (res) => {
+        saveFile(`${problem.problemId}.zip`, res.data);
+      },
+      {
+        onError: (e) => {
+          errorNoti(t("common:error", 3000))
+        }
+      },
+      {},
+      {responseType: "blob"});
   };
 
   const COLUMNS = [
@@ -190,7 +175,7 @@ function ListProblemContent({type}) {
       cellStyle: {minWidth: 120},
       render: (rowData) => (
         <Typography component="span" variant="subtitle2" sx={{color: getColorLevel(`${rowData.levelId}`)}}>
-          {`${levels.find(item => item.value === rowData.levelId).label}`}
+          {`${levels.find(item => item.value === rowData.levelId)?.label || ""}`}
         </Typography>
       ),
     },
@@ -268,7 +253,7 @@ function ListProblemContent({type}) {
   }, [page, pageSize]);
 
   return (
-    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}} square={false}>
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
       <Typography variant="h6" sx={{marginBottom: "12px"}}>{t("search")}</Typography>
       <Grid container spacing={3}>
         <Grid item xs={3}>

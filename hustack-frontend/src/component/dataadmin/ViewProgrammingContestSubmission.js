@@ -133,6 +133,10 @@ const ViewProgrammingContestSubmission = () => {
       render: (rowData) => mapLanguageToDisplayName(rowData.sourceCodeLanguage)
     },
     {
+      title: "IP",
+      field: "createdByIp",
+    },
+    {
       title: t("common:createdTime"),
       cellStyle: {minWidth: 130},
       render: (rowData) => toFormattedDateTime(rowData.createdAt)
@@ -201,12 +205,10 @@ const ViewProgrammingContestSubmission = () => {
         setLoading(false);
 
         const data = res.data
-        const myProblems = data.content
-
         if (data.numberOfElements === 0 && data.number > 0) {
           setPage(0)
         } else {
-          setSubmissions(myProblems);
+          setSubmissions(data.content);
           setTotalCount(data.totalElements)
         }
       },
@@ -223,7 +225,7 @@ const ViewProgrammingContestSubmission = () => {
   }, [page, pageSize]);
 
   return (
-    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}} square={false}>
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
       <Typography variant="h6" sx={{marginBottom: "12px"}}>{t("search")}</Typography>
       <Grid container spacing={3}>
         <Grid item xs={3}>
@@ -306,14 +308,14 @@ const ViewProgrammingContestSubmission = () => {
           variant="outlined"
           startIcon={<AutorenewIcon/>}
         >
-          {t("reset")}
+          {t("common:reset")}
         </TertiaryButton>
         <PrimaryButton
           disabled={loading}
           onClick={handleSearch}
           startIcon={<SearchIcon/>}
         >
-          {t("search")}
+          {t("common:search")}
         </PrimaryButton>
       </Stack>
 

@@ -1,18 +1,22 @@
 import AddIcon from "@material-ui/icons/Add";
-import { Box, LinearProgress } from "@mui/material";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { request } from "../../../api";
-import { toFormattedDateTime } from "../../../utils/dateutils";
+import {Paper} from "@mui/material";
+import React, {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {request} from "../../../api";
+import {toFormattedDateTime} from "../../../utils/dateutils";
 import StandardTable from "../../table/StandardTable";
+import {useTranslation} from "react-i18next";
+import {getContestStatuses} from "./EditContest";
 
 export function ListContestManagerByRegistration() {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const {t} = useTranslation(["education/programmingcontest/contest", "education/programmingcontest/problem", 'common']);
+  const contestStatuses = getContestStatuses(t)
 
   const columns = [
     {
-      title: "Name",
+      title: t("contestName"),
       field: "contestName",
       render: (rowData) => (
         <Link
@@ -25,11 +29,21 @@ export function ListContestManagerByRegistration() {
         </Link>
       ),
     },
-    { title: "Status", field: "statusId" },
-    { title: "Role", field: "roleId" },
-    { title: "Created By", field: "userId" },
     {
-      title: "Created At",
+      title: t("common:status"),
+      field: "statusId",
+      render: (rowData) => `${contestStatuses.find(item => item.value === rowData.statusId)?.label || ""}`
+    },
+    {
+      title: "Role",
+      field: "roleId"
+    },
+    // {
+    //   title: t('common:manager'),
+    //   field: "userId"
+    // },
+    {
+      title: t("common:createdTime"),
       field: "startAt",
       render: (rowData) => toFormattedDateTime(rowData["startAt"]),
     },
@@ -46,10 +60,11 @@ export function ListContestManagerByRegistration() {
   }, []);
 
   return (
-    <Box mb={2}>
-      {loading && <LinearProgress />}
+    // <>
+    //   <Stack direction="row" justifyContent='space-between'>
+    //     <Typography variant="h6" sx={{mb: 1.5}}>My Contests</Typography>
+    //   </Stack>
       <StandardTable
-        title="My Contests"
         columns={columns}
         data={contests}
         hideCommandBar
@@ -59,10 +74,13 @@ export function ListContestManagerByRegistration() {
           search: true,
           sorting: true,
         }}
+        components={{
+          Container: (props) => <Paper {...props} elevation={0}/>,
+        }}
         actions={[
           {
             icon: () => {
-              return <AddIcon fontSize="large" />;
+              return <AddIcon fontSize="large"/>;
             },
             tooltip: "Create new Contest",
             isFreeAction: true,
@@ -72,6 +90,6 @@ export function ListContestManagerByRegistration() {
           },
         ]}
       />
-    </Box>
+    // </>
   );
 }
