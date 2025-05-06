@@ -316,6 +316,11 @@ function QuestionBank(props) {
           contentAnswer3: parseToString(rowData.contentAnswer3),
           contentAnswer4: parseToString(rowData.contentAnswer4),
           contentAnswer5: parseToString(rowData.contentAnswer5),
+          contentFileAnswer1: parseToString(rowData.contentFileAnswer1),
+          contentFileAnswer2: parseToString(rowData.contentFileAnswer2),
+          contentFileAnswer3: parseToString(rowData.contentFileAnswer3),
+          contentFileAnswer4: parseToString(rowData.contentFileAnswer4),
+          contentFileAnswer5: parseToString(rowData.contentFileAnswer5),
           multichoice: rowData.multichoice,
           answer: parseToString(rowData.answer),
           explain: parseToString(rowData.explain)

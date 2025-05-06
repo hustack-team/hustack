@@ -6,6 +6,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import {Box} from "@material-ui/core";
 import QuestionBankDetails from "../questionbank/QuestionBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import {getFilePathFromString} from "../ultils/FileUltils";
 
 
 function TestBankQuestionItem(props) {
@@ -48,38 +49,65 @@ function TestBankQuestionItem(props) {
           value.type === 0 &&
             (<Box display="flex" flexDirection='column'>
               <div style={{display: "flex", alignItems: "center"}}>
-                <span style={{marginRight: "5px"}}>1.</span>
-                <span>{parseHTMLToString(value.contentAnswer1)}</span>
+                <strong style={{marginRight: "5px"}}>1.</strong>
+                <div>
+                  <p>{parseHTMLToString(value.contentAnswer1)}</p>
+                  {value?.contentFileAnswer1 && (
+                    <img src={getFilePathFromString(value?.contentFileAnswer1)} alt="" style={{maxHeight: "150px"}}/>
+                  )}
+                </div>
               </div>
               {
                 value.numberAnswer >= 2 && (
                   <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>2.</span>
-                    <span>{parseHTMLToString(value.contentAnswer2)}</span>
+                    <strong style={{marginRight: "5px"}}>2.</strong>
+                    <div>
+                      <p>{parseHTMLToString(value.contentAnswer2)}</p>
+                      {value?.contentFileAnswer2 && (
+                        <img src={getFilePathFromString(value?.contentFileAnswer2)} alt="" style={{maxHeight: "150px"}}/>
+                      )}
+                    </div>
                   </div>
                 )
               }
               {
                 value.numberAnswer >= 3 && (
                   <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>3.</span>
-                    <span>{parseHTMLToString(value.contentAnswer3)}</span>
+                    <strong style={{marginRight: "5px"}}>3.</strong>
+                    <div>
+                      <p>{parseHTMLToString(value.contentAnswer3)}</p>
+                      {value?.contentFileAnswer3 && (
+                        <img src={getFilePathFromString(value?.contentFileAnswer3)} alt=""
+                             style={{maxHeight: "150px"}}/>
+                      )}
+                    </div>
                   </div>
                 )
               }
               {
                 value.numberAnswer >= 4 && (
                   <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>4.</span>
-                    <span>{parseHTMLToString(value.contentAnswer4)}</span>
+                    <strong style={{marginRight: "5px"}}>4.</strong>
+                    <div>
+                      <p>{parseHTMLToString(value.contentAnswer4)}</p>
+                      {value?.contentFileAnswer4 && (
+                        <img src={getFilePathFromString(value?.contentFileAnswer4)} alt="" style={{maxHeight: "150px"}}/>
+                      )}
+                    </div>
                   </div>
                 )
               }
               {
                 value.numberAnswer >= 5 && (
                   <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>5.</span>
-                    <span>{parseHTMLToString(value.contentAnswer5)}</span>
+                    <strong style={{marginRight: "5px"}}>5.</strong>
+                    <div>
+                      <p>{parseHTMLToString(value.contentAnswer5)}</p>
+                      {value?.contentFileAnswer5 && (
+                        <img src={getFilePathFromString(value?.contentFileAnswer5)} alt=""
+                             style={{maxHeight: "150px"}}/>
+                      )}
+                    </div>
                   </div>
                 )
               }

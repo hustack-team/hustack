@@ -29,6 +29,11 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.content_answer3 as contentAnswer3, " +
                    "    eq.content_answer4 as contentAnswer4, " +
                    "    eq.content_answer5 as contentAnswer5, " +
+                   "    eq.content_file_answer1 as contentFileAnswer1, " +
+                   "    eq.content_file_answer2 as contentFileAnswer2, " +
+                   "    eq.content_file_answer3 as contentFileAnswer3, " +
+                   "    eq.content_file_answer4 as contentFileAnswer4, " +
+                   "    eq.content_file_answer5 as contentFileAnswer5, " +
                    "    eq.multichoice, " +
                    "    eq.answer, " +
                    "    eq.explain, " +
@@ -52,7 +57,8 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.id = :id " +
                    "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer,  " +
                    "    eq.content_answer1, eq.content_answer2, eq.content_answer3,  " +
-                   "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer,  " +
+                   "    eq.content_answer4, eq.content_answer5, eq.content_file_answer1, eq.content_file_answer2, " +
+                   "    eq.content_file_answer3, eq.content_file_answer4, eq.content_file_answer5, eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by,  " +
                    "    es.name, eq.level", nativeQuery = true)
     Optional<ExamQuestionDetailsRes> findOneById(String id);
@@ -69,6 +75,11 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.content_answer3 as contentAnswer3, " +
                    "    eq.content_answer4 as contentAnswer4, " +
                    "    eq.content_answer5 as contentAnswer5, " +
+                   "    eq.content_file_answer1 as contentFileAnswer1, " +
+                   "    eq.content_file_answer2 as contentFileAnswer2, " +
+                   "    eq.content_file_answer3 as contentFileAnswer3, " +
+                   "    eq.content_file_answer4 as contentFileAnswer4, " +
+                   "    eq.content_file_answer5 as contentFileAnswer5, " +
                    "    eq.multichoice, " +
                    "    eq.answer, " +
                    "    eq.explain, " +
@@ -92,7 +103,8 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.code = :code " +
                    "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer,  " +
                    "    eq.content_answer1, eq.content_answer2, eq.content_answer3,  " +
-                   "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer,  " +
+                   "    eq.content_answer4, eq.content_answer5, eq.content_file_answer1, eq.content_file_answer2, " +
+                   "    eq.content_file_answer3, eq.content_file_answer4, eq.content_file_answer5, eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by,  " +
                    "    es.name, eq.level", nativeQuery = true)
     Optional<ExamQuestionDetailsRes> findOneByCode(String code);
@@ -129,7 +141,8 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    (lower(eq.content) like CONCAT('%', lower(:keyword),'%'))) " +
                    "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
                    "    eq.content_answer1, eq.content_answer2, eq.content_answer3, " +
-                   "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer, " +
+                   "    eq.content_answer4, eq.content_answer5, eq.content_file_answer1, eq.content_file_answer2, " +
+                   "    eq.content_file_answer3, eq.content_file_answer4, eq.content_file_answer5, eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by, " +
                    "    eq.exam_subject_id, eq.level ,es.id, es.name " +
                    "order by eq.created_at desc",
@@ -160,7 +173,8 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                         "    (lower(eq.content) like CONCAT('%', lower(:keyword),'%'))) " +
                         "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
                         "    eq.content_answer1, eq.content_answer2, eq.content_answer3, " +
-                        "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer, " +
+                        "    eq.content_answer4, eq.content_answer5, eq.content_file_answer1, eq.content_file_answer2, " +
+                        "    eq.content_file_answer3, eq.content_file_answer4, eq.content_file_answer5, eq.multichoice, eq.answer, " +
                         "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by, " +
                         "    eq.exam_subject_id, eq.level ,es.id, es.name ",
            nativeQuery = true)

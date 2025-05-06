@@ -15,6 +15,11 @@ public interface MyExamQuestionDetailsRes {
     String getQuestionContentAnswer3();
     String getQuestionContentAnswer4();
     String getQuestionContentAnswer5();
+    String getQuestionContentFileAnswer1();
+    String getQuestionContentFileAnswer2();
+    String getQuestionContentFileAnswer3();
+    String getQuestionContentFileAnswer4();
+    String getQuestionContentFileAnswer5();
     boolean getQuestionMultichoice();
     String getQuestionAnswer();
     String getQuestionExplain();

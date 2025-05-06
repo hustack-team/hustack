@@ -114,7 +114,25 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         }
 
         ExamQuestionEntity examQuestionEntity = modelMapper.map(examQuestionSaveReq, ExamQuestionEntity.class);
-        examQuestionEntity.setFilePath(String.join(";", filePaths));
+        List<String> remainingFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePath != null) {
+                if (filePath.contains("_answer_1")) {
+                    examQuestionEntity.setContentFileAnswer1(filePath);
+                } else if (filePath.contains("_answer_2")) {
+                    examQuestionEntity.setContentFileAnswer2(filePath);
+                } else if (filePath.contains("_answer_3")) {
+                    examQuestionEntity.setContentFileAnswer3(filePath);
+                } else if (filePath.contains("_answer_4")) {
+                    examQuestionEntity.setContentFileAnswer4(filePath);
+                } else if (filePath.contains("_answer_5")) {
+                    examQuestionEntity.setContentFileAnswer5(filePath);
+                } else {
+                    remainingFilePaths.add(filePath);
+                }
+            }
+        }
+        examQuestionEntity.setFilePath(String.join(";", remainingFilePaths));
         examQuestionEntity = examQuestionRepository.save(examQuestionEntity);
 
         List<ExamQuestionTagEntity> examQuestionTagEntityList = new ArrayList<>();
@@ -152,12 +170,30 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         examQuestionEntity.setId(examQuestionExist.get().getId());
         examQuestionEntity.setCreatedBy(examQuestionExist.get().getCreatedBy());
         examQuestionEntity.setCreatedAt(examQuestionExist.get().getCreatedAt());
+        List<String> remainingFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePath != null) {
+                if (filePath.contains("_answer_1")) {
+                    examQuestionEntity.setContentFileAnswer1(filePath);
+                } else if (filePath.contains("_answer_2")) {
+                    examQuestionEntity.setContentFileAnswer2(filePath);
+                } else if (filePath.contains("_answer_3")) {
+                    examQuestionEntity.setContentFileAnswer3(filePath);
+                } else if (filePath.contains("_answer_4")) {
+                    examQuestionEntity.setContentFileAnswer4(filePath);
+                } else if (filePath.contains("_answer_5")) {
+                    examQuestionEntity.setContentFileAnswer5(filePath);
+                } else {
+                    remainingFilePaths.add(filePath);
+                }
+            }
+        }
         examQuestionEntity.setFilePath(
             DataUtils.stringIsNotNullOrEmpty(examQuestionEntity.getFilePath()) ?
-                (!filePaths.isEmpty() ?
-                    examQuestionEntity.getFilePath() +";"+ String.join(";", filePaths) :
+                (!remainingFilePaths.isEmpty() ?
+                    examQuestionEntity.getFilePath() +";"+ String.join(";", remainingFilePaths) :
                     examQuestionEntity.getFilePath()) :
-                String.join(";", filePaths));
+                String.join(";", remainingFilePaths));
         examQuestionRepository.save(examQuestionEntity);
 
         for(String filePath: examQuestionSaveReq.getDeletePaths()){
@@ -207,6 +243,18 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
             responseData.setResultMsg("Câu hỏi đã được gán cho đề thi, không được xoá");
             return responseData;
+        }
+
+        List<String> listFileDelete = new ArrayList<>();
+        listFileDelete.add(examQuestionExist.get().getContentFileAnswer1());
+        listFileDelete.add(examQuestionExist.get().getContentFileAnswer2());
+        listFileDelete.add(examQuestionExist.get().getContentFileAnswer3());
+        listFileDelete.add(examQuestionExist.get().getContentFileAnswer4());
+        listFileDelete.add(examQuestionExist.get().getContentFileAnswer5());
+        for(String filePath: listFileDelete){
+            if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                mongoFileService.deleteByPath(filePath);
+            }
         }
 
         if(examQuestionExist.get().getFilePath() != null){

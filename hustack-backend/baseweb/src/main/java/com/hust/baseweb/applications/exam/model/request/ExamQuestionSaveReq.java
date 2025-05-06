@@ -24,6 +24,11 @@ public class ExamQuestionSaveReq {
     private String contentAnswer3;
     private String contentAnswer4;
     private String contentAnswer5;
+    private String contentFileAnswer1;
+    private String contentFileAnswer2;
+    private String contentFileAnswer3;
+    private String contentFileAnswer4;
+    private String contentFileAnswer5;
     private boolean multichoice;
     private String answer;
     private String explain;

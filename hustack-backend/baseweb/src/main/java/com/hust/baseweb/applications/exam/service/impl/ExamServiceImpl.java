@@ -273,19 +273,20 @@ public class ExamServiceImpl implements ExamService {
         ExamResultEntity examResultEntity = modelMapper.map(myExamResultSaveReq, ExamResultEntity.class);
         examResultEntity = examResultRepository.save(examResultEntity);
 
-        for(MultipartFile file: files){
-            String filename = file.getOriginalFilename();
-            for(MyExamResultDetailsSaveReq examResultDetails: myExamResultSaveReq.getExamResultDetails()){
-                if(Objects.equals(examResultDetails.getQuestionOrder(), getQuestionOrderFromFilename(filename))){
-                    String filePath = mongoFileService.storeFile(file);
-                    if(DataUtils.stringIsNotNullOrEmpty(examResultDetails.getFilePath())){
-                        examResultDetails.setFilePath(examResultDetails.getFilePath() + ";" + filePath);
-                    }else{
-                        examResultDetails.setFilePath(filePath);
+        if(files != null){
+            for(MultipartFile file: files){
+                String filename = file.getOriginalFilename();
+                for(MyExamResultDetailsSaveReq examResultDetails: myExamResultSaveReq.getExamResultDetails()){
+                    if(Objects.equals(examResultDetails.getQuestionOrder(), getQuestionOrderFromFilename(filename))){
+                        String filePath = mongoFileService.storeFile(file);
+                        if(DataUtils.stringIsNotNullOrEmpty(examResultDetails.getFilePath())){
+                            examResultDetails.setFilePath(examResultDetails.getFilePath() + ";" + filePath);
+                        }else{
+                            examResultDetails.setFilePath(filePath);
+                        }
                     }
                 }
             }
-
         }
 
         List<ExamResultDetailsEntity> examResultDetailsEntities = new ArrayList<>();

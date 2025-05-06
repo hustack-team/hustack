@@ -26,6 +26,7 @@ import withScreenSecurity from "../../../withScreenSecurity";
 import QuestionTagManagement from "./QuestionTagManagement";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import FileUploader from "../../../common/uploader/FileUploader";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -134,6 +135,12 @@ function QuestionBankCreateUpdate(props) {
   const [contentAnswer3, setContentAnswer3] = useState(question?.contentAnswer3);
   const [contentAnswer4, setContentAnswer4] = useState(question?.contentAnswer4);
   const [contentAnswer5, setContentAnswer5] = useState(question?.contentAnswer5);
+  const [contentFileAnswer1, setContentFileAnswer1] = useState(question?.contentFileAnswer1);
+  const [contentFileAnswer2, setContentFileAnswer2] = useState(question?.contentFileAnswer2);
+  const [contentFileAnswer3, setContentFileAnswer3] = useState(question?.contentFileAnswer3);
+  const [contentFileAnswer4, setContentFileAnswer4] = useState(question?.contentFileAnswer4);
+  const [contentFileAnswer5, setContentFileAnswer5] = useState(question?.contentFileAnswer5);
+  const [contentAnswerFiles, setContentAnswerFiles] = useState([]);
   const [multichoice, setMultichoice] = useState(question?.multichoice);
   const [answer, setAnswer] = useState(question?.answer);
   const [explain, setExplain] = useState(question?.explain);
@@ -155,10 +162,6 @@ function QuestionBankCreateUpdate(props) {
     }
   }, [openQuestionTagManagementDialog]);
 
-  useEffect(() => {
-    console.log('examTags',examTags)
-  }, [examTags]);
-
   const saveQuestion = () =>{
     const body = {
       code: code,
@@ -175,6 +178,11 @@ function QuestionBankCreateUpdate(props) {
       contentAnswer3: type === 0 ? contentAnswer3 : null,
       contentAnswer4: type === 0 ? contentAnswer4 : null,
       contentAnswer5: type === 0 ? contentAnswer5 : null,
+      contentFileAnswer1: type === 0 ? contentFileAnswer1 : null,
+      contentFileAnswer2: type === 0 ? contentFileAnswer2 : null,
+      contentFileAnswer3: type === 0 ? contentFileAnswer3 : null,
+      contentFileAnswer4: type === 0 ? contentFileAnswer4 : null,
+      contentFileAnswer5: type === 0 ? contentFileAnswer5 : null,
       multichoice: type === 0 ? multichoice : null,
       answer:  answer,
       explain:  explain
@@ -185,7 +193,8 @@ function QuestionBankCreateUpdate(props) {
 
     let formData = new FormData();
     formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
-    for (const file of contentFiles) {
+    const tmpFiles = contentFiles.concat(contentAnswerFiles)
+    for (const file of tmpFiles) {
       formData.append("files", file);
     }
 
@@ -312,6 +321,40 @@ function QuestionBankCreateUpdate(props) {
     let tmpDeletePaths = deletePaths
     tmpDeletePaths.push(data)
     setDeletePaths(tmpDeletePaths)
+  }
+
+  const handleUploadContentAnswerFile = (file, index) => {
+    if(file){
+      const fileNameParts = file.name.split('.');
+      const newFileName = `${fileNameParts[0]}_answer_${index}.${fileNameParts[1]}`;
+
+      const updatedFile = new File([file], newFileName, {
+        type: file.type,
+        lastModified: file.lastModified,
+      });
+      setContentAnswerFiles([...contentAnswerFiles, updatedFile])
+    }else{
+      if(contentAnswerFiles){
+        setContentAnswerFiles(contentAnswerFiles.filter((file) => !file.name.includes(`_answer_${index}`)));
+      }
+    }
+  }
+
+  const handleDeleteContentAnswerFile = (file, index) => {
+    if(file){
+      if(index === 1) {
+        setContentFileAnswer1(null)
+      }else if(index === 2) {
+        setContentFileAnswer2(null)
+      }else if(index === 3) {
+        setContentFileAnswer3(null)
+      }else if(index === 4) {
+        setContentFileAnswer4(null)
+      }else if(index === 5) {
+        setContentFileAnswer5(null)
+      }
+      setDeletePaths([...deletePaths, file])
+    }
   }
 
   return (
@@ -564,6 +607,21 @@ function QuestionBankCreateUpdate(props) {
                           setContentAnswer1(contentAnswer1)
                         }
                       />
+                      {
+                        contentFileAnswer1 ?
+                          (
+                            <div style={{display: 'flex', alignItems : 'center'}}>
+                              <AttachFileOutlined></AttachFileOutlined>
+                              <p style={{fontWeight : 'bold', cursor : 'pointer'}} onClick={() => handleOpenFilePreviewDialog(contentFileAnswer1)}>{getFilenameFromString(contentFileAnswer1)}</p>
+                              <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteContentAnswerFile(contentFileAnswer1, 1)}/>
+                            </div>
+                          ) : (
+                            <FileUploader
+                              onChange={(files) => handleUploadContentAnswerFile(files[0], 1)}
+                              preview={false}
+                            />
+                          )
+                      }
                     </div>
                   )
                 }
@@ -577,6 +635,21 @@ function QuestionBankCreateUpdate(props) {
                           setContentAnswer2(contentAnswer2)
                         }
                       />
+                      {
+                        contentFileAnswer2 ?
+                          (
+                            <div style={{display: 'flex', alignItems : 'center'}}>
+                              <AttachFileOutlined></AttachFileOutlined>
+                              <p style={{fontWeight : 'bold', cursor : 'pointer'}} onClick={() => handleOpenFilePreviewDialog(contentFileAnswer2)}>{getFilenameFromString(contentFileAnswer2)}</p>
+                              <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteContentAnswerFile(contentFileAnswer2, 2)}/>
+                            </div>
+                          ) : (
+                            <FileUploader
+                              onChange={(files) => handleUploadContentAnswerFile(files[0], 2)}
+                              preview={false}
+                            />
+                          )
+                      }
                     </div>
                   )
                 }
@@ -590,6 +663,21 @@ function QuestionBankCreateUpdate(props) {
                           setContentAnswer3(contentAnswer3)
                         }
                       />
+                      {
+                        contentFileAnswer3 ?
+                          (
+                            <div style={{display: 'flex', alignItems : 'center'}}>
+                              <AttachFileOutlined></AttachFileOutlined>
+                              <p style={{fontWeight : 'bold', cursor : 'pointer'}} onClick={() => handleOpenFilePreviewDialog(contentFileAnswer3)}>{getFilenameFromString(contentFileAnswer3)}</p>
+                              <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteContentAnswerFile(contentFileAnswer3, 3)}/>
+                            </div>
+                          ) : (
+                            <FileUploader
+                              onChange={(files) => handleUploadContentAnswerFile(files[0], 3)}
+                              preview={false}
+                            />
+                          )
+                      }
                     </div>
                   )
                 }
@@ -603,6 +691,21 @@ function QuestionBankCreateUpdate(props) {
                           setContentAnswer4(contentAnswer4)
                         }
                       />
+                      {
+                        contentFileAnswer4 ?
+                          (
+                            <div style={{display: 'flex', alignItems : 'center'}}>
+                              <AttachFileOutlined></AttachFileOutlined>
+                              <p style={{fontWeight : 'bold', cursor : 'pointer'}} onClick={() => handleOpenFilePreviewDialog(contentFileAnswer4)}>{getFilenameFromString(contentFileAnswer4)}</p>
+                              <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteContentAnswerFile(contentFileAnswer4, 4)}/>
+                            </div>
+                          ) : (
+                            <FileUploader
+                              onChange={(files) => handleUploadContentAnswerFile(files[0], 4)}
+                              preview={false}
+                            />
+                          )
+                      }
                     </div>
                   )
                 }
@@ -616,6 +719,21 @@ function QuestionBankCreateUpdate(props) {
                           setContentAnswer5(contentAnswer5)
                         }
                       />
+                      {
+                        contentFileAnswer5 ?
+                          (
+                            <div style={{display: 'flex', alignItems : 'center'}}>
+                              <AttachFileOutlined></AttachFileOutlined>
+                              <p style={{fontWeight : 'bold', cursor : 'pointer'}} onClick={() => handleOpenFilePreviewDialog(contentFileAnswer5)}>{getFilenameFromString(contentFileAnswer5)}</p>
+                              <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}} onClick={() => handleDeleteContentAnswerFile(contentFileAnswer5, 5)}/>
+                            </div>
+                          ) : (
+                            <FileUploader
+                              onChange={(files) => handleUploadContentAnswerFile(files[0], 5)}
+                              preview={false}
+                            />
+                          )
+                      }
                     </div>
                   )
                 }
