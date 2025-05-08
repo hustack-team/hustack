@@ -29,6 +29,7 @@ import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import TextEditor from "../ultils/component/TextEditor";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -46,9 +47,12 @@ function ExamMarking(props) {
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [examResultDetailsIdSelected, setExamResultDetailsIdSelected] = useState(null);
+  const [indexSelected, setIndexSelected] = useState(null);
   const [isComment, setIsComment] = useState(false);
   const [imageComment, setImageComment] = useState(null);
+  const [contentComment, setContentComment] = useState(null);
   const [commentFilePathDeletes, setCommentFilePathDeletes] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -86,6 +90,14 @@ function ExamMarking(props) {
       setImageComment(null)
     }
   }, [imageComment]);
+
+  useEffect(() => {
+    if(contentComment){
+      setComment(comment.concat(contentComment))
+      setIsTyping(false)
+      setContentComment(null)
+    }
+  }, [contentComment]);
 
   const handleMarking = () => {
     const body = {
@@ -155,6 +167,7 @@ function ExamMarking(props) {
     if(!dataAnswers[index]?.commentFilePath?.includes(`${examResultDetailsId}_${getFileIdFromString(data)}`) &&
       !getFilenameFromFileNew(fileComments)?.includes(`${examResultDetailsId}_${getFileIdFromString(data)}`)){
       setExamResultDetailsIdSelected(examResultDetailsId)
+      setIndexSelected(index)
       setIsComment(isComment)
     }else{
       setIsComment(false)
@@ -342,7 +355,13 @@ function ExamMarking(props) {
                               label={
                                 <FormGroup row>
                                   <Box display="flex" alignItems="center">
-                                    <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
+                                    <div>
+                                      <p>{parseHTMLToString(value?.questionContentAnswer1)}</p>
+                                      {value?.questionContentFileAnswer1 && (
+                                        <img src={getFilePathFromString(value?.questionContentFileAnswer1)} alt=""
+                                             style={{maxHeight: "150px"}}/>
+                                      )}
+                                    </div>
                                     {value?.questionAnswer?.includes('1') && (
                                       <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                   </Box>
@@ -360,7 +379,13 @@ function ExamMarking(props) {
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
+                                        <div>
+                                          <p>{parseHTMLToString(value?.questionContentAnswer2)}</p>
+                                          {value?.questionContentFileAnswer2 && (
+                                            <img src={getFilePathFromString(value?.questionContentFileAnswer2)} alt=""
+                                                 style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
                                         {value?.questionAnswer?.includes('2') && (
                                           <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
@@ -380,7 +405,13 @@ function ExamMarking(props) {
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
+                                        <div>
+                                          <p>{parseHTMLToString(value?.questionContentAnswer3)}</p>
+                                          {value?.questionContentFileAnswer3 && (
+                                            <img src={getFilePathFromString(value?.questionContentFileAnswer3)} alt=""
+                                                 style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
                                         {value?.questionAnswer?.includes('3') && (
                                           <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
@@ -400,7 +431,13 @@ function ExamMarking(props) {
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
+                                        <div>
+                                          <p>{parseHTMLToString(value?.questionContentAnswer4)}</p>
+                                          {value?.questionContentFileAnswer4 && (
+                                            <img src={getFilePathFromString(value?.questionContentFileAnswer4)} alt=""
+                                                 style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
                                         {value?.questionAnswer?.includes('4') && (
                                           <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
@@ -420,7 +457,13 @@ function ExamMarking(props) {
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
+                                        <div>
+                                          <p>{parseHTMLToString(value?.questionContentAnswer5)}</p>
+                                          {value?.questionContentFileAnswer5 && (
+                                            <img src={getFilePathFromString(value?.questionContentFileAnswer5)} alt=""
+                                                 style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
                                         {value?.questionAnswer?.includes('5') && (
                                           <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
@@ -456,7 +499,13 @@ function ExamMarking(props) {
                                 label={
                                   <FormGroup row>
                                     <Box display="flex" alignItems="center">
-                                      <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
+                                      <div>
+                                        <p>{parseHTMLToString(value?.questionContentAnswer1)}</p>
+                                        {value?.questionContentFileAnswer1 && (
+                                          <img src={getFilePathFromString(value?.questionContentFileAnswer1)} alt=""
+                                               style={{maxHeight: "150px"}}/>
+                                        )}
+                                      </div>
                                       {value?.questionAnswer?.includes('1') && (
                                         <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                     </Box>
@@ -476,7 +525,13 @@ function ExamMarking(props) {
                                     label={
                                       <FormGroup row>
                                         <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
+                                          <div>
+                                            <p>{parseHTMLToString(value?.questionContentAnswer2)}</p>
+                                            {value?.questionContentFileAnswer2 && (
+                                              <img src={getFilePathFromString(value?.questionContentFileAnswer2)} alt=""
+                                                   style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
                                           {value?.questionAnswer?.includes('2') && (
                                             <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
@@ -498,7 +553,13 @@ function ExamMarking(props) {
                                     label={
                                       <FormGroup row>
                                         <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
+                                          <div>
+                                            <p>{parseHTMLToString(value?.questionContentAnswer3)}</p>
+                                            {value?.questionContentFileAnswer3 && (
+                                              <img src={getFilePathFromString(value?.questionContentFileAnswer3)} alt=""
+                                                   style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
                                           {value?.questionAnswer?.includes('3') && (
                                             <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
@@ -520,7 +581,13 @@ function ExamMarking(props) {
                                     label={
                                       <FormGroup row>
                                         <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
+                                          <div>
+                                            <p>{parseHTMLToString(value?.questionContentAnswer4)}</p>
+                                            {value?.questionContentFileAnswer4 && (
+                                              <img src={getFilePathFromString(value?.questionContentFileAnswer4)} alt=""
+                                                   style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
                                           {value?.questionAnswer?.includes('4') && (
                                             <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
@@ -542,7 +609,13 @@ function ExamMarking(props) {
                                     label={
                                       <FormGroup row>
                                         <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
+                                          <div>
+                                            <p>{parseHTMLToString(value?.questionContentAnswer5)}</p>
+                                            {value?.questionContentFileAnswer5 && (
+                                              <img src={getFilePathFromString(value?.questionContentFileAnswer5)} alt=""
+                                                   style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
                                           {value?.questionAnswer?.includes('5') && (
                                             <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
@@ -653,11 +726,14 @@ function ExamMarking(props) {
 
             <div>
               <h4 style={{marginBottom: 0, fontSize: '18px'}}>Nhận xét:</h4>
-              <RichTextEditor
+              <TextEditor
                 content={comment}
-                onContentChange={(value) =>
+                onContentChange={(value) => {
                   setComment(value)
+                  setIsTyping(true)
                 }
+                }
+                isTyping={isTyping}
               />
             </div>
           </div>
@@ -688,9 +764,11 @@ function ExamMarking(props) {
         setOpen={setOpenFilePreviewDialog}
         file={filePreview}
         examResultDetailsIdSelected={examResultDetailsIdSelected}
+        indexSelected={indexSelected}
         isComment={isComment}
         imageComment={imageComment}
         setImageComment={setImageComment}
+        setContentComment={setContentComment}
       >
       </QuestionFilePreview>
     </div>

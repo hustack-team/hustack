@@ -68,6 +68,11 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content_answer3 as questionContentAnswer3, " +
                    "    eq.content_answer4 as questionContentAnswer4, " +
                    "    eq.content_answer5 as questionContentAnswer5, " +
+                   "    eq.content_file_answer1 as questionContentFileAnswer1, " +
+                   "    eq.content_file_answer2 as questionContentFileAnswer2, " +
+                   "    eq.content_file_answer3 as questionContentFileAnswer3, " +
+                   "    eq.content_file_answer4 as questionContentFileAnswer4, " +
+                   "    eq.content_file_answer5 as questionContentFileAnswer5, " +
                    "    eq.multichoice as questionMultichoice, " +
                    "    eq.answer as questionAnswer, " +
                    "    eq.explain as questionExplain, " +
@@ -93,7 +98,9 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    and et.id = :examTestId " +
                    "group by etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
                    "    eq.content_answer1, eq.content_answer2, eq.content_answer3, eq.content_answer4, " +
-                   "    eq.content_answer5, eq.multichoice, eq.answer, eq.explain, etq.order, es.name, eq.level " +
+                   "    eq.content_answer5, eq.content_file_answer1, eq.content_file_answer2, eq.content_file_answer3, " +
+                   "    eq.content_answer4, eq.content_file_answer5, " +
+                   "    eq.multichoice, eq.answer, eq.explain, etq.order, es.name, eq.level " +
                    "order by " +
                    "    etq.order", nativeQuery = true)
     List<ExamTestQuestionDetailsRes> details(@Param("userLogin") String userLogin,
@@ -112,6 +119,11 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content_answer3 as questionContentAnswer3, " +
                    "    eq.content_answer4 as questionContentAnswer4, " +
                    "    eq.content_answer5 as questionContentAnswer5, " +
+                   "    eq.content_file_answer1 as questionContentFileAnswer1, " +
+                   "    eq.content_file_answer2 as questionContentFileAnswer2, " +
+                   "    eq.content_file_answer3 as questionContentFileAnswer3, " +
+                   "    eq.content_file_answer4 as questionContentFileAnswer4, " +
+                   "    eq.content_file_answer5 as questionContentFileAnswer5, " +
                    "    eq.multichoice as questionMultichoice, " +
                    "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.answer else null end as questionAnswer, " +
                    "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.explain else null end as questionExplain, " +
@@ -158,6 +170,11 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content_answer3 as questionContentAnswer3, " +
                    "    eq.content_answer4 as questionContentAnswer4, " +
                    "    eq.content_answer5 as questionContentAnswer5, " +
+                   "    eq.content_file_answer1 as questionContentFileAnswer1, " +
+                   "    eq.content_file_answer2 as questionContentFileAnswer2, " +
+                   "    eq.content_file_answer3 as questionContentFileAnswer3, " +
+                   "    eq.content_file_answer4 as questionContentFileAnswer4, " +
+                   "    eq.content_file_answer5 as questionContentFileAnswer5, " +
                    "    eq.multichoice as questionMultichoice, " +
                    "    eq.answer as questionAnswer, " +
                    "    eq.explain as questionExplain, " +

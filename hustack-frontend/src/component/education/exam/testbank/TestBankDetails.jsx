@@ -15,7 +15,7 @@ import TestBankQuestionItem from "./TestBankQuestionItem";
 import QuestionBankDetails from "../questionbank/QuestionBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import {AttachFileOutlined} from "@material-ui/icons";
-import {getFilenameFromString} from "../ultils/FileUltils";
+import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
@@ -48,6 +48,11 @@ function TestBankDetails(props) {
         contentAnswer3: question.questionContentAnswer3,
         contentAnswer4: question.questionContentAnswer4,
         contentAnswer5: question.questionContentAnswer5,
+        contentFileAnswer1: question.questionContentFileAnswer1,
+        contentFileAnswer2: question.questionContentFileAnswer2,
+        contentFileAnswer3: question.questionContentFileAnswer3,
+        contentFileAnswer4: question.questionContentFileAnswer4,
+        contentFileAnswer5: question.questionContentFileAnswer5,
         multichoice: question.questionMultichoice,
         answer: question.questionAnswer,
         explain: question.questionExplain,
@@ -108,38 +113,68 @@ function TestBankDetails(props) {
                           value.type === 0 &&
                           (<Box display="flex" flexDirection='column'>
                             <div style={{display: "flex", alignItems: "center"}}>
-                              <span style={{marginRight: "5px"}}>1.</span>
-                              <span>{parseHTMLToString(value.contentAnswer1)}</span>
+                              <strong style={{marginRight: "5px"}}>1.</strong>
+                              <div>
+                                <p>{parseHTMLToString(value.contentAnswer1)}</p>
+                                {value?.contentFileAnswer1 && (
+                                  <img src={getFilePathFromString(value?.contentFileAnswer1)} alt=""
+                                       style={{maxHeight: "150px"}}/>
+                                )}
+                              </div>
                             </div>
                             {
                               value.numberAnswer >= 2 && (
                                 <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>2.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer2)}</span>
+                                  <strong style={{marginRight: "5px"}}>2.</strong>
+                                  <div>
+                                    <p>{parseHTMLToString(value.contentAnswer2)}</p>
+                                    {value?.contentFileAnswer2 && (
+                                      <img src={getFilePathFromString(value?.contentFileAnswer2)} alt=""
+                                           style={{maxHeight: "150px"}}/>
+                                    )}
+                                  </div>
                                 </div>
                               )
                             }
                             {
                               value.numberAnswer >= 3 && (
                                 <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>3.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer3)}</span>
+                                  <strong style={{marginRight: "5px"}}>3.</strong>
+                                  <div>
+                                    <p>{parseHTMLToString(value.contentAnswer3)}</p>
+                                    {value?.contentFileAnswer3 && (
+                                      <img src={getFilePathFromString(value?.contentFileAnswer3)} alt=""
+                                           style={{maxHeight: "150px"}}/>
+                                    )}
+                                  </div>
                                 </div>
                               )
                             }
                             {
                               value.numberAnswer >= 4 && (
                                 <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>4.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer4)}</span>
+                                  <strong style={{marginRight: "5px"}}>4.</strong>
+                                  <div>
+                                    <p>{parseHTMLToString(value.contentAnswer4)}</p>
+                                    {value?.contentFileAnswer4 && (
+                                      <img src={getFilePathFromString(value?.contentFileAnswer4)} alt=""
+                                           style={{maxHeight: "150px"}}/>
+                                    )}
+                                  </div>
                                 </div>
                               )
                             }
                             {
                               value.numberAnswer >= 5 && (
                                 <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>5.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer5)}</span>
+                                  <strong style={{marginRight: "5px"}}>5.</strong>
+                                  <div>
+                                    <p>{parseHTMLToString(value.contentAnswer5)}</p>
+                                    {value?.contentFileAnswer5 && (
+                                      <img src={getFilePathFromString(value?.contentFileAnswer5)} alt=""
+                                           style={{maxHeight: "150px"}}/>
+                                    )}
+                                  </div>
                                 </div>
                               )
                             }

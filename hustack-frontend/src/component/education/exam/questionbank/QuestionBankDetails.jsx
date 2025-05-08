@@ -107,12 +107,18 @@ function QuestionBankDetails(props) {
                   <div>
                     <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 1:</h4>
                     <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer1)}</p>
+                    {question?.contentFileAnswer1 && (
+                      <img src={getFilePathFromString(question?.contentFileAnswer1)} alt="" style={{maxHeight: "150px"}}/>
+                    )}
                   </div>
                   {
                     (question?.numberAnswer >= 2) && (
                       <div>
                         <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 2:</h4>
                         <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer2)}</p>
+                        {question?.contentFileAnswer2 && (
+                          <img src={getFilePathFromString(question?.contentFileAnswer2)} alt="" style={{maxHeight: "150px"}}/>
+                        )}
                       </div>
                     )
                   }
@@ -121,6 +127,9 @@ function QuestionBankDetails(props) {
                       <div>
                         <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 3:</h4>
                         <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer3)}</p>
+                        {question?.contentFileAnswer3 && (
+                          <img src={getFilePathFromString(question?.contentFileAnswer3)} alt="" style={{maxHeight: "150px"}}/>
+                        )}
                       </div>
                     )
                   }
@@ -129,6 +138,9 @@ function QuestionBankDetails(props) {
                       <div>
                         <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 4:</h4>
                         <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer4)}</p>
+                        {question?.contentFileAnswer4 && (
+                          <img src={getFilePathFromString(question?.contentFileAnswer4)} alt="" style={{maxHeight: "150px"}}/>
+                        )}
                       </div>
                     )
                   }
@@ -137,6 +149,9 @@ function QuestionBankDetails(props) {
                       <div>
                         <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 5:</h4>
                         <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer5)}</p>
+                        {question?.contentFileAnswer5 && (
+                          <img src={getFilePathFromString(question?.contentFileAnswer5)} alt="" style={{maxHeight: "150px"}}/>
+                        )}
                       </div>
                     )
                   }

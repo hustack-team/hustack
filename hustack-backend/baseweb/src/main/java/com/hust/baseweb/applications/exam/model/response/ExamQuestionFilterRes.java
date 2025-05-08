@@ -17,6 +17,11 @@ public interface ExamQuestionFilterRes {
     String getContentAnswer3();
     String getContentAnswer4();
     String getContentAnswer5();
+    String getContentFileAnswer1();
+    String getContentFileAnswer2();
+    String getContentFileAnswer3();
+    String getContentFileAnswer4();
+    String getContentFileAnswer5();
     boolean getMultichoice();
     String getAnswer();
     String getExplain();
