@@ -46,72 +46,19 @@ function TestBankQuestionItem(props) {
         </div>
         <p>{parseHTMLToString(value.content)}</p>
         {
-          value.type === 0 &&
-            (<Box display="flex" flexDirection='column'>
+          value.type === 0 && (
+            Array.from({ length: value.numberAnswer }, (_, index) => (
               <div style={{display: "flex", alignItems: "center"}}>
-                <strong style={{marginRight: "5px"}}>1.</strong>
+                <strong style={{marginRight: "5px"}}>{index+1}.</strong>
                 <div>
-                  <p>{parseHTMLToString(value.contentAnswer1)}</p>
-                  {value?.contentFileAnswer1 && (
-                    <img src={getFilePathFromString(value?.contentFileAnswer1)} alt="" style={{maxHeight: "150px"}}/>
+                  <p>{parseHTMLToString(value.answers[index]?.content)}</p>
+                  {value.answers[index]?.file && (
+                    <img src={getFilePathFromString(value.answers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
                   )}
                 </div>
               </div>
-              {
-                value.numberAnswer >= 2 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <strong style={{marginRight: "5px"}}>2.</strong>
-                    <div>
-                      <p>{parseHTMLToString(value.contentAnswer2)}</p>
-                      {value?.contentFileAnswer2 && (
-                        <img src={getFilePathFromString(value?.contentFileAnswer2)} alt="" style={{maxHeight: "150px"}}/>
-                      )}
-                    </div>
-                  </div>
-                )
-              }
-              {
-                value.numberAnswer >= 3 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <strong style={{marginRight: "5px"}}>3.</strong>
-                    <div>
-                      <p>{parseHTMLToString(value.contentAnswer3)}</p>
-                      {value?.contentFileAnswer3 && (
-                        <img src={getFilePathFromString(value?.contentFileAnswer3)} alt=""
-                             style={{maxHeight: "150px"}}/>
-                      )}
-                    </div>
-                  </div>
-                )
-              }
-              {
-                value.numberAnswer >= 4 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <strong style={{marginRight: "5px"}}>4.</strong>
-                    <div>
-                      <p>{parseHTMLToString(value.contentAnswer4)}</p>
-                      {value?.contentFileAnswer4 && (
-                        <img src={getFilePathFromString(value?.contentFileAnswer4)} alt="" style={{maxHeight: "150px"}}/>
-                      )}
-                    </div>
-                  </div>
-                )
-              }
-              {
-                value.numberAnswer >= 5 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <strong style={{marginRight: "5px"}}>5.</strong>
-                    <div>
-                      <p>{parseHTMLToString(value.contentAnswer5)}</p>
-                      {value?.contentFileAnswer5 && (
-                        <img src={getFilePathFromString(value?.contentFileAnswer5)} alt=""
-                             style={{maxHeight: "150px"}}/>
-                      )}
-                    </div>
-                  </div>
-                )
-              }
-            </Box>)
+            ))
+          )
         }
       </Box>
       <Box display="flex" justifyContent='space-between' width="110px">

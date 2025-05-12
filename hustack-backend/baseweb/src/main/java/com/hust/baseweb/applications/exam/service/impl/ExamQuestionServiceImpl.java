@@ -7,10 +7,7 @@ import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionFilterRes;
-import com.hust.baseweb.applications.exam.repository.ExamQuestionRepository;
-import com.hust.baseweb.applications.exam.repository.ExamQuestionTagRepository;
-import com.hust.baseweb.applications.exam.repository.ExamTagRepository;
-import com.hust.baseweb.applications.exam.repository.ExamTestQuestionRepository;
+import com.hust.baseweb.applications.exam.repository.*;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
 import com.hust.baseweb.applications.exam.service.MongoFileService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
@@ -43,6 +40,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     ExamTagRepository examTagRepository;
     ExamQuestionTagRepository examQuestionTagRepository;
     ExamTestQuestionRepository examTestQuestionRepository;
+    ExamQuestionAnswerRepository examQuestionAnswerRepository;
     MongoFileService mongoFileService;
     ModelMapper modelMapper;
     EntityManager entityManager;
@@ -117,17 +115,14 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         List<String> remainingFilePaths = new ArrayList<>();
         for (String filePath : filePaths) {
             if (filePath != null) {
-                if (filePath.contains("_answer_1")) {
-                    examQuestionEntity.setContentFileAnswer1(filePath);
-                } else if (filePath.contains("_answer_2")) {
-                    examQuestionEntity.setContentFileAnswer2(filePath);
-                } else if (filePath.contains("_answer_3")) {
-                    examQuestionEntity.setContentFileAnswer3(filePath);
-                } else if (filePath.contains("_answer_4")) {
-                    examQuestionEntity.setContentFileAnswer4(filePath);
-                } else if (filePath.contains("_answer_5")) {
-                    examQuestionEntity.setContentFileAnswer5(filePath);
-                } else {
+                boolean exist = false;
+                for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+                    if (filePath.contains("_answer_"+answerSaveReq.getOrder())) {
+                        answerSaveReq.setFile(filePath);
+                        exist = true;
+                    }
+                }
+                if(!exist){
                     remainingFilePaths.add(filePath);
                 }
             }
@@ -142,6 +137,19 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             examQuestionTagEntityList.add(examQuestionTagEntity);
         }
         examQuestionTagRepository.saveAll(examQuestionTagEntityList);
+
+        List<ExamQuestionAnswerEntity> examQuestionAnswerEntities = new ArrayList<>();
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+            examQuestionAnswerEntities.add(
+                ExamQuestionAnswerEntity
+                    .builder()
+                    .examQuestionId(examQuestionEntity.getId())
+                    .order(answerSaveReq.getOrder())
+                    .content(answerSaveReq.getContent())
+                    .file(answerSaveReq.getFile())
+                    .build());
+        }
+        examQuestionAnswerRepository.saveAll(examQuestionAnswerEntities);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -173,17 +181,14 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         List<String> remainingFilePaths = new ArrayList<>();
         for (String filePath : filePaths) {
             if (filePath != null) {
-                if (filePath.contains("_answer_1")) {
-                    examQuestionEntity.setContentFileAnswer1(filePath);
-                } else if (filePath.contains("_answer_2")) {
-                    examQuestionEntity.setContentFileAnswer2(filePath);
-                } else if (filePath.contains("_answer_3")) {
-                    examQuestionEntity.setContentFileAnswer3(filePath);
-                } else if (filePath.contains("_answer_4")) {
-                    examQuestionEntity.setContentFileAnswer4(filePath);
-                } else if (filePath.contains("_answer_5")) {
-                    examQuestionEntity.setContentFileAnswer5(filePath);
-                } else {
+                boolean exist = false;
+                for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+                    if (filePath.contains("_answer_"+answerSaveReq.getOrder())) {
+                        answerSaveReq.setFile(filePath);
+                        exist = true;
+                    }
+                }
+                if(!exist){
                     remainingFilePaths.add(filePath);
                 }
             }
@@ -219,6 +224,27 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             examQuestionTagRepository.save(examQuestionTagEntity);
         }
 
+        List<ExamQuestionAnswerEntity> examQuestionAnswerEntities = new ArrayList<>();
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+            examQuestionAnswerEntities.add(
+                ExamQuestionAnswerEntity
+                    .builder()
+                    .id(answerSaveReq.getId())
+                    .examQuestionId(examQuestionEntity.getId())
+                    .order(answerSaveReq.getOrder())
+                    .content(answerSaveReq.getContent())
+                    .file(answerSaveReq.getFile())
+                    .build());
+        }
+        examQuestionAnswerRepository.saveAll(examQuestionAnswerEntities);
+
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswersDelete()){
+            examQuestionAnswerRepository.deleteById(answerSaveReq.getId());
+            if(DataUtils.stringIsNotNullOrEmpty(answerSaveReq.getFile())){
+                mongoFileService.deleteByPath(answerSaveReq.getFile());
+            }
+        }
+
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
         responseData.setResultMsg("Cập nhật câu hỏi thành công");
@@ -245,16 +271,17 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             return responseData;
         }
 
-        List<String> listFileDelete = new ArrayList<>();
-        listFileDelete.add(examQuestionExist.get().getContentFileAnswer1());
-        listFileDelete.add(examQuestionExist.get().getContentFileAnswer2());
-        listFileDelete.add(examQuestionExist.get().getContentFileAnswer3());
-        listFileDelete.add(examQuestionExist.get().getContentFileAnswer4());
-        listFileDelete.add(examQuestionExist.get().getContentFileAnswer5());
-        for(String filePath: listFileDelete){
-            if(DataUtils.stringIsNotNullOrEmpty(filePath)){
-                mongoFileService.deleteByPath(filePath);
+        List<ExamQuestionAnswerEntity> questionAnswerEntityList = examQuestionAnswerRepository.findAllByExamQuestionId(id);
+        if(!questionAnswerEntityList.isEmpty()){
+            List<String> listFileDelete = questionAnswerEntityList.stream()
+                                                                  .map(ExamQuestionAnswerEntity::getFile)
+                                                                  .collect(Collectors.toList());
+            for(String filePath: listFileDelete){
+                if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                    mongoFileService.deleteByPath(filePath);
+                }
             }
+            examQuestionAnswerRepository.deleteAll(questionAnswerEntityList);
         }
 
         if(examQuestionExist.get().getFilePath() != null){

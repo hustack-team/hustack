@@ -65,9 +65,9 @@ function QuestionBankDetails(props) {
                 )
               }
               {
-                question?.examTagNameStr && (
+                question?.examTags?.length > 0 && (
                   <div style={{display: 'flex', marginLeft: '24px'}}>
-                    <strong style={{fontStyle: "italic"}}># {question?.examTagNameStr}</strong>
+                    <strong style={{fontStyle: "italic"}}># {question?.examTags.map(tag => tag?.name).join(', ')}</strong>
                   </div>
                 )
               }
@@ -104,57 +104,18 @@ function QuestionBankDetails(props) {
                     <h4 style={{marginRight: '5px', marginTop: 0}}>Số đáp án:</h4>
                     <p style={{marginTop: 0, marginBottom: 0}}>{question?.numberAnswer}</p>
                   </div>
-                  <div>
-                    <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 1:</h4>
-                    <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer1)}</p>
-                    {question?.contentFileAnswer1 && (
-                      <img src={getFilePathFromString(question?.contentFileAnswer1)} alt="" style={{maxHeight: "150px"}}/>
-                    )}
-                  </div>
-                  {
-                    (question?.numberAnswer >= 2) && (
+                  {question?.answers.map(answer => {
+                    return (
                       <div>
-                        <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 2:</h4>
-                        <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer2)}</p>
-                        {question?.contentFileAnswer2 && (
-                          <img src={getFilePathFromString(question?.contentFileAnswer2)} alt="" style={{maxHeight: "150px"}}/>
+                        <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án {answer?.order}:</h4>
+                        <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(answer?.content)}</p>
+                        {answer?.file && (
+                          <img src={getFilePathFromString(answer?.file)} alt=""
+                               style={{maxHeight: "150px"}}/>
                         )}
                       </div>
                     )
-                  }
-                  {
-                    (question?.numberAnswer >= 3) && (
-                      <div>
-                        <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 3:</h4>
-                        <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer3)}</p>
-                        {question?.contentFileAnswer3 && (
-                          <img src={getFilePathFromString(question?.contentFileAnswer3)} alt="" style={{maxHeight: "150px"}}/>
-                        )}
-                      </div>
-                    )
-                  }
-                  {
-                    (question?.numberAnswer >= 4) && (
-                      <div>
-                        <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 4:</h4>
-                        <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer4)}</p>
-                        {question?.contentFileAnswer4 && (
-                          <img src={getFilePathFromString(question?.contentFileAnswer4)} alt="" style={{maxHeight: "150px"}}/>
-                        )}
-                      </div>
-                    )
-                  }
-                  {
-                    (question?.numberAnswer >= 5) && (
-                      <div>
-                        <h4 style={{marginRight: '5px', marginTop: 0}}>Nội dung phương án 5:</h4>
-                        <p style={{marginTop: 0, marginBottom: 0}}>{parseHTMLToString(question?.contentAnswer5)}</p>
-                        {question?.contentFileAnswer5 && (
-                          <img src={getFilePathFromString(question?.contentFileAnswer5)} alt="" style={{maxHeight: "150px"}}/>
-                        )}
-                      </div>
-                    )
-                  }
+                  })}
                   <div style={{display: 'flex'}}>
                     <h4 style={{marginRight: '5px', marginTop: 0}}>Nhiều lựa chọn:</h4>
                     <p style={{marginTop: 0, marginBottom: 0}}>{question?.multichoice ? 'Có' : 'không'}</p>

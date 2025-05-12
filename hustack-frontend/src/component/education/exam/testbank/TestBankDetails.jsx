@@ -43,23 +43,13 @@ function TestBankDetails(props) {
         content: question.questionContent,
         filePath: question.questionFile,
         numberAnswer: question.questionNumberAnswer,
-        contentAnswer1: question.questionContentAnswer1,
-        contentAnswer2: question.questionContentAnswer2,
-        contentAnswer3: question.questionContentAnswer3,
-        contentAnswer4: question.questionContentAnswer4,
-        contentAnswer5: question.questionContentAnswer5,
-        contentFileAnswer1: question.questionContentFileAnswer1,
-        contentFileAnswer2: question.questionContentFileAnswer2,
-        contentFileAnswer3: question.questionContentFileAnswer3,
-        contentFileAnswer4: question.questionContentFileAnswer4,
-        contentFileAnswer5: question.questionContentFileAnswer5,
+        answers: question.questionAnswers,
         multichoice: question.questionMultichoice,
         answer: question.questionAnswer,
         explain: question.questionExplain,
         order: question.questionOrder,
         examSubjectName: question.examSubjectName,
-        examTagIdStr: question.examTagIdStr,
-        examTagNameStr: question.examTagNameStr,
+        examTags: question.questionExamTags,
       })
     }
     setQuestions(tmpData)
@@ -110,75 +100,19 @@ function TestBankDetails(props) {
                         </div>
                         <p>{parseHTMLToString(value.content)}</p>
                         {
-                          value.type === 0 &&
-                          (<Box display="flex" flexDirection='column'>
-                            <div style={{display: "flex", alignItems: "center"}}>
-                              <strong style={{marginRight: "5px"}}>1.</strong>
-                              <div>
-                                <p>{parseHTMLToString(value.contentAnswer1)}</p>
-                                {value?.contentFileAnswer1 && (
-                                  <img src={getFilePathFromString(value?.contentFileAnswer1)} alt=""
-                                       style={{maxHeight: "150px"}}/>
-                                )}
+                          value.type === 0 && (
+                            Array.from({ length: value.numberAnswer }, (_, index) => (
+                              <div style={{display: "flex", alignItems: "center"}}>
+                                <strong style={{marginRight: "5px"}}>{index+1}.</strong>
+                                <div>
+                                  <p>{parseHTMLToString(value.answers[index]?.content)}</p>
+                                  {value.answers[index]?.file && (
+                                    <img src={getFilePathFromString(value.answers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            {
-                              value.numberAnswer >= 2 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <strong style={{marginRight: "5px"}}>2.</strong>
-                                  <div>
-                                    <p>{parseHTMLToString(value.contentAnswer2)}</p>
-                                    {value?.contentFileAnswer2 && (
-                                      <img src={getFilePathFromString(value?.contentFileAnswer2)} alt=""
-                                           style={{maxHeight: "150px"}}/>
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            }
-                            {
-                              value.numberAnswer >= 3 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <strong style={{marginRight: "5px"}}>3.</strong>
-                                  <div>
-                                    <p>{parseHTMLToString(value.contentAnswer3)}</p>
-                                    {value?.contentFileAnswer3 && (
-                                      <img src={getFilePathFromString(value?.contentFileAnswer3)} alt=""
-                                           style={{maxHeight: "150px"}}/>
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            }
-                            {
-                              value.numberAnswer >= 4 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <strong style={{marginRight: "5px"}}>4.</strong>
-                                  <div>
-                                    <p>{parseHTMLToString(value.contentAnswer4)}</p>
-                                    {value?.contentFileAnswer4 && (
-                                      <img src={getFilePathFromString(value?.contentFileAnswer4)} alt=""
-                                           style={{maxHeight: "150px"}}/>
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            }
-                            {
-                              value.numberAnswer >= 5 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <strong style={{marginRight: "5px"}}>5.</strong>
-                                  <div>
-                                    <p>{parseHTMLToString(value.contentAnswer5)}</p>
-                                    {value?.contentFileAnswer5 && (
-                                      <img src={getFilePathFromString(value?.contentFileAnswer5)} alt=""
-                                           style={{maxHeight: "150px"}}/>
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            }
-                          </Box>)
+                            ))
+                          )
                         }
                       </Box>
                       <Box display="flex" justifyContent='space-between' width="70px">

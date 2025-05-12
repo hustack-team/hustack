@@ -63,43 +63,34 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content as questionContent, " +
                    "    eq.file_path as questionFile, " +
                    "    eq.number_answer as questionNumberAnswer, " +
-                   "    eq.content_answer1 as questionContentAnswer1, " +
-                   "    eq.content_answer2 as questionContentAnswer2, " +
-                   "    eq.content_answer3 as questionContentAnswer3, " +
-                   "    eq.content_answer4 as questionContentAnswer4, " +
-                   "    eq.content_answer5 as questionContentAnswer5, " +
-                   "    eq.content_file_answer1 as questionContentFileAnswer1, " +
-                   "    eq.content_file_answer2 as questionContentFileAnswer2, " +
-                   "    eq.content_file_answer3 as questionContentFileAnswer3, " +
-                   "    eq.content_file_answer4 as questionContentFileAnswer4, " +
-                   "    eq.content_file_answer5 as questionContentFileAnswer5, " +
                    "    eq.multichoice as questionMultichoice, " +
                    "    eq.answer as questionAnswer, " +
                    "    eq.explain as questionExplain, " +
                    "    etq.order as questionOrder, " +
                    "    es.name as examSubjectName, " +
                    "    eq.level as questionLevel, " +
-                   "    string_agg(eta.id, ',') as examTagIdStr, " +
-                   "    string_agg(eta.name, ',') as examTagNameStr " +
+                   "    COALESCE( " +
+                   "        (SELECT " +
+                   "             json_agg(json_build_object('id', et.id, 'name', et.name)) " +
+                   "         FROM exam_question_tag eqt " +
+                   "         LEFT JOIN exam_tag et ON " +
+                   "             et.id = eqt.exam_tag_id " +
+                   "         WHERE eqt.exam_question_id = eq.id), '[]') AS questionExamTags, " +
+                   "    COALESCE(json_agg(json_build_object('id', eqa.id, 'examQuestionId', eqa.exam_question_id, 'order', eqa.order, 'content', eqa.content, 'file', eqa.file) ORDER BY eqa.order ASC) FILTER (WHERE eqa.id IS NOT NULL), '[]') AS questionAnswers " +
                    "from " +
                    "    exam_test et " +
                    "left join exam_test_question etq on " +
                    "    et.id = etq.exam_test_id " +
                    "left join exam_question eq on " +
                    "    etq.exam_question_id = eq.id " +
+                   "left join exam_question_answer eqa on " +
+                   "    eq.id = eqa.exam_question_id " +
                    "left join exam_subject es on " +
                    "    es.id = eq.exam_subject_id " +
-                   "left join exam_question_tag eqt on " +
-                   "    eqt.exam_question_id = eq.id " +
-                   "left join exam_tag eta on " +
-                   "    eta.id = eqt.exam_tag_id " +
                    "where " +
                    "    et.created_by = :userLogin " +
                    "    and et.id = :examTestId " +
                    "group by etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
-                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3, eq.content_answer4, " +
-                   "    eq.content_answer5, eq.content_file_answer1, eq.content_file_answer2, eq.content_file_answer3, " +
-                   "    eq.content_answer4, eq.content_file_answer5, " +
                    "    eq.multichoice, eq.answer, eq.explain, etq.order, es.name, eq.level " +
                    "order by " +
                    "    etq.order", nativeQuery = true)
@@ -114,16 +105,6 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content as questionContent, " +
                    "    eq.file_path as questionFile, " +
                    "    eq.number_answer as questionNumberAnswer, " +
-                   "    eq.content_answer1 as questionContentAnswer1, " +
-                   "    eq.content_answer2 as questionContentAnswer2, " +
-                   "    eq.content_answer3 as questionContentAnswer3, " +
-                   "    eq.content_answer4 as questionContentAnswer4, " +
-                   "    eq.content_answer5 as questionContentAnswer5, " +
-                   "    eq.content_file_answer1 as questionContentFileAnswer1, " +
-                   "    eq.content_file_answer2 as questionContentFileAnswer2, " +
-                   "    eq.content_file_answer3 as questionContentFileAnswer3, " +
-                   "    eq.content_file_answer4 as questionContentFileAnswer4, " +
-                   "    eq.content_file_answer5 as questionContentFileAnswer5, " +
                    "    eq.multichoice as questionMultichoice, " +
                    "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.answer else null end as questionAnswer, " +
                    "    case when erd.score is not null and e.answer_status = 'OPEN' then eq.explain else null end as questionExplain, " +
@@ -133,13 +114,16 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    erd.file_path as filePathAnswer, " +
                    "    erd.comment_file_path as filePathComment, " +
                    "    erd.pass as pass, " +
-                   "    erd.score as score " +
+                   "    erd.score as score, " +
+                   "    COALESCE(json_agg(json_build_object('id', eqa.id, 'examQuestionId', eqa.exam_question_id, 'order', eqa.order, 'content', eqa.content, 'file', eqa.file) ORDER BY eqa.order ASC) FILTER (WHERE eqa.id IS NOT NULL), '[]') AS questionAnswers " +
                    "from " +
                    "    exam_test et " +
                    "left join exam_test_question etq on " +
                    "    et.id = etq.exam_test_id " +
                    "left join exam_question eq on " +
                    "    etq.exam_question_id = eq.id " +
+                   "left join exam_question_answer eqa on " +
+                   "    eq.id = eqa.exam_question_id " +
                    "left join exam_student es on " +
                    "    es.exam_test_id = et.id " +
                    "left join exam e on " +
@@ -152,6 +136,11 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "where " +
                    "    et.id = :examTestId " +
                    "    and es.id = :examStudentId " +
+                   "group by " +
+                   "    etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, " +
+                   "    eq.number_answer, eq.multichoice, e.answer_status, eq.answer,  " +
+                   "    eq.explain, etq.order, erd.id, erd.answer, erd.file_path, " +
+                   "    erd.comment_file_path, erd.pass, erd.score " +
                    "order by " +
                    "    etq.order", nativeQuery = true)
     List<MyExamQuestionDetailsRes> getMyExamQuestionDetails(@Param("examTestId") String examTestId,
@@ -165,16 +154,6 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    eq.content as questionContent, " +
                    "    eq.file_path as questionFile, " +
                    "    eq.number_answer as questionNumberAnswer, " +
-                   "    eq.content_answer1 as questionContentAnswer1, " +
-                   "    eq.content_answer2 as questionContentAnswer2, " +
-                   "    eq.content_answer3 as questionContentAnswer3, " +
-                   "    eq.content_answer4 as questionContentAnswer4, " +
-                   "    eq.content_answer5 as questionContentAnswer5, " +
-                   "    eq.content_file_answer1 as questionContentFileAnswer1, " +
-                   "    eq.content_file_answer2 as questionContentFileAnswer2, " +
-                   "    eq.content_file_answer3 as questionContentFileAnswer3, " +
-                   "    eq.content_file_answer4 as questionContentFileAnswer4, " +
-                   "    eq.content_file_answer5 as questionContentFileAnswer5, " +
                    "    eq.multichoice as questionMultichoice, " +
                    "    eq.answer as questionAnswer, " +
                    "    eq.explain as questionExplain, " +
@@ -184,13 +163,16 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    erd.file_path as filePathAnswer, " +
                    "    erd.comment_file_path as filePathComment, " +
                    "    erd.pass as pass, " +
-                   "    erd.score as score " +
+                   "    erd.score as score, " +
+                   "    COALESCE(json_agg(json_build_object('id', eqa.id, 'examQuestionId', eqa.exam_question_id, 'order', eqa.order, 'content', eqa.content, 'file', eqa.file) ORDER BY eqa.order ASC) FILTER (WHERE eqa.id IS NOT NULL), '[]') AS questionAnswers " +
                    "from " +
                    "    exam_test et " +
                    "left join exam_test_question etq on " +
                    "    et.id = etq.exam_test_id " +
                    "left join exam_question eq on " +
                    "    etq.exam_question_id = eq.id " +
+                   "left join exam_question_answer eqa on " +
+                   "    eq.id = eqa.exam_question_id " +
                    "left join exam_student es on " +
                    "    es.exam_test_id = et.id " +
                    "left join exam_result er on " +
@@ -201,6 +183,11 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "where " +
                    "    et.id = :examTestId " +
                    "    and es.id = :examStudentId " +
+                   "group by " +
+                   "    etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, " +
+                   "    eq.number_answer, eq.multichoice, eq.answer, " +
+                   "    eq.explain, etq.order, erd.id, erd.answer, erd.file_path, " +
+                   "    erd.comment_file_path, erd.pass, erd.score " +
                    "order by " +
                    "    etq.order", nativeQuery = true)
     List<MyExamQuestionDetailsRes> getExamMarkingDetails(@Param("examTestId") String examTestId,

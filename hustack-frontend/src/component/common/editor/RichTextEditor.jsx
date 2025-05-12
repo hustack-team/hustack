@@ -25,7 +25,7 @@ export default function RichTextEditor(props) {
   }
 
   function createEditorStateFromHTML(htmlContent) {
-    const {contentBlocks, entityMap} = htmlToDraft(htmlContent)
+    const {contentBlocks, entityMap} = htmlToDraft(htmlContent || '')
     const contentState = ContentState.createFromBlockArray(contentBlocks, entityMap);
     return EditorState.createWithContent(contentState)
   }
