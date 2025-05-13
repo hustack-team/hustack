@@ -7,10 +7,7 @@ import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.SubmissionFilter;
@@ -47,7 +44,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ContestController {
 
-    private final ProblemBlockRepo problemBlockRepo;
+    ProblemBlockRepo problemBlockRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
