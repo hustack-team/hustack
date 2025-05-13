@@ -28,5 +28,6 @@
     "disabled": "Deleted",
     "running": "Running",
     "over": "Over"
-  }
+  },
+  "detectCodeAuthorship": "Detect whether this source code is written by a human or AI"
 }

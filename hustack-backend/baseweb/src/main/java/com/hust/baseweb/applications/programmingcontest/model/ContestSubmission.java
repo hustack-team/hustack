@@ -50,4 +50,5 @@ public class ContestSubmission {
     @Column(name = "final_selected_submission", length = 1)
     private String finalSelectedSubmission;
 
+    String codeAuthorship;
 }
