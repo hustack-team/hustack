@@ -8,4 +8,5 @@ import java.util.List;
 public interface ProblemBlockRepo extends JpaRepository<ProblemBlock, Long> {
     List<ProblemBlock> findByProblemId(String problemId);
     void deleteByProblemId(String problemId);
+
 }
