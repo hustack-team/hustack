@@ -259,6 +259,7 @@ public class ContestController {
         Principal principal,
         @PathVariable("problemId") String problemId, @PathVariable("contestId") String contestId
     ) {
+
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
 
         //System.out.println("ALO");
@@ -290,6 +291,7 @@ public class ContestController {
             model.setPreloadCode(problemEntity.getPreloadCode());
             model.setAttachment(problemEntity.getAttachment());
             model.setAttachmentNames(problemEntity.getAttachmentNames());
+            //model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowed());
             model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowedInContest());
             model.setSampleTestCase(problemEntity.getSampleTestCase());
 
