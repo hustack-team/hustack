@@ -119,4 +119,7 @@ public class ContestSubmissionEntity {
     @Column(name="created_by_ip")
     private String createdByIp;
 
+    @Column(name="code_authorship")
+    private String codeAuthorship;
+
 }
