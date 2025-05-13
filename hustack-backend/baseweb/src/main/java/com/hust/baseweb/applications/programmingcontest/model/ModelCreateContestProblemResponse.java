@@ -71,5 +71,18 @@ public class ModelCreateContestProblemResponse {
     List<String> roles;
 
     String sampleTestCase;
+
+    List<BlockCode> blockCodes;
+
+    @Data
+    @ToString
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class BlockCode {
+        String id;
+        String code;
+        boolean forStudent;
+        int seq;
+        String language;
+    }
 }
 

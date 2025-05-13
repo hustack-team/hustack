@@ -7,10 +7,7 @@ import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.SubmissionFilter;
@@ -47,6 +44,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ContestController {
 
+    private final ProblemBlockRepo problemBlockRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
@@ -257,11 +255,9 @@ public class ContestController {
     public ResponseEntity<?> getProblemDetailInContestViewByStudent(
         Principal principal,
         @PathVariable("problemId") String problemId, @PathVariable("contestId") String contestId
-    ) {
-
+    )  {
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
 
-        //System.out.println("ALO");
         try {
             ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
             ContestProblem cp = contestProblemRepo.findByContestIdAndProblemId(contestId, problemId);
@@ -272,6 +268,8 @@ public class ContestController {
                 return ResponseEntity.ok().body(null);
             }
             ModelCreateContestProblemResponse problemEntity = problemTestCaseService.getContestProblem(problemId);
+            ProblemEntity problem = problemRepo.findByProblemId(problemId); // Lấy ProblemEntity để kiểm tra categoryId
+
             ModelStudentViewProblemDetail model = new ModelStudentViewProblemDetail();
             if (contestEntity.getProblemDescriptionViewType() != null &&
                 contestEntity.getProblemDescriptionViewType()
@@ -288,15 +286,34 @@ public class ContestController {
             model.setPreloadCode(problemEntity.getPreloadCode());
             model.setAttachment(problemEntity.getAttachment());
             model.setAttachmentNames(problemEntity.getAttachmentNames());
-            //model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowed());
             model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowedInContest());
             model.setSampleTestCase(problemEntity.getSampleTestCase());
+
+            // Kiểm tra nếu là problem block thì lấy tất cả blockCodes
+            if ("isBlock".equals(problem.getCategoryId())) {
+                List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
+                List<ModelCreateContestProblem.BlockCode> blockCodes = problemBlocks.stream()
+                                                                                    .map(pb -> {
+                                                                                        ModelCreateContestProblem.BlockCode blockCode = new ModelCreateContestProblem.BlockCode();
+                                                                                        blockCode.setId(pb.getId().toString());
+                                                                                        blockCode.setCode("student".equals(pb.getCompletedBy()) ? "" : pb.getSourceCode()); // Gán code rỗng nếu forStudent
+                                                                                        blockCode.setForStudent("student".equals(pb.getCompletedBy()));
+                                                                                        blockCode.setLanguage(pb.getProgrammingLanguage());
+                                                                                        blockCode.setSeq(pb.getSeq());
+                                                                                        return blockCode;
+                                                                                    })
+                                                                                    .collect(Collectors.toList());
+                model.setBlockCodes(blockCodes);
+            }
+
             return ResponseEntity.ok().body(model);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.ok().body("NOTFOUND");
     }
+
+
 
 
     @GetMapping("/contests/{contestId}/problems")
@@ -333,12 +350,10 @@ public class ContestController {
 
         ContestEntity contest = contestService.findContest(contestId);
 
-
         List<ProblemEntity> problems = contest.getProblems();
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
         List<ModelProblemMaxSubmissionPoint> submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(
-            userId,
-            contestId);
+            userId, contestId);
 
         Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
         for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
@@ -350,8 +365,7 @@ public class ContestController {
         if (contest.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
             Set<String> problemIds = problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet());
             List<ContestProblem> contestProblems = contestProblemRepo.findByContestIdAndProblemIdIn(
-                contestId,
-                problemIds);
+                contestId, problemIds);
 
             Map<String, ContestProblem> problemId2ContestProblem = new HashMap<>();
             contestProblems.forEach(p -> problemId2ContestProblem.put(p.getProblemId(), p));
@@ -371,6 +385,23 @@ public class ContestController {
                 response.setProblemName(contestProblem.getProblemRename());
                 response.setProblemCode(contestProblem.getProblemRecode());
                 response.setLevelId(problem.getLevelId());
+                response.setCategoryId(problem.getCategoryId()); // Gán categoryId
+                System.out.println("aaaaaaaaaa" + problem.getCategoryId());
+                // Xử lý blockCodes cho problem block
+                if ("isBlock".equals(problem.getCategoryId())) {
+                    List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
+                    List<ModelCreateContestProblem.BlockCode> blockCodes = problemBlocks.stream()
+                                                                                        .map(pb -> {
+                                                                                            ModelCreateContestProblem.BlockCode blockCode = new ModelCreateContestProblem.BlockCode();
+                                                                                            blockCode.setId(pb.getId().toString()); // Sử dụng id của ProblemBlock
+                                                                                            blockCode.setCode(pb.getSourceCode());
+                                                                                            blockCode.setForStudent("student".equals(pb.getCompletedBy()));
+                                                                                            blockCode.setLanguage(pb.getProgrammingLanguage());
+                                                                                            return blockCode;
+                                                                                        })
+                                                                                        .collect(Collectors.toList());
+                    response.setBlockCodes(blockCodes);
+                }
 
                 if (contest.getContestShowTag() != null && contest.getContestShowTag().equals("N")) {
                     response.setTags(new ArrayList<>());

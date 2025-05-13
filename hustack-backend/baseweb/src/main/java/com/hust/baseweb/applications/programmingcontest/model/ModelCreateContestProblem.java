@@ -1,10 +1,10 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
 import com.hust.baseweb.applications.programmingcontest.entity.ProblemStatus;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Data
 @ToString
@@ -56,4 +56,21 @@ public class ModelCreateContestProblem {
     ProblemStatus status;
 
     String sampleTestCase;
+
+    private Boolean isProblemBlock;
+    private List<BlockCode> blockCodes;
+
+    @Getter
+    @Setter
+    public static class BlockCode {
+        private String id;
+        private String code;
+        private boolean forStudent;
+        private int seq;
+        public boolean isForStudent() {
+            return forStudent;
+        }
+
+        private String language;
+    }
 }

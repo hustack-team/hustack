@@ -1,27 +1,27 @@
-import {makeStyles} from "@material-ui/core/styles";
-import {LoadingButton} from "@mui/lab";
-import {Box, Checkbox, FormControlLabel, Grid, InputAdornment, Stack, TextField, Typography,} from "@mui/material";
-import {extractErrorMessage, request} from "api";
+import { makeStyles } from "@material-ui/core/styles";
+import { LoadingButton } from "@mui/lab";
+import { Box, Checkbox, FormControlLabel, Grid, InputAdornment, Stack, TextField, Typography, Tabs, Tab, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { extractErrorMessage, request } from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {useTranslation} from "react-i18next";
-import {useParams} from "react-router";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import {randomImageName} from "utils/FileUpload/covert";
-import {errorNoti, successNoti} from "utils/notification";
+import { randomImageName } from "utils/FileUpload/covert";
+import { errorNoti, successNoti } from "utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import {CompileStatus} from "./CompileStatus";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION,} from "./Constant";
+import { CompileStatus } from "./CompileStatus";
+import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
 import ListTestCase from "./ListTestCase";
 import ModelAddNewTag from "./ModelAddNewTag";
-import {getAllTags} from "./service/TagService";
+import { getAllTags } from "./service/TagService";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import {useHistory} from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import StyledSelect from "../../select/StyledSelect";
-import {getLevels, getPublicOptions, getStatuses} from "./CreateProblem";
+import { getLevels, getPublicOptions, getStatuses } from "./CreateProblem";
 import FilterByTag from "../../table/FilterByTag";
 import TertiaryButton from "../../button/TertiaryButton";
 import AddIcon from "@mui/icons-material/Add";
@@ -31,25 +31,61 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(3),
   },
+  blockCode: {
+    border: '2px solid black',
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    position: 'relative',
+    cursor: 'pointer',
+  },
+  blockCodeStudent: {
+    border: '2px solid green',
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    position: 'relative',
+    cursor: 'pointer',
+  },
+  deleteButton: {
+    position: "absolute",
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+    display: "flex",
+    gap: theme.spacing(1),
+  },
+  blockCodeContainer: {
+    display: "flex",
+    alignItems: "flex-start",
+    marginTop: theme.spacing(2),
+  },
+  blockCodeControls: {
+    marginLeft: theme.spacing(2),
+    display: "flex",
+    flexDirection: "column",
+    gap: theme.spacing(1),
+  },
+}));
+
+const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
+  label: key,
+  value: COMPUTER_LANGUAGES[key],
 }));
 
 function EditProblem() {
   const history = useHistory();
-  const {problemId} = useParams();
+  const { problemId } = useParams();
   const classes = useStyles();
-  const {t} = useTranslation([
+  const { t } = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
   ]);
   const levels = getLevels(t);
-  const publicOptions = getPublicOptions(t)
-  const statuses = getStatuses(t)
+  const publicOptions = getPublicOptions(t);
+  const statuses = getStatuses(t);
 
   const [problemName, setProblemName] = useState("");
   const [description, setDescription] = useState("");
   const [solution, setSolution] = useState("");
-  // const [timeLimit, setTimeLimit] = useState('');
   const [timeLimitCPP, setTimeLimitCPP] = useState('');
   const [timeLimitJAVA, setTimeLimitJAVA] = useState('');
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState('');
@@ -75,10 +111,18 @@ function EditProblem() {
   const [isOwner, setIsOwner] = useState(false);
   const [sampleTestCase, setSampleTestCase] = useState(null);
   const [problem, setProblem] = useState({});
-
   const [loading, setLoading] = useState(false);
-
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
+  const [isProblemBlock, setIsProblemBlock] = useState(false);
+  const [blockCodes, setBlockCodes] = useState(
+    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
+  );
+  const [newBlockCode, setNewBlockCode] = useState("");
+  const [editingBlockIndex, setEditingBlockIndex] = useState(null);
+  const [editingBlockCode, setEditingBlockCode] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
+  const [isAddingBlock, setIsAddingBlock] = useState(false);
+  const [isEditingBlock, setIsEditingBlock] = useState(false);
 
   const handleGetTagsSuccess = (res) => setTags(res.data);
 
@@ -109,36 +153,36 @@ function EditProblem() {
       "post",
       "/check-compile",
       (res) => {
-        setLoading(false)
-
+        setLoading(false);
         setShowCompile(true);
         setStatusSuccessful(res.data.status !== "Compilation Error");
-        setCompileMessage(res.data)
+        setCompileMessage(res.data);
       },
       {
         onError: (e) => {
-          setLoading(false)
+          setLoading(false);
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
       body
     );
-  }
+  };
 
   const validateSubmit = () => {
     if (problemName === "") {
       errorNoti(
-        t("validation:missingField", {fieldName: t("problemName")}),
+        t("validation:missingField", { fieldName: t("problemName") }),
         3000
       );
       return false;
     }
-    if (timeLimitCPP < 1
-      || timeLimitJAVA < 1
-      || timeLimitPYTHON < 1
-      || timeLimitCPP > 300
-      || timeLimitJAVA > 300
-      || timeLimitPYTHON > 300
+    if (
+      timeLimitCPP < 1 ||
+      timeLimitJAVA < 1 ||
+      timeLimitPYTHON < 1 ||
+      timeLimitCPP > 300 ||
+      timeLimitJAVA > 300 ||
+      timeLimitPYTHON > 300
     ) {
       errorNoti(
         t("validation:numberBetween", {
@@ -165,10 +209,14 @@ function EditProblem() {
       errorNoti(t("validateSubmit.warningCheckSolutionCompile"), 5000);
       return false;
     }
+    if (isProblemBlock && Object.values(blockCodes).every(blocks => blocks.length === 0)) {
+      errorNoti(t("validateSubmit.noBlockCodesAdded"), 5000);
+      return false;
+    }
     return true;
   };
 
-  function handleSubmit() {
+  const handleSubmit = () => {
     if (!validateSubmit()) return;
 
     setLoading(true);
@@ -187,15 +235,29 @@ function EditProblem() {
       });
     }
 
+    let formattedBlockCodes = [];
+    if (isProblemBlock) {
+      formattedBlockCodes = Object.keys(blockCodes)
+        .filter(language => blockCodes[language].length > 0)
+        .flatMap((language, seq) =>
+          blockCodes[language].map((block, index) => ({
+            id: block.id || `${language}_${index}`,
+            code: block.code,
+            forStudent: block.forStudent,
+            seq: block.seq || index + 1,
+            language: language,
+          }))
+        );
+    }
+
     const body = {
       problemName: problemName,
       problemDescription: description,
-      // timeLimit: timeLimit,
-      timeLimitCPP: timeLimitCPP,
-      timeLimitJAVA: timeLimitJAVA,
-      timeLimitPYTHON: timeLimitPYTHON,
+      timeLimitCPP: parseFloat(timeLimitCPP),
+      timeLimitJAVA: parseFloat(timeLimitJAVA),
+      timeLimitPYTHON: parseFloat(timeLimitPYTHON),
       levelId: levelId,
-      memoryLimit: memoryLimit,
+      memoryLimit: parseFloat(memoryLimit),
       correctSolutionLanguage: languageSolution,
       solution: solution,
       correctSolutionSourceCode: codeSolution,
@@ -210,10 +272,13 @@ function EditProblem() {
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
+      isProblemBlock: isProblemBlock,
+      blockCodes: formattedBlockCodes,
+      categoryId: isProblemBlock ? "isBlock" : "notBlock",
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -230,7 +295,7 @@ function EditProblem() {
       "/problems/" + problemId,
       (res) => {
         setLoading(false);
-        successNoti(t("common:editSuccess", {name: t("problem")}), 3000);
+        successNoti(t("common:editSuccess", { name: t("problem") }), 3000);
         history.push("/programming-contest/manager-view-problem-detail/" + problemId);
       },
       {
@@ -242,15 +307,47 @@ function EditProblem() {
       formData,
       config
     );
-  }
+  };
 
   const handleBackToList = () => {
     history.push(`/programming-contest/list-problems`);
-  }
+  };
 
   const handleExit = () => {
     history.push(`/programming-contest/manager-view-problem-detail/` + problemId);
-  }
+  };
+
+  const startEditingBlock = (index) => {
+    setEditingBlockIndex(index);
+    setEditingBlockCode(blockCodes[selectedLanguage][index].code);
+    setIsEditingBlock(true);
+  };
+
+  const updateBlockCode = () => {
+    if (editingBlockCode.trim()) {
+      setBlockCodes((prev) => ({
+        ...prev,
+        [selectedLanguage]: prev[selectedLanguage].map((block, i) =>
+          i === editingBlockIndex ? { ...block, code: editingBlockCode } : block
+        ),
+      }));
+      setEditingBlockCode("");
+      setEditingBlockIndex(null);
+      setIsEditingBlock(false);
+      successNoti(t("Update successfully"), 2000);
+    }
+  };
+
+  const handleDeleteBlock = (index) => {
+    setBlockCodes((prev) => ({
+      ...prev,
+      [selectedLanguage]: prev[selectedLanguage].filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedLanguage(newValue);
+  };
 
   useEffect(() => {
     request(
@@ -258,7 +355,7 @@ function EditProblem() {
       "teacher/problems/" + problemId,
       (res) => {
         const data = res.data;
-        setProblem(data)
+        setProblem(data);
 
         if (data.attachment && data.attachment.length !== 0) {
           const newFileURLArray = data.attachment.map((url) => ({
@@ -273,7 +370,6 @@ function EditProblem() {
 
         setProblemName(data.problemName);
         setLevelId(data.levelId);
-        // setTimeLimit(data.timeLimit);
         setTimeLimitCPP(data.timeLimitCPP);
         setTimeLimitJAVA(data.timeLimitJAVA);
         setTimeLimitPYTHON(data.timeLimitPYTHON);
@@ -291,20 +387,40 @@ function EditProblem() {
         setStatus(data.status);
         setSampleTestCase(data.sampleTestCase);
         setIsOwner(data.roles?.includes("OWNER"));
+        setIsProblemBlock(data.categoryId === "isBlock");
+
+        // Khởi tạo blockCodes từ dữ liệu API
+        if (data.blockCodes && data.blockCodes.length > 0) {
+          const newBlockCodes = Object.fromEntries(
+            PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
+          );
+          data.blockCodes.forEach((block) => {
+            if (newBlockCodes[block.language]) {
+              newBlockCodes[block.language].push({
+                id: block.id,
+                code: block.code,
+                forStudent: block.forStudent,
+                seq: block.seq,
+              });
+            }
+          });
+          setBlockCodes(newBlockCodes);
+        }
       },
       {
         onError: (e) => {
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
-      });
-  }, [problemId]);
+      }
+    );
+  }, [problemId, t]);
 
   useEffect(() => {
     getAllTags(handleGetTagsSuccess);
-  }, [])
+  }, []);
 
   return (
-    <ProgrammingContestLayout title={t("common:edit", {name: t("problem")})} onBack={handleBackToList}>
+    <ProgrammingContestLayout title={t("common:edit", { name: t("problem") })} onBack={handleBackToList}>
       <Typography variant="h6">
         {t("generalInfo")}
       </Typography>
@@ -332,7 +448,7 @@ function EditProblem() {
             label={t("level")}
             options={levels}
             value={levelId}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             onChange={(event) => {
               setLevelId(event.target.value);
             }}
@@ -347,7 +463,7 @@ function EditProblem() {
             label={t("status")}
             options={statuses}
             value={status}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             onChange={(event) => {
               setStatus(event.target.value);
             }}
@@ -362,7 +478,7 @@ function EditProblem() {
             key={t("common:public")}
             label={t("common:public")}
             options={publicOptions}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             value={isPublic}
             onChange={(event) => {
               setIsPublic(event.target.value);
@@ -443,22 +559,34 @@ function EditProblem() {
         </Grid>
 
         <Grid item xs={9}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
-            startIcon={<AddIcon/>}
+            startIcon={<AddIcon />}
             onClick={() => setOpenModalAddNewTag(true)}
           >
-            {t("common:add", {name: t('tag')})}
+            {t("common:add", { name: t('tag') })}
           </TertiaryButton>
+        </Grid>
+
+        <Grid item xs={3}>
+          <FormControlLabel
+            label={t("Problem Block")}
+            control={
+              <Checkbox
+                checked={isProblemBlock}
+                onChange={() => setIsProblemBlock(!isProblemBlock)}
+              />
+            }
+          />
         </Grid>
       </Grid>
 
       <Box className={classes.description}>
         <Typography
           variant="h6"
-          sx={{marginTop: "8px", marginBottom: "8px"}}
+          sx={{ marginTop: "8px", marginBottom: "8px" }}
         >
           {t("problemDescription")}
         </Typography>
@@ -466,9 +594,6 @@ function EditProblem() {
           content={description}
           onContentChange={(text) => setDescription(text)}
         />
-        {/*
-        <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
-              */}
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -477,33 +602,152 @@ function EditProblem() {
             setSampleTestCase(code);
           }}
         />
-
         <HustDropzoneArea
           onChangeAttachment={(files) => handleAttachmentFiles(files)}
         />
+        {isProblemBlock && (
+          <>
+            <Tabs
+              value={selectedLanguage}
+              onChange={handleTabChange}
+              sx={{ marginTop: "12px" }}
+            >
+              {PROGRAMMING_LANGUAGES.map((lang) => (
+                <Tab key={lang.value} label={lang.label} value={lang.value} />
+              ))}
+            </Tabs>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setIsAddingBlock(!isAddingBlock);
+                setNewBlockCode("");
+              }}
+              sx={{ marginTop: "12px" }}
+            >
+              {isAddingBlock ? t("cancel", { ns: "common" }) : t("Add Block Code")}
+            </Button>
+
+            {isEditingBlock && editingBlockIndex !== null ? (
+              <Box sx={{ width: "100%", mt: 2 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={10}
+                  value={editingBlockCode}
+                  onChange={(e) => setEditingBlockCode(e.target.value)}
+                  placeholder={t("enterBlockCode")}
+                />
+                <Box sx={{ mt: 1, display: "flex", gap: 2 }}>
+                  <Button
+                    onClick={updateBlockCode}
+                    disabled={!editingBlockCode.trim()}
+                    variant="contained"
+                    size="small"
+                  >
+                    {t("update", { ns: "common" })}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsEditingBlock(false);
+                      setEditingBlockIndex(null);
+                    }}
+                    variant="outlined"
+                    size="small"
+                  >
+                    {t("cancel", { ns: "common" })}
+                  </Button>
+                </Box>
+              </Box>
+            ) : (
+              blockCodes[selectedLanguage].map((block, index) => (
+                <Box className={classes.blockCodeContainer} key={block.id || index}>
+                  <Box
+                    sx={{ width: "70%", position: "relative" }}
+                    className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
+                  >
+                    <Box sx={{ position: "absolute", top: "8px", right: "8px", display: "flex", gap: 1 }}>
+                      <Button size="small" variant="contained" color="primary" onClick={() => startEditingBlock(index)}>
+                        {t("update", { ns: "common" })}
+                      </Button>
+                      <Button size="small" color="error" onClick={() => handleDeleteBlock(index)}>
+                        {t("delete", { ns: "common" })}
+                      </Button>
+                    </Box>
+                    <pre>{block.code}</pre>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", ml: 2, mt: 2 }}>
+                    <StyledSelect
+                      size="small"
+                      value={block.forStudent ? "student" : "teacher"}
+                      onChange={(event) => {
+                        setBlockCodes((prev) => ({
+                          ...prev,
+                          [selectedLanguage]: prev[selectedLanguage].map((block, i) =>
+                            i === index ? { ...block, forStudent: event.target.value === "student" } : block,
+                          ),
+                        }))
+                      }}
+                      options={[
+                        { label: t("For Teacher"), value: "teacher" },
+                        { label: t("For Student"), value: "student" },
+                      ]}
+                      sx={{ minWidth: "120px" }}
+                    />
+                  </Box>
+                </Box>
+              ))
+            )}
+
+            {isAddingBlock && !isEditingBlock && (
+              <Box sx={{ width: "70%", mt: 2 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={10}
+                  value={newBlockCode}
+                  onChange={(e) => setNewBlockCode(e.target.value)}
+                  placeholder={t("enterBlockCode")}
+                />
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    onClick={() => {
+                      if (newBlockCode.trim()) {
+                        setBlockCodes((prev) => ({
+                          ...prev,
+                          [selectedLanguage]: [...prev[selectedLanguage], { 
+                            code: newBlockCode, 
+                            forStudent: false,
+                            seq: prev[selectedLanguage].length + 1
+                          }],
+                        }));
+                        setNewBlockCode("");
+                        setIsAddingBlock(false);
+                      }
+                    }}
+                    disabled={!newBlockCode.trim()}
+                    variant="contained"
+                    size="small"
+                  >
+                    {t("Add Block Code", { ns: "" })}
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </>
+        )}
       </Box>
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
           <FileUploadZone
+            key={file.id}
             file={file}
             removable={true}
             onRemove={() => handleDeleteImageAttachment(file.fileName)}
           />
         ))}
-      {/* this function is not implemented yet
-              <Box>
-                <Typography>
-                  <h2>{t("problemSuggestion")}</h2>
-                </Typography>
-                <RichTextEditor
-                  content={solution}
-                  onContentChange={text => setSolution(text)}
-                />
-              </Box>
-              */}
 
-      <Box sx={{marginTop: "32px"}}/>
+      <Box sx={{ marginTop: "32px" }} />
       <HustCodeEditor
         title={t("solutionSourceCode") + " *"}
         language={languageSolution}
@@ -520,7 +764,7 @@ function EditProblem() {
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{margin: "12px 0", textTransform: 'none'}}
+        sx={{ margin: "12px 0", textTransform: 'none' }}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -531,7 +775,7 @@ function EditProblem() {
         detail={compileMessage}
       />
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isPreloadCode")}
           control={
@@ -554,7 +798,7 @@ function EditProblem() {
         )}
       </Box>
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
@@ -584,7 +828,7 @@ function EditProblem() {
         )}
       </Box>
 
-      <ListTestCase/>
+      <ListTestCase />
 
       <Stack direction="row" spacing={2} mt={2}>
         <TertiaryButton variant="outlined" onClick={handleExit}>
@@ -594,16 +838,16 @@ function EditProblem() {
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
-          sx={{textTransform: 'capitalize'}}
+          sx={{ textTransform: 'capitalize' }}
         >
-          {t("save", {ns: "common"})}
+          {t("save", { ns: "common" })}
         </LoadingButton>
       </Stack>
 
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", {name: t('tag')}), 3000)
+          successNoti(t("common:addSuccess", { name: t('tag') }), 3000);
           getAllTags(handleGetTagsSuccess);
         }}
         handleClose={() => setOpenModalAddNewTag(false)}
