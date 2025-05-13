@@ -232,26 +232,24 @@ function ManagerViewProblemDetailV2() {
         <Stack direction="row" spacing={2}>
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
             (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)
-          ) ? null : (
-            <PrimaryButton
-              onClick={() => {
-                history.push("/programming-contest/edit-problem/" + problemId);
-              }}
-              startIcon={<EditIcon />}
+          ) ? null : (<PrimaryButton
+            onClick={() => {
+              history.push("/programming-contest/edit-problem/" + problemId);
+            }}
+            startIcon={<EditIcon />}
             >
-              {t("common:edit", { name: '' })}
-            </PrimaryButton>
+            {t("common:edit", { name: '' })}
+          </PrimaryButton>
           )}
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
             (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) ||
-              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
-            <TertiaryButton
-              variant="outlined"
-              onClick={handleCloneDialogOpen}
-              startIcon={<ContentCopyIcon />}
-            >
-              {t("clone")}
-            </TertiaryButton>
+              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (<TertiaryButton
+            variant="outlined"
+            onClick={handleCloneDialogOpen}
+            startIcon={<ContentCopyIcon />}
+          >
+            {t("clone")}
+          </TertiaryButton>
           )}
           {problemDetail.roles.includes(PROBLEM_ROLE.OWNER) && (
             <TertiaryButton
@@ -265,8 +263,7 @@ function ManagerViewProblemDetailV2() {
             >
               {t("manageRole")}
             </TertiaryButton>
-          )}
-        </Stack>
+          )}</Stack>
       </Stack>
 
       <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
@@ -292,6 +289,8 @@ function ManagerViewProblemDetailV2() {
             variant="outlined"
             value={newProblemName}
             onChange={(e) => setNewProblemName(e.target.value)}
+            //error={hasSpecialCharacterProblemName()}
+            //helperText={hasSpecialCharacterProblemName() ? "Invalid characters in Problem Name." : ""}
             helperText={""}
           />
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
@@ -305,15 +304,14 @@ function ManagerViewProblemDetailV2() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress/>}
       <Grid container spacing={2} display={loading ? "none" : ""}>
         {[
           [t("problemName"), problemDetail.problemName],
           [t("level"), getLevels(t).find(item => item.value === problemDetail.levelId)?.label],
           [t("status"), getStatuses(t).find(item => item.value === problemDetail.status)?.label],
           [
-            t("public", { ns: "common" }),
+            t("public", { ns:"common"}),
             problemDetail.public ? t("common:yes") : t("common:no"),
           ],
           [
@@ -356,17 +354,18 @@ function ManagerViewProblemDetailV2() {
         ))}
       </Grid>
 
-      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
-        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+      <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
+        <Typography variant="h6" sx={{marginBottom: "8px"}}>
           {t("common:description")}
         </Typography>
         <RichTextEditor
           toolbarHidden
           content={problemDetail.description}
           readOnly
-          editorStyle={{ editor: {} }}
+          editorStyle={{editor: {}}}
         />
       </Box>
+
 
       {problemDetail.sampleTestCase && (
         <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase} />
@@ -443,10 +442,10 @@ function ManagerViewProblemDetailV2() {
         </Box>
       )}
 
-      <ListTestCase mode={2} />
+      <ListTestCase mode={2}/>
 
-      <Box sx={{ height: "36px" }}></Box>
-      <ContestsUsingAProblem problemId={problemId} />
+      <Box sx={{height: "36px"}}></Box>
+      <ContestsUsingAProblem problemId={problemId}/>
     </ProgrammingContestLayout>
   );
 }
