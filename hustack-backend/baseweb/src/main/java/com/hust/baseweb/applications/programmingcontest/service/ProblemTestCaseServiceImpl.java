@@ -82,6 +82,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
     private final ProblemRepo problemRepo;
+
     private final ProblemBlockRepo problemBlockRepo;
 
     private TestCaseRepo testCaseRepo;
@@ -159,7 +160,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             throw new DuplicateKeyException("Problem ID already exist");
         }
 
-        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
@@ -182,12 +182,12 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
         });
 
-        // Tạo ProblemEntity
         ProblemEntity problem = ProblemEntity.builder()
                                              .problemId(problemId)
                                              .problemName(dto.getProblemName())
                                              .problemDescription(dto.getProblemDescription())
                                              .memoryLimit(dto.getMemoryLimit())
+//                                                   .timeLimit(dto.getTimeLimitCPP()) //TODO: remove this after moving all to lms
                                              .timeLimitCPP(dto.getTimeLimitCPP())
                                              .timeLimitJAVA(dto.getTimeLimitJAVA())
                                              .timeLimitPYTHON(dto.getTimeLimitPYTHON())
@@ -211,19 +211,15 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .build();
         problem = problemService.saveProblemWithCache(problem);
 
-        // Lưu ProblemBlock nếu isProblemBlock là true
         if (Boolean.TRUE.equals(dto.getIsProblemBlock()) && dto.getBlockCodes() != null) {
             List<ProblemBlock> problemBlocks = new ArrayList<>();
             Random random = new Random();
 
-            // Nhóm blockCodes theo programming_language
             Map<String, List<ModelCreateContestProblem.BlockCode>> blocksByLanguage =
                 dto.getBlockCodes().stream()
                    .collect(Collectors.groupingBy(ModelCreateContestProblem.BlockCode::getLanguage));
 
-            // Xử lý từng ngôn ngữ
             for (List<ModelCreateContestProblem.BlockCode> blockCodes : blocksByLanguage.values()) {
-                // Gán seq tăng dần từ 1 cho mỗi ngôn ngữ
                 for (int i = 0; i < blockCodes.size(); i++) {
                     ModelCreateContestProblem.BlockCode blockCode = blockCodes.get(i);
                     long generatedId = System.currentTimeMillis() * 1000 + random.nextInt(1000);
@@ -241,7 +237,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemBlockRepo.saveAll(problemBlocks);
         }
 
-        // Lưu ProblemTags
         List<ProblemTag> problemTags = Arrays.stream(dto.getTagIds())
                                              .map(tagId -> ProblemTag.builder()
                                                                      .id(new ProblemTagId(tagId, problemId))
@@ -249,7 +244,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .collect(Collectors.toList());
         problemTagRepo.saveAll(problemTags);
 
-        // Gán vai trò owner, editor, viewer
+        // grant role owner, manager, view to current user and admin
         List<String> roleIds = Arrays.asList(
             UserContestProblemRole.ROLE_OWNER,
             UserContestProblemRole.ROLE_EDITOR,
@@ -272,7 +267,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         userContestProblemRoleRepo.saveAll(roles);
 
-        // Gửi thông báo cho admin
+        // push notification to admin
         notificationsService.create(
             createdBy,
             "admin",
@@ -289,7 +284,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         ModelUpdateContestProblem dto,
         MultipartFile[] files
     ) throws Exception {
-        // Kiểm tra quyền chỉnh sửa
         List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(
             problemId,
             userId);
@@ -319,7 +313,12 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             throw new MiniLeetCodeException("permission denied", 403);
         }
 
-        // Xử lý tag
+        // problem há been created, admin is shared edit role, but cannot perform the edit
+        //if (!userId.equals(problem.getUserId())
+        //    && !problem.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
+        //    throw new MiniLeetCodeException("Problem is not opened for edit", 400);
+        //}
+
         List<TagEntity> tags = new ArrayList<>();
         Integer[] tagIds = dto.getTagIds();
         for (Integer tagId : tagIds) {
@@ -327,7 +326,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             tags.add(tag);
         }
 
-        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         attachmentId.add(problem.getAttachment());
         String[] fileId = dto.getFileId();
@@ -367,13 +365,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
         });
 
-        // Cập nhật thông tin problem
         problem.setProblemName(dto.getProblemName());
         problem.setProblemDescription(dto.getProblemDescription());
         problem.setLevelId(dto.getLevelId());
         problem.setSolution(dto.getSolution());
         problem.setIsPreloadCode(dto.getIsPreloadCode());
         problem.setPreloadCode(dto.getPreloadCode());
+//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
         problem.setTimeLimitJAVA(dto.getTimeLimitJAVA());
         problem.setTimeLimitPYTHON(dto.getTimeLimitPYTHON());
@@ -419,9 +417,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemBlockRepo.saveAll(problemBlocks);
         }
 
-        // Lưu problem với cache
         return problemService.saveProblemWithCache(problem);
     }
+
     @Override
     public List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo() {
         //return problemRepo.getAllProblemGeneralInformation();
@@ -4174,35 +4172,4 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         return newProblem;
     }
-
-//    @Override
-//    public ContestProblemBlock createContestProblemBlock(String userId, ModelCreateContestProblemBlock dto) throws Exception {
-//        ProblemEntity problem = problemRepo.findById(dto.getProblemId())
-//                                           .orElseThrow(() -> new MiniLeetCodeException("Problem not found", 404));
-//
-//        List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(dto.getProblemId(), userId);
-//        boolean hasPermission = false;
-//        for (UserContestProblemRole role : roles) {
-//            if (role.getRoleId().equals(UserContestProblemRole.ROLE_EDITOR) ||
-//                role.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)) {
-//                hasPermission = true;
-//                break;
-//            }
-//        }
-//
-//        if (!hasPermission && !userId.equals(problem.getCreatedBy())) {
-//            throw new MiniLeetCodeException("Permission denied", 403);
-//        }
-//
-//        ContestProblemBlock block = ContestProblemBlock.builder()
-//                                                       .problem(problem)
-//                                                       .seq(dto.getSeq())
-//                                                       .completedBy(dto.getCompletedBy())
-//                                                       .sourceCode(dto.getSourceCode())
-//                                                       .programmingLanguage(dto.getProgrammingLanguage())
-//                                                       .build();
-//
-//        return contestProblemBlock.save(block);
-//    }
-
 }

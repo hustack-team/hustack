@@ -3,10 +3,14 @@ package com.hust.baseweb.applications.programmingcontest.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.ToString;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
+
 @Entity
 @Data
 @Builder
@@ -14,6 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContestSubmission {
+
     @Id
     UUID contestSubmissionId;
 

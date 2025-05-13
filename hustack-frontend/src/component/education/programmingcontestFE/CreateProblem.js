@@ -1,40 +1,25 @@
-"use client"
-
-import { makeStyles } from "@material-ui/core"
-import {
-  Box,
-  Checkbox,
-  Chip,
-  FormControlLabel,
-  Grid,
-  InputAdornment,
-  Link,
-  TextField,
-  Typography,
-  Button,
-  Tabs,
-  Tab,
-} from "@mui/material"
-import { useEffect, useState } from "react"
-import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css"
-import { useHistory } from "react-router-dom"
-import { CompileStatus } from "./CompileStatus"
-import { extractErrorMessage, request } from "../../../api"
-import { useTranslation } from "react-i18next"
-import HustDropzoneArea from "../../common/HustDropzoneArea"
-import { errorNoti, successNoti } from "../../../utils/notification"
-import HustCodeEditor from "../../common/HustCodeEditor"
-import { LoadingButton } from "@mui/lab"
-import RichTextEditor from "../../common/editor/RichTextEditor"
-import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant"
-import { getAllTags } from "./service/TagService"
-import ModelAddNewTag from "./ModelAddNewTag"
-import AddIcon from "@mui/icons-material/Add"
-import ProgrammingContestLayout from "./ProgrammingContestLayout"
-import StyledSelect from "../../select/StyledSelect"
-import TertiaryButton from "../../button/TertiaryButton"
-import FilterByTag from "../../table/FilterByTag"
-import withScreenSecurity from "../../withScreenSecurity"
+import {makeStyles} from "@material-ui/core";
+import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography} from "@mui/material";
+import React, {useEffect, useState} from "react";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import {useHistory} from "react-router-dom";
+import {CompileStatus} from "./CompileStatus";
+import {extractErrorMessage, request} from "../../../api";
+import {useTranslation} from "react-i18next";
+import HustDropzoneArea from "../../common/HustDropzoneArea";
+import {errorNoti, successNoti} from "../../../utils/notification";
+import HustCodeEditor from "../../common/HustCodeEditor";
+import {LoadingButton} from "@mui/lab";
+import RichTextEditor from "../../common/editor/RichTextEditor";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
+import {getAllTags} from "./service/TagService";
+import ModelAddNewTag from "./ModelAddNewTag";
+import AddIcon from '@mui/icons-material/Add';
+import ProgrammingContestLayout from "./ProgrammingContestLayout";
+import StyledSelect from "../../select/StyledSelect";
+import TertiaryButton from "../../button/TertiaryButton";
+import FilterByTag from "../../table/FilterByTag";
+import withScreenSecurity from "../../withScreenSecurity";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -73,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     gap: theme.spacing(1),
   },
-}))
+}));
 
 export const getLevels = (t) => [
   {

@@ -7,7 +7,10 @@ import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.*;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.SubmissionFilter;
@@ -255,9 +258,10 @@ public class ContestController {
     public ResponseEntity<?> getProblemDetailInContestViewByStudent(
         Principal principal,
         @PathVariable("problemId") String problemId, @PathVariable("contestId") String contestId
-    )  {
+    ) {
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
 
+        //System.out.println("ALO");
         try {
             ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
             ContestProblem cp = contestProblemRepo.findByContestIdAndProblemId(contestId, problemId);
@@ -350,10 +354,12 @@ public class ContestController {
 
         ContestEntity contest = contestService.findContest(contestId);
 
+
         List<ProblemEntity> problems = contest.getProblems();
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
         List<ModelProblemMaxSubmissionPoint> submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(
-            userId, contestId);
+            userId,
+            contestId);
 
         Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
         for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
@@ -365,7 +371,8 @@ public class ContestController {
         if (contest.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
             Set<String> problemIds = problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet());
             List<ContestProblem> contestProblems = contestProblemRepo.findByContestIdAndProblemIdIn(
-                contestId, problemIds);
+                contestId,
+                problemIds);
 
             Map<String, ContestProblem> problemId2ContestProblem = new HashMap<>();
             contestProblems.forEach(p -> problemId2ContestProblem.put(p.getProblemId(), p));
