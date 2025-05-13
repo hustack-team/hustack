@@ -24,6 +24,7 @@ import {formatDateTime} from "../ultils/DateUltils";
 import {DropzoneArea} from "material-ui-dropzone";
 import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer, CheckCircle, Check} from "@mui/icons-material";
 import {
+  compressImage,
   getFileCommentFromFileAnswerAndExamResultDetailsId,
   getFilenameFromString,
   getFilePathFromString
@@ -115,8 +116,21 @@ function MyExamDetails(props) {
     setDataAnswers(dataAnswers)
   };
 
-  const handleAnswerFileChange = (files, questionOrder) => {
-    answersFiles[questionOrder-1].files = files
+  const handleAnswerFileChange = async (files, questionOrder) => {
+    let tmpFiles = []
+    for(let file of files){
+      try {
+        if (file.type.startsWith('image/')){
+          tmpFiles.push(await compressImage(file, 1920, 1920, 1))
+        }else{
+          tmpFiles.push(file)
+        }
+      } catch (error) {
+        console.error('Error compressing file:', error);
+        toast.error('Lỗi khi tải ảnh lên');
+      }
+    }
+    answersFiles[questionOrder-1].files = tmpFiles
 
     setAnswersFiles(answersFiles)
   }
