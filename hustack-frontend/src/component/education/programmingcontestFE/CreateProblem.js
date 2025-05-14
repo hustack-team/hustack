@@ -267,7 +267,7 @@ function CreateProblem() {
           blockCodes[language].map((block, index) => ({
             id: `${language}_${index}`,
             code: block.code,
-            forStudent: block.forStudent, // true for student, false for teacher
+            forStudent: block.forStudent ? 1 : 0, // true for student, false for teacher
             language: language,
           })),
         )
@@ -295,10 +295,10 @@ function CreateProblem() {
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
-      isProblemBlock: isProblemBlock,
+      problemBlock: isProblemBlock ? 1 : 0,
       blockCodes: formattedBlockCodes,
     }
-
+    console.log("helloôo")
     const formData = new FormData()
     formData.append("dto", new Blob([JSON.stringify(body)], { type: "application/json" }))
 

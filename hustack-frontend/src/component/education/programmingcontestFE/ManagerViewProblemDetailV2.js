@@ -24,7 +24,7 @@ import { useHistory, useParams } from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
 import { randomImageName } from "utils/FileUpload/covert";
 import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage } from "./Constant"; 
-import { PROBLEM_ROLE, PROBLEM_STATUS  } from "utils/constants";
+import { PROBLEM_ROLE, PROBLEM_STATUS } from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
@@ -136,7 +136,7 @@ function ManagerViewProblemDetailV2() {
         categoryId: data.categoryId || "",
       });
 
-      // Xử lý blockCodes
+      // Process blockCodes
       if (data.blockCodes && data.blockCodes.length > 0) {
         const newBlockCodes = Object.fromEntries(
           PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
@@ -173,7 +173,6 @@ function ManagerViewProblemDetailV2() {
     setNewProblemId("");
     setNewProblemName("");
     setErrorMessage("");
-    // history.push("/programming-contest/list-problems"); // Đã comment để không chuyển hướng khi hủy
   };
 
   const handleClone = () => {
@@ -377,7 +376,8 @@ function ManagerViewProblemDetailV2() {
           <FileUploadZone key={file.id} file={file} removable={false} />
         ))}
 
-      {problemDetail.categoryId === "isBlock" && (
+      {/* Updated block codes rendering */}
+      {problemDetail.blockCodes && problemDetail.blockCodes.length > 0 && (
         <Box sx={{ marginTop: "24px" }}>
           <Typography variant="h6" sx={{ marginBottom: "8px" }}>
             {t("Block codes")}
@@ -409,7 +409,7 @@ function ManagerViewProblemDetailV2() {
               </Box>
             ))
           ) : (
-            <Typography>{t()}</Typography>
+            <Typography>{t("noBlockCodes")}</Typography>
           )}
         </Box>
       )}

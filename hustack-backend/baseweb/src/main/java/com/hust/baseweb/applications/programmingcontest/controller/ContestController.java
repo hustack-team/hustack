@@ -289,15 +289,14 @@ public class ContestController {
             model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowedInContest());
             model.setSampleTestCase(problemEntity.getSampleTestCase());
 
-            // Kiểm tra nếu là problem block thì lấy tất cả blockCodes
-            if ("isBlock".equals(problem.getCategoryId())) {
+            if (problem.getBlockProblem() == 1) {
                 List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
                 List<ModelCreateContestProblem.BlockCode> blockCodes = problemBlocks.stream()
                                                                                     .map(pb -> {
                                                                                         ModelCreateContestProblem.BlockCode blockCode = new ModelCreateContestProblem.BlockCode();
                                                                                         blockCode.setId(pb.getId().toString());
-                                                                                        blockCode.setCode("student".equals(pb.getCompletedBy()) ? "" : pb.getSourceCode()); // Gán code rỗng nếu forStudent
-                                                                                        blockCode.setForStudent("student".equals(pb.getCompletedBy()));
+                                                                                        blockCode.setCode(pb.getCompletedBy() == 1 ? "" : pb.getSourceCode());
+                                                                                        blockCode.setForStudent(pb.getCompletedBy() == 1);
                                                                                         blockCode.setLanguage(pb.getProgrammingLanguage());
                                                                                         blockCode.setSeq(pb.getSeq());
                                                                                         return blockCode;
@@ -312,9 +311,6 @@ public class ContestController {
         }
         return ResponseEntity.ok().body("NOTFOUND");
     }
-
-
-
 
     @GetMapping("/contests/{contestId}/problems")
     public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
@@ -353,7 +349,8 @@ public class ContestController {
         List<ProblemEntity> problems = contest.getProblems();
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
         List<ModelProblemMaxSubmissionPoint> submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(
-            userId, contestId);
+            userId,
+            contestId);
 
         Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
         for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
@@ -385,17 +382,17 @@ public class ContestController {
                 response.setProblemName(contestProblem.getProblemRename());
                 response.setProblemCode(contestProblem.getProblemRecode());
                 response.setLevelId(problem.getLevelId());
-                response.setCategoryId(problem.getCategoryId()); // Gán categoryId
-                System.out.println("aaaaaaaaaa" + problem.getCategoryId());
-                // Xử lý blockCodes cho problem block
-                if ("isBlock".equals(problem.getCategoryId())) {
+                Integer blockProblem = problem.getBlockProblem();
+                int blockProblemValue = (blockProblem != null) ? blockProblem.intValue() : 0;
+                response.setBlockProblem(blockProblemValue);
+                if (blockProblemValue == 1) {
                     List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
                     List<ModelCreateContestProblem.BlockCode> blockCodes = problemBlocks.stream()
                                                                                         .map(pb -> {
                                                                                             ModelCreateContestProblem.BlockCode blockCode = new ModelCreateContestProblem.BlockCode();
-                                                                                            blockCode.setId(pb.getId().toString()); // Sử dụng id của ProblemBlock
+                                                                                            blockCode.setId(pb.getId().toString());
                                                                                             blockCode.setCode(pb.getSourceCode());
-                                                                                            blockCode.setForStudent("student".equals(pb.getCompletedBy()));
+                                                                                            blockCode.setForStudent(pb.getCompletedBy() == 1);
                                                                                             blockCode.setLanguage(pb.getProgrammingLanguage());
                                                                                             return blockCode;
                                                                                         })

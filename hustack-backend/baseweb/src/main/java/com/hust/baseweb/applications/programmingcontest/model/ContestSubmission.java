@@ -46,9 +46,6 @@ public class ContestSubmission {
     String violationForbiddenInstructionMessage;
 
     String createdByIp;
-
-    @Column(name = "final_selected_submission", length = 1)
-    private String finalSelectedSubmission;
-
+    
     String codeAuthorship;
 }

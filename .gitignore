@@ -39,7 +39,6 @@ build/
 /lib/
 /out/
 
-authz-resource-server/
 
 ### VS Code ###
 .vscode/

@@ -18,6 +18,6 @@ public class ModelStudentOverviewProblem {
     private boolean accepted = false;
     private Long maxSubmittedPoint;
     private List<String> tags = new ArrayList<>();
-    private String categoryId;
+    private int blockProblem;
     private List<ModelCreateContestProblem.BlockCode> blockCodes;
 }

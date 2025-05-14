@@ -61,6 +61,8 @@ public class ModelUpdateContestProblem {
 
     String sampleTestCase;
 
+    int forStudent;
+
     List<BlockCode> blockCodes;
 
     @Data
@@ -71,10 +73,6 @@ public class ModelUpdateContestProblem {
         private String code;
         private boolean forStudent;
         private int seq;
-        public boolean isForStudent() {
-            return forStudent;
-        }
-
         private String language;
     }
 }

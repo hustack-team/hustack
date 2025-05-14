@@ -272,9 +272,8 @@ function EditProblem() {
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
-      isProblemBlock: isProblemBlock,
+      isProblemBlock: isProblemBlock ? 1 : 0,
       blockCodes: formattedBlockCodes,
-      categoryId: isProblemBlock ? "isBlock" : "notBlock",
     };
 
     const formData = new FormData();
@@ -387,9 +386,10 @@ function EditProblem() {
         setStatus(data.status);
         setSampleTestCase(data.sampleTestCase);
         setIsOwner(data.roles?.includes("OWNER"));
-        setIsProblemBlock(data.categoryId === "isBlock");
+        // Updated condition for block problem
+        setIsProblemBlock(data.blockCodes && data.blockCodes.length > 0);
 
-        // Khởi tạo blockCodes từ dữ liệu API
+        // Initialize blockCodes from API data
         if (data.blockCodes && data.blockCodes.length > 0) {
           const newBlockCodes = Object.fromEntries(
             PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
@@ -673,9 +673,9 @@ function EditProblem() {
                         {t("delete", { ns: "common" })}
                       </Button>
                     </Box>
-                      <Box sx={{ minHeight: "120px", overflowY: "auto", padding: "10px" }}> 
-                        <pre>{block.code}</pre>
-                     </Box>  
+                    <Box sx={{ minHeight: "120px", overflowY: "auto", padding: "10px" }}>
+                      <pre>{block.code}</pre>
+                    </Box>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", ml: 2, mt: 2 }}>
                     <StyledSelect
@@ -716,8 +716,8 @@ function EditProblem() {
                       if (newBlockCode.trim()) {
                         setBlockCodes((prev) => ({
                           ...prev,
-                          [selectedLanguage]: [...prev[selectedLanguage], { 
-                            code: newBlockCode, 
+                          [selectedLanguage]: [...prev[selectedLanguage], {
+                            code: newBlockCode,
                             forStudent: false,
                             seq: prev[selectedLanguage].length + 1
                           }],

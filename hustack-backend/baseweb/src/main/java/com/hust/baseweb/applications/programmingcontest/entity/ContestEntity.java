@@ -293,6 +293,4 @@ public class ContestEntity implements Serializable {
     @Column(name = "contest_show_comment")
     private String contestShowComment;
 
-    @Column(name = "send_confirm_email")
-    private String sendConfirmEmail;
 }

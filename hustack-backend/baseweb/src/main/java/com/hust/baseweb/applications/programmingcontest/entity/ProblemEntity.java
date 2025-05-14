@@ -78,6 +78,9 @@ public class ProblemEntity implements Serializable {
     @Column(name = "is_public")
     private boolean isPublicProblem;
 
+    @Column(name="is_block_problem")
+    private Integer blockProblem; // 1 : yes, 0 : no
+
     @Column(name = "attachment")
     private String attachment;
 

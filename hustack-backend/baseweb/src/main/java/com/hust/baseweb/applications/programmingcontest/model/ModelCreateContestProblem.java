@@ -57,7 +57,7 @@ public class ModelCreateContestProblem {
 
     String sampleTestCase;
 
-    private Boolean isProblemBlock;
+    private Integer problemBlock;
     private List<BlockCode> blockCodes;
 
     @Getter
@@ -67,10 +67,6 @@ public class ModelCreateContestProblem {
         private String code;
         private boolean forStudent;
         private int seq;
-        public boolean isForStudent() {
-            return forStudent;
-        }
-
         private String language;
     }
 }

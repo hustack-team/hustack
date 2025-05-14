@@ -84,6 +84,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     private final ProblemRepo problemRepo;
 
     private final ProblemBlockRepo problemBlockRepo;
+    private final ProblemBlockService problemBlockService;
 
     private TestCaseRepo testCaseRepo;
 
@@ -183,7 +184,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
         });
 
-        // Tạo ProblemEntity
         ProblemEntity problem = ProblemEntity.builder()
                                              .problemId(problemId)
                                              .problemName(dto.getProblemName())
@@ -193,7 +193,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .timeLimitJAVA(dto.getTimeLimitJAVA())
                                              .timeLimitPYTHON(dto.getTimeLimitPYTHON())
                                              .levelId(dto.getLevelId())
-                                             .categoryId(dto.getIsProblemBlock() != null && dto.getIsProblemBlock() ? "isBlock" : "notBlock") // Gán categoryId
+                                             .blockProblem(dto.getProblemBlock() != null && dto.getProblemBlock() == 1 ? 1 : 0)
                                              .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
                                              .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
                                              .solution(dto.getSolution())
@@ -212,37 +212,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .build();
         problem = problemService.saveProblemWithCache(problem);
 
-        // Lưu ProblemBlock nếu isProblemBlock là true
-        if (Boolean.TRUE.equals(dto.getIsProblemBlock()) && dto.getBlockCodes() != null) {
-            List<ProblemBlock> problemBlocks = new ArrayList<>();
-            Random random = new Random();
-
-            // Nhóm blockCodes theo programming_language
-            Map<String, List<ModelCreateContestProblem.BlockCode>> blocksByLanguage =
-                dto.getBlockCodes().stream()
-                   .collect(Collectors.groupingBy(ModelCreateContestProblem.BlockCode::getLanguage));
-
-            // Xử lý từng ngôn ngữ
-            for (List<ModelCreateContestProblem.BlockCode> blockCodes : blocksByLanguage.values()) {
-                // Gán seq tăng dần từ 1 cho mỗi ngôn ngữ
-                for (int i = 0; i < blockCodes.size(); i++) {
-                    ModelCreateContestProblem.BlockCode blockCode = blockCodes.get(i);
-                    long generatedId = System.currentTimeMillis() * 1000 + random.nextInt(1000);
-                    ProblemBlock problemBlock = ProblemBlock.builder()
-                                                            .id(generatedId)
-                                                            .problemId(problemId)
-                                                            .seq(i + 1)
-                                                            .sourceCode(blockCode.getCode())
-                                                            .programmingLanguage(blockCode.getLanguage())
-                                                            .completedBy(blockCode.isForStudent() ? "student" : "teacher")
-                                                            .build();
-                    problemBlocks.add(problemBlock);
-                }
-            }
-            problemBlockRepo.saveAll(problemBlocks);
+        if (dto.getProblemBlock() != null && dto.getProblemBlock() == 1 && dto.getBlockCodes() != null) {
+            problemBlockService.createProblemBlocks(problemId, dto.getBlockCodes());
         }
 
-        // Lưu ProblemTags
         List<ProblemTag> problemTags = Arrays.stream(dto.getTagIds())
                                              .map(tagId -> ProblemTag.builder()
                                                                      .id(new ProblemTagId(tagId, problemId))
@@ -250,7 +223,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .collect(Collectors.toList());
         problemTagRepo.saveAll(problemTags);
 
-        // Gán vai trò owner, editor, viewer
         List<String> roleIds = Arrays.asList(
             UserContestProblemRole.ROLE_OWNER,
             UserContestProblemRole.ROLE_EDITOR,
@@ -273,7 +245,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         userContestProblemRoleRepo.saveAll(roles);
 
-        // Gửi thông báo cho admin
         notificationsService.create(
             createdBy,
             "admin",
@@ -393,7 +364,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problem.setStatusId(dto.getStatus().toString());
         }
 
-        if ("isBlock".equals(dto.getCategoryId()) && dto.getBlockCodes() != null) {
+        if (dto.getBlockCodes() != null && !dto.getBlockCodes().isEmpty()) {
             problemBlockRepo.deleteByProblemId(problemId);
 
             List<ProblemBlock> problemBlocks = new ArrayList<>();
@@ -405,14 +376,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             for (List<ModelUpdateContestProblem.BlockCode> blockCodes : blocksByLanguage.values()) {
                 for (int i = 0; i < blockCodes.size(); i++) {
                     ModelUpdateContestProblem.BlockCode blockCode = blockCodes.get(i);
-                    long generatedId = System.currentTimeMillis() * 1000 + random.nextInt(1000);
                     ProblemBlock problemBlock = ProblemBlock.builder()
-                                                            .id(generatedId)
+                                                            .id(UUID.randomUUID())
                                                             .problemId(problemId)
                                                             .seq(i + 1)
                                                             .sourceCode(blockCode.getCode())
                                                             .programmingLanguage(blockCode.getLanguage())
-                                                            .completedBy(blockCode.isForStudent() ? "student" : "teacher")
+                                                            .completedBy(blockCode.isForStudent() ? 1 : 0)
                                                             .build();
                     problemBlocks.add(problemBlock);
                 }
@@ -3855,7 +3825,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                                                             ModelCreateContestProblemResponse.BlockCode blockCode = new ModelCreateContestProblemResponse.BlockCode();
                                                                                             blockCode.setId(String.valueOf(block.getId()));
                                                                                             blockCode.setCode(block.getSourceCode());
-                                                                                            blockCode.setForStudent(block.getCompletedBy().equals("student"));
+                                                                                            blockCode.setForStudent(block.getCompletedBy() == 1);
                                                                                             blockCode.setSeq(block.getSeq());
                                                                                             blockCode.setLanguage(block.getProgrammingLanguage());
                                                                                             return blockCode;
@@ -4176,35 +4146,5 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         return newProblem;
     }
-
-//    @Override
-//    public ContestProblemBlock createContestProblemBlock(String userId, ModelCreateContestProblemBlock dto) throws Exception {
-//        ProblemEntity problem = problemRepo.findById(dto.getProblemId())
-//                                           .orElseThrow(() -> new MiniLeetCodeException("Problem not found", 404));
-//
-//        List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(dto.getProblemId(), userId);
-//        boolean hasPermission = false;
-//        for (UserContestProblemRole role : roles) {
-//            if (role.getRoleId().equals(UserContestProblemRole.ROLE_EDITOR) ||
-//                role.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)) {
-//                hasPermission = true;
-//                break;
-//            }
-//        }
-//
-//        if (!hasPermission && !userId.equals(problem.getCreatedBy())) {
-//            throw new MiniLeetCodeException("Permission denied", 403);
-//        }
-//
-//        ContestProblemBlock block = ContestProblemBlock.builder()
-//                                                       .problem(problem)
-//                                                       .seq(dto.getSeq())
-//                                                       .completedBy(dto.getCompletedBy())
-//                                                       .sourceCode(dto.getSourceCode())
-//                                                       .programmingLanguage(dto.getProgrammingLanguage())
-//                                                       .build();
-//
-//        return contestProblemBlock.save(block);
-//    }
 
 }
