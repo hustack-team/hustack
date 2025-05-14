@@ -582,76 +582,78 @@ function CreateProblem() {
                 <Tab key={lang.value} label={lang.label} value={lang.value} />
               ))}
             </Tabs>
-            {isEditingBlock && editingBlockIndex !== null ? (
-              <Box sx={{ width: "100%", mt: 2 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={10}
-                  value={editingBlockCode}
-                  onChange={(e) => setEditingBlockCode(e.target.value)}
-                  placeholder={t("enterBlockCode")}
-                />
-                <Box sx={{ mt: 1, display: "flex", gap: 2 }}>
-                  <Button
-                    onClick={updateBlockCode}
-                    disabled={!editingBlockCode.trim()}
-                    variant="contained"
-                    size="small"
-                  >
-                    {t("update", { ns: "common" })}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setIsEditingBlock(false)
-                      setEditingBlockIndex(null)
-                    }}
-                    variant="outlined"
-                    size="small"
-                  >
-                    {t("cancel", { ns: "common" })}
-                  </Button>
-                </Box>
-              </Box>
-            ) : (
-              blockCodes[selectedLanguage].map((block, index) => (
-                <Box className={classes.blockCodeContainer} key={index}>
-                  <Box
-                    sx={{ width: "70%", position: "relative" }}
-                    className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
-                  >
-                    <Box sx={{ position: "absolute", top: "8px", right: "8px", display: "flex", gap: 1 }}>
-                      <Button size="small" variant="contained" color="primary" onClick={() => startEditingBlock(index)}>
-                        {t("update", { ns: "common" })}
-                      </Button>
-                      <Button size="small" color="error" onClick={() => handleDeleteBlock(index)}>
-                        {t("delete", { ns: "common" })}
-                      </Button>
-                    </Box>
-                    <pre>{block.code}</pre>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", ml: 2, marginTop: 2 }}>
-                    <StyledSelect
+              {isEditingBlock && editingBlockIndex !== null ? (
+                <Box sx={{ width: "100%", mt: 2 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={10}
+                    value={editingBlockCode}
+                    onChange={(e) => setEditingBlockCode(e.target.value)}
+                    placeholder={t("enterBlockCode")}
+                  />
+                  <Box sx={{ mt: 1, display: "flex", gap: 2 }}>
+                    <Button
+                      onClick={updateBlockCode}
+                      disabled={!editingBlockCode.trim()}
+                      variant="contained"
                       size="small"
-                      value={block.forStudent ? "student" : "teacher"}
-                      onChange={(event) => {
-                        setBlockCodes((prev) => ({
-                          ...prev,
-                          [selectedLanguage]: prev[selectedLanguage].map((block, i) =>
-                            i === index ? { ...block, forStudent: event.target.value === "student" } : block,
-                          ),
-                        }))
+                    >
+                      {t("update", { ns: "common" })}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsEditingBlock(false);
+                        setEditingBlockIndex(null);
                       }}
-                      options={[
-                        { label: t("For Teacher"), value: "teacher" },
-                        { label: t("For Student"), value: "student" },
-                      ]}
-                      sx={{ minWidth: "120px" }}
-                    />
+                      variant="outlined"
+                      size="small"
+                    >
+                      {t("cancel", { ns: "common" })}
+                    </Button>
                   </Box>
                 </Box>
-              ))
-            )}
+              ) : (
+                blockCodes[selectedLanguage].map((block, index) => (
+                  <Box className={classes.blockCodeContainer} key={index}>
+                    <Box
+                      sx={{ width: "70%", position: "relative" }}
+                      className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
+                    >
+                      <Box sx={{ position: "absolute", top: "8px", right: "8px", display: "flex", gap: 1 }}>
+                        <Button size="small" variant="contained" color="primary" onClick={() => startEditingBlock(index)}>
+                          {t("update", { ns: "common" })}
+                        </Button>
+                        <Button size="small" color="error" onClick={() => handleDeleteBlock(index)}>
+                          {t("delete", { ns: "common" })}
+                        </Button>
+                      </Box>
+                      <Box sx={{ minHeight: "120px", overflowY: "auto",  padding: "10px" }}> 
+                        <pre>{block.code}</pre>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", ml: 2, marginTop: 2 }}>
+                      <StyledSelect
+                        size="small"
+                        value={block.forStudent ? "student" : "teacher"}
+                        onChange={(event) => {
+                          setBlockCodes((prev) => ({
+                            ...prev,
+                            [selectedLanguage]: prev[selectedLanguage].map((block, i) =>
+                              i === index ? { ...block, forStudent: event.target.value === "student" } : block,
+                            ),
+                          }));
+                        }}
+                        options={[
+                          { label: t("For Teacher"), value: "teacher" },
+                          { label: t("For Student"), value: "student" },
+                        ]}
+                        sx={{ minWidth: "120px" }}
+                      />
+                    </Box>
+                  </Box>
+                ))
+              )}
 
             {isAddingBlock && !isEditingBlock && (
               <Box sx={{ width: "70%", mt: 2 }}>

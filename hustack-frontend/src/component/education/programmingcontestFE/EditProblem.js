@@ -673,7 +673,9 @@ function EditProblem() {
                         {t("delete", { ns: "common" })}
                       </Button>
                     </Box>
-                    <pre>{block.code}</pre>
+                      <Box sx={{ minHeight: "120px", overflowY: "auto", padding: "10px" }}> 
+                        <pre>{block.code}</pre>
+                     </Box>  
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", ml: 2, mt: 2 }}>
                     <StyledSelect

@@ -47,10 +47,16 @@ const HustCodeEditor = (props) => {
         {language && !hideLanguagePicker && <HustCodeLanguagePicker listLanguagesAllowed={listLanguagesAllowed} language={language} onChangeLanguage={onChangeLanguage}/>}
       </Box> */}
 
+    <Box sx={{ minHeight: "120px", overflowY: "auto", padding: "8px" }}> 
       <AceEditor
         width="100%"
         height={height}
-        style={{ paddingTop: "6px" }}
+        style={{ 
+        paddingTop: "6px", 
+        padding: "8px", 
+        minHeight: "120px",
+        overflowY: "auto" 
+      }}
         placeholder={placeholder}
         mode={convertLanguageToEditorMode(language)}
         theme="monokai"
@@ -59,6 +65,7 @@ const HustCodeEditor = (props) => {
         value={sourceCode}
         readOnly={readOnly} 
       />
+    </Box>
     </Box>
   );
 };

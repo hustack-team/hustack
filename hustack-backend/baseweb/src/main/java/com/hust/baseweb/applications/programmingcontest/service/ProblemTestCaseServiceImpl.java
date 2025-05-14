@@ -82,6 +82,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
     private final ProblemRepo problemRepo;
+
     private final ProblemBlockRepo problemBlockRepo;
 
     private TestCaseRepo testCaseRepo;
