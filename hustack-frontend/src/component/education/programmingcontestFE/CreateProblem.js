@@ -24,6 +24,7 @@ import { useTranslation } from "react-i18next"
 import HustDropzoneArea from "../../common/HustDropzoneArea"
 import { errorNoti, successNoti } from "../../../utils/notification"
 import HustCodeEditor from "../../common/HustCodeEditor"
+import HustCodeEditorV2 from "../../common/HustCodeEditorV2"
 import { LoadingButton } from "@mui/lab"
 import RichTextEditor from "../../common/editor/RichTextEditor"
 import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant"
@@ -41,36 +42,21 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(3),
   },
-  blockCode: {
-    border: "2px solid black",
-    padding: theme.spacing(2),
-    marginTop: theme.spacing(2),
-    position: "relative",
-    cursor: "pointer",
-  },
-  blockCodeStudent: {
-    border: "2px solid green",
-    padding: theme.spacing(2),
-    marginTop: theme.spacing(2),
-    position: "relative",
-    cursor: "pointer",
-  },
-  deleteButton: {
-    position: "absolute",
-    top: theme.spacing(1),
-    right: theme.spacing(1),
-    display: "flex",
-    gap: theme.spacing(1),
-  },
   blockCodeContainer: {
     display: "flex",
-    alignItems: "flex-start",
     marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  },
+  codeEditorWrapper: {
+    width: "75%",
   },
   blockCodeControls: {
-    marginLeft: theme.spacing(2),
+    width: "25%",
+    paddingLeft: theme.spacing(1),
     display: "flex",
     flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
     gap: theme.spacing(1),
   },
 }))
@@ -154,15 +140,10 @@ function CreateProblem() {
   const [loading, setLoading] = useState(false)
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false)
   const [isProblemBlock, setIsProblemBlock] = useState(false)
-  const [newBlockCode, setNewBlockCode] = useState("")
   const [blockCodes, setBlockCodes] = useState(
     Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])),
   )
-  const [editingBlockIndex, setEditingBlockIndex] = useState(null)
-  const [editingBlockCode, setEditingBlockCode] = useState("")
   const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17)
-  const [isAddingBlock, setIsAddingBlock] = useState(false)
-  const [isEditingBlock, setIsEditingBlock] = useState(false)
 
   const handleGetTagsSuccess = (res) => setTags(res.data)
 
@@ -267,10 +248,13 @@ function CreateProblem() {
           blockCodes[language].map((block, index) => ({
             id: `${language}_${index}`,
             code: block.code,
-            forStudent: block.forStudent ? 1 : 0, // true for student, false for teacher
+            forStudent: block.forStudent ? 1 : 0,
             language: language,
           })),
         )
+      
+      // Log the formatted block codes
+      console.log("Formatted block codes:", formattedBlockCodes)
     }
 
     const body = {
@@ -333,27 +317,6 @@ function CreateProblem() {
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`)
-  }
-
-  const startEditingBlock = (index) => {
-    setEditingBlockIndex(index)
-    setEditingBlockCode(blockCodes[selectedLanguage][index].code)
-    setIsEditingBlock(true)
-  }
-
-  const updateBlockCode = () => {
-    if (editingBlockCode.trim()) {
-      setBlockCodes((prev) => ({
-        ...prev,
-        [selectedLanguage]: prev[selectedLanguage].map((block, i) =>
-          i === editingBlockIndex ? { ...block, code: editingBlockCode } : block,
-        ),
-      }))
-      setEditingBlockCode("")
-      setEditingBlockIndex(null)
-      setIsEditingBlock(false)
-      successNoti(t("Update Successfully"), 2000)
-    }
   }
 
   const handleTabChange = (event, newValue) => {
@@ -582,119 +545,77 @@ function CreateProblem() {
                 <Tab key={lang.value} label={lang.label} value={lang.value} />
               ))}
             </Tabs>
-              {isEditingBlock && editingBlockIndex !== null ? (
-                <Box sx={{ width: "100%", mt: 2 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={10}
-                    value={editingBlockCode}
-                    onChange={(e) => setEditingBlockCode(e.target.value)}
-                    placeholder={t("enterBlockCode")}
-                  />
-                  <Box sx={{ mt: 1, display: "flex", gap: 2 }}>
-                    <Button
-                      onClick={updateBlockCode}
-                      disabled={!editingBlockCode.trim()}
-                      variant="contained"
-                      size="small"
-                    >
-                      {t("update", { ns: "common" })}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setIsEditingBlock(false);
-                        setEditingBlockIndex(null);
-                      }}
-                      variant="outlined"
-                      size="small"
-                    >
-                      {t("cancel", { ns: "common" })}
-                    </Button>
-                  </Box>
-                </Box>
-              ) : (
-                blockCodes[selectedLanguage].map((block, index) => (
-                  <Box className={classes.blockCodeContainer} key={index}>
-                    <Box
-                      sx={{ width: "70%", position: "relative" }}
-                      className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
-                    >
-                      <Box sx={{ position: "absolute", top: "8px", right: "8px", display: "flex", gap: 1 }}>
-                        <Button size="small" variant="contained" color="primary" onClick={() => startEditingBlock(index)}>
-                          {t("update", { ns: "common" })}
-                        </Button>
-                        <Button size="small" color="error" onClick={() => handleDeleteBlock(index)}>
-                          {t("delete", { ns: "common" })}
-                        </Button>
-                      </Box>
-                      <Box sx={{ minHeight: "120px", overflowY: "auto",  padding: "10px" }}> 
-                        <pre>{block.code}</pre>
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", ml: 2, marginTop: 2 }}>
-                      <StyledSelect
-                        size="small"
-                        value={block.forStudent ? "student" : "teacher"}
-                        onChange={(event) => {
-                          setBlockCodes((prev) => ({
-                            ...prev,
-                            [selectedLanguage]: prev[selectedLanguage].map((block, i) =>
-                              i === index ? { ...block, forStudent: event.target.value === "student" } : block,
-                            ),
-                          }));
-                        }}
-                        options={[
-                          { label: t("For Teacher"), value: "teacher" },
-                          { label: t("For Student"), value: "student" },
-                        ]}
-                        sx={{ minWidth: "120px" }}
-                      />
-                    </Box>
-                  </Box>
-                ))
-              )}
 
-            {isAddingBlock && !isEditingBlock && (
-              <Box sx={{ width: "70%", mt: 2 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={10}
-                  value={newBlockCode}
-                  onChange={(e) => setNewBlockCode(e.target.value)}
-                  placeholder={t("enterBlockCode")}
-                />
-                <Box sx={{ mt: 1 }}>
-                  <Button
-                    onClick={() => {
-                      if (newBlockCode.trim()) {
+            {blockCodes[selectedLanguage].map((block, index) => (
+              <Box className={classes.blockCodeContainer} key={index}>
+                <Box className={classes.codeEditorWrapper}>
+                  <HustCodeEditorV2
+                    sourceCode={block.code || ""}
+                    onChangeSourceCode={(newCode) => {
+                      try {
                         setBlockCodes((prev) => ({
                           ...prev,
-                          [selectedLanguage]: [...prev[selectedLanguage], { code: newBlockCode, forStudent: false }],
+                          [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                            i === index ? { ...b, code: newCode } : b,
+                          ),
                         }))
-                        setNewBlockCode("")
-                        setIsAddingBlock(false)
+                      } catch (error) {
+                        console.error("Error updating code:", error)
+                        errorNoti(t("Failed to update code"), 3000)
                       }
                     }}
-                    disabled={!newBlockCode.trim()}
-                    variant="contained"
+                    language={selectedLanguage}
+                    height="300px"
+                  />
+
+                </Box>
+                <Box className={classes.blockCodeControls}>
+                  <StyledSelect
                     size="small"
+                    value={block.forStudent ? "student" : "teacher"}
+                    onChange={(event) => {
+                      setBlockCodes((prev) => ({
+                        ...prev,
+                        [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                          i === index ? { ...b, forStudent: event.target.value === "student" } : b,
+                        ),
+                      }))
+                    }}
+                    options={[
+                      { label: t("For Teacher"), value: "teacher" },
+                      { label: t("For Student"), value: "student" },
+                    ]}
+                    sx={{ width: "150px", mt: 5 }}
+                  />
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteBlock(index)}
+                    sx={{ minWidth: "60px", px: 1 }}
                   >
-                    {t("Add Block Code")}
+                    {t("delete", { ns: "common" })}
                   </Button>
                 </Box>
               </Box>
-            )}
+            ))}
+
             <Button
               variant="outlined"
               onClick={() => {
-                setIsAddingBlock(!isAddingBlock)
-                setNewBlockCode("")
+                try {
+                  const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17
+                  setBlockCodes((prev) => ({
+                    ...prev,
+                    [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
+                  }))
+                } catch (error) {
+                  console.error("Error adding block code:", error)
+                  errorNoti(t("Failed to add block code"), 3000)
+                }
               }}
-              sx={{ marginTop: "12px" }}
+              sx={{ marginTop: "12px" }}  
             >
-              {isAddingBlock ? t("cancel", { ns: "common" }) : t("Add Block Code")}
+              {t("Add Block Code")}
             </Button>
           </>
         )}

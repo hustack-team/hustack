@@ -10,6 +10,7 @@ import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
+import com.hust.baseweb.applications.programmingcontest.service.StudentProblemViewService;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 public class ContestController {
 
     private final ProblemBlockRepo problemBlockRepo;
+    private final StudentProblemViewService studentProblemViewService;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
@@ -254,62 +256,15 @@ public class ContestController {
     @GetMapping("/contests/{contestId}/problems/{problemId}")
     public ResponseEntity<?> getProblemDetailInContestViewByStudent(
         Principal principal,
-        @PathVariable("problemId") String problemId, @PathVariable("contestId") String contestId
-    )  {
+        @PathVariable("problemId") String problemId,
+        @PathVariable("contestId") String contestId
+    ) {
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
-
-        try {
-            ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
-            ContestProblem cp = contestProblemRepo.findByContestIdAndProblemId(contestId, problemId);
-            if (cp == null) {
-                return ResponseEntity.ok().body("NOTFOUND");
-            }
-            if (!contestEntity.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
-                return ResponseEntity.ok().body(null);
-            }
-            ModelCreateContestProblemResponse problemEntity = problemTestCaseService.getContestProblem(problemId);
-            ProblemEntity problem = problemRepo.findByProblemId(problemId); // Lấy ProblemEntity để kiểm tra categoryId
-
-            ModelStudentViewProblemDetail model = new ModelStudentViewProblemDetail();
-            if (contestEntity.getProblemDescriptionViewType() != null &&
-                contestEntity.getProblemDescriptionViewType()
-                             .equals(ContestEntity.CONTEST_PROBLEM_DESCRIPTION_VIEW_TYPE_HIDDEN)) {
-                model.setProblemStatement(" ");
-            } else {
-                model.setProblemStatement(problemEntity.getProblemDescription());
-            }
-
-            model.setSubmissionMode(cp.getSubmissionMode());
-            model.setProblemName(cp.getProblemRename());
-            model.setProblemCode(cp.getProblemRecode());
-            model.setIsPreloadCode(problemEntity.getIsPreloadCode());
-            model.setPreloadCode(problemEntity.getPreloadCode());
-            model.setAttachment(problemEntity.getAttachment());
-            model.setAttachmentNames(problemEntity.getAttachmentNames());
-            model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowedInContest());
-            model.setSampleTestCase(problemEntity.getSampleTestCase());
-
-            if (problem.getBlockProblem() == 1) {
-                List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
-                List<ModelCreateContestProblem.BlockCode> blockCodes = problemBlocks.stream()
-                                                                                    .map(pb -> {
-                                                                                        ModelCreateContestProblem.BlockCode blockCode = new ModelCreateContestProblem.BlockCode();
-                                                                                        blockCode.setId(pb.getId().toString());
-                                                                                        blockCode.setCode(pb.getCompletedBy() == 1 ? "" : pb.getSourceCode());
-                                                                                        blockCode.setForStudent(pb.getCompletedBy() == 1);
-                                                                                        blockCode.setLanguage(pb.getProgrammingLanguage());
-                                                                                        blockCode.setSeq(pb.getSeq());
-                                                                                        return blockCode;
-                                                                                    })
-                                                                                    .collect(Collectors.toList());
-                model.setBlockCodes(blockCodes);
-            }
-
-            return ResponseEntity.ok().body(model);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ResponseEntity.ok().body("NOTFOUND");
+        ModelStudentViewProblemDetail result = studentProblemViewService.getProblemDetailForStudentView(
+            principal.getName(), contestId, problemId
+        );
+        if (result == null) return ResponseEntity.ok().body("NOTFOUND");
+        return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/contests/{contestId}/problems")

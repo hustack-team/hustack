@@ -51,6 +51,8 @@ const HustCodeEditor = (props) => {
       <AceEditor
         width="100%"
         height={height}
+        minLines={6}        
+        maxLines={Infinity}
         style={{ 
         paddingTop: "6px", 
         padding: "8px", 
