@@ -250,7 +250,7 @@ function CreateProblem() {
             language: language,
           })),
         )
-      
+
       // Log the formatted block codes
       console.log("Formatted block codes:", formattedBlockCodes)
     }
@@ -498,7 +498,7 @@ function CreateProblem() {
 
         <Grid item xs={3}>
           <FormControlLabel
-            label={t("Problem Block")}
+            label={t("problemBlock")}
             control={<Checkbox checked={isProblemBlock} onChange={() => setIsProblemBlock(!isProblemBlock)} />}
           />
         </Grid>
@@ -580,10 +580,10 @@ function CreateProblem() {
                       }))
                     }}
                     options={[
-                      { label: t("For Teacher"), value: "teacher" },
-                      { label: t("For Student"), value: "student" },
+                      { label: t("forTeacher"), value: "teacher" },
+                      { label: t("forStudent"), value: "student" },
                     ]}
-                    sx={{ width: "150px", mt: 5 }}
+                    sx={{ width: "250px", mt: 5 }}
                   />
                   <Button
                     size="small"
@@ -611,9 +611,9 @@ function CreateProblem() {
                   errorNoti(t("Failed to add block code"), 3000)
                 }
               }}
-              sx={{ marginTop: "12px" }}  
+              sx={{ marginTop: "12px" }}
             >
-              {t("Add Block Code")}
+              {t("addProblemBlock")}
             </Button>
           </>
         )}

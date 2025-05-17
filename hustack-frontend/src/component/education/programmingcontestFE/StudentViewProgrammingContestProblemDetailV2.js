@@ -469,7 +469,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
                     .map((block) => (
                       <Box key={block.id}>
                         <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                          {block.forStudent ? `Block for Student ${block.seq}` : `Block for teacher ${block.seq} (Read-Only)`}
+                          {block.forStudent ? `${t("forStudentBlock")}` : `${t("forTeacherBlock")} (Read-Only)`}
                         </Typography>
                         <HustCodeEditorV2
                           language={lang}

@@ -380,7 +380,7 @@ function ManagerViewProblemDetailV2() {
       {problemDetail.blockCodes && problemDetail.blockCodes.length > 0 && (
         <Box sx={{ marginTop: "24px" }}>
           <Typography variant="h6" sx={{ marginBottom: "8px" }}>
-            {t("Block codes")}
+            {t("listProblemBlock")}
           </Typography>
           <Tabs
             value={selectedLanguage}
@@ -398,10 +398,10 @@ function ManagerViewProblemDetailV2() {
                 className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
               >
                 <Typography className={classes.forStudentLabel}>
-                  {block.forStudent ? t("For Student") : t("For Teacher")}
+                  {block.forStudent ? t("forStudent") : t("forTeacher")}
                 </Typography>
                 <HustCopyCodeBlock
-                  title={`${t("Block ")} ${block.seq}`}
+                  title={`${t("blocks")} ${block.seq}`}
                   text={block.code}
                   language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
                   showLineNumbers

@@ -532,7 +532,7 @@ function EditProblem() {
 
         <Grid item xs={3}>
           <FormControlLabel
-            label={t("Problem Block")}
+            label={t("problemBlock")}
             control={
               <Checkbox
                 checked={isProblemBlock}
@@ -613,10 +613,10 @@ function EditProblem() {
                       }));
                     }}
                     options={[
-                      { label: t("For Teacher"), value: "teacher" },
-                      { label: t("For Student"), value: "student" },
+                      { label: t("forTeacher"), value: "teacher" },
+                      { label: t("forStudent"), value: "student" },
                     ]}
-                    sx={{ width: "150px", mt: 5 }}
+                    sx={{ width: "250px", mt: 5 }}
                   />
                   <Button
                     size="small"
@@ -646,7 +646,7 @@ function EditProblem() {
               }}
               sx={{ marginTop: "12px" }}
             >
-              {t("Add Block Code")}
+              {t("addProblemBlock")}
             </Button>
           </>
         )}
