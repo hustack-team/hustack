@@ -1,18 +1,16 @@
 package com.hust.baseweb.applications.exam.model.response;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
+
 public interface MyExamFilterRes {
 
-    String getExamStudentId();
     String getExamId();
     String getExamCode();
     String getExamName();
     String getExamDescription();
     String getStartTime();
     String getEndTime();
-    String getExamTestId();
-    String getExamTestCode();
-    String getExamTestName();
-    String getExamResultId();
-    Double getTotalScore();
+    @JsonRawValue
+    String getExamTestIds();
 
 }

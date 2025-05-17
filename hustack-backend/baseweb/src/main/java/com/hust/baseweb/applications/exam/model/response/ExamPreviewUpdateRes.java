@@ -1,19 +1,18 @@
-package com.hust.baseweb.applications.exam.model.request;
+package com.hust.baseweb.applications.exam.model.response;
 
-import com.hust.baseweb.applications.exam.entity.ExamExamTestEntity;
 import com.hust.baseweb.applications.exam.entity.ExamStudentEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
 @FieldNameConstants
-public class ExamSaveReq {
+public class ExamPreviewUpdateRes {
 
+    private String id;
     private String code;
     private String name;
     private String description;
@@ -21,8 +20,6 @@ public class ExamSaveReq {
     private String answerStatus;
     private String startTime;
     private String endTime;
-    private List<ExamExamTestEntity> examExamTests;
-    private List<ExamExamTestEntity> examExamTestDeletes;
-    private List<ExamStudentSaveReq> examStudents;
-    private List<ExamStudentSaveReq> examStudentDeletes;
+    private List<ExamExamTestPreviewUpdateRes> examExamTests;
+    private List<ExamStudentEntity> examStudents;
 }

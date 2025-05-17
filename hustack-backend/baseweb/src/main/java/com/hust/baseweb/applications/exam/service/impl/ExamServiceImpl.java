@@ -1,7 +1,7 @@
 package com.hust.baseweb.applications.exam.service.impl;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.hust.baseweb.applications.exam.entity.*;
 import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
@@ -10,11 +10,9 @@ import com.hust.baseweb.applications.exam.repository.*;
 import com.hust.baseweb.applications.exam.service.ExamService;
 import com.hust.baseweb.applications.exam.service.ExamTestService;
 import com.hust.baseweb.applications.exam.service.MongoFileService;
-import com.hust.baseweb.applications.exam.utils.Constants;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
 import com.hust.baseweb.applications.exam.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,18 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Service
@@ -47,6 +42,8 @@ public class ExamServiceImpl implements ExamService {
     ExamStudentRepository examStudentRepository;
     ExamResultRepository examResultRepository;
     ExamResultDetailsRepository examResultDetailsRepository;
+    ExamExamTestRepository examExamTestRepository;
+    ExamStudentTestRepository examStudentTestRepository;
     EntityManager entityManager;
     ModelMapper modelMapper;
     ObjectMapper objectMapper;
@@ -72,26 +69,29 @@ public class ExamServiceImpl implements ExamService {
     public ResponseData<ExamDetailsRes> details(String id) {
         ResponseData<ExamDetailsRes> responseData = new ResponseData<>();
 
-        Optional<ExamEntity> examEntityExist = examRepository.findById(id);
-        if(!examEntityExist.isPresent()){
+        Optional<ExamDetailsRes> exam = examRepository.detailExamById(id);
+        if(!exam.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
             responseData.setResultMsg("Chưa tồn kỳ thi");
             return responseData;
         }
 
-        ExamDetailsRes examDetailsRes = modelMapper.map(examEntityExist.get(), ExamDetailsRes.class);
+        responseData.setHttpStatus(HttpStatus.OK);
+        responseData.setResultCode(HttpStatus.OK.value());
+        responseData.setResultMsg("Success");
+        responseData.setData(exam.get());
+        return responseData;
+    }
 
-        List<ExamTestDetailsRes> examTests = new ArrayList<>();
-        examTests.add(examTestService.details(examDetailsRes.getExamTestId()).getData());
-        examDetailsRes.setExamTests(examTests);
-
-        examDetailsRes.setExamStudents(examStudentRepository.findAllWithResult(examDetailsRes.getId()));
+    @Override
+    public ResponseData<List<ExamStudentResultDetailsRes>> detailStudentExam(String examExamTestId) {
+        ResponseData<List<ExamStudentResultDetailsRes>> responseData = new ResponseData<>();
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
         responseData.setResultMsg("Success");
-        responseData.setData(examDetailsRes);
+        responseData.setData(examStudentRepository.findAllWithResult(examExamTestId));
         return responseData;
     }
 
@@ -100,8 +100,11 @@ public class ExamServiceImpl implements ExamService {
     public ResponseData<ExamEntity> create(ExamSaveReq examSaveReq) {
         ResponseData<ExamEntity> responseData = new ResponseData<>();
 
-        Optional<ExamTestEntity> examTestEntity = examTestRepository.findById(examSaveReq.getExamTestId());
-        if(!examTestEntity.isPresent()){
+        List<ExamTestEntity> examTestExist = examTestRepository.findAllByExamTestIds(examSaveReq.getExamExamTests()
+                                                                                                .stream()
+                                                                                                .map(ExamExamTestEntity::getExamTestId)
+                                                                                                .collect(Collectors.toList()));
+        if(examTestExist.isEmpty()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
             responseData.setResultMsg("Chưa tồn tại đề thi");
@@ -121,12 +124,30 @@ public class ExamServiceImpl implements ExamService {
         examEntity.setEndTime(DataUtils.formatStringToLocalDateTime(examSaveReq.getEndTime()));
         examEntity = examRepository.save(examEntity);
 
+        List<ExamExamTestEntity> examExamTests = new ArrayList<>();
+        for(ExamExamTestEntity examExamTest: examSaveReq.getExamExamTests()){
+            examExamTests.add(ExamExamTestEntity
+                                  .builder()
+                                  .examId(examEntity.getId())
+                                  .examTestId(examExamTest.getExamTestId())
+                                  .build());
+        }
+        examExamTests = examExamTestRepository.saveAll(examExamTests);
+
         if(!examSaveReq.getExamStudents().isEmpty()){
-            for(ExamStudentEntity examStudent: examSaveReq.getExamStudents()){
-                examStudent.setExamId(examEntity.getId());
-                examStudent.setExamTestId(examSaveReq.getExamTestId());
+            List<ExamStudentTestEntity> examStudentTestEntities = new ArrayList<>();
+            for(ExamStudentSaveReq examStudent: examSaveReq.getExamStudents()){
+                ExamStudentEntity examStudentEntity = modelMapper.map(examStudent, ExamStudentEntity.class);
+                examStudentEntity = examStudentRepository.save(examStudentEntity);
+                for(ExamExamTestEntity examExamTest: examExamTests){
+                    examStudentTestEntities.add(ExamStudentTestEntity
+                                                    .builder()
+                                                    .examExamTestId(examExamTest.getId())
+                                                    .examStudentId(examStudentEntity.getId())
+                                                    .build());
+                }
             }
-            examStudentRepository.saveAll(examSaveReq.getExamStudents());
+            examStudentTestRepository.saveAll(examStudentTestEntities);
         }
 
         responseData.setHttpStatus(HttpStatus.OK);
@@ -136,12 +157,37 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    public ResponseData<ExamPreviewUpdateRes> previewUpdate(String id) {
+        ResponseData<ExamPreviewUpdateRes> responseData = new ResponseData<>();
+
+        Optional<ExamDetailsRes> examExist = examRepository.detailExamById(id);
+        if(!examExist.isPresent()){
+            responseData.setHttpStatus(HttpStatus.NOT_FOUND);
+            responseData.setResultCode(HttpStatus.NOT_FOUND.value());
+            responseData.setResultMsg("Chưa tồn kỳ thi");
+            return responseData;
+        }
+        ExamPreviewUpdateRes examPreviewUpdateRes = modelMapper.map(examExist.get(), ExamPreviewUpdateRes.class);
+        examPreviewUpdateRes.setExamExamTests(examExamTestRepository.findPreviewUpdateByExamId(id));
+        examPreviewUpdateRes.setExamStudents(examStudentRepository.findALlByExamId(id));
+
+        responseData.setHttpStatus(HttpStatus.OK);
+        responseData.setResultCode(HttpStatus.OK.value());
+        responseData.setData(examPreviewUpdateRes);
+        responseData.setResultMsg("Success");
+        return responseData;
+    }
+
+    @Override
     @Transactional
     public ResponseData<ExamEntity> update(ExamSaveReq examSaveReq) {
         ResponseData<ExamEntity> responseData = new ResponseData<>();
 
-        Optional<ExamTestEntity> examTestEntity = examTestRepository.findById(examSaveReq.getExamTestId());
-        if(!examTestEntity.isPresent()){
+        List<ExamTestEntity> examTestExist = examTestRepository.findAllByExamTestIds(examSaveReq.getExamExamTests()
+                                                                                                .stream()
+                                                                                                .map(ExamExamTestEntity::getExamTestId)
+                                                                                                .collect(Collectors.toList()));
+        if(examTestExist.isEmpty()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
             responseData.setResultMsg("Chưa tồn tại đề thi");
@@ -164,17 +210,86 @@ public class ExamServiceImpl implements ExamService {
         examEntity.setEndTime(DataUtils.formatStringToLocalDateTime(examSaveReq.getEndTime()));
         examRepository.save(examEntity);
 
-        if(!examSaveReq.getExamStudents().isEmpty()){
-            for(ExamStudentEntity examStudent: examSaveReq.getExamStudents()){
-                examStudent.setExamId(examEntity.getId());
-                examStudent.setExamTestId(examSaveReq.getExamTestId());
+        if(!examSaveReq.getExamStudentDeletes().isEmpty()){
+            List<String> examStudentIds = new ArrayList<>();
+            for(ExamStudentSaveReq examStudent: examSaveReq.getExamStudentDeletes()){
+                examStudentIds.add(examStudent.getId());
+
+                List<ExamStudentTestEntity> examStudentTestEntities = examStudentTestRepository.findAllByExamStudentId(examStudent.getId());
+                examStudentTestRepository.deleteAll(examStudentTestEntities);
             }
-            examStudentRepository.saveAll(examSaveReq.getExamStudents());
+            examStudentRepository.deleteAllById(examStudentIds);
         }
 
-        if(!examSaveReq.getExamStudentDeletes().isEmpty()){
-            examStudentRepository.deleteAll(examSaveReq.getExamStudentDeletes());
+        List<ExamExamTestEntity> examExamTests = new ArrayList<>();
+        for(ExamExamTestEntity examExamTest: examSaveReq.getExamExamTests()){
+            if(!DataUtils.stringIsNotNullOrEmpty(examExamTest.getId())){
+                examExamTests.add(ExamExamTestEntity
+                                      .builder()
+                                      .examId(examEntity.getId())
+                                      .examTestId(examExamTest.getExamTestId())
+                                      .build());
+            }
         }
+        examExamTests = examExamTestRepository.saveAll(examExamTests);
+        if(!examSaveReq.getExamExamTestDeletes().isEmpty()){
+            List<ExamStudentUpdateDeleteRes> examStudentUpdateDeleteRes = examStudentRepository
+                .findAllWithExamStudentTestByExamExamTestIds(examSaveReq.getExamExamTestDeletes()
+                                                                        .stream()
+                                                                        .map(ExamExamTestEntity::getId)
+                                                                        .collect(Collectors.toList()));
+
+            List<ExamStudentTestEntity> examStudentTestEntities = examStudentUpdateDeleteRes.stream()
+                                                                                            .map(ExamStudentUpdateDeleteRes::getExamStudentTests)
+                                                                                            .flatMap(json -> {
+                                                                                                try {
+                                                                                                    return objectMapper.readValue(json, new TypeReference<List<ExamStudentTestEntity>>() {})
+                                                                                                                       .stream();
+                                                                                                } catch (Exception e) {
+                                                                                                    log.error(e.getMessage(), e);
+                                                                                                    return Stream.empty();
+                                                                                                }
+                                                                                            })
+                                                                                            .collect(Collectors.toList());
+            examStudentTestRepository.deleteAll(examStudentTestEntities);
+
+            examExamTestRepository.deleteAll(examSaveReq.getExamExamTestDeletes());
+        }
+
+        List<ExamStudentTestEntity> examStudentTestEntities = new ArrayList<>();
+        for(ExamStudentSaveReq examStudent: examSaveReq.getExamStudents()){
+            if(DataUtils.stringIsNotNullOrEmpty(examStudent.getId())){
+                for(ExamExamTestEntity examExamTest: examExamTests){
+                    examStudentTestEntities.add(ExamStudentTestEntity
+                                                    .builder()
+                                                    .examExamTestId(examExamTest.getId())
+                                                    .examStudentId(examStudent.getId())
+                                                    .build());
+                }
+            }
+        }
+        List<ExamExamTestEntity> examExamTestEntities = new ArrayList<>(examSaveReq.getExamExamTests()
+                                                                                   .stream()
+                                                                                   .filter(item -> DataUtils.stringIsNotNullOrEmpty(item.getId()))
+                                                                                   .collect(Collectors.toList()));
+        examExamTestEntities.addAll(examExamTests);
+        if(!examSaveReq.getExamStudents().isEmpty()){
+            for(ExamStudentSaveReq examStudent: examSaveReq.getExamStudents()){
+                if(!DataUtils.stringIsNotNullOrEmpty(examStudent.getId())){
+                    ExamStudentEntity examStudentEntity = modelMapper.map(examStudent, ExamStudentEntity.class);
+                    examStudentEntity = examStudentRepository.save(examStudentEntity);
+
+                    for(ExamExamTestEntity examExamTest: examExamTestEntities){
+                        examStudentTestEntities.add(ExamStudentTestEntity
+                                                        .builder()
+                                                        .examExamTestId(examExamTest.getId())
+                                                        .examStudentId(examStudentEntity.getId())
+                                                        .build());
+                    }
+                }
+            }
+        }
+        examStudentTestRepository.saveAll(examStudentTestEntities);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -202,6 +317,18 @@ public class ExamServiceImpl implements ExamService {
             return responseData;
         }
 
+        List<ExamExamTestEntity> examExamTestEntities = examExamTestRepository.findAllByExamId(id);
+        for(ExamExamTestEntity examExamTest: examExamTestEntities){
+            List<ExamStudentTestEntity> examStudentTestEntities = examStudentTestRepository.findAllByExamExamTestId(examExamTest.getId());
+            List<ExamStudentEntity> examStudentEntities = examStudentRepository.findAllById(examStudentTestEntities
+                                                                                                .stream()
+                                                                                                .map(ExamStudentTestEntity::getExamStudentId)
+                                                                                                .collect(Collectors.toList()));
+            examStudentTestRepository.deleteAll(examStudentTestEntities);
+            examStudentRepository.deleteAll(examStudentEntities);
+        }
+        examExamTestRepository.deleteAll(examExamTestEntities);
+
         examRepository.delete(examEntityExist.get());
 
         responseData.setHttpStatus(HttpStatus.OK);
@@ -221,13 +348,26 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public ResponseData<MyExamDetailsRes> detailsMyExam(String examId, String examStudentId) {
+    public ResponseData<List<MyExamTestWithResultRes>> getListTestMyExam(String examTestIds) {
+        ResponseData<List<MyExamTestWithResultRes>> responseData = new ResponseData<>();
+
+        List<String> ids = Arrays.asList(examTestIds.split(","));
+        List<MyExamTestWithResultRes> list = examTestRepository.findAllWithResultByExamTestIds(SecurityUtils.getUserLogin(),ids);
+
+        responseData.setHttpStatus(HttpStatus.OK);
+        responseData.setResultCode(HttpStatus.OK.value());
+        responseData.setData(list);
+        responseData.setResultMsg("Success");
+        return responseData;
+    }
+
+    @Override
+    public ResponseData<MyExamDetailsRes> detailsMyExam(String examStudentTestId) {
         ResponseData<MyExamDetailsRes> responseData = new ResponseData<>();
 
         Optional<MyExamDetailsResDB> myExamDetailsResDB = examRepository.detailsMyExam(
             SecurityUtils.getUserLogin(),
-            examId,
-            examStudentId
+            examStudentTestId
         );
         if(!myExamDetailsResDB.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
@@ -255,8 +395,7 @@ public class ExamServiceImpl implements ExamService {
             }
         }
 
-        myExamDetailsRes.setQuestionList(examTestRepository.getMyExamQuestionDetails(myExamDetailsRes.getExamTestId(),
-                                                                                     myExamDetailsRes.getExamStudentId()));
+        myExamDetailsRes.setQuestionList(examTestRepository.getMyExamQuestionDetails(examStudentTestId));
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -312,10 +451,10 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public ResponseData<ExamMarkingDetailsRes> detailsExamMarking(String examStudentId) {
+    public ResponseData<ExamMarkingDetailsRes> detailsExamMarking(String examStudentTestId) {
         ResponseData<ExamMarkingDetailsRes> responseData = new ResponseData<>();
 
-        Optional<ExamMarkingDetailsResDB> examMarkingDetailsResDB = examRepository.detailsExamMarking(examStudentId);
+        Optional<ExamMarkingDetailsResDB> examMarkingDetailsResDB = examRepository.detailsExamMarking(examStudentTestId);
         if(!examMarkingDetailsResDB.isPresent()){
             responseData.setHttpStatus(HttpStatus.NOT_FOUND);
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
@@ -325,8 +464,7 @@ public class ExamServiceImpl implements ExamService {
 
         ExamMarkingDetailsRes examMarkingDetailsRes = new ExamMarkingDetailsRes(examMarkingDetailsResDB.get(), null, modelMapper);
 
-        examMarkingDetailsRes.setQuestionList(examTestRepository.getExamMarkingDetails(examMarkingDetailsRes.getExamTestId(),
-                                                                                          examMarkingDetailsRes.getExamStudentId()));
+        examMarkingDetailsRes.setQuestionList(examTestRepository.getExamMarkingDetails(examStudentTestId));
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());

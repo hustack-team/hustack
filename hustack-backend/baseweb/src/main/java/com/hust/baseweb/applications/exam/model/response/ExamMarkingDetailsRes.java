@@ -11,7 +11,7 @@ import java.util.List;
 public class ExamMarkingDetailsRes {
 
     private String examId;
-    private String examTestId;
+    private String examStudentTestId;
     private String examStudentId;
     private String examStudentCode;
     private String examStudentName;

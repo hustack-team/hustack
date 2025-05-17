@@ -11,7 +11,7 @@ import {
   Radio,
   RadioGroup,
   FormGroup
-} from "@mui/material";
+} from "@material-ui/core";
 import {request} from "../../../../api";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
@@ -86,6 +86,7 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
+    setStartLoadTime(new Date());
   }, []);
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
@@ -140,8 +141,7 @@ function MyExamDetails(props) {
     const totalTime = Math.round((endLoadTime - startLoadTime) / 60000);
 
     const body = {
-      examId: data?.examId,
-      examStudentId: data?.examStudentId,
+      examStudentTestId: data?.examStudentTestId,
       totalTime: totalTime,
       examResultDetails: dataAnswers
     }
@@ -215,7 +215,7 @@ function MyExamDetails(props) {
   }
 
   const handleStartDoing = () => {
-    setStartLoadTime(new Date());
+    // setStartLoadTime(new Date());
     setStartDoing(true)
   }
 

@@ -10,9 +10,7 @@ import java.util.List;
 @Setter
 @FieldNameConstants
 public class MyExamResultSaveReq {
-
-    private String examId;
-    private String examStudentId;
+    private String examStudentTestId;
     private Integer totalTime;
     private List<MyExamResultDetailsSaveReq> examResultDetails;
 }

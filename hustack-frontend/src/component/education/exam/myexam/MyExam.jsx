@@ -7,7 +7,7 @@ import {
   CardHeader,
   MenuItem,
   TextField
-} from "@mui/material";
+} from "@material-ui/core";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
 import useDebounceValue from "../hooks/use-debounce";
@@ -15,6 +15,8 @@ import {toast} from "react-toastify";
 import {DataGrid} from "@mui/x-data-grid";
 import {formatDateTime} from "../ultils/DateUltils";
 import { BorderColor } from "@mui/icons-material";
+import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
@@ -27,16 +29,19 @@ function MyExam(props) {
   const columns = [
     {
       field: "examName",
-      headerName: "Tên kỳ thi",
+      headerName: "Kỳ thi",
       minWidth: 200,
       flex: 1,
       ...baseColumn
     },
     {
-      field: "examTestName",
-      headerName: "Tên đề thi",
+      field: "examDescription",
+      headerName: "Mô tả",
       minWidth: 200,
       flex: 1,
+      renderCell: (rowData) => {
+        return parseHTMLToString(rowData.value)
+      },
       ...baseColumn
     },
     {
@@ -57,38 +62,44 @@ function MyExam(props) {
         return formatDateTime(rowData.value)
       },
     },
-    {
-      field: "examResultId",
-      headerName: "Trạng thái",
-      ...baseColumn,
-      minWidth: 170,
-      height: 20,
-      renderCell: (rowData) => {
-        if(rowData.row?.examResultId != null && rowData.row?.totalScore == null ){
-          return (
-            <strong style={{color: '#716DF2'}}>Chưa chấm</strong>
-          )
-        }else if(rowData.row?.examResultId != null && rowData.row?.totalScore != null ){
-          return (
-            <strong style={{color: '#61bd6d'}}>Đã chấm</strong>
-          )
-        }else{
-          return (
-            <strong style={{color: '#f50000c9'}}>Chưa làm</strong>
-          )
-        }
-      },
-    },
+    // {
+    //   field: "examResultId",
+    //   headerName: "Trạng thái",
+    //   ...baseColumn,
+    //   minWidth: 170,
+    //   height: 20,
+    //   renderCell: (rowData) => {
+    //     if(rowData.row?.examResultId != null && rowData.row?.totalScore == null ){
+    //       return (
+    //         <strong style={{color: '#716DF2'}}>Chưa chấm</strong>
+    //       )
+    //     }else if(rowData.row?.examResultId != null && rowData.row?.totalScore != null ){
+    //       return (
+    //         <strong style={{color: '#61bd6d'}}>Đã chấm</strong>
+    //       )
+    //     }else{
+    //       return (
+    //         <strong style={{color: '#f50000c9'}}>Chưa làm</strong>
+    //       )
+    //     }
+    //   },
+    // },
     {
       field: "",
       headerName: "",
       sortable: false,
-      minWidth: 30,
-      maxWidth: 30,
+      minWidth: 100,
+      maxWidth: 100,
       renderCell: (rowData) => {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
-            <BorderColor style={{cursor: 'pointer'}} onClick={(data) => handleDoingExam(rowData?.row)}/>
+            <PrimaryButton
+              variant="outlined"
+              color="primary"
+              onClick={(data) => handleGetListExamTest(rowData?.row)}
+            >
+              Chi tiết
+            </PrimaryButton>
           </Box>
         )
       }
@@ -150,6 +161,31 @@ function MyExam(props) {
     );
   }
 
+  const handleGetListExamTest = (rowData) => {
+    request(
+      "get",
+      `/exam/student/submissions/examTest/${rowData?.examTestIds.join(',')}`,
+      (res) => {
+        if(res.status === 200){
+          if(res.data.resultCode === 200){
+            history.push({
+              pathname: `/exam/my-exam-test`,
+              state: {
+                data: res.data?.data,
+                exam: rowData
+              },
+            });
+          }else{
+            toast.error(res.data.resultMsg)
+          }
+        }else {
+          toast.error(res)
+        }
+      },
+      { onError: (e) => toast.error(e) },
+    );
+  };
+
   const handleDoingExam = (rowData) => {
     request(
       "get",
@@ -187,7 +223,7 @@ function MyExam(props) {
                     autoFocus
                     id="keywordMyExam"
                     label="Nội dung tìm kiếm"
-                    placeholder="Tìm kiếm theo tên kỳ thi hoặc tên đề thi"
+                    placeholder="Tìm kiếm theo tên hoặc mô tả kỳ thi"
                     value={keywordFilter}
                     style={{ width: "400px", marginRight: "16px"}}
                     size="small"
@@ -199,25 +235,25 @@ function MyExam(props) {
                     }}
                   />
 
-                  <TextField
-                    id="statusMyExam"
-                    select
-                    label="Trạng thái"
-                    style={{ width: "150px"}}
-                    size="small"
-                    value={statusFilter}
-                    onChange={(event) => {
-                      setStatusFilter(event.target.value);
-                    }}
-                  >
-                    {
-                      statusList.map(item => {
-                        return (
-                          <MenuItem value={item.value}>{item.name}</MenuItem>
-                        )
-                      })
-                    }
-                  </TextField>
+                  {/*<TextField*/}
+                  {/*  id="statusMyExam"*/}
+                  {/*  select*/}
+                  {/*  label="Trạng thái"*/}
+                  {/*  style={{ width: "150px"}}*/}
+                  {/*  size="small"*/}
+                  {/*  value={statusFilter}*/}
+                  {/*  onChange={(event) => {*/}
+                  {/*    setStatusFilter(event.target.value);*/}
+                  {/*  }}*/}
+                  {/*>*/}
+                  {/*  {*/}
+                  {/*    statusList.map(item => {*/}
+                  {/*      return (*/}
+                  {/*        <MenuItem value={item.value}>{item.name}</MenuItem>*/}
+                  {/*      )*/}
+                  {/*    })*/}
+                  {/*  }*/}
+                  {/*</TextField>*/}
                 </Box>
               </Box>
             </Box>

@@ -2,6 +2,7 @@ package com.hust.baseweb.applications.exam.repository;
 
 import com.hust.baseweb.applications.exam.entity.ExamTestEntity;
 import com.hust.baseweb.applications.exam.model.response.ExamTestQuestionDetailsRes;
+import com.hust.baseweb.applications.exam.model.response.MyExamTestWithResultRes;
 import com.hust.baseweb.applications.exam.model.response.MyExamQuestionDetailsRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -124,18 +125,19 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    etq.exam_question_id = eq.id " +
                    "left join exam_question_answer eqa on " +
                    "    eq.id = eqa.exam_question_id " +
-                   "left join exam_student es on " +
-                   "    es.exam_test_id = et.id " +
+                   "left join exam_exam_test eet on " +
+                   "    eet.exam_test_id = et.id " +
+                   "left join exam_student_test est on " +
+                   "    est.exam_exam_test_id = eet.id " +
                    "left join exam e on " +
-                   "    e.id = es.exam_id " +
+                   "    e.id = eet.exam_id " +
                    "left join exam_result er on " +
-                   "    es.id = er.exam_student_id " +
+                   "    er.exam_student_test_id = est.id  " +
                    "left join exam_result_details erd on " +
                    "    erd.exam_result_id = er.id " +
                    "    and erd.exam_question_id = eq.id " +
                    "where " +
-                   "    et.id = :examTestId " +
-                   "    and es.id = :examStudentId " +
+                   "    est.id = :examStudentTestId " +
                    "group by " +
                    "    etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, " +
                    "    eq.number_answer, eq.multichoice, e.answer_status, eq.answer,  " +
@@ -143,8 +145,7 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    erd.comment_file_path, erd.pass, erd.score " +
                    "order by " +
                    "    etq.order", nativeQuery = true)
-    List<MyExamQuestionDetailsRes> getMyExamQuestionDetails(@Param("examTestId") String examTestId,
-                                                            @Param("examStudentId") String examStudentId);
+    List<MyExamQuestionDetailsRes> getMyExamQuestionDetails(@Param("examStudentTestId") String examStudentTestId);
 
     @Query(value = "select " +
                    "    etq.id as examTestQuestionId, " +
@@ -173,16 +174,17 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    etq.exam_question_id = eq.id " +
                    "left join exam_question_answer eqa on " +
                    "    eq.id = eqa.exam_question_id " +
-                   "left join exam_student es on " +
-                   "    es.exam_test_id = et.id " +
+                   "left join exam_exam_test eet on " +
+                   "    eet.exam_test_id = et.id " +
+                   "left join exam_student_test est on " +
+                   "    est.exam_exam_test_id = eet.id " +
                    "left join exam_result er on " +
-                   "    es.id = er.exam_student_id " +
+                   "    er.exam_student_test_id = est.id  " +
                    "left join exam_result_details erd on " +
                    "    erd.exam_result_id = er.id " +
                    "    and erd.exam_question_id = eq.id " +
                    "where " +
-                   "    et.id = :examTestId " +
-                   "    and es.id = :examStudentId " +
+                   "    est.id = :examStudentTestId " +
                    "group by " +
                    "    etq.id, eq.id, eq.code, eq.type, eq.content, eq.file_path, " +
                    "    eq.number_answer, eq.multichoice, eq.answer, " +
@@ -190,8 +192,34 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    erd.comment_file_path, erd.pass, erd.score " +
                    "order by " +
                    "    etq.order", nativeQuery = true)
-    List<MyExamQuestionDetailsRes> getExamMarkingDetails(@Param("examTestId") String examTestId,
-                                                            @Param("examStudentId") String examStudentId);
+    List<MyExamQuestionDetailsRes> getExamMarkingDetails(@Param("examStudentTestId") String examStudentTestId);
 
     Optional<ExamTestEntity> findByCode(String code);
+
+    @Query(value = "select * from exam_test et where et.id in :examTestIds", nativeQuery = true)
+    List<ExamTestEntity> findAllByExamTestIds(@Param("examTestIds") List<String> examTestIds);
+
+    @Query(value = "select " +
+                   "    est.id as examStudentTestId, " +
+                   "    et.id as examTestId, " +
+                   "    et.code as examTestCode, " +
+                   "    et.name as examTestName, " +
+                   "    et.description as examTestDescription, " +
+                   "    er.total_score as totalScore, " +
+                   "    er.total_time as totalTime " +
+                   "from " +
+                   "    exam_test et " +
+                   "left join exam_exam_test eet on " +
+                   "    et.id = eet.exam_test_id " +
+                   "left join exam_student_test est on " +
+                   "    est.exam_exam_test_id = eet.id " +
+                   "left join exam_student es on " +
+                   "    es.id = est.exam_student_id " +
+                   "left join exam_result er on " +
+                   "    er.exam_student_test_id = est.id " +
+                   "where " +
+                   "    es.code = :userLogin " +
+                   "    and et.id in :examTestIds", nativeQuery = true)
+    List<MyExamTestWithResultRes> findAllWithResultByExamTestIds(@Param("userLogin") String userLogin,
+                                                                 @Param("examTestIds") List<String> examTestIds);
 }
