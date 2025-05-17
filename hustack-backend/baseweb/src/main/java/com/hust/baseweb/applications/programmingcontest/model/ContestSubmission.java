@@ -7,7 +7,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
-@Entity
 @Data
 @Builder
 @AllArgsConstructor

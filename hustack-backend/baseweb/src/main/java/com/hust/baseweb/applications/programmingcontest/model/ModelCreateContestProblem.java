@@ -29,7 +29,7 @@ public class ModelCreateContestProblem {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
@@ -57,16 +57,6 @@ public class ModelCreateContestProblem {
 
     String sampleTestCase;
 
-    private Integer problemBlock;
     private List<BlockCode> blockCodes;
 
-    @Getter
-    @Setter
-    public static class BlockCode {
-        private String id;
-        private String code;
-        private boolean forStudent;
-        private int seq;
-        private String language;
-    }
 }

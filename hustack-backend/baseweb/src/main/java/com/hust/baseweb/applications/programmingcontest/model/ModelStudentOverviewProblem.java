@@ -19,5 +19,5 @@ public class ModelStudentOverviewProblem {
     private Long maxSubmittedPoint;
     private List<String> tags = new ArrayList<>();
     private int blockProblem;
-    private List<ModelCreateContestProblem.BlockCode> blockCodes;
+    private List<BlockCode> blockCodes;
 }

@@ -39,7 +39,6 @@ build/
 /lib/
 /out/
 
-
 ### VS Code ###
 .vscode/
 .history

@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -263,10 +264,11 @@ public class ContestController {
         ModelStudentViewProblemDetail result = studentProblemViewService.getProblemDetailForStudentView(
             principal.getName(), contestId, problemId
         );
-        if (result == null) return ResponseEntity.ok().body("NOTFOUND");
+        if (result == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Problem not found");
+        }
         return ResponseEntity.ok().body(result);
     }
-
     @GetMapping("/contests/{contestId}/problems")
     public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
         ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
@@ -296,84 +298,10 @@ public class ContestController {
         Principal principal
     ) {
         String userId = principal.getName();
-
         logStudentGetDetailContest(userId, contestId);
 
-        ContestEntity contest = contestService.findContest(contestId);
-
-        List<ProblemEntity> problems = contest.getProblems();
-        List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
-        List<ModelProblemMaxSubmissionPoint> submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(
-            userId,
-            contestId);
-
-        Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
-        for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
-            mapProblemToMaxSubmissionPoint.put(problem.getProblemId(), problem.getMaxPoint());
-        }
-
-        List<ModelStudentOverviewProblem> responses = new ArrayList<>();
-
-        if (contest.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
-            Set<String> problemIds = problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet());
-            List<ContestProblem> contestProblems = contestProblemRepo.findByContestIdAndProblemIdIn(
-                contestId, problemIds);
-
-            Map<String, ContestProblem> problemId2ContestProblem = new HashMap<>();
-            contestProblems.forEach(p -> problemId2ContestProblem.put(p.getProblemId(), p));
-
-            for (ProblemEntity problem : problems) {
-                String problemId = problem.getProblemId();
-
-                ContestProblem contestProblem = problemId2ContestProblem.get(problemId);
-                if (contestProblem.getSubmissionMode() != null) {
-                    if (contestProblem.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
-                        continue;
-                    }
-                }
-
-                ModelStudentOverviewProblem response = new ModelStudentOverviewProblem();
-                response.setProblemId(problemId);
-                response.setProblemName(contestProblem.getProblemRename());
-                response.setProblemCode(contestProblem.getProblemRecode());
-                response.setLevelId(problem.getLevelId());
-                Integer blockProblem = problem.getBlockProblem();
-                int blockProblemValue = (blockProblem != null) ? blockProblem.intValue() : 0;
-                response.setBlockProblem(blockProblemValue);
-                if (blockProblemValue == 1) {
-                    List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
-                    List<ModelCreateContestProblem.BlockCode> blockCodes = problemBlocks.stream()
-                                                                                        .map(pb -> {
-                                                                                            ModelCreateContestProblem.BlockCode blockCode = new ModelCreateContestProblem.BlockCode();
-                                                                                            blockCode.setId(pb.getId().toString());
-                                                                                            blockCode.setCode(pb.getSourceCode());
-                                                                                            blockCode.setForStudent(pb.getCompletedBy() == 1);
-                                                                                            blockCode.setLanguage(pb.getProgrammingLanguage());
-                                                                                            return blockCode;
-                                                                                        })
-                                                                                        .collect(Collectors.toList());
-                    response.setBlockCodes(blockCodes);
-                }
-
-                if (contest.getContestShowTag() != null && contest.getContestShowTag().equals("N")) {
-                    response.setTags(new ArrayList<>());
-                } else {
-                    List<String> tags = problem.getTags().stream().map(TagEntity::getName).collect(Collectors.toList());
-                    response.setTags(tags);
-                }
-
-                if (mapProblemToMaxSubmissionPoint.containsKey(problemId)) {
-                    response.setSubmitted(true);
-                    response.setMaxSubmittedPoint(mapProblemToMaxSubmissionPoint.get(problemId));
-                }
-
-                if (acceptedProblems.contains(problemId)) {
-                    response.setAccepted(true);
-                }
-
-                responses.add(response);
-            }
-        }
+        List<ModelStudentOverviewProblem> responses =
+            studentProblemViewService.getStudentOverviewProblems(userId, contestId);
 
         return ResponseEntity.ok().body(responses);
     }

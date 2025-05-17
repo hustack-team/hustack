@@ -18,6 +18,7 @@ public class ProblemBlock {
 
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "problem_id")

@@ -36,7 +36,7 @@ public class ModelCreateContestProblemResponse {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
@@ -74,15 +74,6 @@ public class ModelCreateContestProblemResponse {
 
     List<BlockCode> blockCodes;
 
-    @Data
-    @ToString
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class BlockCode {
-        String id;
-        String code;
-        boolean forStudent;
-        int seq;
-        String language;
-    }
+
 }
 

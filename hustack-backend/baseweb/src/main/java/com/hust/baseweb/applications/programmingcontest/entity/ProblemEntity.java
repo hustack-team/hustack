@@ -55,7 +55,7 @@ public class ProblemEntity implements Serializable {
     private String levelId;
 
     @Column(name = "category_id")
-    private String categoryId;
+    private Integer categoryId;
 
     @Column(name = "correct_solution_source_code")
     private String correctSolutionSourceCode;
@@ -77,9 +77,6 @@ public class ProblemEntity implements Serializable {
 
     @Column(name = "is_public")
     private boolean isPublicProblem;
-
-    @Column(name="is_block_problem")
-    private Integer blockProblem; // 1 : yes, 0 : no
 
     @Column(name = "attachment")
     private String attachment;

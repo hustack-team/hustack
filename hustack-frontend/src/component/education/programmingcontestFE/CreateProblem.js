@@ -1,5 +1,3 @@
-"use client"
-
 import { makeStyles } from "@material-ui/core"
 import {
   Box,
@@ -279,7 +277,7 @@ function CreateProblem() {
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
-      problemBlock: isProblemBlock ? 1 : 0,
+      categoryId: isProblemBlock ? 1 : 0,
       blockCodes: formattedBlockCodes,
     }
     console.log("helloôo")

@@ -193,7 +193,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .timeLimitJAVA(dto.getTimeLimitJAVA())
                                              .timeLimitPYTHON(dto.getTimeLimitPYTHON())
                                              .levelId(dto.getLevelId())
-                                             .blockProblem(dto.getProblemBlock() != null && dto.getProblemBlock() == 1 ? 1 : 0)
+                                             .categoryId(dto.getCategoryId() != null && dto.getCategoryId() == 1 ? 1 : 0)
                                              .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
                                              .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
                                              .solution(dto.getSolution())
@@ -212,7 +212,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .build();
         problem = problemService.saveProblemWithCache(problem);
 
-        if (dto.getProblemBlock() != null && dto.getProblemBlock() == 1 && dto.getBlockCodes() != null) {
+        if (dto.getCategoryId() != null && dto.getCategoryId() == 1 && dto.getBlockCodes() != null) {
             problemBlockService.createProblemBlocks(problemId, dto.getBlockCodes());
         }
 
@@ -339,11 +339,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
         });
 
-        // Cập nhật thông tin problem
         problem.setProblemName(dto.getProblemName());
         problem.setProblemDescription(dto.getProblemDescription());
         problem.setLevelId(dto.getLevelId());
         problem.setSolution(dto.getSolution());
+//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setIsPreloadCode(dto.getIsPreloadCode());
         problem.setPreloadCode(dto.getPreloadCode());
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
@@ -368,7 +368,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemBlockRepo.deleteByProblemId(problemId);
 
             List<ProblemBlock> problemBlocks = new ArrayList<>();
-            Random random = new Random();
             Map<String, List<ModelUpdateContestProblem.BlockCode>> blocksByLanguage =
                 dto.getBlockCodes().stream()
                    .collect(Collectors.groupingBy(ModelUpdateContestProblem.BlockCode::getLanguage));
@@ -377,7 +376,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 for (int i = 0; i < blockCodes.size(); i++) {
                     ModelUpdateContestProblem.BlockCode blockCode = blockCodes.get(i);
                     ProblemBlock problemBlock = ProblemBlock.builder()
-                                                            .id(UUID.randomUUID())
                                                             .problemId(problemId)
                                                             .seq(i + 1)
                                                             .sourceCode(blockCode.getCode())
@@ -390,7 +388,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemBlockRepo.saveAll(problemBlocks);
         }
 
-        // Lưu problem với cache
         return problemService.saveProblemWithCache(problem);
     }
     @Override
@@ -3817,12 +3814,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemResponse.setAttachmentNames(null);
         }
 
-        // Lấy và gán block codes nếu có
         List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
         if (problemBlocks != null && !problemBlocks.isEmpty()) {
-            List<ModelCreateContestProblemResponse.BlockCode> blockCodes = problemBlocks.stream()
+            List<BlockCode> blockCodes = problemBlocks.stream()
                                                                                         .map(block -> {
-                                                                                            ModelCreateContestProblemResponse.BlockCode blockCode = new ModelCreateContestProblemResponse.BlockCode();
+                                                                                            BlockCode blockCode = new BlockCode();
                                                                                             blockCode.setId(String.valueOf(block.getId()));
                                                                                             blockCode.setCode(block.getSourceCode());
                                                                                             blockCode.setForStudent(block.getCompletedBy() == 1);
