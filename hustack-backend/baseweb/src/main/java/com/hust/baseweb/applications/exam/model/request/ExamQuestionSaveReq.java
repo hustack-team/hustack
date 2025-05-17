@@ -19,11 +19,8 @@ public class ExamQuestionSaveReq {
     private String content;
     private String filePath;
     private Integer numberAnswer;
-    private String contentAnswer1;
-    private String contentAnswer2;
-    private String contentAnswer3;
-    private String contentAnswer4;
-    private String contentAnswer5;
+    private List<ExamQuestionAnswerSaveReq> answers;
+    private List<ExamQuestionAnswerSaveReq> answersDelete;
     private boolean multichoice;
     private String answer;
     private String explain;

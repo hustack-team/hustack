@@ -27,6 +27,9 @@ public class ExamResultEntity{
     @Column(name = "exam_student_id")
     private String examStudentId;
 
+    @Column(name = "exam_student_test_id")
+    private String examStudentTestId;
+
     @Column(name = "total_score")
     private Integer totalScore;
 

@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 public class MyExamDetailsRes {
 
-    private String examStudentId;
+    private String examStudentTestId;
     private String examId;
     private String examAnswerStatus;
     private String examCode;

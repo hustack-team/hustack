@@ -11,7 +11,7 @@ import {
   Radio,
   RadioGroup,
   FormGroup
-} from "@mui/material";
+} from "@material-ui/core";
 import {request} from "../../../../api";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
@@ -24,6 +24,7 @@ import {formatDateTime} from "../ultils/DateUltils";
 import {DropzoneArea} from "material-ui-dropzone";
 import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer, CheckCircle, Check} from "@mui/icons-material";
 import {
+  compressImage,
   getFileCommentFromFileAnswerAndExamResultDetailsId,
   getFilenameFromString,
   getFilePathFromString
@@ -85,6 +86,7 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
+    setStartLoadTime(new Date());
   }, []);
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
@@ -115,8 +117,21 @@ function MyExamDetails(props) {
     setDataAnswers(dataAnswers)
   };
 
-  const handleAnswerFileChange = (files, questionOrder) => {
-    answersFiles[questionOrder-1].files = files
+  const handleAnswerFileChange = async (files, questionOrder) => {
+    let tmpFiles = []
+    for(let file of files){
+      try {
+        if (file.type.startsWith('image/')){
+          tmpFiles.push(await compressImage(file, 1920, 1920, 1))
+        }else{
+          tmpFiles.push(file)
+        }
+      } catch (error) {
+        console.error('Error compressing file:', error);
+        toast.error('Lỗi khi tải ảnh lên');
+      }
+    }
+    answersFiles[questionOrder-1].files = tmpFiles
 
     setAnswersFiles(answersFiles)
   }
@@ -126,8 +141,7 @@ function MyExamDetails(props) {
     const totalTime = Math.round((endLoadTime - startLoadTime) / 60000);
 
     const body = {
-      examId: data?.examId,
-      examStudentId: data?.examStudentId,
+      examStudentTestId: data?.examStudentTestId,
       totalTime: totalTime,
       examResultDetails: dataAnswers
     }
@@ -201,7 +215,7 @@ function MyExamDetails(props) {
   }
 
   const handleStartDoing = () => {
-    setStartLoadTime(new Date());
+    // setStartLoadTime(new Date());
     setStartDoing(true)
   }
 
@@ -369,96 +383,29 @@ function MyExamDetails(props) {
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
                             <p style={{margin: 0, padding: 0, fontWeight: "bold"}}>Chọn các đáp án đúng trong các đáp án
                               sau:</p>
-                            <FormControlLabel
-                              label={
-                                <FormGroup row>
-                                  <Box display="flex" alignItems="center">
-                                    <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                    {( data?.totalScore != null && value?.questionAnswer?.includes('1')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                  </Box>
-                                </FormGroup>
-                              }
-                              control={<Checkbox color="primary"
-                                                 checked={value?.answer?.includes('1')}
-                                                 disabled={data?.examResultId != null}
-                                                 onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '1', event.target.checked)
-                                                 }/>}
-                            />
                             {
-                              value?.questionNumberAnswer >= 2 && (
+                              Array.from({ length: value?.questionNumberAnswer }, (_, index) => (
                                 <FormControlLabel
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('2')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
+                                        <div>
+                                          <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                          {value.questionAnswers[index]?.file && (
+                                            <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
+                                        {( data?.totalScore != null && value?.questionAnswer?.includes(`${index+1}`)) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
                                       </Box>
                                     </FormGroup>
                                   }
                                   control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('2')}
+                                                     checked={value?.answer?.includes(`${index+1}`)}
                                                      disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '2', event.target.checked)
+                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, `${index+1}`, event.target.checked)
                                                      }/>}
                                 />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 3 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('3')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('3')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '3', event.target.checked)
-                                                     }/>}
-                                />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 4 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('4')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('4')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '4', event.target.checked)
-                                                     }/>}
-                                />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 5 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('5')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('5')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '5', event.target.checked)
-                                                     }/>}
-                                />
-                              )
+                              ))
                             }
                           </Box>
                         )
@@ -473,71 +420,25 @@ function MyExamDetails(props) {
                               value={dataAnswers[value?.questionOrder - 1]?.answer}
                               onChange={(event) => handleAnswerRadioChange(event, value?.questionOrder)}
                             >
-                              <FormControlLabel value="1" control={<Radio checked={value?.answer?.includes('1')}
-                                                                          disabled={data?.examResultId != null}/>}
-                                                label={
-                                                  <FormGroup row>
-                                                    <Box display="flex" alignItems="center">
-                                                      <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                                      {( data?.totalScore != null && value?.questionAnswer?.includes('1')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                    </Box>
-                                                  </FormGroup>
-                                                }/>
                               {
-                                value?.questionNumberAnswer >= 2 && (
-                                  <FormControlLabel value="2" control={<Radio checked={value?.answer?.includes('2')}
-                                                                              disabled={data?.examResultId != null}/>}
+                                Array.from({ length: value?.questionNumberAnswer }, (_, index) => (
+                                  <FormControlLabel value={index+1}
+                                                    control={<Radio checked={value?.answer?.includes(`${index+1}`)}
+                                                    disabled={data?.examResultId != null}/>}
                                                     label={
                                                       <FormGroup row>
                                                         <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('2')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
+                                                          <div>
+                                                            <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                                            {value.questionAnswers[index]?.file && (
+                                                              <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                                            )}
+                                                          </div>
+                                                          {( data?.totalScore != null && value?.questionAnswer?.includes(`${index+1}`)) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
                                                         </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 3 && (
-                                  <FormControlLabel value="3" control={<Radio checked={value?.answer?.includes('3')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('3')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 4 && (
-                                  <FormControlLabel value="4" control={<Radio checked={value?.answer?.includes('4')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('4')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 5 && (
-                                  <FormControlLabel value="5" control={<Radio checked={value?.answer?.includes('5')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('5')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
+                                                      </FormGroup>}
+                                  />
+                                ))
                               }
                             </RadioGroup>
                           </Box>

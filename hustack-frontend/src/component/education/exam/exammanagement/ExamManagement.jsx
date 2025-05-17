@@ -200,7 +200,7 @@ function ExamManagement(props) {
   const handleUpdate = (rowData) => {
     request(
       "get",
-      `/exam/${rowData.id}`,
+      `/exam/preview-update/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           history.push({

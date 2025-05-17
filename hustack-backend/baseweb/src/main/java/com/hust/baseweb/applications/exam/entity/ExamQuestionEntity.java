@@ -37,21 +37,6 @@ public class ExamQuestionEntity extends BaseEntity {
     @Column(name = "number_answer")
     private Integer numberAnswer;
 
-    @Column(name = "content_answer1")
-    private String contentAnswer1;
-
-    @Column(name = "content_answer2")
-    private String contentAnswer2;
-
-    @Column(name = "content_answer3")
-    private String contentAnswer3;
-
-    @Column(name = "content_answer4")
-    private String contentAnswer4;
-
-    @Column(name = "content_answer5")
-    private String contentAnswer5;
-
     @Column(name = "multichoice")
     private boolean multichoice;
 

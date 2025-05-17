@@ -2,6 +2,7 @@ package com.hust.baseweb.applications.exam.model.response;
 
 public interface ExamStudentResultDetailsRes {
 
+    String getExamStudentTestId();
     String getId();
     String getCode();
     String getName();

@@ -141,14 +141,22 @@ function ExamCreateUpdate(props) {
   const [status, setStatus] = useState(data?.status);
   const [answerStatus, setAnswerStatus] = useState(data?.answerStatus);
   const [description, setDescription] = useState(data?.description ? data?.description : '');
-  const [examTestId, setExamTestId] = useState(data?.examTestId);
   const [startTime, setStartTime] = useState(data?.startTime);
   const [endTime, setEndTime] = useState(data?.endTime);
   const [isLoading, setIsLoading] = useState(false);
   const [openSelectTestDialog, setOpenSelectTestDialog] = useState(false);
-  const [testList, setTestList] = useState(data?.examTests)
+  const [testList, setTestList] = useState(data?.examExamTests?.map(item => ({
+    id: item.examTestId,
+    code: item.examTestCode,
+    name: item.examTestName,
+    description: item.examTestDescription,
+    examId: item.examId,
+    examExamTestId: item.id,
+  })) || [])
   const [openTestDetailsDialog, setOpenTestDetailsDialog] = useState(false);
   const [testDetails, setTestDetails] = useState(null)
+  const [examExamTests, setExamExamTests] = useState([])
+  const [examExamTestDeletes, setExamExamTestDeletes] = useState([])
   const [examStudents, setExamStudents] = useState(data?.examStudents)
   const [examStudentDeletes, setExamStudentsDeletes] = useState([])
 
@@ -159,15 +167,18 @@ function ExamCreateUpdate(props) {
       description: description,
       status: status,
       answerStatus: answerStatus,
-      examTestId: examTestId,
       startTime: formatDateTimeApi(startTime),
       endTime: formatDateTimeApi(endTime),
+      examExamTests: examExamTests,
+      examExamTestDeletes: examExamTestDeletes,
       examStudents: examStudents,
       examStudentDeletes: examStudentDeletes
     }
     if(!validateBody(body)){
       return
     }
+
+    // console.log('body',body)
 
     setIsLoading(true)
     request(
@@ -193,6 +204,18 @@ function ExamCreateUpdate(props) {
     );
   }
 
+  useEffect(() => {
+    getExamExamTests()
+  }, [testList]);
+
+  const getExamExamTests = () => {
+    setExamExamTests(testList.map(test => ({
+      id: test?.examExamTestId,
+      examId: test?.examId,
+      examTestId: test?.id
+    })))
+  }
+
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã kỳ thi không được bỏ trống')
@@ -200,10 +223,6 @@ function ExamCreateUpdate(props) {
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên kỳ thi không được bỏ trống')
-      return false
-    }
-    if(body.examTestId == null || body.examTestId === ''){
-      toast.error('Chọn đề thi cho kỳ thi')
       return false
     }
     if(body.startTime == null || body.startTime === ''){
@@ -225,10 +244,15 @@ function ExamCreateUpdate(props) {
   }
 
   const handleAddTestSubmit = (data) => {
-    // setTestList(testList.concat(data))
-    setTestList(data)
-    setExamTestId(data[0]?.id)
+    setTestList(testList.concat(data))
   };
+
+  const handleDeleteTest = (item) => {
+    setTestList(testList.filter(test => test.id !== item.id))
+    if(item?.examExamTestId){
+      setExamExamTestDeletes([...examExamTestDeletes, data?.examExamTests.find(examExamTest => examExamTest.examTestId === item.id)])
+    }
+  }
 
   const detailsTest = (id) =>{
     request(
@@ -402,20 +426,8 @@ function ExamCreateUpdate(props) {
 
                 <div>
                   {
-                    testList.length < 1 ?
-                      (
-                        <PrimaryButton
-                          variant="contained"
-                          color="primary"
-                          onClick={() => setOpenSelectTestDialog(true)}
-                          startIcon={<AddCircleIcon/>}
-                          style={{marginRight: 16, width: '200px'}}
-                        >
-                          Chọn đề thi
-                        </PrimaryButton>
-                      )
-                      :
-                      (
+                    testList.map(test => {
+                      return (
                         <div style={{
                           border: '2px solid #f5f5f5',
                           display: 'flex',
@@ -435,10 +447,10 @@ function ExamCreateUpdate(props) {
                                  msUserSelect: "none"
                                }}>
                             <div style={{display: 'flex'}}>
-                              <span style={{fontStyle: 'italic', marginRight: '5px'}}>({testList[0]?.code})</span>
-                              <span style={{display: "block", fontWeight: 'bold'}}>{testList[0]?.name}</span>
+                              <span style={{fontStyle: 'italic', marginRight: '5px'}}>({test?.code})</span>
+                              <span style={{display: "block", fontWeight: 'bold'}}>{test?.name}</span>
                             </div>
-                            <p>{parseHTMLToString(testList[0]?.description)}</p>
+                            <p>{parseHTMLToString(test?.description)}</p>
                           </Box>
 
                           <Box display="flex" justifyContent='space-between' width="110px">
@@ -452,7 +464,7 @@ function ExamCreateUpdate(props) {
                                 fontWeight: 'bold'
                               }}
                               onClick={(event) => {
-                                handleOpenPopupDetails(testList[0])
+                                handleOpenPopupDetails(test)
                                 event.preventDefault()
                                 event.stopPropagation()
                               }}>
@@ -469,7 +481,7 @@ function ExamCreateUpdate(props) {
                                 fontWeight: 'bold'
                               }}
                               onClick={(event) => {
-                                setTestList([])
+                                handleDeleteTest(test)
                                 event.preventDefault()
                                 event.stopPropagation()
                               }}>
@@ -478,8 +490,17 @@ function ExamCreateUpdate(props) {
                           </Box>
                         </div>
                       )
+                    })
                   }
-
+                  <PrimaryButton
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setOpenSelectTestDialog(true)}
+                    startIcon={<AddCircleIcon/>}
+                    style={{marginRight: 16, width: '200px'}}
+                  >
+                    Chọn đề thi
+                  </PrimaryButton>
                 </div>
 
                 <div>

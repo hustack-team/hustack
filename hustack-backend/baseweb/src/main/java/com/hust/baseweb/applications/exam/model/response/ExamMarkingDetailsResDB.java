@@ -2,7 +2,7 @@ package com.hust.baseweb.applications.exam.model.response;
 
 public interface ExamMarkingDetailsResDB {
     String getExamId();
-    String getExamTestId();
+    String getExamStudentTestId();
     String getExamStudentId();
     String getExamStudentCode();
     String getExamStudentName();

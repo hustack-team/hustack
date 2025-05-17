@@ -7,10 +7,7 @@ import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionFilterRes;
-import com.hust.baseweb.applications.exam.repository.ExamQuestionRepository;
-import com.hust.baseweb.applications.exam.repository.ExamQuestionTagRepository;
-import com.hust.baseweb.applications.exam.repository.ExamTagRepository;
-import com.hust.baseweb.applications.exam.repository.ExamTestQuestionRepository;
+import com.hust.baseweb.applications.exam.repository.*;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
 import com.hust.baseweb.applications.exam.service.MongoFileService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
@@ -43,6 +40,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     ExamTagRepository examTagRepository;
     ExamQuestionTagRepository examQuestionTagRepository;
     ExamTestQuestionRepository examTestQuestionRepository;
+    ExamQuestionAnswerRepository examQuestionAnswerRepository;
     MongoFileService mongoFileService;
     ModelMapper modelMapper;
     EntityManager entityManager;
@@ -114,7 +112,22 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         }
 
         ExamQuestionEntity examQuestionEntity = modelMapper.map(examQuestionSaveReq, ExamQuestionEntity.class);
-        examQuestionEntity.setFilePath(String.join(";", filePaths));
+        List<String> remainingFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePath != null) {
+                boolean exist = false;
+                for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+                    if (filePath.contains("_answer_"+answerSaveReq.getOrder())) {
+                        answerSaveReq.setFile(filePath);
+                        exist = true;
+                    }
+                }
+                if(!exist){
+                    remainingFilePaths.add(filePath);
+                }
+            }
+        }
+        examQuestionEntity.setFilePath(String.join(";", remainingFilePaths));
         examQuestionEntity = examQuestionRepository.save(examQuestionEntity);
 
         List<ExamQuestionTagEntity> examQuestionTagEntityList = new ArrayList<>();
@@ -124,6 +137,19 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             examQuestionTagEntityList.add(examQuestionTagEntity);
         }
         examQuestionTagRepository.saveAll(examQuestionTagEntityList);
+
+        List<ExamQuestionAnswerEntity> examQuestionAnswerEntities = new ArrayList<>();
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+            examQuestionAnswerEntities.add(
+                ExamQuestionAnswerEntity
+                    .builder()
+                    .examQuestionId(examQuestionEntity.getId())
+                    .order(answerSaveReq.getOrder())
+                    .content(answerSaveReq.getContent())
+                    .file(answerSaveReq.getFile())
+                    .build());
+        }
+        examQuestionAnswerRepository.saveAll(examQuestionAnswerEntities);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -152,12 +178,27 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         examQuestionEntity.setId(examQuestionExist.get().getId());
         examQuestionEntity.setCreatedBy(examQuestionExist.get().getCreatedBy());
         examQuestionEntity.setCreatedAt(examQuestionExist.get().getCreatedAt());
+        List<String> remainingFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePath != null) {
+                boolean exist = false;
+                for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+                    if (filePath.contains("_answer_"+answerSaveReq.getOrder())) {
+                        answerSaveReq.setFile(filePath);
+                        exist = true;
+                    }
+                }
+                if(!exist){
+                    remainingFilePaths.add(filePath);
+                }
+            }
+        }
         examQuestionEntity.setFilePath(
             DataUtils.stringIsNotNullOrEmpty(examQuestionEntity.getFilePath()) ?
-                (!filePaths.isEmpty() ?
-                    examQuestionEntity.getFilePath() +";"+ String.join(";", filePaths) :
+                (!remainingFilePaths.isEmpty() ?
+                    examQuestionEntity.getFilePath() +";"+ String.join(";", remainingFilePaths) :
                     examQuestionEntity.getFilePath()) :
-                String.join(";", filePaths));
+                String.join(";", remainingFilePaths));
         examQuestionRepository.save(examQuestionEntity);
 
         for(String filePath: examQuestionSaveReq.getDeletePaths()){
@@ -181,6 +222,27 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             ExamQuestionTagEntity examQuestionTagEntity = new ExamQuestionTagEntity();
             examQuestionTagEntity.setId(new ExamQuestionTagKey(item.getId(), examQuestionEntity.getId()));
             examQuestionTagRepository.save(examQuestionTagEntity);
+        }
+
+        List<ExamQuestionAnswerEntity> examQuestionAnswerEntities = new ArrayList<>();
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+            examQuestionAnswerEntities.add(
+                ExamQuestionAnswerEntity
+                    .builder()
+                    .id(answerSaveReq.getId())
+                    .examQuestionId(examQuestionEntity.getId())
+                    .order(answerSaveReq.getOrder())
+                    .content(answerSaveReq.getContent())
+                    .file(answerSaveReq.getFile())
+                    .build());
+        }
+        examQuestionAnswerRepository.saveAll(examQuestionAnswerEntities);
+
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswersDelete()){
+            examQuestionAnswerRepository.deleteById(answerSaveReq.getId());
+            if(DataUtils.stringIsNotNullOrEmpty(answerSaveReq.getFile())){
+                mongoFileService.deleteByPath(answerSaveReq.getFile());
+            }
         }
 
         responseData.setHttpStatus(HttpStatus.OK);
@@ -207,6 +269,19 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             responseData.setResultCode(HttpStatus.NOT_FOUND.value());
             responseData.setResultMsg("Câu hỏi đã được gán cho đề thi, không được xoá");
             return responseData;
+        }
+
+        List<ExamQuestionAnswerEntity> questionAnswerEntityList = examQuestionAnswerRepository.findAllByExamQuestionId(id);
+        if(!questionAnswerEntityList.isEmpty()){
+            List<String> listFileDelete = questionAnswerEntityList.stream()
+                                                                  .map(ExamQuestionAnswerEntity::getFile)
+                                                                  .collect(Collectors.toList());
+            for(String filePath: listFileDelete){
+                if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                    mongoFileService.deleteByPath(filePath);
+                }
+            }
+            examQuestionAnswerRepository.deleteAll(questionAnswerEntityList);
         }
 
         if(examQuestionExist.get().getFilePath() != null){

@@ -1,14 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
 import {
+  Accordion, AccordionDetails, AccordionSummary,
   Box,
   Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
 } from "@material-ui/core";
-import {DialogActions} from "@mui/material";
 import {formatDateTime} from "../ultils/DateUltils";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
@@ -16,9 +12,7 @@ import TestBankDetails from "../testbank/TestBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
 import ExamMarking from "./ExamMarking";
 import {parseHTMLToString} from "../ultils/DataUltils";
-import {AttachFileOutlined} from "@material-ui/icons";
-import {getFilenameFromString} from "../ultils/FileUltils";
-import QuestionFilePreview from "../questionbank/QuestionFilePreview";
+import {ExpandMore} from "@material-ui/icons";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
@@ -110,11 +104,13 @@ function ExamDetails(props) {
   const classes = useStyles();
   const { open, setOpen, dataExam} = props;
 
+  const [rowData, setRowData] = useState([])
   const [data, setData] = useState(dataExam)
   const [openTestDetailsDialog, setOpenTestDetailsDialog] = useState(false);
   const [testDetails, setTestDetails] = useState(null)
   const [openExamDetailsMarkingDialog, setOpenExamDetailsMarkingDialog] = useState(false);
   const [examDetailsMarking, setExamDetailsMarking] = useState(null)
+  const [expanded, setExpanded] = useState(false)
 
   const handleOpenPopupTestDetails = (test) =>{
     request(
@@ -139,17 +135,36 @@ function ExamDetails(props) {
   const handleMarking = (rowData) => {
     request(
       "get",
-      `/exam/teacher/submissions/${rowData?.id}`,
+      `/exam/teacher/submissions/${rowData?.examStudentTestId}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetailsMarking(res.data.data)
           setOpenExamDetailsMarkingDialog(true)
+          setExpanded(false)
         }else{
           toast.error(res.data.resultMsg)
         }
       },
       { onError: (e) => toast.error(e) }
     );
+  }
+
+  const handleChangeAccordion = (test, panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : false);
+    if(isExpanded){
+      request(
+        "get",
+        `exam/examTest/${test.examExamTestId}`,
+        (res) => {
+          if(res.data.resultCode === 200){
+            setRowData(res.data.data)
+          }else{
+            toast.error(res.data.resultMsg)
+          }
+        },
+        { onError: (e) => toast.error(e) },
+      );
+    }
   }
 
   return (
@@ -194,61 +209,83 @@ function ExamDetails(props) {
 
             <div style={{display: "flex", flexDirection: "column"}}>
               <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Đề thi:</h4>
-              <div style={{
-                border: '2px solid #f5f5f5',
-                display: 'flex',
-                justifyContent: 'space-between',
-                borderRadius: '10px',
-                padding: '10px',
-                marginBottom: '10px',
-                marginTop: '10px'
-              }}>
-                <Box display="flex"
-                     flexDirection='column'
-                     width="calc(100% - 80px)"
-                     style={{
-                       userSelect: "none",
-                       WebkitUserSelect: "none",
-                       MozUserSelect: "none",
-                       msUserSelect: "none"
-                     }}>
-                  <div style={{display: 'flex'}}>
-                    <span style={{fontStyle: 'italic', marginRight: '5px'}}>({data.examTests[0]?.code})</span>
-                    <span style={{display: "block", fontWeight: 'bold'}}>{data.examTests[0]?.name}</span>
-                  </div>
-                  <p>{parseHTMLToString(data.examTests[0]?.description)}</p>
-                </Box>
+              {
+                data?.examTests.map((test, index) => {
+                  return (
+                    <Accordion
+                      expanded={expanded === index}
+                      onChange={handleChangeAccordion(test, index)}
+                      sx={{
+                        border: '1px solid #ddd',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        mb: 2,
+                        '&:before': { display: 'none' },
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={<ExpandMore />}
+                        aria-controls={`panel${index}-content`}
+                        id={`panel${index}-header`}
+                        style={{ flexDirection: 'row-reverse' , paddingLeft: 0}}
+                      >
+                        <Box display="flex" alignItems="center" width="100%" justifyContent="space-between">
+                          <Box display="flex" alignItems="center">
+                            <Box display="flex"
+                                 flexDirection='column'
+                                 width="calc(100% - 80px)"
+                                 style={{
+                                   userSelect: "none",
+                                   WebkitUserSelect: "none",
+                                   MozUserSelect: "none",
+                                   msUserSelect: "none"
+                                 }}>
+                              <div style={{display: 'flex'}}>
+                                <span style={{fontStyle: 'italic', marginRight: '5px'}}>({test?.code})</span>
+                                <span style={{display: "block", fontWeight: 'bold'}}>{test?.name}</span>
+                              </div>
+                              {
+                                test?.description && test?.description !== '' && (
+                                  <p>{parseHTMLToString(test?.description)}</p>
+                                )
+                              }
+                            </Box>
+                          </Box>
 
-                <Box display="flex" justifyContent='space-between' width="80px">
-                  <button
-                    style={{
-                      height: 'max-content',
-                      padding: '8px',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                    onClick={(event) => {
-                      handleOpenPopupTestDetails(data?.examTests[0])
-                      event.preventDefault()
-                      event.stopPropagation()
-                    }}>
-                    Chi tiết
-                  </button>
-                </Box>
-              </div>
-            </div>
-
-            <div>
-              <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
-              <DataGrid
-                rows={data?.examStudents}
-                columns={columns}
-                getRowId={(row) => row.code}
-                disableColumnMenu
-                autoHeight
-              />
+                          <button
+                            style={{
+                              height: 'max-content',
+                              padding: '8px',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: 'bold'
+                            }}
+                            onClick={(event) => {
+                              handleOpenPopupTestDetails(test)
+                              event.preventDefault()
+                              event.stopPropagation()
+                            }}>
+                            Chi tiết
+                          </button>
+                        </Box>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <div style={{width: '100%'}}>
+                          <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
+                          <DataGrid
+                            rows={rowData}
+                            columns={columns}
+                            getRowId={(row) => row.code}
+                            disableColumnMenu
+                            autoHeight
+                          />
+                        </div>
+                      </AccordionDetails>
+                    </Accordion>
+                  )
+                })
+              }
             </div>
           </div>
         }
