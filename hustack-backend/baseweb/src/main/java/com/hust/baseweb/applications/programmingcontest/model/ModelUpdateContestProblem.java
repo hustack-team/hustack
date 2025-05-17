@@ -60,4 +60,19 @@ public class ModelUpdateContestProblem {
     ProblemStatus status;
 
     String sampleTestCase;
+
+    int forStudent;
+
+    List<BlockCode> blockCodes;
+
+    @Data
+    @ToString
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class BlockCode {
+        private String id;
+        private String code;
+        private boolean forStudent;
+        private int seq;
+        private String language;
+    }
 }

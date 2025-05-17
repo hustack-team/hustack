@@ -46,6 +46,15 @@
     "missingField": "Trường {{fieldName}} không được bỏ trống"
   },
   "generalInfo": "Thông tin chung",
+  "problemBlock": "Bài tập ghép Block",
+  "addProblemBlock": "Thêm Block code",
+  "listProblemBlock": "Danh sách Block codes",
+  "blocks": "Block thứ ",
+  "forTeacher": "Dành cho giáo viên",
+  "noBlockCodes": "Không có block code",
+  "forStudent": "Dành cho sinh viên",
+  "forStudentBlock": "Block dành cho sinh viên",
+  "forTeacherBlock": "Block dành cho giáo viên",
   "manageRole": "Phân quyền",
   "clone": "Sao chép"
 }

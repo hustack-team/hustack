@@ -48,6 +48,15 @@
     "missingField": "Missing required field: {{fieldName}}"
   },
   "generalInfo": "General information",
+  "problemBlock": "Block Problems",
+  "listProblemBlock": "List Block codes",
+  "addProblemBlock": "Add Block code",
+  "blocks": "Block ",
+  "noBlockCodes": "No block code available",
+  "forTeacher": "For Teacher",
+  "forStudent": "For Student", 
+  "forStudentBlock": "Block for Student ",
+  "forTeacherBlock": "Block for Teacher ",
   "manageRole": "Manage Role",
   "clone": "Clone"
 }
