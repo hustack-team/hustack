@@ -6,26 +6,34 @@ import com.hust.baseweb.applications.examclassandaccount.model.ModelCreateExamCl
 import com.hust.baseweb.applications.examclassandaccount.model.ModelRepsonseExamClassDetail;
 import com.hust.baseweb.applications.examclassandaccount.repo.ExamClassRepo;
 import com.hust.baseweb.applications.examclassandaccount.repo.ExamClassUserloginMapRepo;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-@Log4j2
+import static com.hust.baseweb.utils.PdfUtils.exportPdf;
+
+@Slf4j
 @AllArgsConstructor(onConstructor_ = @Autowired)
 @Service
 @Transactional
-@jakarta.transaction.Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class ExamClassServiceImpl implements ExamClassService {
 
-public class ExamClassServiceImpl implements ExamClassService{
+    ExamClassRepo examClassRepo;
 
-    private ExamClassRepo examClassRepo;
-    private ExamClassUserloginMapRepo examClassUserloginMapRepo;
-    private ExamClassUserloginMapService examClassUserloginMapService;
+    ExamClassUserloginMapRepo examClassUserloginMapRepo;
+
+    ExamClassUserloginMapService examClassUserloginMapService;
+
     @Override
     public List<ExamClass> getAllExamClass() {
         List<ExamClass> res = examClassRepo.findAll();
@@ -47,16 +55,21 @@ public class ExamClassServiceImpl implements ExamClassService{
     @Override
     public boolean updateStatusExamClass(UUID examClassId, String status) {
         ExamClass ec = examClassRepo.findById(examClassId).orElse(null);
-        if(ec == null)
+        if (ec == null) {
             return false;
-        if(ec.getStatus().equals(status)) return false;
+        }
+        if (ec.getStatus().equals(status)) {
+            return false;
+        }
 
         ec.setStatus(status);
         List<ExamClassUserloginMap> lst = examClassUserloginMapRepo.findByExamClassId(examClassId);
-        for(ExamClassUserloginMap e: lst){// reverse status
-            if(e.getStatus().equals(ExamClassUserloginMap.STATUS_DISABLE))
+        for (ExamClassUserloginMap e : lst) {// reverse status
+            if (e.getStatus().equals(ExamClassUserloginMap.STATUS_DISABLE)) {
                 e.setStatus(ExamClassUserloginMap.STATUS_ACTIVE);
-            else e.setStatus(ExamClassUserloginMap.STATUS_DISABLE);
+            } else {
+                e.setStatus(ExamClassUserloginMap.STATUS_DISABLE);
+            }
             e = examClassUserloginMapRepo.save(e);
         }
         return true;
@@ -65,7 +78,7 @@ public class ExamClassServiceImpl implements ExamClassService{
     @Override
     public boolean clearAccountExamClass(UUID examClassId) {
         List<ExamClassUserloginMap> L = examClassUserloginMapRepo.findByExamClassId(examClassId);
-        for(ExamClassUserloginMap e: L){
+        for (ExamClassUserloginMap e : L) {
             examClassUserloginMapRepo.delete(e);
             log.info("clearAccountExamClass, remove " + e.getId() + "," + e.getRealUserLoginId());
         }
@@ -74,9 +87,9 @@ public class ExamClassServiceImpl implements ExamClassService{
 
     @Override
     public ModelRepsonseExamClassDetail getExamClassDetail(UUID examClassId) {
-        ExamClass ec = examClassRepo.findById(examClassId).orElse(null);
-        if(ec == null)
-            return null;
+        ExamClass ec = examClassRepo
+            .findById(examClassId)
+            .orElseThrow(() -> new EntityNotFoundException("Exam class with ID " + examClassId + " not found"));
         ModelRepsonseExamClassDetail m = new ModelRepsonseExamClassDetail();
         m.setExamClassId(ec.getId());
         m.setName(ec.getName());
@@ -87,5 +100,15 @@ public class ExamClassServiceImpl implements ExamClassService{
         List<ExamClassUserloginMap> accounts = examClassUserloginMapService.getExamClassUserloginMap(examClassId);
         m.setAccounts(accounts);
         return m;
+    }
+
+    /**
+     * @param examClassId
+     * @return
+     */
+    @Override
+    public byte[] exportExamClass(UUID examClassId) {
+        List<ExamClassUserloginMap> accounts = getExamClassDetail(examClassId).getAccounts();
+        return exportPdf(accounts, "reports/exam-class-account_report.jasper", new HashMap<>());
     }
 }

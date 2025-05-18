@@ -33,18 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.util.JRLoader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -71,6 +64,7 @@ import static com.hust.baseweb.applications.programmingcontest.entity.ContestEnt
 import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
 import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
 import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.MULTI_THREADED_PROGRAM;
+import static com.hust.baseweb.utils.PdfUtils.exportPdf;
 
 @Slf4j
 @Service
@@ -3407,19 +3401,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
 
         return exportPdf(dtos, "reports/submission_report.jasper", new HashMap<>());
-    }
-
-    private byte[] exportPdf(Collection<?> collection, String reportPath, Map<String, Object> parameters) {
-        try {
-            InputStream is = new ClassPathResource(reportPath).getInputStream();
-            JasperReport jasperReport = (JasperReport) JRLoader.loadObject(is);
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(collection);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-
-            return JasperExportManager.exportReportToPdf(jasperPrint);
-        } catch (Exception e) {
-            throw new RuntimeException("Error generating PDF", e);
-        }
     }
 
     @Override
