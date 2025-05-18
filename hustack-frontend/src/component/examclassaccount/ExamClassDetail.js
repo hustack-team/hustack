@@ -1,30 +1,16 @@
-import { useParams } from "react-router";
-import { useEffect, useState, useRef } from "react";
-import FileSaver from "file-saver";
-import { pdf } from "@react-pdf/renderer";
-import { useHistory } from "react-router-dom";
-import { request } from "../../api";
-import { errorNoti, successNoti } from "../../utils/notification";
-import { LoadingButton } from "@mui/lab";
-import {
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  Chip,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-} from "@mui/material";
+import {useParams} from "react-router";
+import React, {useEffect, useRef, useState} from "react";
+import {request, saveFile} from "../../api";
+import {errorNoti, successNoti} from "../../utils/notification";
+import {LoadingButton} from "@mui/lab";
+import {Button, Chip, MenuItem, Select, TextField,} from "@mui/material";
 import PublishIcon from "@mui/icons-material/Publish";
 import SendIcon from "@mui/icons-material/Send";
 import StandardTable from "../table/StandardTable";
-import SelectItem from "../common/form/SelectItem";
 import XLSX from "xlsx";
-import { config } from "../../config/config";
-import { KC_REALM } from "../../config/keycloak";
-import ExportUsersPDF from "./pdf/ExportUsersPDF";
-import { toast } from "react-toastify";
+import {config} from "../../config/config";
+import {KC_REALM} from "../../config/keycloak";
+
 function ExamClassDetail() {
   const params = useParams();
   const examClassId = params.id;
@@ -38,21 +24,29 @@ function ExamClassDetail() {
   const [mapUserLogins, setMapUserLogins] = useState([]);
   const intervalIdRef = useRef(null);
   const [continueOnError, setContinueOnError] = useState(true);
+  const [loadingState, setLoadingState] = useState({
+    exportingPDF: false,
+  });
+
+  const handleLoadingStateChange = (key, value) => {
+    setLoadingState(prev => ({...prev, [key]: value}));
+  };
 
   const columns = [
-    { title: "UserName", field: "realUserLoginId" },
-    { title: "StudentCode", field: "studentCode" },
-    { title: "FullName", field: "fullname" },
-    { title: "Random username", field: "randomUserLoginId" },
-    { title: "Password", field: "password" },
-    { title: "Status", field: "status" },
+    {title: "UserName", field: "realUserLoginId"},
+    {title: "StudentCode", field: "studentCode"},
+    {title: "FullName", field: "fullname"},
+    {title: "Random username", field: "randomUserLoginId"},
+    {title: "Password", field: "password"},
+    {title: "Status", field: "status"},
   ];
+
   function importStudentsFromExcel(event) {
     event.preventDefault();
 
     setIsProcessing(true);
     let formData = new FormData();
-    formData.append("inputJson", JSON.stringify({ examClassId }));
+    formData.append("inputJson", JSON.stringify({examClassId}));
     formData.append("file", importedExcelFile);
 
     let successHandler = (res) => {
@@ -80,12 +74,6 @@ function ExamClassDetail() {
   function getExamClassDetail() {
     request("get", "/get-exam-class-detail/" + examClassId, (res) => {
       //setLoading(false);
-      console.log(
-        "get-exam-class-detail res = ",
-        res.data,
-        " len = ",
-        res.data.accounts.length
-      );
       setName(res.data.name);
       setDescription(res.data.description);
       setExecuteDate(res.data.executeDate);
@@ -94,6 +82,7 @@ function ExamClassDetail() {
       setMapUserLogins(res.data.accounts);
     });
   }
+
   const downloadHandler = (event) => {
     if (mapUserLogins.length === 0) {
       return;
@@ -101,13 +90,13 @@ function ExamClassDetail() {
 
     var wbcols = [];
 
-    wbcols.push({ wpx: 80 });
-    wbcols.push({ wpx: 120 });
+    wbcols.push({wpx: 80});
+    wbcols.push({wpx: 120});
     let rows = mapUserLogins.length;
     for (let i = 0; i < rows; i++) {
-      wbcols.push({ wpx: 50 });
+      wbcols.push({wpx: 50});
     }
-    wbcols.push({ wpx: 50 });
+    wbcols.push({wpx: 50});
 
     let datas = [];
 
@@ -130,14 +119,29 @@ function ExamClassDetail() {
     XLSX.writeFile(wb, examClassId + ".xlsx");
   };
 
-  async function generatePdfDocument() {
-    toast.info("Đang chuẩn bị tệp");
+  function exportPdf() {
+    handleLoadingStateChange('exportingPDF', true);
 
-    const blob = await pdf(<ExportUsersPDF data={mapUserLogins} />).toBlob();
-
-    toast.success("Lưu file thành công");
-
-    FileSaver.saveAs(blob, `${examClassId}.pdf`);
+    request("GET",
+      `/exam-class/${examClassId}/export`,
+      (res) => {
+        handleLoadingStateChange('exportingPDF', false);
+        saveFile(`${name}.pdf`, res.data)
+      },
+      {
+        onError: e => {
+          handleLoadingStateChange('exportingPDF', false);
+          errorNoti(t("common:error", 3000))
+        }
+      },
+      {},
+      {
+        responseType: "blob",
+        headers: {
+          "Accept": "application/pdf"
+        }
+      }
+    );
   }
 
   function handleUpdateStatus() {
@@ -162,10 +166,10 @@ function ExamClassDetail() {
     setStatus(event.target.value);
   };
 
-  function clearAccount(){
+  function clearAccount() {
     let body = {
       examClassId: examClassId
-      
+
     };
 
     request(
@@ -180,17 +184,19 @@ function ExamClassDetail() {
       body
     );
   }
+
   const randomNumberInRange = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
-  function genPass(L){
-    let r = randomNumberInRange(10000,1000000);
-    let s = r.toString();    
-    while(len(s) < L) s = '0' + s;
+
+  function genPass(L) {
+    let r = randomNumberInRange(10000, 1000000);
+    let s = r.toString();
+    while (len(s) < L) s = '0' + s;
     return s;
   }
 
-  function updateFullnameOfAUserId(userId, fullname){
+  function updateFullnameOfAUserId(userId, fullname) {
     // PUT
     // {{keycloak_url}}/admin/realms/{{realm}}/users/{{userId}}
 
@@ -244,7 +250,7 @@ function ExamClassDetail() {
 
   }
 
-  function updateFullnameOfAUserName(userName, fullname){
+  function updateFullnameOfAUserName(userName, fullname) {
     const headerConfig = {
       headers: {
         "content-Type": "application/json",
@@ -277,7 +283,7 @@ function ExamClassDetail() {
 
   }
 
-  function synRandomUserInfo(){
+  function synRandomUserInfo() {
     //alert('syn, REST API below');
     // PUT
     // {{keycloak_url}}/admin/realms/{{realm}}/users/{{userId}}
@@ -297,17 +303,18 @@ function ExamClassDetail() {
         //let userId = getUserId(userName);
         //console.log('found id = ',userId,' of username ',userName);
         //resetPasswordOfUser(mapUserLogins[idx].randomUserLoginId,mapUserLogins[idx].password);
-        
+
         updateFullnameOfAUserName(
           mapUserLogins[idx].randomUserLoginId,
           mapUserLogins[idx].fullname
         );
-        console.log('synchronize fullname -> done ', idx, '/',mapUserLogins.length,' : ', mapUserLogins[idx].randomUserLoginId,':',mapUserLogins[idx].password);
+        console.log('synchronize fullname -> done ', idx, '/', mapUserLogins.length, ' : ', mapUserLogins[idx].randomUserLoginId, ':', mapUserLogins[idx].password);
         idx++;
       }
     }, 500);
 
   }
+
   function resetPassword() {
     //for(i = 0; i < mapUserLogins.length; i++){
     // resetPasswordOfUser(mapUserLogins[i].randomUserLoginId,mapUserLogins[i].password);
@@ -321,16 +328,17 @@ function ExamClassDetail() {
         //let userId = getUserId(userName);
         //console.log('found id = ',userId,' of username ',userName);
         //resetPasswordOfUser(mapUserLogins[idx].randomUserLoginId,mapUserLogins[idx].password);
-        
+
         resetPasswordOfUserName(
           mapUserLogins[idx].randomUserLoginId,
           mapUserLogins[idx].password
         );
-        console.log('reset password done ', idx, '/', mapUserLogins.length,': ', mapUserLogins[idx].randomUserLoginId,':',mapUserLogins[idx].password);
+        console.log('reset password done ', idx, '/', mapUserLogins.length, ': ', mapUserLogins[idx].randomUserLoginId, ':', mapUserLogins[idx].password);
         idx++;
       }
     }, 500);
   }
+
   function resetPasswordOfUserName(userName, password) {
     const headerConfig = {
       headers: {
@@ -405,6 +413,7 @@ function ExamClassDetail() {
       headerConfig
     );
   }
+
   useEffect(() => {
     getExamClassDetail();
   }, []);
@@ -469,7 +478,7 @@ function ExamClassDetail() {
         <Button
           variant="contained"
           color="primary"
-          style={{ marginLeft: "45px" }}
+          style={{marginLeft: "45px"}}
           onClick={handleUpdateStatus}
         >
           Update Status
@@ -485,13 +494,15 @@ function ExamClassDetail() {
             marginTop: "10px",
           }}
         >
-          <Button
+          <LoadingButton
+            sx={{textTransform: 'none'}}
+            loading={loadingState.exportingPDF}
+            loadingPosition="center"
             variant="contained"
-            color="primary"
-            onClick={generatePdfDocument}
+            onClick={exportPdf}
           >
             EXPORT PDF
-          </Button>
+          </LoadingButton>
           <Button variant="contained" color="primary" onClick={downloadHandler}>
             EXPORT EXCEL
           </Button>
@@ -501,14 +512,14 @@ function ExamClassDetail() {
           <Button variant="contained" color="primary" onClick={synRandomUserInfo}>
             Synchronize random user info
           </Button>
-          
+
 
           <Button variant="contained" color="primary" onClick={clearAccount}>
             CLEAR
           </Button>
 
           <Button color="primary" variant="contained" component="label">
-            <PublishIcon /> Select excel file to import
+            <PublishIcon/> Select excel file to import
             <input
               type="file"
               hidden
@@ -525,7 +536,7 @@ function ExamClassDetail() {
           )}
           <LoadingButton
             loading={isProcessing}
-            endIcon={<SendIcon />}
+            endIcon={<SendIcon/>}
             disabled={!importedExcelFile}
             color="primary"
             variant="contained"

@@ -18,7 +18,7 @@ public class ExamClassUserloginMap {
     public static final String STATUS_ACTIVE = "ACTIVE";
     public static final String STATUS_DISABLE = "DISABLE";
 
-    @jakarta.persistence.Id
+    @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID Id;

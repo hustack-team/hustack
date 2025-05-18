@@ -8,13 +8,18 @@ import com.hust.baseweb.applications.examclassandaccount.model.*;
 import com.hust.baseweb.applications.examclassandaccount.repo.RandomGeneratedUserLoginRepo;
 import com.hust.baseweb.applications.examclassandaccount.service.ExamClassService;
 import com.hust.baseweb.applications.examclassandaccount.service.ExamClassUserloginMapService;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
@@ -26,16 +31,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Log4j2
+@Slf4j
 @RestController
-@CrossOrigin
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class ExamClassAccountController {
 
-    @Autowired
-    private ExamClassService examClassService;
-    @Autowired
-    private ExamClassUserloginMapService examClassUserloginMapService;
-    @Autowired
+    ExamClassService examClassService;
+
+    ExamClassUserloginMapService examClassUserloginMapService;
+
     RandomGeneratedUserLoginRepo randomGeneratedUserLoginRepo;
 
     @Secured("ROLE_ADMIN")
@@ -57,14 +62,22 @@ public class ExamClassAccountController {
         List<ExamClassUserloginMap> res = examClassUserloginMapService.getExamClassUserloginMap(examClassId);
         return ResponseEntity.ok().body(res);
     }
+
     @Secured("ROLE_ADMIN")
     @PostMapping("/create-a-generated-userlogin")
-    public ResponseEntity<?> createAGeneratedUserLogin(Principal principal, @RequestBody ModelCreateGeneratedUserLogin m){
-        RandomGeneratedUserLogin u = new RandomGeneratedUserLogin(m.getUserLoginId(),m.getPassword(),RandomGeneratedUserLogin.STATUS_ACTIVE);
+    public ResponseEntity<?> createAGeneratedUserLogin(
+        Principal principal,
+        @RequestBody ModelCreateGeneratedUserLogin m
+    ) {
+        RandomGeneratedUserLogin u = new RandomGeneratedUserLogin(
+            m.getUserLoginId(),
+            m.getPassword(),
+            RandomGeneratedUserLogin.STATUS_ACTIVE);
         u = randomGeneratedUserLoginRepo.save(u);
         log.info("createAGeneratedUserLogin, created generated user " + u.getUserLoginId() + "," + u.getPassword());
         return ResponseEntity.ok().body(u);
     }
+
     @Secured("ROLE_ADMIN")
     @PostMapping("/create-exam-accounts-map")
     public ResponseEntity<?> createExamAccountsMap(
@@ -91,15 +104,15 @@ public class ExamClassAccountController {
                 log.info("row " + i + " has columns = " + columns);
                 String userLoginId = "";
                 String studentCode = "";
-                if(columns > 0) {
+                if (columns > 0) {
                     Cell c = row.getCell(0);
                     userLoginId = c.getStringCellValue();
                     log.info("userId = " + c.getStringCellValue());
                 }
-                if(columns > 1) {
+                if (columns > 1) {
                     Cell c = row.getCell(1);
-                    if(c!=null) {
-                        if (c.getCellType()!=null && c.getCellType().equals(CellType.NUMERIC)) {
+                    if (c != null) {
+                        if (c.getCellType() != null && c.getCellType().equals(CellType.NUMERIC)) {
                             studentCode = c.getNumericCellValue() + "";
                         } else {
                             studentCode = c.getStringCellValue();
@@ -108,9 +121,9 @@ public class ExamClassAccountController {
                     log.info("Student Code = " + studentCode);
                 }
                 String fullName = "";
-                if(columns > 2) {
+                if (columns > 2) {
                     Cell c = row.getCell(2);
-                    if(c != null) {
+                    if (c != null) {
                         if (c.getCellType() != null && c.getCellType().equals(CellType.NUMERIC)) {
                             fullName = c.getNumericCellValue() + "";
                         } else {
@@ -119,35 +132,46 @@ public class ExamClassAccountController {
                     }
                 }
                 log.info("fullName = " + fullName);
-                UserLoginModel u = new UserLoginModel(userLoginId,studentCode,fullName);
+                UserLoginModel u = new UserLoginModel(userLoginId, studentCode, fullName);
                 users.add(u);
 
             }
-            List<ExamClassUserloginMap> res = examClassUserloginMapService.createExamClassAccount(examClassId,users);
+            List<ExamClassUserloginMap> res = examClassUserloginMapService.createExamClassAccount(examClassId, users);
             return ResponseEntity.ok().body(res);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.ok().body("null");
     }
+
     @Secured("ROLE_ADMIN")
     @PostMapping("/update-status-exam-class")
-    public ResponseEntity<?> updateStatusExamClass(Principal principal, @RequestBody ModelUpdateStatusExamClass m){
-        boolean res = examClassService.updateStatusExamClass(m.getExamClassId(),m.getStatus());
+    public ResponseEntity<?> updateStatusExamClass(Principal principal, @RequestBody ModelUpdateStatusExamClass m) {
+        boolean res = examClassService.updateStatusExamClass(m.getExamClassId(), m.getStatus());
         return ResponseEntity.ok().body(res);
     }
 
     @Secured("ROLE_ADMIN")
     @PostMapping("/clear-account-exam-class")
-    public ResponseEntity<?> clearAccountExamClass(Principal principal, @RequestBody ModelClearAccountInput m){
+    public ResponseEntity<?> clearAccountExamClass(Principal principal, @RequestBody ModelClearAccountInput m) {
         boolean res = examClassService.clearAccountExamClass(m.getExamClassId());
         return ResponseEntity.ok().body(res);
     }
 
     @Secured("ROLE_ADMIN")
     @GetMapping("/get-exam-class-detail/{examClassId}")
-    public ResponseEntity<?> getExamClassDetail(Principal principal, @PathVariable UUID examClassId){
+    public ResponseEntity<?> getExamClassDetail(Principal principal, @PathVariable UUID examClassId) {
         ModelRepsonseExamClassDetail res = examClassService.getExamClassDetail(examClassId);
         return ResponseEntity.ok().body(res);
+    }
+
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/exam-class/{examClassId}/export")
+    public ResponseEntity<?> exportExamClass(@PathVariable UUID examClassId) {
+        byte[] pdfBytes = examClassService.exportExamClass(examClassId);
+        return ResponseEntity.ok()
+                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + examClassId + ".pdf")
+                             .contentType(MediaType.APPLICATION_PDF)
+                             .body(pdfBytes);
     }
 }
