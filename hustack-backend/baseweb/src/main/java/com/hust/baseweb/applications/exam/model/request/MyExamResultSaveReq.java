@@ -1,7 +1,9 @@
 package com.hust.baseweb.applications.exam.model.request;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
@@ -9,8 +11,9 @@ import java.util.List;
 @Getter
 @Setter
 @FieldNameConstants
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyExamResultSaveReq {
-    private String examStudentTestId;
-    private Integer totalTime;
-    private List<MyExamResultDetailsSaveReq> examResultDetails;
+    String examStudentTestId;
+    Integer totalTime;
+    List<MyExamResultDetailsSaveReq> examResultDetails;
 }

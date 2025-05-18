@@ -16,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -67,7 +68,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     @Override
     public ResponseData<ExamQuestionDetailsRes> details(String id) {
         ResponseData<ExamQuestionDetailsRes> responseData = new ResponseData<>();
-        if(DataUtils.stringIsNotNullOrEmpty(id)){
+        if(StringUtils.isNotEmpty(id)){
             Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneById(id);
             if(examQuestionEntity.isPresent()){
                 responseData.setHttpStatus(HttpStatus.OK);
@@ -78,7 +79,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             }
         }
 
-//        if(DataUtils.stringIsNotNullOrEmpty(code)){
+//        if(StringUtils.isNotEmpty(code)){
 //            Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneByCode(code);
 //            if(examQuestionEntity.isPresent()){
 //                responseData.setHttpStatus(HttpStatus.OK);
@@ -194,7 +195,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             }
         }
         examQuestionEntity.setFilePath(
-            DataUtils.stringIsNotNullOrEmpty(examQuestionEntity.getFilePath()) ?
+            StringUtils.isNotEmpty(examQuestionEntity.getFilePath()) ?
                 (!remainingFilePaths.isEmpty() ?
                     examQuestionEntity.getFilePath() +";"+ String.join(";", remainingFilePaths) :
                     examQuestionEntity.getFilePath()) :
@@ -240,7 +241,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
 
         for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswersDelete()){
             examQuestionAnswerRepository.deleteById(answerSaveReq.getId());
-            if(DataUtils.stringIsNotNullOrEmpty(answerSaveReq.getFile())){
+            if(StringUtils.isNotEmpty(answerSaveReq.getFile())){
                 mongoFileService.deleteByPath(answerSaveReq.getFile());
             }
         }
@@ -277,7 +278,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
                                                                   .map(ExamQuestionAnswerEntity::getFile)
                                                                   .collect(Collectors.toList());
             for(String filePath: listFileDelete){
-                if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                if(StringUtils.isNotEmpty(filePath)){
                     mongoFileService.deleteByPath(filePath);
                 }
             }
@@ -287,7 +288,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         if(examQuestionExist.get().getFilePath() != null){
             String[] filePaths = examQuestionExist.get().getFilePath().split(";");
             for(String filePath: filePaths){
-                if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                if(StringUtils.isNotEmpty(filePath)){
                     mongoFileService.deleteByPath(filePath);
                 }
             }

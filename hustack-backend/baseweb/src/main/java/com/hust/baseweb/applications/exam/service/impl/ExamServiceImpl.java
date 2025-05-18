@@ -223,7 +223,7 @@ public class ExamServiceImpl implements ExamService {
 
         List<ExamExamTestEntity> examExamTests = new ArrayList<>();
         for(ExamExamTestEntity examExamTest: examSaveReq.getExamExamTests()){
-            if(!DataUtils.stringIsNotNullOrEmpty(examExamTest.getId())){
+            if(!StringUtils.isNotEmpty(examExamTest.getId())){
                 examExamTests.add(ExamExamTestEntity
                                       .builder()
                                       .examId(examEntity.getId())
@@ -258,7 +258,7 @@ public class ExamServiceImpl implements ExamService {
 
         List<ExamStudentTestEntity> examStudentTestEntities = new ArrayList<>();
         for(ExamStudentSaveReq examStudent: examSaveReq.getExamStudents()){
-            if(DataUtils.stringIsNotNullOrEmpty(examStudent.getId())){
+            if(StringUtils.isNotEmpty(examStudent.getId())){
                 for(ExamExamTestEntity examExamTest: examExamTests){
                     examStudentTestEntities.add(ExamStudentTestEntity
                                                     .builder()
@@ -270,12 +270,12 @@ public class ExamServiceImpl implements ExamService {
         }
         List<ExamExamTestEntity> examExamTestEntities = new ArrayList<>(examSaveReq.getExamExamTests()
                                                                                    .stream()
-                                                                                   .filter(item -> DataUtils.stringIsNotNullOrEmpty(item.getId()))
+                                                                                   .filter(item -> StringUtils.isNotEmpty(item.getId()))
                                                                                    .collect(Collectors.toList()));
         examExamTestEntities.addAll(examExamTests);
         if(!examSaveReq.getExamStudents().isEmpty()){
             for(ExamStudentSaveReq examStudent: examSaveReq.getExamStudents()){
-                if(!DataUtils.stringIsNotNullOrEmpty(examStudent.getId())){
+                if(!StringUtils.isNotEmpty(examStudent.getId())){
                     ExamStudentEntity examStudentEntity = modelMapper.map(examStudent, ExamStudentEntity.class);
                     examStudentEntity = examStudentRepository.save(examStudentEntity);
 
@@ -377,7 +377,7 @@ public class ExamServiceImpl implements ExamService {
         }
         MyExamDetailsRes myExamDetailsRes = new MyExamDetailsRes(myExamDetailsResDB.get(), null, modelMapper);
 
-        if(!DataUtils.stringIsNotNullOrEmpty(myExamDetailsRes.getExamResultId())){
+        if(!StringUtils.isNotEmpty(myExamDetailsRes.getExamResultId())){
             LocalDateTime now = DataUtils.getTimeNowWithZone();
             if(now.isBefore(DataUtils.formatStringToLocalDateTimeFull(myExamDetailsRes.getStartTime()))){
                 responseData.setHttpStatus(HttpStatus.NOT_FOUND);
@@ -418,7 +418,7 @@ public class ExamServiceImpl implements ExamService {
                 for(MyExamResultDetailsSaveReq examResultDetails: myExamResultSaveReq.getExamResultDetails()){
                     if(Objects.equals(examResultDetails.getQuestionOrder(), getQuestionOrderFromFilename(filename))){
                         String filePath = mongoFileService.storeFile(file);
-                        if(DataUtils.stringIsNotNullOrEmpty(examResultDetails.getFilePath())){
+                        if(StringUtils.isNotEmpty(examResultDetails.getFilePath())){
                             examResultDetails.setFilePath(examResultDetails.getFilePath() + ";" + filePath);
                         }else{
                             examResultDetails.setFilePath(filePath);
@@ -442,7 +442,7 @@ public class ExamServiceImpl implements ExamService {
         return responseData;
     }
     private Integer getQuestionOrderFromFilename(String filename){
-        if(DataUtils.stringIsNotNullOrEmpty(filename)){
+        if(StringUtils.isNotEmpty(filename)){
             String[] fileParts = filename.split("\\.");
             String[] subFileParts = fileParts[fileParts.length - 2].split("_");
             return Integer.parseInt(subFileParts[subFileParts.length-1]);
@@ -528,7 +528,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     private String getExamResultDetailsIdFromFilepathComment(String filepath){
-        if(DataUtils.stringIsNotNullOrEmpty(filepath)){
+        if(StringUtils.isNotEmpty(filepath)){
             String[] filepaths = filepath.split("/");
             String[] fileParts = filepaths[filepaths.length - 1].split("\\.");
             String[] subFileParts = fileParts[0].split("_");

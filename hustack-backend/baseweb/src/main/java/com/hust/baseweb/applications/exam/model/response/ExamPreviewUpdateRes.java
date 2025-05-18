@@ -1,8 +1,10 @@
 package com.hust.baseweb.applications.exam.model.response;
 
 import com.hust.baseweb.applications.exam.entity.ExamStudentEntity;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
@@ -10,16 +12,17 @@ import java.util.List;
 @Getter
 @Setter
 @FieldNameConstants
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExamPreviewUpdateRes {
 
-    private String id;
-    private String code;
-    private String name;
-    private String description;
-    private Integer status;
-    private String answerStatus;
-    private String startTime;
-    private String endTime;
-    private List<ExamExamTestPreviewUpdateRes> examExamTests;
-    private List<ExamStudentEntity> examStudents;
+    String id;
+    String code;
+    String name;
+    String description;
+    Integer status;
+    String answerStatus;
+    String startTime;
+    String endTime;
+    List<ExamExamTestPreviewUpdateRes> examExamTests;
+    List<ExamStudentEntity> examStudents;
 }

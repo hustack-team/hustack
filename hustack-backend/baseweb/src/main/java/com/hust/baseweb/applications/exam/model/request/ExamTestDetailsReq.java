@@ -1,9 +1,7 @@
 package com.hust.baseweb.applications.exam.model.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 @Getter
@@ -11,7 +9,8 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExamTestDetailsReq {
 
-    private String id;
+    String id;
 }

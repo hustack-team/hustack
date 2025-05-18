@@ -1,15 +1,18 @@
 package com.hust.baseweb.applications.exam.model.request;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 @Getter
 @Setter
 @FieldNameConstants
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExamSubjectSaveReq {
 
-    private String code;
-    private String name;
-    private String status;
+    String code;
+    String name;
+    String status;
 }

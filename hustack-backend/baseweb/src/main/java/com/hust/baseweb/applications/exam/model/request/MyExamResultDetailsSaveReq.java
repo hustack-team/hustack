@@ -1,18 +1,21 @@
 package com.hust.baseweb.applications.exam.model.request;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
 @FieldNameConstants
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyExamResultDetailsSaveReq {
 
-    private String examResultId;
-    private String examQuestionId;
-    private Integer questionOrder;
-    private String filePath;
-    private String answer;
+    String examResultId;
+    String examQuestionId;
+    Integer questionOrder;
+    String filePath;
+    String answer;
 }
