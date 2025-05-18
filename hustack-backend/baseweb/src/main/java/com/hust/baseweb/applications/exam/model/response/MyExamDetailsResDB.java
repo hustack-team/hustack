@@ -13,7 +13,7 @@ public interface MyExamDetailsResDB {
     String getExamTestCode();
     String getExamTestName();
     String getExamResultId();
-    Integer getTotalScore();
+    Float getTotalScore();
     Integer getTotalTime();
     String getSubmitedAt();
     String getAnswerFiles();

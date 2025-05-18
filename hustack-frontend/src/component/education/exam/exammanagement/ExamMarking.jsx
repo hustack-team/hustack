@@ -178,13 +178,15 @@ function ExamMarking(props) {
     let tmpScore = 0;
     if(event.target.value === ''){
       dataAnswers[questionOrder-1].score = 0
+    }else if (event.target.value.endsWith(".")) {
+      dataAnswers[questionOrder - 1].score = event.target.value;
     }else{
-      dataAnswers[questionOrder-1].score = parseInt(event.target.value)
+      dataAnswers[questionOrder-1].score = parseFloat(event.target.value)
     }
 
     let totalScore = 0
     for(let item of dataAnswers){
-      totalScore += item?.score
+      totalScore += typeof item?.score === "number" ? item?.score : 0
     }
 
     setDataAnswers(dataAnswers)
@@ -204,8 +206,8 @@ function ExamMarking(props) {
     setOpen(false)
   }
 
-  const handleKeyPress = (event) => {
-    const regex = /^[0-9]+$/
+  const handleKeyPressNumber = (event) => {
+    const regex = /^[0-9.]+$/
     if (!regex.test(event.key)) {
       event.preventDefault();
     }
@@ -316,7 +318,7 @@ function ExamMarking(props) {
                           <TextField
                             id={`scoreInput-${questionOrder}`}
                             label="Nhập điểm"
-                            onKeyPress={handleKeyPress}
+                            onKeyPress={handleKeyPressNumber}
                             style={{width: "90px", marginLeft: "16px"}}
                             size="small"
                             value={dataAnswers[questionOrder - 1]?.score}

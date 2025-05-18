@@ -97,6 +97,14 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
 
     Optional<ExamEntity> findByCode(String code);
 
+    @Query(value = "select " +
+                   "    e.* " +
+                   "from " +
+                   "    exam e " +
+                   "left join exam_exam_test eet on " +
+                   "    eet.exam_id = e.id " +
+                   "where " +
+                   "    eet.exam_test_id = :examTestId", nativeQuery = true)
     List<ExamEntity> findALlByExamTestId(String examTestId);
 
     @Query(value = "select  " +

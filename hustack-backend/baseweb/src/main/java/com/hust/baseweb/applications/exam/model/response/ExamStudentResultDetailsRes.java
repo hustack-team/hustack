@@ -9,7 +9,7 @@ public interface ExamStudentResultDetailsRes {
     String getEmail();
     String getPhone();
     String getExamResultId();
-    Integer getTotalScore();
+    Float getTotalScore();
     Integer getTotalTime();
     String getSubmitedAt();
 }

@@ -22,7 +22,7 @@ public class MyExamDetailsRes {
     private String examTestCode;
     private String examTestName;
     private String examResultId;
-    private Integer totalScore;
+    private Float totalScore;
     private Integer totalTime;
     private String submitedAt;
     private String answerFiles;

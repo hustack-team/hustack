@@ -15,5 +15,5 @@ public class ExamMarkingDetailsSaveReq {
     private String answer;
     private String filePath;
     private String commentFilePath;
-    private Integer score;
+    private Float score;
 }

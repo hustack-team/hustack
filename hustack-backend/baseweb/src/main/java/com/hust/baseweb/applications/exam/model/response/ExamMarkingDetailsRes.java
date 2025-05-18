@@ -18,7 +18,7 @@ public class ExamMarkingDetailsRes {
     private String examStudentEmail;
     private String examStudentPhone;
     private String examResultId;
-    private Integer totalScore;
+    private Float totalScore;
     private Integer totalTime;
     private String submitedAt;
     private String answerFiles;

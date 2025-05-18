@@ -6,6 +6,6 @@ public interface MyExamTestWithResultRes {
     String getExamTestCode();
     String getExamTestName();
     String getExamTestDescription();
-    Integer getTotalScore();
+    Float getTotalScore();
     Integer getTotalTime();
 }

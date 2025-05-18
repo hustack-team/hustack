@@ -9,7 +9,7 @@ public interface ExamMarkingDetailsResDB {
     String getExamStudentEmail();
     String getExamStudentPhone();
     String getExamResultId();
-    Integer getTotalScore();
+    Float getTotalScore();
     Integer getTotalTime();
     String getSubmitedAt();
     String getAnswerFiles();

@@ -21,17 +21,11 @@ public class ExamResultEntity{
     @Column(length = 60)
     protected String id;
 
-    @Column(name = "exam_id")
-    private String examId;
-
-    @Column(name = "exam_student_id")
-    private String examStudentId;
-
     @Column(name = "exam_student_test_id")
     private String examStudentTestId;
 
     @Column(name = "total_score")
-    private Integer totalScore;
+    private Float totalScore;
 
     @Column(name = "total_time")
     private Integer totalTime;

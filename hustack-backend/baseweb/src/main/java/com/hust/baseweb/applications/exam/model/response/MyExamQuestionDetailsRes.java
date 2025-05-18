@@ -19,7 +19,7 @@ public interface MyExamQuestionDetailsRes {
     String getAnswer();
     String getFilePathAnswer();
     String getFilePathComment();
-    Integer getScore();
+    Float getScore();
     @JsonRawValue
     String getQuestionAnswers();
 }
