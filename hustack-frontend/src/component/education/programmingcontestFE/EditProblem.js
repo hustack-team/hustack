@@ -49,6 +49,10 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "flex-start",
     gap: theme.spacing(1),
   },
+  disabledBlock: {
+    opacity: 0.6,
+    pointerEvents: "none",
+  },
 }));
 
 const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
@@ -98,6 +102,7 @@ function EditProblem() {
   const [isOwner, setIsOwner] = useState(false);
   const [sampleTestCase, setSampleTestCase] = useState(null);
   const [problem, setProblem] = useState({});
+  const [canEditBlocks, setCanEditBlocks] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -200,7 +205,7 @@ function EditProblem() {
     return true;
   };
 
-  function handleSubmit () {
+  function handleSubmit() {
     if (!validateSubmit()) return;
 
     setLoading(true);
@@ -237,6 +242,7 @@ function EditProblem() {
     const body = {
       problemName: problemName,
       problemDescription: description,
+      // timeLimit: timeLimit,
       timeLimitCPP: timeLimitCPP,
       timeLimitJAVA: timeLimitJAVA,
       timeLimitPYTHON: timeLimitPYTHON,
@@ -305,10 +311,31 @@ function EditProblem() {
   };
 
   const handleDeleteBlock = (index) => {
+    if (!canEditBlocks) {
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+      return;
+    }
     setBlockCodes((prev) => ({
       ...prev,
       [selectedLanguage]: prev[selectedLanguage].filter((_, i) => i !== index),
     }));
+  };
+
+  const handleAddBlock = () => {
+    if (!canEditBlocks) {
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+      return;
+    }
+    try {
+      const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17;
+      setBlockCodes((prev) => ({
+        ...prev,
+        [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
+      }));
+    } catch (error) {
+      console.error("Error adding block code:", error);
+      errorNoti(t("Failed to add block code"), 3000);
+    }
   };
 
   useEffect(() => {
@@ -350,6 +377,8 @@ function EditProblem() {
         setStatus(data.status);
         setSampleTestCase(data.sampleTestCase);
         setIsOwner(data.roles?.includes("OWNER"));
+        setCanEditBlocks(data.canEditBlocks || false);
+        
         // Updated condition for block problem
         setIsProblemBlock(data.blockCodes && data.blockCodes.length > 0);
 
@@ -383,7 +412,7 @@ function EditProblem() {
   }, [])
 
   return (
-    <ProgrammingContestLayout title={t("common:edit", { name: t("problem") })} onBack={handleBackToList}>
+    <ProgrammingContestLayout title={t("common:edit", {name: t("problem")})} onBack={handleBackToList}>
       <Typography variant="h6">
         {t("generalInfo")}
       </Typography>
@@ -526,7 +555,7 @@ function EditProblem() {
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
-            startIcon={<AddIcon />}
+            startIcon={<AddIcon/>}
             onClick={() => setOpenModalAddNewTag(true)}
           >
             {t("common:add", {name: t('tag')})}
@@ -540,9 +569,15 @@ function EditProblem() {
               <Checkbox
                 checked={isProblemBlock}
                 onChange={() => setIsProblemBlock(!isProblemBlock)}
+                disabled={!canEditBlocks}
               />
             }
           />
+          {!canEditBlocks && (
+            <Typography variant="caption" color="error">
+              {t("common:noPermissionToEditBlocks")}
+            </Typography>
+          )}
         </Grid>
       </Grid>
 
@@ -557,9 +592,6 @@ function EditProblem() {
           content={description}
           onContentChange={(text) => setDescription(text)}
         />
-        {/*
-        <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
-              */}
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -585,76 +617,79 @@ function EditProblem() {
               ))}
             </Tabs>
 
-            {blockCodes[selectedLanguage].map((block, index) => (
-              <Box className={classes.blockCodeContainer} key={block.id || index}>
-                <Box className={classes.codeEditorWrapper}>
-                  <HustCodeEditorV2
-                    sourceCode={block.code || ""}
-                    onChangeSourceCode={(newCode) => {
-                      try {
+            <Box className={!canEditBlocks ? classes.disabledBlock : undefined}>
+              {blockCodes[selectedLanguage].map((block, index) => (
+                <Box className={classes.blockCodeContainer} key={block.id || index}>
+                  <Box className={classes.codeEditorWrapper}>
+                    <HustCodeEditorV2
+                      sourceCode={block.code || ""}
+                      onChangeSourceCode={(newCode) => {
+                        if (!canEditBlocks) {
+                          errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+                          return;
+                        }
+                        try {
+                          setBlockCodes((prev) => ({
+                            ...prev,
+                            [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                              i === index ? { ...b, code: newCode } : b,
+                            ),
+                          }));
+                        } catch (error) {
+                          console.error("Error updating code:", error);
+                          errorNoti(t("Failed to update code"), 3000);
+                        }
+                      }}
+                      language={selectedLanguage}
+                      height="300px"
+                      readOnly={!canEditBlocks}
+                    />
+                  </Box>
+                  <Box className={classes.blockCodeControls}>
+                    <StyledSelect
+                      size="small"
+                      value={block.forStudent ? "student" : "teacher"}
+                      onChange={(event) => {
+                        if (!canEditBlocks) {
+                          errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+                          return;
+                        }
                         setBlockCodes((prev) => ({
                           ...prev,
                           [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                            i === index ? { ...b, code: newCode } : b,
+                            i === index ? { ...b, forStudent: event.target.value === "student" } : b,
                           ),
                         }));
-                      } catch (error) {
-                        console.error("Error updating code:", error);
-                        errorNoti(t("Failed to update code"), 3000);
-                      }
-                    }}
-                    language={selectedLanguage}
-                    height="300px"
-                  />
+                      }}
+                      options={[
+                        { label: t("forTeacher"), value: "teacher" },
+                        { label: t("forStudent"), value: "student" },
+                      ]}
+                      sx={{ width: "250px", mt: 5 }}
+                      disabled={!canEditBlocks}
+                    />
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteBlock(index)}
+                      sx={{ minWidth: "60px", px: 1 }}
+                      disabled={!canEditBlocks}
+                    >
+                      {t("delete", { ns: "common" })}
+                    </Button>
+                  </Box>
                 </Box>
-                <Box className={classes.blockCodeControls}>
-                  <StyledSelect
-                    size="small"
-                    value={block.forStudent ? "student" : "teacher"}
-                    onChange={(event) => {
-                      setBlockCodes((prev) => ({
-                        ...prev,
-                        [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                          i === index ? { ...b, forStudent: event.target.value === "student" } : b,
-                        ),
-                      }));
-                    }}
-                    options={[
-                      { label: t("forTeacher"), value: "teacher" },
-                      { label: t("forStudent"), value: "student" },
-                    ]}
-                    sx={{ width: "250px", mt: 5 }}
-                  />
-                  <Button
-                    size="small"
-                    color="error"
-                    onClick={() => handleDeleteBlock(index)}
-                    sx={{ minWidth: "60px", px: 1 }}
-                  >
-                    {t("delete", { ns: "common" })}
-                  </Button>
-                </Box>
-              </Box>
-            ))}
+              ))}
 
-            <Button
-              variant="outlined"
-              onClick={() => {
-                try {
-                  const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17;
-                  setBlockCodes((prev) => ({
-                    ...prev,
-                    [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
-                  }));
-                } catch (error) {
-                  console.error("Error adding block code:", error);
-                  errorNoti(t("Failed to add block code"), 3000);
-                }
-              }}
-              sx={{ marginTop: "12px" }}
-            >
-              {t("addProblemBlock")}
-            </Button>
+              <Button
+                variant="outlined"
+                onClick={handleAddBlock}
+                sx={{ marginTop: "12px" }}
+                disabled={!canEditBlocks}
+              >
+                {t("addProblemBlock")}
+              </Button>
+            </Box>
           </>
         )}
       </Box>
@@ -668,17 +703,6 @@ function EditProblem() {
             onRemove={() => handleDeleteImageAttachment(file.fileName)}
           />
         ))}
-      {/* this function is not implemented yet  
-              <Box>
-                <Typography>
-                  <h2>{t("problemSuggestion")}</h2>
-                </Typography>
-                <RichTextEditor
-                  content={solution}
-                  onContentChange={text => setSolution(text)}
-                />
-              </Box>
-              */}
 
       <Box sx={{marginTop: "32px"}}/>
       <HustCodeEditor

@@ -15,26 +15,26 @@ import {
   Tab,
 } from "@mui/material";
 import { makeStyles } from "@material-ui/core/styles";
-import { request } from "api";
+import {request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import {useTranslation} from "react-i18next";
+import {useHistory, useParams} from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import { randomImageName } from "utils/FileUpload/covert";
-import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage } from "./Constant"; 
-import { PROBLEM_ROLE, PROBLEM_STATUS } from "utils/constants";
+import {randomImageName} from "utils/FileUpload/covert";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant"; 
+import {PROBLEM_ROLE, PROBLEM_STATUS} from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
-import { localeOption } from "../../../utils/NumberFormat";
-import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import {localeOption} from "../../../utils/NumberFormat";
+import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { getLevels, getStatuses } from "./CreateProblem";
+import {getLevels, getStatuses} from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
 
 const useStyles = makeStyles((theme) => ({
@@ -65,10 +65,11 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 }));
 
 function ManagerViewProblemDetailV2() {
-  const { problemId } = useParams();
+  const {problemId} = useParams();
   const history = useHistory();
   const classes = useStyles();
-  const { t } = useTranslation([
+
+  const {t} = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
@@ -109,7 +110,7 @@ function ManagerViewProblemDetailV2() {
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
-  };
+  }
 
   useEffect(() => {
     request("get", "teacher/problems/" + problemId, (res) => {
@@ -173,6 +174,7 @@ function ManagerViewProblemDetailV2() {
     setNewProblemId("");
     setNewProblemName("");
     setErrorMessage("");
+    history.push("/programming-contest/list-problems"); // comment this line : not return to list-problems when click cancel
   };
 
   const handleClone = () => {
@@ -231,27 +233,25 @@ function ManagerViewProblemDetailV2() {
         <Stack direction="row" spacing={2}>
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
             (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)
-          ) ? null : (
-            <PrimaryButton
-              onClick={() => {
-                history.push("/programming-contest/edit-problem/" + problemId);
-              }}
-              startIcon={<EditIcon />}
-            >
-              {t("common:edit", { name: '' })}
-            </PrimaryButton>
-          )}
+                   ) ? null : (<PrimaryButton
+            onClick={() => {
+              history.push("/programming-contest/edit-problem/" + problemId);
+            }}
+            startIcon={<EditIcon/>}
+          >
+            {t("common:edit", {name: ''})}
+          </PrimaryButton>)
+          }
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
             (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) ||
-              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
-            <TertiaryButton
-              variant="outlined"
-              onClick={handleCloneDialogOpen}
-              startIcon={<ContentCopyIcon />}
-            >
-              {t("clone")}
-            </TertiaryButton>
-          )}
+              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (<TertiaryButton
+            variant="outlined"
+            onClick={handleCloneDialogOpen}
+            startIcon={<ContentCopyIcon/>}
+          >
+            {t("clone")}
+          </TertiaryButton>)
+          }
           {problemDetail.roles.includes(PROBLEM_ROLE.OWNER) && (
             <TertiaryButton
               variant="outlined"
@@ -264,8 +264,7 @@ function ManagerViewProblemDetailV2() {
             >
               {t("manageRole")}
             </TertiaryButton>
-          )}
-        </Stack>
+          )}</Stack>
       </Stack>
 
       <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
@@ -291,6 +290,8 @@ function ManagerViewProblemDetailV2() {
             variant="outlined"
             value={newProblemName}
             onChange={(e) => setNewProblemName(e.target.value)}
+            //error={hasSpecialCharacterProblemName()}
+            //helperText={hasSpecialCharacterProblemName() ? "Invalid characters in Problem Name." : ""}
             helperText={""}
           />
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
@@ -304,15 +305,14 @@ function ManagerViewProblemDetailV2() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress/>}
       <Grid container spacing={2} display={loading ? "none" : ""}>
         {[
           [t("problemName"), problemDetail.problemName],
           [t("level"), getLevels(t).find(item => item.value === problemDetail.levelId)?.label],
           [t("status"), getStatuses(t).find(item => item.value === problemDetail.status)?.label],
           [
-            t("public", { ns: "common" }),
+            t("public", {ns: "common"}),
             problemDetail.public ? t("common:yes") : t("common:no"),
           ],
           [
@@ -355,15 +355,15 @@ function ManagerViewProblemDetailV2() {
         ))}
       </Grid>
 
-      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
-        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+      <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
+        <Typography variant="h6" sx={{marginBottom: "8px"}}>
           {t("common:description")}
         </Typography>
         <RichTextEditor
           toolbarHidden
           content={problemDetail.description}
           readOnly
-          editorStyle={{ editor: {} }}
+          editorStyle={{editor: {}}}
         />
       </Box>
 
@@ -376,7 +376,6 @@ function ManagerViewProblemDetailV2() {
           <FileUploadZone key={file.id} file={file} removable={false} />
         ))}
 
-      {/* Updated block codes rendering */}
       {problemDetail.blockCodes && problemDetail.blockCodes.length > 0 && (
         <Box sx={{ marginTop: "24px" }}>
           <Typography variant="h6" sx={{ marginBottom: "8px" }}>
@@ -445,8 +444,8 @@ function ManagerViewProblemDetailV2() {
 
       <ListTestCase mode={2} />
 
-      <Box sx={{ height: "36px" }}></Box>
-      <ContestsUsingAProblem problemId={problemId} />
+      <Box sx={{height: "36px"}}></Box>
+      <ContestsUsingAProblem problemId={problemId}/>
     </ProgrammingContestLayout>
   );
 }

@@ -1,16 +1,16 @@
-import { LoadingButton } from "@mui/lab";
-import { Alert, Box, Button, Divider, Stack, Typography, Tabs, Tab } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import {LoadingButton} from "@mui/lab";
+import {Alert, Box, Button, Divider, Stack, Typography, Tabs, Tab} from "@mui/material";
+import {styled} from "@mui/material/styles";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import HustModal from "component/common/HustModal";
-import { ContentState, EditorState } from "draft-js";
+import {ContentState, EditorState} from "draft-js";
 import htmlToDraft from "html-to-draftjs";
-import React, { forwardRef, useEffect, useRef, useState } from "react";
-import { Editor } from "react-draft-wysiwyg";
-import { useParams } from "react-router";
-import { randomImageName } from "utils/FileUpload/covert";
-import { errorNoti, successNoti } from "utils/notification";
-import { request } from "../../../api";
+import React, {forwardRef, useEffect, useRef, useState} from "react";
+import {Editor} from "react-draft-wysiwyg";
+import {useParams} from "react-router";
+import {randomImageName} from "utils/FileUpload/covert";
+import {errorNoti, successNoti} from "utils/notification";
+import {request} from "../../../api";
 import FileUploadZone from "../../../utils/FileUpload/FileUploadZone";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustCodeEditorV2 from "../../common/HustCodeEditorV2";
@@ -25,10 +25,10 @@ import {
   SUBMISSION_MODE_SOURCE_CODE,
 } from "./Constant";
 import StudentViewSubmission from "./StudentViewSubmission";
-import { useTranslation } from "react-i18next";
+import {useTranslation} from "react-i18next";
 import _ from "lodash";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import { useHistory } from "react-router-dom";
+import {useHistory} from "react-router-dom";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -63,12 +63,12 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export const InputFileUpload = forwardRef((props, ref) => {
-  const { label, buttonProps, ...otherProps } = props;
+  const {label, buttonProps, ...otherProps} = props;
   return (
     <Button
       component="label"
       variant="outlined"
-      sx={{ textTransform: "none" }}
+      sx={{textTransform: "none"}}
       {...buttonProps}
     >
       {label}
@@ -98,26 +98,36 @@ const ERR_STATUS = [
 ];
 
 export default function StudentViewProgrammingContestProblemDetail() {
-  const { problemId, contestId } = useParams();
+  const {problemId, contestId} = useParams();
   const history = useHistory();
-  const { t } = useTranslation(["education/programmingcontest/problem", "common"]);
+  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
 
   const [problem, setProblem] = useState(null);
   const [testCases, setTestCases] = useState([]);
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [listLanguagesAllowed, setListLanguagesAllowed] = useState([]);
+  // const [status, setStatus] = useState("");
+  // const [message, setMessage] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
-  const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE);
+  const [submissionMode, setSubmissionMode] = useState(
+    SUBMISSION_MODE_SOURCE_CODE
+  );
   const [isSubmitCode, setIsSubmitCode] = useState(0);
 
   const [openModalPreview, setOpenModalPreview] = useState(false);
   const [selectedTestcase, setSelectedTestcase] = useState();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  // const [problemDescription, setProblemDescription] = useState(
+  //   ""
+  // );
   const [editorStateDescription, setEditorStateDescription] = useState(
     EditorState.createEmpty()
   );
-  const [sampleTestCase, setSampleTestCase] = useState(null);
+  const [sampleTestCase, setSampleTestCase] = useState(
+    null//EditorState.createEmpty()
+  );
+
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
   
   const [isProblemBlock, setIsProblemBlock] = useState(false);
@@ -131,6 +141,11 @@ export default function StudentViewProgrammingContestProblemDetail() {
   function onFileChange(event) {
     setFile(event.target.files[0]);
   }
+
+  const onInputChange = (event) => {
+    let name = event.target.value;
+    setFile(name);
+  };
 
   async function isFileBlank(file) {
     if (!file) return true;
@@ -195,7 +210,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
     }
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
+    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
     formData.append("file", file);
 
     const config = {
@@ -204,6 +219,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
       },
     };
 
+    //TODO: consider remove duplicate code
     request(
       "post",
       "/submissions/file-upload",
@@ -211,7 +227,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
         setIsProcessing(false);
         res = res.data;
         listSubmissionRef.current.refreshSubmission();
-
         if (inputRef.current) {
           inputRef.current.value = null;
         }
@@ -249,10 +264,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
           errorNoti(res.message, 3000);
         } else {
           successNoti("Submitted successfully", 3000);
-          // Optional: Controlled page reload (uncomment if needed)
-          // setTimeout(() => {
-          //   window.location.reload();
-          // }, 1000); // Delay to allow notification to show
         }
       },
       {
@@ -278,7 +289,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         res = res.data;
         setProblem(res);
         if (res.listLanguagesAllowed != null && res.listLanguagesAllowed.length > 0) {
-          setLanguage(res.listLanguagesAllowed[0]);
+          setLanguage(res.listLanguagesAllowed[0])
           setListLanguagesAllowed(res.listLanguagesAllowed);
         }
 
@@ -310,8 +321,9 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setFetchedImageArray(newFileURLArray);
         }
 
+        // setProblemDescription(res?.problemStatement || "");
         let problemDescriptionHtml = htmlToDraft(res.problemStatement);
-        let { contentBlocks, entityMap } = problemDescriptionHtml;
+        let {contentBlocks, entityMap} = problemDescriptionHtml;
         let contentDescriptionState = ContentState.createFromBlockArray(
           contentBlocks,
           entityMap
@@ -321,7 +333,21 @@ export default function StudentViewProgrammingContestProblemDetail() {
         );
         setEditorStateDescription(statementDescription);
 
+                // public testcase    
+        /*  
+        let sampleTestCaseHtml = htmlToDraft(res.sampleTestCase);
+        let { contentBlocksTestCase, entityMapTestCase } = sampleTestCaseHtml;
+        let contentDescriptionStateTestCase = ContentState.createFromBlockArray(
+          contentBlocksTestCase,
+          entityMapTestCase
+        );
+        let editorSampleTestCase = EditorState.createWithContent(
+          contentDescriptionStateTestCase
+        );
+        //setSampleTestCase(editorSampleTestCase);
+        */
         setSampleTestCase(res.sampleTestCase);
+        //console.log('GetProblemDetail, res = ',res);
       },
       { onError: (e) => {
         errorNoti(t("errorFetchingProblem"), 3000);
@@ -378,6 +404,14 @@ export default function StudentViewProgrammingContestProblemDetail() {
   };
 
   async function submitCode() {
+    const blob = new Blob([codeSolution], {type: "text/plain;charset=utf-8"});
+    const now = new Date();
+    const file = new File(
+      [blob],
+      `${problemId}_${now.getTime()}.txt`,
+      {type: "text/plain;charset=utf-8"}
+    );
+    setFile(file);
     setIsSubmitCode(isSubmitCode + 1);
   }
 
@@ -387,7 +421,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
   const handleExit = () => {
     history.push(`/programming-contest/student-view-contest-detail/${contestId}`);
-  };
+  }
 
   const groupedBlockCodes = blockCodes.reduce((acc, block) => {
     if (!acc[block.language]) {
@@ -411,7 +445,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
       <Typography variant="h6" sx={{ mb: 1 }}>
         {t("common:description")}
       </Typography>
-
+      {/*{ReactHtmlParser(problemDescription)}*/} 
       <Editor
         toolbarHidden
         editorState={editorStateDescription}
@@ -419,7 +453,19 @@ export default function StudentViewProgrammingContestProblemDetail() {
         readOnly
         editorStyle={editorStyle.editor}
       />
-
+      {/*
+        <Typography variant="h5">Sample testcase</Typography>
+        
+        <Editor
+          toolbarHidden
+          editorState={sampleTestCase}
+          handlePastedText={() => false}
+          readOnly
+          editorStyle={editorStyle.editor}
+        />
+      */}
+      {/*ReactHtmlParser(sampleTestCase)*/}
+      {/*sampleTestCase*/}
       {sampleTestCase && <>
         <div style={{ height: "10px" }}></div>
         <HustCopyCodeBlock
@@ -430,7 +476,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
-          <FileUploadZone key={file.id} file={file} removable={false} />
+          <FileUploadZone key={file.id} file={file} removable={false}/>
         ))}
 
       <ModalPreview chosenTestcase={selectedTestcase} />
@@ -589,7 +635,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{ width: 128, textTransform: 'none' }}
+              sx={{width: 128, textTransform: 'none'}}
               loading={isProcessing}
               loadingIndicator="Submitting…"
               variant="contained"
@@ -608,7 +654,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
           </Box>
         )}
       </Box>
-
       {language === COMPUTER_LANGUAGES.JAVA && (
         <Alert
           variant="outlined"
@@ -624,8 +669,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
         </Alert>
       )}
 
-      <Box sx={{ mt: 3 }}>
-        <StudentViewSubmission problemId={problemId} ref={listSubmissionRef} />
+      <Box sx={{mt: 3}}>
+        <StudentViewSubmission problemId={problemId} ref={listSubmissionRef}/>
       </Box>
     </ProgrammingContestLayout>
   );
