@@ -2,7 +2,7 @@ import {makeStyles} from "@material-ui/core";
 import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography, Button, Tabs, Tab } from "@mui/material";
 import React, {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {useHistory} from "react-router-dom"
+import {useHistory} from "react-router-dom";
 import {CompileStatus} from "./CompileStatus";
 import {extractErrorMessage, request} from "../../../api";
 import {useTranslation} from "react-i18next";
@@ -15,7 +15,7 @@ import RichTextEditor from "../../common/editor/RichTextEditor";
 import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
 import {getAllTags} from "./service/TagService";
 import ModelAddNewTag from "./ModelAddNewTag";
-import AddIcon from "@mui/icons-material/Add";
+import AddIcon from '@mui/icons-material/Add';
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import StyledSelect from "../../select/StyledSelect";
 import TertiaryButton from "../../button/TertiaryButton";
@@ -74,13 +74,13 @@ export const getPublicOptions = (t) => [
 
 export const getStatuses = (t) => [
   {
-    label: t("open"),
+    label: t('open'),
     value: "OPEN",
   },
   {
-    label: t("hidden"),
+    label: t('hidden'),
     value: "HIDDEN",
-  },
+  }
 ];
 
 const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
@@ -92,7 +92,9 @@ function CreateProblem() {
   const history = useHistory();
   const classes = useStyles();
 
-  const { t } = useTranslation(["education/programmingcontest/problem", "common", "validation"]);
+  const {t} = useTranslation(
+    ["education/programmingcontest/problem", "common", "validation"]
+  );
   const levels = getLevels(t);
   const publicOptions = getPublicOptions(t);
   const statuses = getStatuses(t);
@@ -112,17 +114,20 @@ function CreateProblem() {
   const [languageSolution, setLanguageSolution] = useState(COMPUTER_LANGUAGES.CPP17);
   const [solutionChecker, setSolutionChecker] = useState("");
   const [solutionCheckerLanguage, setSolutionCheckerLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
-  const [isPublic, setIsPublic] = useState("N");
+  const [isPublic, setIsPublic] = useState('N');
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [status, setStatus] = useState("HIDDEN");
+  const [status, setStatus] = useState('HIDDEN');
   const [sampleTestCase, setSampleTestCase] = useState(null);
+
   const [isCustomEvaluated, setIsCustomEvaluated] = useState(false);
   const [compileMessage, setCompileMessage] = useState("");
   const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [showCompile, setShowCompile] = useState(false);
   const [statusSuccessful, setStatusSuccessful] = useState(false);
+
   const [loading, setLoading] = useState(false);
+
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState(
@@ -133,11 +138,11 @@ function CreateProblem() {
   const handleGetTagsSuccess = (res) => setTags(res.data);
 
   const handleSelectTags = (tags) => {
-    setSelectedTags(tags)
+    setSelectedTags(tags);
   };
 
   const handleAttachmentFiles = (files) => {
-    setAttachmentFiles(files)
+    setAttachmentFiles(files);
   };
 
   const checkCompile = () => {
@@ -153,6 +158,7 @@ function CreateProblem() {
       "/check-compile",
       (res) => {
         setLoading(false)
+
         setShowCompile(true);
         setStatusSuccessful(res.data.status !== "Compilation Error");
         setCompileMessage(res.data)
@@ -162,9 +168,9 @@ function CreateProblem() {
           setLoading(false)
           setShowCompile(true)
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
-        },
+        }
       },
-      body,
+      body
     );
   }
 
@@ -181,7 +187,7 @@ function CreateProblem() {
 
   const validateSubmit = () => {
     if (problemId === "") {
-      errorNoti(t("missingField", { ns: "validation", fieldName: t("problemId") }), 3000);
+      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemId")}), 3000);
       return false;
     }
     if (hasSpecialCharacterProblemId()) {
@@ -189,24 +195,24 @@ function CreateProblem() {
       return false;
     }
     if (problemName === "") {
-      errorNoti(t("missingField", { ns: "validation", fieldName: t("problemName") }), 3000);
+      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemName")}), 3000);
       return false;
     }
     //if (hasSpecialCharacterProblemName()) {
     //  errorNoti("Problem name must only contain alphanumeric characters.", 3000);
     //  return false;
     //}
-    if (timeLimitCPP < 1 
-      || timeLimitJAVA < 1 
-      || timeLimitPYTHON < 1 
-      || timeLimitCPP > 300 
-      || timeLimitJAVA > 300 
+    if (timeLimitCPP < 1
+      || timeLimitJAVA < 1
+      || timeLimitPYTHON < 1
+      || timeLimitCPP > 300
+      || timeLimitJAVA > 300
       || timeLimitPYTHON > 300) {
-      errorNoti(t("numberBetween", { ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300 }), 3000);
+      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300}), 3000);
       return false;
     }
     if (memoryLimit < 3 || memoryLimit > 1024) {
-      errorNoti(t("numberBetween", { ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024 }), 3000);
+      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024}), 3000);
       return false;
     }
     if (!statusSuccessful) {
@@ -269,9 +275,10 @@ function CreateProblem() {
       sampleTestCase: sampleTestCase,
       categoryId: isProblemBlock ? 1 : 0,
       blockCodes: formattedBlockCodes,
-    }
+    };
+
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], { type: "application/json" }));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -288,7 +295,7 @@ function CreateProblem() {
       "/problems",
       (res) => {
         setLoading(false);
-        successNoti(t("common:addSuccess", { name: t("problem") }), 3000);
+        successNoti(t("common:addSuccess", {name: t("problem")}), 3000);
         history.push("/programming-contest/list-problems");
       },
       {
@@ -298,7 +305,7 @@ function CreateProblem() {
         },
       },
       formData,
-      config,
+      config
     );
   }
 
@@ -322,8 +329,10 @@ function CreateProblem() {
   }, [])
 
   return (
-    <ProgrammingContestLayout title={t("common:create", { name: t("problem") })} onBack={handleExit}>
-      <Typography variant="h6">{t("generalInfo")}</Typography>
+    <ProgrammingContestLayout title={t("common:create", {name: t("problem")})} onBack={handleExit}>
+      <Typography variant="h6">
+        {t("generalInfo")}
+      </Typography>
 
       <Grid container spacing={2} mt={0}>
         <Grid item xs={3}>
@@ -344,7 +353,7 @@ function CreateProblem() {
                 ? "Problem ID must not contain special characters including %^/\\|.?;[]"
                 : ""
             }
-            sx={{ marginBottom: "12px" }}
+            sx={{marginBottom: "12px"}}
           />
         </Grid>
         <Grid item xs={3}>
@@ -378,7 +387,7 @@ function CreateProblem() {
             value={status}
             sx={{minWidth: 'unset', mr: 'unset'}}
             onChange={(event) => {
-              setStatus(event.target.value)
+              setStatus(event.target.value);
             }}
           />
         </Grid>
@@ -464,7 +473,7 @@ function CreateProblem() {
             onChange={(event) => {
               setMemoryLimit(event.target.value);
             }}
-            InputProps={{ endAdornment: <InputAdornment position="end">MB</InputAdornment>,}}
+            InputProps={{endAdornment: <InputAdornment position="end">MB</InputAdornment>,}}
           />
         </Grid>
 
@@ -504,8 +513,7 @@ function CreateProblem() {
       </Grid>
 
       <Link sx={{mt: 3, display: 'inline-block'}} href="/programming-contest/suggest-problem" target="_blank"
-            underline="hover"
-      >
+            underline="hover">
         <Typography variant="body1" color="primary">
           Struggling to create a fresh and exciting challenge? Try our new <b>Problem Suggestion</b> feature
           <Chip label="Beta" color="secondary" variant="outlined" size="small"
@@ -528,7 +536,7 @@ function CreateProblem() {
             setSampleTestCase(code);
           }}
         />
-        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)} />
+        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)}/>
         {isProblemBlock && (
           <>
             <Tabs value={selectedLanguage} onChange={handleTabChange} sx={{ marginTop: "12px" }}>
@@ -627,7 +635,7 @@ function CreateProblem() {
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{ margin: "12px 0", textTransform: 'none'}}
+        sx={{margin: "12px 0", textTransform: 'none'}}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -646,7 +654,7 @@ function CreateProblem() {
               onChange={() => setIsPreloadCode(!isPreloadCode)}
             />}
         />
-        {isPreloadCode && 
+        {isPreloadCode &&
           <HustCodeEditor
             title={t("preloadCode")}
             sourceCode={preloadCode}
@@ -670,7 +678,7 @@ function CreateProblem() {
         />
         <Typography variant="body2" color="gray">{t("customEvaluationNote1")}</Typography>
 
-        {isCustomEvaluated && 
+        {isCustomEvaluated &&
           <HustCodeEditor
             title={t("checkerSourceCode")}
             language={solutionCheckerLanguage}
@@ -700,7 +708,7 @@ function CreateProblem() {
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", {name: t("tag")}), 3000)
+          successNoti(t("common:addSuccess", {name: t('tag')}), 3000)
           getAllTags(handleGetTagsSuccess)
         }}
         handleClose={() => setOpenModalAddNewTag(false)}
