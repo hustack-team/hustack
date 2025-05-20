@@ -312,7 +312,7 @@ function EditProblem() {
 
   const handleDeleteBlock = (index) => {
     if (!canEditBlocks) {
-      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+      errorNoti(t("noPermissionToEditBlocks"), 3000);
       return;
     }
     setBlockCodes((prev) => ({
@@ -323,7 +323,7 @@ function EditProblem() {
 
   const handleAddBlock = () => {
     if (!canEditBlocks) {
-      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+      errorNoti(t("noPermissionToEditBlocks"), 3000);
       return;
     }
     try {
@@ -573,11 +573,6 @@ function EditProblem() {
               />
             }
           />
-          {!canEditBlocks && (
-            <Typography variant="caption" color="error">
-              {t("common:noPermissionToEditBlocks")}
-            </Typography>
-          )}
         </Grid>
       </Grid>
 
@@ -592,6 +587,9 @@ function EditProblem() {
           content={description}
           onContentChange={(text) => setDescription(text)}
         />
+        {/*
+        <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
+              */}
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -625,7 +623,7 @@ function EditProblem() {
                       sourceCode={block.code || ""}
                       onChangeSourceCode={(newCode) => {
                         if (!canEditBlocks) {
-                          errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+                          errorNoti(t("noPermissionToEditBlocks"), 3000);
                           return;
                         }
                         try {
@@ -651,7 +649,7 @@ function EditProblem() {
                       value={block.forStudent ? "student" : "teacher"}
                       onChange={(event) => {
                         if (!canEditBlocks) {
-                          errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+                          errorNoti(t("noPermissionToEditBlocks"), 3000);
                           return;
                         }
                         setBlockCodes((prev) => ({

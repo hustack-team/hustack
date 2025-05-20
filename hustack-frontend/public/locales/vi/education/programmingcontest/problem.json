@@ -35,6 +35,7 @@
   "contestUsingProblem": "Cuộc thi sử dụng bài tập",
   "addTestCase": "Thêm Test Case",
   "sampleTestCase": "Test Case mẫu",
+  "noPermissionToEditBlocks": "Không thể chỉnh sửa Blocks",
   "edit": "Chỉnh sửa",
   "myProblems": "Bài tập của tôi",
   "sharedProblems": "Bài tập được chia sẻ",
