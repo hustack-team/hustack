@@ -1,27 +1,27 @@
-import { makeStyles } from "@material-ui/core/styles";
-import { LoadingButton } from "@mui/lab";
-import { Box, Checkbox, FormControlLabel, Grid, InputAdornment, Stack, TextField, Typography, Tabs, Tab, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
-import { extractErrorMessage, request } from "api";
+import {makeStyles} from "@material-ui/core/styles";
+import {LoadingButton} from "@mui/lab";
+import {Box, Checkbox, FormControlLabel, Grid, InputAdornment, Stack, TextField, Typography, Tabs, Tab, Button, Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material";
+import {extractErrorMessage, request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import {useTranslation} from "react-i18next";
+import {useParams} from "react-router";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import { randomImageName } from "utils/FileUpload/covert";
-import { errorNoti, successNoti } from "utils/notification";
+import {randomImageName} from "utils/FileUpload/covert";
+import {errorNoti, successNoti} from "utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import { CompileStatus } from "./CompileStatus";
-import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
+import {CompileStatus} from "./CompileStatus";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION,} from "./Constant";
 import ListTestCase from "./ListTestCase";
 import ModelAddNewTag from "./ModelAddNewTag";
-import { getAllTags } from "./service/TagService";
+import {getAllTags} from "./service/TagService";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import { useHistory } from "react-router-dom";
+import {useHistory} from "react-router-dom";
 import StyledSelect from "../../select/StyledSelect";
-import { getLevels, getPublicOptions, getStatuses } from "./CreateProblem";
+import {getLevels, getPublicOptions, getStatuses} from "./CreateProblem";
 import FilterByTag from "../../table/FilterByTag";
 import TertiaryButton from "../../button/TertiaryButton";
 import AddIcon from "@mui/icons-material/Add";
@@ -58,20 +58,21 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 
 function EditProblem() {
   const history = useHistory();
-  const { problemId } = useParams();
+  const {problemId} = useParams();
   const classes = useStyles();
-  const { t } = useTranslation([
+  const {t} = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
   ]);
   const levels = getLevels(t);
-  const publicOptions = getPublicOptions(t);
-  const statuses = getStatuses(t);
+  const publicOptions = getPublicOptions(t)
+  const statuses = getStatuses(t)
 
   const [problemName, setProblemName] = useState("");
   const [description, setDescription] = useState("");
   const [solution, setSolution] = useState("");
+  // const [timeLimit, setTimeLimit] = useState('');
   const [timeLimitCPP, setTimeLimitCPP] = useState('');
   const [timeLimitJAVA, setTimeLimitJAVA] = useState('');
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState('');
@@ -97,7 +98,9 @@ function EditProblem() {
   const [isOwner, setIsOwner] = useState(false);
   const [sampleTestCase, setSampleTestCase] = useState(null);
   const [problem, setProblem] = useState({});
+
   const [loading, setLoading] = useState(false);
+
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState(
@@ -134,36 +137,36 @@ function EditProblem() {
       "post",
       "/check-compile",
       (res) => {
-        setLoading(false);
+        setLoading(false)
+
         setShowCompile(true);
         setStatusSuccessful(res.data.status !== "Compilation Error");
-        setCompileMessage(res.data);
+        setCompileMessage(res.data)
       },
       {
         onError: (e) => {
-          setLoading(false);
+          setLoading(false)
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
       body
     );
-  };
+  }
 
   const validateSubmit = () => {
     if (problemName === "") {
       errorNoti(
-        t("validation:missingField", { fieldName: t("problemName") }),
+        t("validation:missingField", {fieldName: t("problemName")}),
         3000
       );
       return false;
     }
-    if (
-      timeLimitCPP < 1 ||
-      timeLimitJAVA < 1 ||
-      timeLimitPYTHON < 1 ||
-      timeLimitCPP > 300 ||
-      timeLimitJAVA > 300 ||
-      timeLimitPYTHON > 300
+    if (timeLimitCPP < 1
+      || timeLimitJAVA < 1
+      || timeLimitPYTHON < 1
+      || timeLimitCPP > 300
+      || timeLimitJAVA > 300
+      || timeLimitPYTHON > 300
     ) {
       errorNoti(
         t("validation:numberBetween", {
@@ -197,7 +200,7 @@ function EditProblem() {
     return true;
   };
 
-  const handleSubmit = () => {
+  function handleSubmit () {
     if (!validateSubmit()) return;
 
     setLoading(true);
@@ -234,11 +237,11 @@ function EditProblem() {
     const body = {
       problemName: problemName,
       problemDescription: description,
-      timeLimitCPP: parseFloat(timeLimitCPP),
-      timeLimitJAVA: parseFloat(timeLimitJAVA),
-      timeLimitPYTHON: parseFloat(timeLimitPYTHON),
+      timeLimitCPP: timeLimitCPP,
+      timeLimitJAVA: timeLimitJAVA,
+      timeLimitPYTHON: timeLimitPYTHON,
       levelId: levelId,
-      memoryLimit: parseFloat(memoryLimit),
+      memoryLimit: memoryLimit,
       correctSolutionLanguage: languageSolution,
       solution: solution,
       correctSolutionSourceCode: codeSolution,
@@ -258,7 +261,7 @@ function EditProblem() {
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
+    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -275,7 +278,7 @@ function EditProblem() {
       "/problems/" + problemId,
       (res) => {
         setLoading(false);
-        successNoti(t("common:editSuccess", { name: t("problem") }), 3000);
+        successNoti(t("common:editSuccess", {name: t("problem")}), 3000);
         history.push("/programming-contest/manager-view-problem-detail/" + problemId);
       },
       {
@@ -287,15 +290,15 @@ function EditProblem() {
       formData,
       config
     );
-  };
+  }
 
   const handleBackToList = () => {
     history.push(`/programming-contest/list-problems`);
-  };
+  }
 
   const handleExit = () => {
     history.push(`/programming-contest/manager-view-problem-detail/` + problemId);
-  };
+  }
 
   const handleTabChange = (event, newValue) => {
     setSelectedLanguage(newValue);
@@ -314,7 +317,7 @@ function EditProblem() {
       "teacher/problems/" + problemId,
       (res) => {
         const data = res.data;
-        setProblem(data);
+        setProblem(data)
 
         if (data.attachment && data.attachment.length !== 0) {
           const newFileURLArray = data.attachment.map((url) => ({
@@ -329,6 +332,7 @@ function EditProblem() {
 
         setProblemName(data.problemName);
         setLevelId(data.levelId);
+        // setTimeLimit(data.timeLimit);
         setTimeLimitCPP(data.timeLimitCPP);
         setTimeLimitJAVA(data.timeLimitJAVA);
         setTimeLimitPYTHON(data.timeLimitPYTHON);
@@ -371,13 +375,12 @@ function EditProblem() {
         onError: (e) => {
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
-      }
-    );
+      });
   }, [problemId, t]);
 
   useEffect(() => {
     getAllTags(handleGetTagsSuccess);
-  }, []);
+  }, [])
 
   return (
     <ProgrammingContestLayout title={t("common:edit", { name: t("problem") })} onBack={handleBackToList}>
@@ -408,7 +411,7 @@ function EditProblem() {
             label={t("level")}
             options={levels}
             value={levelId}
-            sx={{ minWidth: 'unset', mr: 'unset' }}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             onChange={(event) => {
               setLevelId(event.target.value);
             }}
@@ -423,7 +426,7 @@ function EditProblem() {
             label={t("status")}
             options={statuses}
             value={status}
-            sx={{ minWidth: 'unset', mr: 'unset' }}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             onChange={(event) => {
               setStatus(event.target.value);
             }}
@@ -438,7 +441,7 @@ function EditProblem() {
             key={t("common:public")}
             label={t("common:public")}
             options={publicOptions}
-            sx={{ minWidth: 'unset', mr: 'unset' }}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             value={isPublic}
             onChange={(event) => {
               setIsPublic(event.target.value);
@@ -519,14 +522,14 @@ function EditProblem() {
         </Grid>
 
         <Grid item xs={9}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
             startIcon={<AddIcon />}
             onClick={() => setOpenModalAddNewTag(true)}
           >
-            {t("common:add", { name: t('tag') })}
+            {t("common:add", {name: t('tag')})}
           </TertiaryButton>
         </Grid>
 
@@ -546,7 +549,7 @@ function EditProblem() {
       <Box className={classes.description}>
         <Typography
           variant="h6"
-          sx={{ marginTop: "8px", marginBottom: "8px" }}
+          sx={{marginTop: "8px", marginBottom: "8px"}}
         >
           {t("problemDescription")}
         </Typography>
@@ -554,6 +557,9 @@ function EditProblem() {
           content={description}
           onContentChange={(text) => setDescription(text)}
         />
+        {/*
+        <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
+              */}
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -562,6 +568,7 @@ function EditProblem() {
             setSampleTestCase(code);
           }}
         />
+
         <HustDropzoneArea
           onChangeAttachment={(files) => handleAttachmentFiles(files)}
         />
@@ -661,8 +668,19 @@ function EditProblem() {
             onRemove={() => handleDeleteImageAttachment(file.fileName)}
           />
         ))}
+      {/* this function is not implemented yet  
+              <Box>
+                <Typography>
+                  <h2>{t("problemSuggestion")}</h2>
+                </Typography>
+                <RichTextEditor
+                  content={solution}
+                  onContentChange={text => setSolution(text)}
+                />
+              </Box>
+              */}
 
-      <Box sx={{ marginTop: "32px" }} />
+      <Box sx={{marginTop: "32px"}}/>
       <HustCodeEditor
         title={t("solutionSourceCode") + " *"}
         language={languageSolution}
@@ -679,7 +697,7 @@ function EditProblem() {
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{ margin: "12px 0", textTransform: 'none' }}
+        sx={{margin: "12px 0", textTransform: 'none'}}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -690,7 +708,7 @@ function EditProblem() {
         detail={compileMessage}
       />
 
-      <Box sx={{ marginTop: "12px" }}>
+      <Box sx={{marginTop: "12px"}}>
         <FormControlLabel
           label={t("isPreloadCode")}
           control={
@@ -713,7 +731,7 @@ function EditProblem() {
         )}
       </Box>
 
-      <Box sx={{ marginTop: "12px" }}>
+      <Box sx={{marginTop: "12px"}}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
@@ -743,7 +761,7 @@ function EditProblem() {
         )}
       </Box>
 
-      <ListTestCase />
+      <ListTestCase/>
 
       <Stack direction="row" spacing={2} mt={2}>
         <TertiaryButton variant="outlined" onClick={handleExit}>
@@ -753,16 +771,16 @@ function EditProblem() {
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
-          sx={{ textTransform: 'capitalize' }}
+          sx={{textTransform: 'capitalize'}}
         >
-          {t("save", { ns: "common" })}
+          {t("save", {ns: "common"})}
         </LoadingButton>
       </Stack>
 
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", { name: t('tag') }), 3000);
+          successNoti(t("common:addSuccess", {name: t('tag')}), 3000)
           getAllTags(handleGetTagsSuccess);
         }}
         handleClose={() => setOpenModalAddNewTag(false)}

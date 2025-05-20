@@ -96,8 +96,8 @@ function CreateProblem() {
     ["education/programmingcontest/problem", "common", "validation"]
   );
   const levels = getLevels(t);
-  const publicOptions = getPublicOptions(t);
-  const statuses = getStatuses(t);
+  const publicOptions = getPublicOptions(t)
+  const statuses = getStatuses(t)
 
   const [problemId, setProblemID] = useState("");
   const [problemName, setProblemName] = useState("");
@@ -278,7 +278,7 @@ function CreateProblem() {
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json'}));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
