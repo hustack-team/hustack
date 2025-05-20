@@ -775,6 +775,20 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
     }
 
+    private boolean canEditBlocks(ProblemEntity problem) {
+        List<String> contestIds = contestRepo.findContestIdsByProblemId(problem.getProblemId());
+        for (String contestId : contestIds) {
+            if (contestSubmissionRepo.existsByProblemIdAndContestId(problem.getProblemId(), contestId)) {
+                return false;
+            }
+            ContestEntity contest = contestRepo.findContestByContestId(contestId);
+            if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public ContestEntity updateContest(
         ModelUpdateContest modelUpdateContest,
@@ -3834,7 +3848,29 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         problemResponse.setRoles(userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, teacherId));
 
+        boolean canEditBlocks = checkCanEditBlocks(problemId);
+        problemResponse.setCanEditBlocks(canEditBlocks);
+
         return problemResponse;
+    }
+
+    private boolean checkCanEditBlocks(String problemId) {
+        List<ContestProblem> contestProblems = contestProblemRepo.findAllByProblemId(problemId);
+
+        if (contestProblems.isEmpty()) {
+            return true;
+        }
+
+        for (ContestProblem cp : contestProblems) {
+            ContestEntity contest = contestRepo.findContestByContestId(cp.getContestId());
+            if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+                return false;
+            }
+        }
+
+        boolean hasSubmissions = contestSubmissionRepo.existsByProblemId(problemId);
+
+        return !hasSubmissions;
     }
 
     @Override

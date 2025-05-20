@@ -191,4 +191,9 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         @Param("toDate") ZonedDateTime toDate,
         Pageable pageable
     );
+
+    boolean existsByProblemIdAndContestId(String problemId, String contestId);
+
+    @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END FROM ContestSubmissionEntity cs WHERE cs.problemId = :problemId")
+    boolean existsByProblemId(@Param("problemId") String problemId);
 }

@@ -74,6 +74,7 @@ public class ModelCreateContestProblemResponse {
 
     List<BlockCode> blockCodes;
 
+    Boolean canEditBlocks;
 
 }
 
