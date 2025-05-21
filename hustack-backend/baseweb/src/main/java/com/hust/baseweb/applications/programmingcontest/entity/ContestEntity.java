@@ -293,4 +293,7 @@ public class ContestEntity implements Serializable {
     @Column(name = "contest_show_comment")
     private String contestShowComment;
 
+    @Column(name = "can_edit_coefficient_point")
+    private String canEditCoefficientPoint;
+
 }

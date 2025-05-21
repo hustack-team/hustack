@@ -717,6 +717,7 @@ public class ContestController {
             userId,
             contestId,
             getPointForRankingType);
+
         return ResponseEntity.ok().body(res);
     }
 

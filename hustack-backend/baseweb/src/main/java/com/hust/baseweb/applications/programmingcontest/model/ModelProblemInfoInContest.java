@@ -12,5 +12,6 @@ public class ModelProblemInfoInContest {
     private String problemRecode;
     private String submissionMode;
     private String forbiddenInstructions;
+    private Integer coefficientPoint;
 
 }
