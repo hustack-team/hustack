@@ -78,7 +78,7 @@ const ModalAddProblemToContest = (props) => {
     )
   }
 
-  const resetField = () => {
+  const resetField= () => {
     setProblemRename("");
     setProblemRecode("");
     setCoefficientPoint(canEditCoefficientPoint === "N" ? 1 : 1); 

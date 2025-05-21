@@ -1812,7 +1812,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             switch (getPointForRankingType) {
                 case HIGHEST:
                     submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
-
                     break;
                 case LATEST:
                     submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
@@ -1879,6 +1878,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 System.out.println("RANKING, nbProblem = " + nbProblems + " total percent = " + totalPercentage);
             }
 
+            //contestSubmission.setFullname(userService.getUserFullName(userId));
             contestSubmission.setFullname(getUserFullNameOfContest(contestId, userId));
             contestSubmission.setMapProblemsToPoints(mapProblemsToPoints);
             contestSubmission.setTotalPoint(Double.parseDouble(String.format("%.2f", totalPoint)));
@@ -1896,7 +1896,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         String contestId,
         Constants.GetPointForRankingType getPointForRankingType
     ) {
-        // CHANGE: Use the updated getRankingByContestIdNew with weighted score and 2 decimal places for totalPoint
+
         List<ContestSubmissionsByUser> listContestSubmissionsByUser = getRankingByContestIdNew(
             contestId,
             getPointForRankingType);
