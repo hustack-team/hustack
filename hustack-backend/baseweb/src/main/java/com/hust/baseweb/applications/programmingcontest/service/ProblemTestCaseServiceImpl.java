@@ -1843,8 +1843,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
 
             double totalWeightedPoint = 0;
+            double totalWeightedPercent = 0;
             double totalCoefficient = 0;
-            double totalPercentage = 0;
 
             List<ModelSubmissionInfoRanking> mapProblemsToPoints = new ArrayList<>();
             for (Map.Entry entry : mapProblemToPoint.entrySet()) {
@@ -1853,32 +1853,37 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 tmp.setProblemId(mapProblemIdToProblemName.get(problemId));
                 long point = (Long) entry.getValue();
                 tmp.setPoint(point);
-                int coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1);
-                totalWeightedPoint += point * coefficient;
-                totalCoefficient += coefficient;
-                mapProblemsToPoints.add(tmp);
 
+                int coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1);
+                long maxPoint = mProblem2MaxPoint.getOrDefault(problemId, 0L);
                 double percent = 0;
-                if (mapProblem2PointPercentage.get(problemId) != null) {
-                    percent = mapProblem2PointPercentage.get(problemId);
+                if (maxPoint > 0) {
+                    percent = (double) point / maxPoint;
                 }
-                totalPercentage += percent * coefficient;
+
+                totalWeightedPoint += point * coefficient;
+                totalWeightedPercent += percent * coefficient;
+                totalCoefficient += coefficient;
+
                 System.out.println("RANKING, problem " +
                                    problemId +
-                                   " percent = " +
-                                   percent +
-                                   " coefficient = " +
-                                   coefficient +
-                                   " weighted percent = " +
-                                   (percent * coefficient) +
-                                   " total percent = " +
-                                   totalPercentage);
+                                   " point = " + point +
+                                   " max = " + maxPoint +
+                                   " percent = " + percent +
+                                   " coefficient = " + coefficient +
+                                   " weighted point = " + (point * coefficient) +
+                                   " weighted percent = " + (percent * coefficient));
+
                 tmp.setPointPercentage(percent);
+                mapProblemsToPoints.add(tmp);
             }
 
             double totalPoint = 0;
+            double totalPercentage = 0;
+
             if (totalCoefficient > 0) {
                 totalPoint = totalWeightedPoint / totalCoefficient;
+                totalPercentage = totalWeightedPercent / totalCoefficient;
             }
 
             //contestSubmission.setFullname(userService.getUserFullName(userId));
@@ -1886,8 +1891,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             contestSubmission.setMapProblemsToPoints(mapProblemsToPoints);
             contestSubmission.setTotalPoint(Double.parseDouble(String.format("%.2f", totalPoint)));
             contestSubmission.setTotalPercentagePoint(totalPercentage);
-            contestSubmission.setStringTotalPercentagePoint(String.format("%,.2f", totalPercentage));
+            contestSubmission.setStringTotalPercentagePoint(String.format("%,.2f", totalPercentage * 100) + "%");
+
             listContestSubmissionsByUser.add(contestSubmission);
+
         }
 
         return listContestSubmissionsByUser;
