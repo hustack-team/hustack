@@ -1876,9 +1876,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 tmp.setPointPercentage(percent);
             }
 
-            double totalPoint = totalWeightedPoint;
+            double totalPoint = 0;
             if (totalCoefficient > 0) {
-                totalPercentage = totalPercentage * 100 / totalCoefficient;
+                totalPoint = totalWeightedPoint / totalCoefficient;
             }
 
             //contestSubmission.setFullname(userService.getUserFullName(userId));
