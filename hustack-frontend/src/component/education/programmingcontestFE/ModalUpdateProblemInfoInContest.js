@@ -17,7 +17,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
   const {contestId, editingProblem, isOpen, handleSuccess, handleClose} = props;
 
   const {t} = useTranslation(
-      ["education/programmingcontest/problem", "common", "validation"]
+    ["education/programmingcontest/problem", "common", "validation"]
   );
 
   const [problemRename, setProblemRename] = useState("");
@@ -53,7 +53,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
   useEffect(() =>  {
     setProblemRename(editingProblem?.problemRename || "");
     setProblemRecode(editingProblem?.problemRecode || "");
-    setForbiddenInstructions(editingProblem?.forbiddenInstructions|| "");
+    setForbiddenInstructions(editingProblem?.forbiddenInstructions||"");
     setSubmissionMode(editingProblem?.submissionMode || SUBMISSION_MODE_SOURCE_CODE);
     setCoefficientPoint(editingProblem?.coefficientPoint ?? 1);
   }, [isOpen, editingProblem]);
@@ -83,7 +83,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
     )
   }
 
-  const resetField = () => {
+  const resetField= () => {
     setProblemRename("");
     setProblemRecode("");
     setForbiddenInstructions("");
@@ -137,6 +137,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
         }}
         sx={{marginTop: "16px"}}
       />
+
       <TextField
         fullWidth
         autoFocus
@@ -161,6 +162,8 @@ const ModalUpdateProblemInfoInContest = (props) => {
         <MenuItem value={SUBMISSION_MODE_HIDDEN}>
           {getSubmissionModeFromConstant(SUBMISSION_MODE_HIDDEN)}
         </MenuItem>
+
+
       </TextField>
       <TextField
         fullWidth
@@ -183,6 +186,6 @@ const ModalUpdateProblemInfoInContest = (props) => {
       />
     </HustModal>
   );
-};
+}
 
 export default React.memo(ModalUpdateProblemInfoInContest);

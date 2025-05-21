@@ -165,6 +165,6 @@ const ModalAddProblemToContest = (props) => {
       />
     </HustModal>
   );
-};
+}
 
 export default React.memo(ModalAddProblemToContest);
