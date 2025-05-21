@@ -148,19 +148,19 @@ const ModalAddProblemToContest = (props) => {
         fullWidth
         required
         type="number"
-        label={"Score Coefficient"}
-        placeholder={"Enter a positive integer (default is 1)"}
+        label={"Score Coefficient (Min: 1, Max: 100)"}
+        placeholder={"Enter a positive integer from 1 to 100 (default is 1)"}
         value={coefficientPoint}
         onChange={(event) => {
           if (canEditCoefficientPoint === "Y") {
             const value = parseInt(event.target.value);
-            if (value >= 1 || isNaN(value)) {
+            if ((value >= 1 && value <= 100) || isNaN(value)) {
               setCoefficientPoint(value || 1);
             }
           }
         }}
-        inputProps={{ min: 1 }}
-        disabled={canEditCoefficientPoint === "N"} 
+        inputProps={{ min: 1, max: 100 }}
+        disabled={canEditCoefficientPoint === "N"}
         sx={{ marginTop: "16px" }}
       />
     </HustModal>

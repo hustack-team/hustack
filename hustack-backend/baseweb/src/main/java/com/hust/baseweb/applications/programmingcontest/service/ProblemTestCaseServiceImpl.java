@@ -1862,20 +1862,23 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 if (mapProblem2PointPercentage.get(problemId) != null) {
                     percent = mapProblem2PointPercentage.get(problemId);
                 }
-                totalPercentage = totalPercentage + percent;
+                totalPercentage += percent * coefficient;
                 System.out.println("RANKING, problem " +
                                    problemId +
                                    " percent = " +
                                    percent +
+                                   " coefficient = " +
+                                   coefficient +
+                                   " weighted percent = " +
+                                   (percent * coefficient) +
                                    " total percent = " +
                                    totalPercentage);
                 tmp.setPointPercentage(percent);
             }
 
-            double totalPoint = totalCoefficient > 0 ? totalWeightedPoint / totalCoefficient : 0;
-            if (nbProblems > 0) {
-                totalPercentage = totalPercentage * 100 / nbProblems;
-                System.out.println("RANKING, nbProblem = " + nbProblems + " total percent = " + totalPercentage);
+            double totalPoint = totalWeightedPoint;
+            if (totalCoefficient > 0) {
+                totalPercentage = totalPercentage * 100 / totalCoefficient;
             }
 
             //contestSubmission.setFullname(userService.getUserFullName(userId));
