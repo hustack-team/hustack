@@ -772,6 +772,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (!canUpdate) {
             throw new MiniLeetCodeException("You don't have privileged");
         }
+
         ContestEntity contestEntity = ContestEntity.builder()
                                                    .contestId(contestId)
                                                    .contestName(modelUpdateContest.getContestName())
@@ -1751,20 +1752,26 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         List<String> problemIds = new ArrayList<>();
 
         List<ContestProblem> contestProblems = contestProblemRepo.findAllByContestId(contestId);
-        // CHANGE: Added map to store coefficientPoint for each problem, defaulting to 1 if null
         LinkedHashMap<String, Integer> mapProblemIdToCoefficient = new LinkedHashMap<>();
         if (contestProblems != null) {
             for (ContestProblem cp : contestProblems) {
                 if (cp.getSubmissionMode() != null) {
                     if (!cp.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
                         problemIds.add(cp.getProblemId());
-                        // CHANGE: Store coefficientPoint for each problem
                         mapProblemIdToCoefficient.put(cp.getProblemId(), cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1);
                     }
                 }
             }
         }
 
+        /*
+        List<String> problemIds = contestRepo
+            .findContestByContestId(contestId)
+            .getProblems()
+            .stream()
+            .map(ProblemEntity::getProblemId)
+            .collect(Collectors.toList());
+        */
         LinkedHashMap<String, String> mapProblemIdToProblemName = new LinkedHashMap<>();
         for (ContestProblem contestProblem : contestProblems) {
             mapProblemIdToProblemName.put(contestProblem.getProblemId(), contestProblem.getProblemRename());
@@ -1805,13 +1812,16 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             switch (getPointForRankingType) {
                 case HIGHEST:
                     submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+
                     break;
                 case LATEST:
                     submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
                     break;
             }
+            //log.info("getRankingByContestIdNew, submisionByUser.sz = " + submissionsByUser.size());
 
             for (ModelSubmissionInfoRanking submission : submissionsByUser) {
+                //log.info("getRankingByContestIdNew, submisionByUser, point = " + submission.getPoint());
                 String problemId = submission.getProblemId();
                 if (mapProblemToPoint.containsKey(problemId)) {
                     mapProblemToPoint.put(problemId, submission.getPoint());
@@ -1833,7 +1843,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 mapProblem2PointPercentage.put(problemId, percentage);
             }
 
-            // CHANGE: Calculate weighted score using coefficientPoint
             double totalWeightedPoint = 0;
             double totalCoefficient = 0;
             double totalPercentage = 0;
@@ -1845,7 +1854,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 tmp.setProblemId(mapProblemIdToProblemName.get(problemId));
                 long point = (Long) entry.getValue();
                 tmp.setPoint(point);
-                // CHANGE: Apply coefficientPoint to the score
                 int coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1);
                 totalWeightedPoint += point * coefficient;
                 totalCoefficient += coefficient;
@@ -1865,7 +1873,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 tmp.setPointPercentage(percent);
             }
 
-            // CHANGE: Compute total score as weighted average, keeping as double for precision
             double totalPoint = totalCoefficient > 0 ? totalWeightedPoint / totalCoefficient : 0;
             if (nbProblems > 0) {
                 totalPercentage = totalPercentage * 100 / nbProblems;
@@ -1874,7 +1881,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             contestSubmission.setFullname(getUserFullNameOfContest(contestId, userId));
             contestSubmission.setMapProblemsToPoints(mapProblemsToPoints);
-            // CHANGE: Store totalPoint as double formatted to 2 decimal places
             contestSubmission.setTotalPoint(Double.parseDouble(String.format("%.2f", totalPoint)));
             contestSubmission.setTotalPercentagePoint(totalPercentage);
             contestSubmission.setStringTotalPercentagePoint(String.format("%,.2f", totalPercentage));

@@ -42,7 +42,7 @@ export function ContestManagerDetail(props) {
     const getContestDetail = () => {
       request("get", "/contests/" + contestId, (res) => {
         setLoading(false);
-        console.log('hehhhhe');
+
         const data = res.data;
         setContestDetail((prev) => ({
           ...prev,

@@ -14,4 +14,5 @@ public class ModelProblemGeneralInfo {
     private String problemName;
     private String levelId;
     private String problemDescription;
+
 }

@@ -68,7 +68,7 @@ function EditContest() {
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
-  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState("N"); // Added new state for Edit Coefficient Point
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState("N"); 
 
   const [options, setOptions] = useState({
     // status: [],
@@ -82,7 +82,7 @@ function EditContest() {
     contestType: [],
     participantViewComment: [],
     contestPublic: [],
-    canEditCoefficientPoint: [ // Added options for Edit Coefficient Point
+    canEditCoefficientPoint: [ 
       { label: "No", value: "N" },
       { label: "Yes", value: "Y" },
     ],
@@ -146,7 +146,7 @@ function EditContest() {
       setLoading(false);
 
       const data = res.data;
-      console.log(data)
+
       setOptions({
         // status: data.listStatusIds.map((status) => ({
         //   label: status,

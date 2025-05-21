@@ -1,30 +1,28 @@
 // import HustModal from "component/common/HustModal";
-import { HustModal } from "erp-hust/lib/HustModal";
-import React, { useState, useEffect } from "react";
-import { MenuItem, TextField } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { saveProblemToContest } from "./service/ContestProblemService";
+import {HustModal} from "erp-hust/lib/HustModal";
+import React, {useState, useEffect} from "react";
+import {MenuItem, TextField} from "@mui/material";
+import {useTranslation} from "react-i18next";
+import {saveProblemToContest} from "./service/ContestProblemService";
 import {
   getSubmissionModeFromConstant,
   SUBMISSION_MODE_NOT_ALLOWED,
   SUBMISSION_MODE_SOLUTION_OUTPUT,
-  SUBMISSION_MODE_SOURCE_CODE,
+  SUBMISSION_MODE_SOURCE_CODE
 } from "./Constant";
 import { request } from "api"; 
 import { errorNoti } from "utils/notification"; 
 
 const ModalAddProblemToContest = (props) => {
-  const { contestId, chosenProblem, isOpen, handleSuccess, handleClose } = props;
+  const {contestId, chosenProblem, isOpen, handleSuccess, handleClose} = props;
 
-  const { t } = useTranslation([
-    "education/programmingcontest/problem",
-    "common",
-    "validation",
-  ]);
+  const {t} = useTranslation(
+    ["education/programmingcontest/problem", "common", "validation"]
+  );
 
   const [problemRename, setProblemRename] = useState("");
   const [problemRecode, setProblemRecode] = useState("");
-  const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE);
+  const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE)
   const [loading, setLoading] = useState(false);
   const [coefficientPoint, setCoefficientPoint] = useState(1);
   const [forbiddenInstructions, setForbiddenInstructions] = useState("");
@@ -76,9 +74,9 @@ const ModalAddProblemToContest = (props) => {
         setLoading(false);
         handleClose();
         resetField();
-      }
-    );
-  };
+      },
+    )
+  }
 
   const resetField = () => {
     setProblemRename("");
@@ -86,7 +84,7 @@ const ModalAddProblemToContest = (props) => {
     setCoefficientPoint(canEditCoefficientPoint === "N" ? 1 : 1); 
     setSubmissionMode(SUBMISSION_MODE_SOURCE_CODE);
     setForbiddenInstructions("");
-  };
+  }
 
   return (
     <HustModal
@@ -113,7 +111,7 @@ const ModalAddProblemToContest = (props) => {
         onChange={(event) => {
           setProblemRename(event.target.value);
         }}
-        sx={{ marginTop: "16px" }}
+        sx={{marginTop: "16px"}}
       />
       <TextField
         fullWidth
@@ -123,7 +121,7 @@ const ModalAddProblemToContest = (props) => {
         onChange={(event) => {
           setProblemRecode(event.target.value);
         }}
-        sx={{ marginTop: "16px" }}
+        sx={{marginTop: "16px"}}
       />
       <TextField
         fullWidth
@@ -134,7 +132,7 @@ const ModalAddProblemToContest = (props) => {
           setSubmissionMode(event.target.value);
         }}
         value={submissionMode}
-        sx={{ marginTop: "16px" }}
+        sx={{marginTop: "16px"}}
       >
         <MenuItem value={SUBMISSION_MODE_SOURCE_CODE}>
           {getSubmissionModeFromConstant(SUBMISSION_MODE_SOURCE_CODE)}
