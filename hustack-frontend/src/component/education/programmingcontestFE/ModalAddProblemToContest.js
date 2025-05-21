@@ -93,7 +93,7 @@ const ModalAddProblemToContest = (props) => {
       textOk={t("common:save")}
       onClose={handleClose}
       isLoading={loading}
-      title={t("common:create")}
+      title={t("common:create", { name: "problem" })}
     >
       <TextField
         fullWidth

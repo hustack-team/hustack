@@ -98,7 +98,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
       textOk={t("common:save")}
       onClose={handleClose}
       isLoading={loading}
-      title={t("common:edit")}
+      title={t("common:edit", { name: "problem" })}
     >
       <TextField
         fullWidth
@@ -162,7 +162,6 @@ const ModalUpdateProblemInfoInContest = (props) => {
         <MenuItem value={SUBMISSION_MODE_HIDDEN}>
           {getSubmissionModeFromConstant(SUBMISSION_MODE_HIDDEN)}
         </MenuItem>
-
 
       </TextField>
       <TextField
