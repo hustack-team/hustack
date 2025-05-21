@@ -126,6 +126,12 @@ export function ContestManagerManageProblem(props) {
         getSubmissionModeFromConstant(problem?.submissionMode),
     },
     {
+      title: "Coefficient Point",
+      field: "coefficientPoint",
+      minWidth: 150,
+      render: (problem) => problem?.coefficientPoint ?? "N/A", 
+    },
+    {
       title: "Created By",
       field: "createdByUserId",
       minWidth: 130,
@@ -179,6 +185,7 @@ export function ContestManagerManageProblem(props) {
     request("get", "/contests/" + contestId, (res) => {
       setLoading(false);
       setContestProblems(res.data.list);
+      console.log('res.....', res)
     });
   };
 

@@ -68,6 +68,7 @@ function EditContest() {
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState("N"); // Added new state for Edit Coefficient Point
 
   const [options, setOptions] = useState({
     // status: [],
@@ -81,6 +82,10 @@ function EditContest() {
     contestType: [],
     participantViewComment: [],
     contestPublic: [],
+    canEditCoefficientPoint: [ // Added options for Edit Coefficient Point
+      { label: "No", value: "N" },
+      { label: "Yes", value: "Y" },
+    ],
   });
 
   const [contestType, setContestType] = useState("");
@@ -119,6 +124,7 @@ function EditContest() {
       contestShowTag: participantViewProblemsTag,
       contestShowComment: participantViewComment,
       contestPublic: contestPublic,
+      canEditCoefficientPoint: canEditCoefficientPoint, 
     };
 
     request(
@@ -140,7 +146,7 @@ function EditContest() {
       setLoading(false);
 
       const data = res.data;
-
+      console.log(data)
       setOptions({
         // status: data.listStatusIds.map((status) => ({
         //   label: status,
@@ -191,6 +197,10 @@ function EditContest() {
           {label: "Yes", value: true},
           {label: "No", value: false},
         ],
+        canEditCoefficientPoint: [
+          { label: "No", value: "N" },
+          { label: "Yes", value: "Y" },
+        ],
       });
 
       setContestTime(data.contestTime);
@@ -217,6 +227,7 @@ function EditContest() {
       setParticipantViewProblemsTag(data.contestShowTag);
       setParticipantViewComment(data.contestShowComment);
       setContestPublic(data.contestPublic);
+      setCanEditCoefficientPoint(data.canEditCoefficientPoint || "N"); // Set default to "N" if not provided
     });
   }
 
@@ -425,6 +436,17 @@ function EditContest() {
                     options={options.contestPublic}
                     onChange={(event) => {
                       setContestPublic(event.target.value);
+                    }}
+                  />,
+                  <StyledSelect
+                    fullWidth
+                    id="canEditCoefficientPoint"
+                    label="Edit Coefficient Point"
+                    key={"canEditCoefficientPoint"}
+                    value={canEditCoefficientPoint}
+                    options={options.canEditCoefficientPoint}
+                    onChange={(event) => {
+                      setCanEditCoefficientPoint(event.target.value);
                     }}
                   />,
                 ].map((input, index) => (
