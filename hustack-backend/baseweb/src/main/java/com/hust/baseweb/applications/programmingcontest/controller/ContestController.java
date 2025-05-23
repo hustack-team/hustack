@@ -771,6 +771,7 @@ public class ContestController {
         return ResponseEntity.ok().body(page);
     }
     
+    
     @Async
     protected void logGetSubmissionsOfContest(String userId, String contestId) {
         if (true) {
