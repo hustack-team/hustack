@@ -68,6 +68,7 @@ function EditContest() {
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
+  const [allowParticipantPinSubmission, setAllowParticipantPinSubmission] = useState(0); 
 
   const [options, setOptions] = useState({
     // status: [],
@@ -81,6 +82,10 @@ function EditContest() {
     contestType: [],
     participantViewComment: [],
     contestPublic: [],
+    allowParticipantPinSubmission: [ 
+      { label: "No", value: "0" },
+      { label: "Yes", value: "1" },
+    ],
   });
 
   const [contestType, setContestType] = useState("");
@@ -119,6 +124,7 @@ function EditContest() {
       contestShowTag: participantViewProblemsTag,
       contestShowComment: participantViewComment,
       contestPublic: contestPublic,
+      allowParticipantPinSubmission: allowParticipantPinSubmission,
     };
 
     request(
@@ -191,6 +197,10 @@ function EditContest() {
           {label: "Yes", value: true},
           {label: "No", value: false},
         ],
+        allowParticipantPinSubmission: [
+          { label: "No", value: "0" },
+          { label: "Yes", value: "1" },
+        ],
       });
 
       setContestTime(data.contestTime);
@@ -217,6 +227,7 @@ function EditContest() {
       setParticipantViewProblemsTag(data.contestShowTag);
       setParticipantViewComment(data.contestShowComment);
       setContestPublic(data.contestPublic);
+      setAllowParticipantPinSubmission(data.allowParticipantPinSubmission || 0);
     });
   }
 
@@ -425,6 +436,17 @@ function EditContest() {
                     options={options.contestPublic}
                     onChange={(event) => {
                       setContestPublic(event.target.value);
+                    }}
+                  />,
+                  <StyledSelect
+                    fullWidth
+                    id="allowParticipantPinSubmission"
+                    label="Allow Participant Pin Submission"
+                    key={"allowParticipantPinSubmission"}
+                    value={allowParticipantPinSubmission}
+                    options={options.allowParticipantPinSubmission}
+                    onChange={(event) => {
+                      setAllowParticipantPinSubmission(event.target.value);
                     }}
                   />,
                 ].map((input, index) => (

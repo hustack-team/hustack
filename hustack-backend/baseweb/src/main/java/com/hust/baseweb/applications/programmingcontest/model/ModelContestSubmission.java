@@ -20,4 +20,7 @@ public class ModelContestSubmission {
     String language;
 
     String createdByIp;
+
+    String finalSelectedSubmission;
+
 }

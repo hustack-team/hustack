@@ -144,6 +144,7 @@ public class ContestService {
             .listContestShowComments(contestEntity.getListContestShowComment())
             .contestPublic(contestEntity.getContestPublic())
             .listContestPublic(contestEntity.getListContestPublic())
+            .allowParticipantPinSubmission(contestEntity.getAllowParticipantPinSubmission())
             .build();
     }
 

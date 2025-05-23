@@ -155,7 +155,10 @@ public class SubmissionServiceImpl implements SubmissionService {
                 model.getProblemId(),
                 source,
                 model.getLanguage(),
-                getClientIp(request));
+                getClientIp(request),
+                numOfSubmissions == 0 ? "Y" : "N"
+                );
+
 
             if (problem.getForbiddenInstructions() != null) {
                 String[] forbiddenInstructions = problem.getForbiddenInstructions().split(",");
@@ -190,6 +193,7 @@ public class SubmissionServiceImpl implements SubmissionService {
             throw new RuntimeException(e);
         }
     }
+
 
     /**
      * @param principal
@@ -250,6 +254,45 @@ public class SubmissionServiceImpl implements SubmissionService {
             principal.getName());
         return submit(request, dto, file);
     }
+
+    @Transactional
+    public void updateFinalSelectedSubmission(
+        String userId,
+        String contestId,
+        String problemId,
+        UUID newSubmissionId,
+        UUID oldSubmissionId
+    ) {
+        // Validate the new submission
+        ContestSubmissionEntity newSubmission = contestSubmissionRepo.findById(newSubmissionId)
+                                                                     .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + newSubmissionId));
+
+        // Verify user, contest, and problem
+        if (!userId.equals(newSubmission.getUserId())) {
+            throw new SecurityException("User does not have permission to modify this submission");
+        }
+        if (!contestId.equals(newSubmission.getContestId()) || !problemId.equals(newSubmission.getProblemId())) {
+            throw new IllegalArgumentException("Submission does not belong to the specified contest or problem");
+        }
+
+        // If an old submission ID is provided, set its finalSelectedSubmission to null
+        if (oldSubmissionId != null) {
+            ContestSubmissionEntity oldSubmission = contestSubmissionRepo.findById(oldSubmissionId)
+                                                                         .orElse(null);
+            if (oldSubmission != null) {
+                if (!contestId.equals(oldSubmission.getContestId()) || !problemId.equals(oldSubmission.getProblemId())) {
+                    throw new IllegalArgumentException("Old submission does not belong to the specified contest or problem");
+                }
+                oldSubmission.setFinalSelectedSubmission(null);
+                contestSubmissionRepo.save(oldSubmission);
+            }
+        }
+
+        newSubmission.setFinalSelectedSubmission("Y");
+        contestSubmissionRepo.save(newSubmission);
+    }
+
+
 
     /**
      * @param contestId
@@ -363,6 +406,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                                                                     .submittedByUserId(submittedByUserId)
                                                                     .runtime(0L)
                                                                     .createdByIp(modelContestSubmission.getCreatedByIp())
+                                                                    .finalSelectedSubmission(modelContestSubmission.getFinalSelectedSubmission())
                                                                     .createdAt(new Date())
                                                                     .build();
 
@@ -390,6 +434,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                                                                     .userId(userName)
                                                                     .submittedByUserId(submittedByUserId)
                                                                     .runtime(0L)
+                                                                    .finalSelectedSubmission(modelContestSubmission.getFinalSelectedSubmission())
                                                                     .createdAt(new Date())
                                                                     .build();
 
@@ -427,6 +472,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                                                                     .runtime(0L)
                                                                     .createdByIp(dto.getCreatedByIp())
                                                                     .createdAt(new Date())
+                                                                    .finalSelectedSubmission(dto.getFinalSelectedSubmission())
                                                                     .build();
         submission = contestSubmissionRepo.save(submission);
 

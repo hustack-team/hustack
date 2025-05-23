@@ -23,7 +23,7 @@ import {
   SUBMISSION_MODE_NOT_ALLOWED,
   SUBMISSION_MODE_SOURCE_CODE,
 } from "./Constant";
-import StudentViewSubmission from "./StudentViewSubmission";
+import StudentViewSubmission from "./StudentViewSubmissionV2";
 import {useTranslation} from "react-i18next";
 import _ from "lodash";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";

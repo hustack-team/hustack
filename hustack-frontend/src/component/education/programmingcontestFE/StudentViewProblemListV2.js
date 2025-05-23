@@ -1,44 +1,40 @@
 import DoneIcon from "@mui/icons-material/Done";
-import {Box, Chip, LinearProgress, Paper, Typography} from "@mui/material";
-import React, {useEffect, useState} from "react";
-import {useTranslation} from "react-i18next";
-import {Link, useParams} from "react-router-dom";
-import {localeOption} from "utils/NumberFormat";
-import {request} from "../../../api";
-import StandardTable from "../../table/StandardTable";
-import {getColorLevel} from "./lib";
-import {getLevels} from "./CreateProblem";
-import {errorNoti} from "../../../utils/notification";
+import { Box, Chip, LinearProgress, Paper, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+import { localeOption } from "utils/NumberFormat";
+import { request } from "../../../api";
+import StandardTable from "../../table/StandardTableV2";
+import { getColorLevel } from "./lib";
+import { getLevels } from "./CreateProblem";
+import { errorNoti } from "../../../utils/notification";
 
 export default function StudentViewProblemList() {
-  const {t} = useTranslation(["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
+  const { t } = useTranslation([
+    "education/programmingcontest/studentviewcontestdetail",
+    "education/programmingcontest/problem",
+    "education/programmingcontest/testcase",
+    "common",
+  ]);
   const levels = getLevels(t);
-
-  const {contestId} = useParams();
+  const { contestId } = useParams();
   const [problems, setProblems] = useState([]);
-
   const [loading, setLoading] = useState(false);
+  const [totalSubmittedPoints, setTotalSubmittedPoints] = useState(0);
+  const [totalMaxPoints, setTotalMaxPoints] = useState(0);
 
   const columns = [
-    // {
-    //   title: "Code",
-    //   field: "problemCode",
-    // },
     {
       title: t("problem"),
       field: "problemName",
       render: (rowData) => (
         <Link
-          to={
-            "/programming-contest/student-view-contest-problem-detail/" +
-            contestId +
-            "/" +
-            rowData.problemId
-          }
+          to={`/programming-contest/student-view-contest-problem-detail/${contestId}/${rowData.problemId}`}
           style={{
             textDecoration: "none",
             color: "blue",
-            cursor: "",
+            cursor: "pointer",
           }}
         >
           {rowData["problemName"]}
@@ -48,38 +44,37 @@ export default function StudentViewProblemList() {
     {
       title: t("level"),
       field: "levelId",
-      align: 'center',
-      cellStyle: {minWidth: 120, paddingRight: 40},
+      align: "center",
+      cellStyle: { minWidth: 120, paddingRight: 40 },
       render: (rowData) => (
-        <Typography component="span" variant="subtitle2" sx={{color: getColorLevel(`${rowData.levelId}`)}}>
-          {`${levels.find(item => item.value === rowData.levelId)?.label || ""}`}
+        <Typography
+          component="span"
+          variant="subtitle2"
+          sx={{ color: getColorLevel(`${rowData.levelId}`) }}
+        >
+          {levels.find((item) => item.value === rowData.levelId)?.label || ""}
         </Typography>
       ),
     },
     {
       title: t("education/programmingcontest/testcase:point"),
       field: "maxSubmittedPoint",
-      type: 'numeric',
+      type: "numeric",
       render: (rowData) => (
         <>
-          {
-            rowData.maxSubmittedPoint &&
-            rowData.maxSubmittedPoint.toLocaleString("fr-FR", localeOption)
-            // (
-            //   <Chip
-            //     size="small"
-            //     color="primary"
-            //     variant="outlined"
-            //     label={rowData.maxSubmittedPoint}
-            //     sx={{
-            //       padding: "4px",
-            //       border: "2px solid lightgray",
-            //       width: "52px",
-            //     }}
-            //   />
-            // )
-          }
+          {rowData.maxSubmittedPoint &&
+            rowData.maxSubmittedPoint.toLocaleString("fr-FR", localeOption)}
         </>
+      ),
+      align: "right",
+      minWidth: 160,
+    },
+    {
+      title: t("maxPoint"),
+      field: "maxPoint",
+      type: "numeric",
+      render: (rowData) => (
+        <>{rowData.maxPoint.toLocaleString("fr-FR", localeOption)}</>
       ),
       align: "right",
       minWidth: 160,
@@ -87,8 +82,8 @@ export default function StudentViewProblemList() {
     {
       title: t("common:complete"),
       field: "accepted",
-      cellStyle: {paddingRight: 40},
-      render: (rowData) => rowData.accepted && <DoneIcon color="success"/>,
+      cellStyle: { paddingRight: 40 },
+      render: (rowData) => rowData.accepted && <DoneIcon color="success" />,
       align: "center",
       minWidth: 160,
     },
@@ -100,6 +95,7 @@ export default function StudentViewProblemList() {
           {rowData?.tags.length > 0 &&
             rowData.tags.map((tag) => (
               <Chip
+                key={tag}
                 size="small"
                 label={tag}
                 sx={{
@@ -116,33 +112,32 @@ export default function StudentViewProblemList() {
   ];
 
   function getContestDetail() {
+    setLoading(true);
     request(
       "get",
       "/contests/" + contestId + "/problems/v2",
       (res) => {
-        setProblems(res.data);
-        // TODO: rm this code
-        // for (let i = 0; i < res.data.length; i++) {
-        //   let idSource = contestId + "-" + res.data[i].problemId + "-source";
-        //   let tmpSource = localStorage.getItem(idSource);
-        //   let idLanguage =
-        //     contestId + "-" + res.data[i].problemId + "-language";
-        //   let tmpLanguage = localStorage.getItem(idLanguage);
-        //   if (tmpSource == null) {
-        //     localStorage.setItem(idSource, "");
-        //   }
-        //   if (tmpLanguage == null) {
-        //     localStorage.setItem(idLanguage, "CPP");
-        //   }
-        // }
+        const problemsData = res.data;
+        setProblems(problemsData);
+
+        // Tính tổng maxSubmittedPoint và maxPoint
+        const totalSubmitted = problemsData.reduce(
+          (sum, problem) => sum + (problem.maxSubmittedPoint || 0),
+          0
+        );
+        const totalMax = problemsData.reduce(
+          (sum, problem) => sum + (problem.maxPoint || 0),
+          0
+        );
+        setTotalSubmittedPoints(totalSubmitted);
+        setTotalMaxPoints(totalMax);
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error", 3000))
-        }
+          errorNoti(t("common:error"), 3000);
+        },
       }
-    )
-    // .then(() => setLoading(false));
+    ).finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -151,7 +146,7 @@ export default function StudentViewProblemList() {
 
   return (
     <>
-      {loading && <LinearProgress/>}
+      {loading && <LinearProgress />}
       <StandardTable
         columns={columns}
         data={problems}
@@ -159,11 +154,13 @@ export default function StudentViewProblemList() {
         options={{
           selection: false,
           pageSize: 5,
-          search: true
+          search: true,
         }}
         components={{
-          Container: (props) => <Paper {...props} elevation={0}/>,
+          Container: (props) => <Paper {...props} elevation={0} />,
         }}
+        totalSubmittedPoints={totalSubmittedPoints}
+        totalMaxPoints={totalMaxPoints}
       />
     </>
   );
