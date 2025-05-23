@@ -294,5 +294,5 @@ public class ContestEntity implements Serializable {
     private String contestShowComment;
 
     @Column(name = "use_participant_selected_submission")
-    private Double allowParticipantPinSubmission;
+    private Integer allowParticipantPinSubmission;
 }

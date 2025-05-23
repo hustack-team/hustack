@@ -263,11 +263,9 @@ public class SubmissionServiceImpl implements SubmissionService {
         UUID newSubmissionId,
         UUID oldSubmissionId
     ) {
-        // Validate the new submission
         ContestSubmissionEntity newSubmission = contestSubmissionRepo.findById(newSubmissionId)
                                                                      .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + newSubmissionId));
 
-        // Verify user, contest, and problem
         if (!userId.equals(newSubmission.getUserId())) {
             throw new SecurityException("User does not have permission to modify this submission");
         }
@@ -275,7 +273,6 @@ public class SubmissionServiceImpl implements SubmissionService {
             throw new IllegalArgumentException("Submission does not belong to the specified contest or problem");
         }
 
-        // If an old submission ID is provided, set its finalSelectedSubmission to null
         if (oldSubmissionId != null) {
             ContestSubmissionEntity oldSubmission = contestSubmissionRepo.findById(oldSubmissionId)
                                                                          .orElse(null);

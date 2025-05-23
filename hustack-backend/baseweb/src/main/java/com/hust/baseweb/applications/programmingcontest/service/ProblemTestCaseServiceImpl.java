@@ -1760,14 +1760,14 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
         }
 
-    /*
-    List<String> problemIds = contestRepo
-        .findContestByContestId(contestId)
-        .getProblems()
-        .stream()
-        .map(ProblemEntity::getProblemId)
-        .collect(Collectors.toList());
-    */
+        /*
+        List<String> problemIds = contestRepo
+            .findContestByContestId(contestId)
+            .getProblems()
+            .stream()
+            .map(ProblemEntity::getProblemId)
+            .collect(Collectors.toList());
+        */
         LinkedHashMap<String, String> mapProblemIdToProblemName = new LinkedHashMap<>();
         for (ContestProblem contestProblem : contestProblemRepo.findAllByContestId(contestId)) {
             mapProblemIdToProblemName.put(contestProblem.getProblemId(), contestProblem.getProblemRename());
@@ -1830,8 +1830,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                     }
                     break;
             }
+            //log.info("getRankingByContestIdNew, submisionByUser.sz = " + submissionsByUser.size());
 
             for (ModelSubmissionInfoRanking submission : submissionsByUser) {
+                //log.info("getRankingByContestIdNew, submisionByUser, point = " + submission.getPoint());
                 String problemId = submission.getProblemId();
                 if (mapProblemToPoint.containsKey(problemId)) {
                     mapProblemToPoint.put(problemId, submission.getPoint());
