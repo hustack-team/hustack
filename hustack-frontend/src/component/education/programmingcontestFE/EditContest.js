@@ -68,7 +68,7 @@ function EditContest() {
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
-  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState("N"); 
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(0); 
 
   const [options, setOptions] = useState({
     // status: [],
@@ -83,8 +83,8 @@ function EditContest() {
     participantViewComment: [],
     contestPublic: [],
     canEditCoefficientPoint: [ 
-      { label: "No", value: "N" },
-      { label: "Yes", value: "Y" },
+      { label: "No", value: 0 },
+      { label: "Yes", value: 1 },
     ],
   });
 
@@ -198,8 +198,8 @@ function EditContest() {
           {label: "No", value: false},
         ],
         canEditCoefficientPoint: [
-          { label: "No", value: "N" },
-          { label: "Yes", value: "Y" },
+          { label: "No", value: 0 },
+          { label: "Yes", value: 1 },
         ],
       });
 
@@ -227,7 +227,7 @@ function EditContest() {
       setParticipantViewProblemsTag(data.contestShowTag);
       setParticipantViewComment(data.contestShowComment);
       setContestPublic(data.contestPublic);
-      setCanEditCoefficientPoint(data.canEditCoefficientPoint || "N"); // Set default to "N" if not provided
+      setCanEditCoefficientPoint(data.canEditCoefficientPoint); 
     });
   }
 
@@ -441,7 +441,7 @@ function EditContest() {
                   <StyledSelect
                     fullWidth
                     id="canEditCoefficientPoint"
-                    label="Edit Coefficient Point"
+                    label={t("common:canEditCoefficientPoint")}
                     key={"canEditCoefficientPoint"}
                     value={canEditCoefficientPoint}
                     options={options.canEditCoefficientPoint}

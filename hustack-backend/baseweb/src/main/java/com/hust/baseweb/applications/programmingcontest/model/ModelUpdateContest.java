@@ -31,5 +31,5 @@ public class  ModelUpdateContest {
     private String contestShowTag;
     private String contestShowComment;
     private Boolean contestPublic;
-    private String canEditCoefficientPoint;
+    private Integer canEditCoefficientPoint;
 }

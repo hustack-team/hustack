@@ -83,7 +83,7 @@ public class ContestService {
                 String problemRename = "";
                 String problemRecode = "";
                 String forbiddenInstructions = "";
-                Integer coefficientPoint = 1;
+                Double coefficientPoint = 1.0;
 
                 // If contest problem exists in the repository, update values
                 if (cp != null) {

@@ -46,5 +46,5 @@ public class ModelGetContestDetailResponse implements Serializable {
     private List<String> listContestShowTags;
     private List<String> listContestShowComments;
     private List<Boolean> listContestPublic;
-    private String canEditCoefficientPoint;
+    private Integer canEditCoefficientPoint;
 }

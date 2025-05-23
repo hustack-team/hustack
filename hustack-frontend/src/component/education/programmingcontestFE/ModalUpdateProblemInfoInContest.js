@@ -26,7 +26,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
   const [loading, setLoading] = useState(false);
   const [forbiddenInstructions, setForbiddenInstructions] = useState("");
   const [coefficientPoint, setCoefficientPoint] = useState(1);
-  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState("Y");
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(1);
 
   useEffect(() => {
     if (isOpen && contestId) {
@@ -37,7 +37,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
         (res) => {
           setLoading(false);
           const data = res.data;
-          const canEdit = data.canEditCoefficientPoint || "Y";
+          const canEdit = data.canEditCoefficientPoint ?? 0;
           setCanEditCoefficientPoint(canEdit);
         },
         {
@@ -67,7 +67,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
       problemRecode: problemRecode,
       submissionMode: submissionMode,
       forbiddenInstructions: forbiddenInstructions,
-      coefficientPoint: canEditCoefficientPoint === "N" ? (editingProblem?.coefficientPoint ?? 1) : coefficientPoint,
+      coefficientPoint: canEditCoefficientPoint === 0 ? (editingProblem?.coefficientPoint ?? 1) : coefficientPoint,
     };
 
     setLoading(true);
@@ -88,7 +88,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
     setProblemRecode("");
     setForbiddenInstructions("");
     setSubmissionMode(SUBMISSION_MODE_SOURCE_CODE);
-    setCoefficientPoint(canEditCoefficientPoint === "N" ? (editingProblem?.coefficientPoint ?? 1) : 1);
+    setCoefficientPoint(canEditCoefficientPoint === 0 ? (editingProblem?.coefficientPoint ?? 1) : 1);
   }
 
   return (
@@ -172,7 +172,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
         placeholder={"Enter a positive integer from 1 to 100 (default is 1)"}
         value={coefficientPoint}
         onChange={(event) => {
-          if (canEditCoefficientPoint === "Y") {
+          if (canEditCoefficientPoint === 1) {
             const value = parseInt(event.target.value);
             if ((value >= 1 && value <= 100) || isNaN(value)) {
               setCoefficientPoint(value || 1);
@@ -180,7 +180,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
           }
         }}
         inputProps={{ min: 1, max: 100 }}
-        disabled={canEditCoefficientPoint === "N"}
+        disabled={canEditCoefficientPoint === 0}
         sx={{ marginTop: "16px" }}
       />
     </HustModal>

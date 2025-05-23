@@ -1752,13 +1752,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         List<String> problemIds = new ArrayList<>();
 
         List<ContestProblem> contestProblems = contestProblemRepo.findAllByContestId(contestId);
-        LinkedHashMap<String, Integer> mapProblemIdToCoefficient = new LinkedHashMap<>();
+        LinkedHashMap<String, Double> mapProblemIdToCoefficient = new LinkedHashMap<>();
         if (contestProblems != null) {
             for (ContestProblem cp : contestProblems) {
                 if (cp.getSubmissionMode() != null) {
                     if (!cp.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
                         problemIds.add(cp.getProblemId());
-                        mapProblemIdToCoefficient.put(cp.getProblemId(), cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1);
+                        mapProblemIdToCoefficient.put(cp.getProblemId(), cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1.0);
                     }
                 }
             }
@@ -1854,7 +1854,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 long point = (Long) entry.getValue();
                 tmp.setPoint(point);
 
-                int coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1);
+                double coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1.0);
                 long maxPoint = mProblem2MaxPoint.getOrDefault(problemId, 0L);
                 double percent = 0;
                 if (maxPoint > 0) {
@@ -1865,7 +1865,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 totalWeightedPercent += percent * coefficient;
                 totalCoefficient += coefficient;
 
-                System.out.println("RANKING, problem " +
+                log.info("RANKING, problem " +
                                    problemId +
                                    " point = " + point +
                                    " max = " + maxPoint +

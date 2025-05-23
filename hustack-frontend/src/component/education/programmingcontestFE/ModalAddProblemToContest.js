@@ -26,7 +26,7 @@ const ModalAddProblemToContest = (props) => {
   const [loading, setLoading] = useState(false);
   const [coefficientPoint, setCoefficientPoint] = useState(1);
   const [forbiddenInstructions, setForbiddenInstructions] = useState("");
-  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState("Y"); 
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(1); 
 
   useEffect(() => {
     if (isOpen && contestId) {
@@ -37,9 +37,9 @@ const ModalAddProblemToContest = (props) => {
         (res) => {
           setLoading(false);
           const data = res.data;
-          const canEdit = data.canEditCoefficientPoint || "Y";
+          const canEdit = data.canEditCoefficientPoint ?? 0;
           setCanEditCoefficientPoint(canEdit);
-          if (canEdit === "N") {
+          if (canEdit === 0) {
             setCoefficientPoint(1); 
           }
         },
@@ -62,7 +62,7 @@ const ModalAddProblemToContest = (props) => {
       problemRecode: problemRecode,
       submissionMode: submissionMode,
       forbiddenInstructions: forbiddenInstructions,
-      coefficientPoint: canEditCoefficientPoint === "N" ? 1 : coefficientPoint, 
+      coefficientPoint: canEditCoefficientPoint === 0 ? 1 : coefficientPoint, 
     };
 
     setLoading(true);
@@ -81,7 +81,7 @@ const ModalAddProblemToContest = (props) => {
   const resetField= () => {
     setProblemRename("");
     setProblemRecode("");
-    setCoefficientPoint(canEditCoefficientPoint === "N" ? 1 : 1); 
+    setCoefficientPoint(canEditCoefficientPoint === 0 ? 1 : 1); 
     setSubmissionMode(SUBMISSION_MODE_SOURCE_CODE);
     setForbiddenInstructions("");
   }
@@ -152,7 +152,7 @@ const ModalAddProblemToContest = (props) => {
         placeholder={"Enter a positive integer from 1 to 100 (default is 1)"}
         value={coefficientPoint}
         onChange={(event) => {
-          if (canEditCoefficientPoint === "Y") {
+          if (canEditCoefficientPoint === 1) {
             const value = parseInt(event.target.value);
             if ((value >= 1 && value <= 100) || isNaN(value)) {
               setCoefficientPoint(value || 1);
@@ -160,7 +160,7 @@ const ModalAddProblemToContest = (props) => {
           }
         }}
         inputProps={{ min: 1, max: 100 }}
-        disabled={canEditCoefficientPoint === "N"}
+        disabled={canEditCoefficientPoint === 0}
         sx={{ marginTop: "16px" }}
       />
     </HustModal>

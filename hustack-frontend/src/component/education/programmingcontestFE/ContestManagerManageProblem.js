@@ -129,7 +129,7 @@ export function ContestManagerManageProblem(props) {
       title: "Coefficient Point",
       field: "coefficientPoint",
       minWidth: 150,
-      render: (problem) => problem?.coefficientPoint ?? "N/A", 
+      render: (problem) => problem?.coefficientPoint, 
     },
     {
       title: "Created By",
@@ -185,7 +185,6 @@ export function ContestManagerManageProblem(props) {
     request("get", "/contests/" + contestId, (res) => {
       setLoading(false);
       setContestProblems(res.data.list);
-      console.log('res.....', res)
     });
   };
 

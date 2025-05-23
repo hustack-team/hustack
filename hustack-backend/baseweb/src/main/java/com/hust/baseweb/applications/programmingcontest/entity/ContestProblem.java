@@ -52,5 +52,5 @@ public class ContestProblem {
     private String forbiddenInstructions;
 
     @Column(name="coefficient_point")
-    private Integer coefficientPoint;
+    private Double coefficientPoint;
 }
