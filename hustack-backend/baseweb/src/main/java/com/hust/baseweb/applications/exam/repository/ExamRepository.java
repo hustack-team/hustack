@@ -113,8 +113,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.name as examName, " +
                    "    e.description as examDescription, " +
                    "    e.start_time as startTime, " +
-                   "    e.end_time as endTime, " +
-                   "    COALESCE(json_agg(eet.exam_test_id) FILTER (WHERE eet.exam_test_id IS NOT NULL), '[]') AS examTestIds  " +
+                   "    e.end_time as endTime " +
                    "from " +
                    "    exam_student es " +
                    "left join exam_student_test est on " +

@@ -164,7 +164,7 @@ function MyExam(props) {
   const handleGetListExamTest = (rowData) => {
     request(
       "get",
-      `/exam/student/submissions/examTest/${rowData?.examTestIds.join(',')}`,
+      `/exam/student/submissions/${rowData?.examId}`,
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){

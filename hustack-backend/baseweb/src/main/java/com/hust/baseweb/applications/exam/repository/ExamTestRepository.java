@@ -211,6 +211,8 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    exam_test et " +
                    "left join exam_exam_test eet on " +
                    "    et.id = eet.exam_test_id " +
+                   "left join exam e on " +
+                   "    e.id = eet.exam_id " +
                    "left join exam_student_test est on " +
                    "    est.exam_exam_test_id = eet.id " +
                    "left join exam_student es on " +
@@ -219,7 +221,7 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    er.exam_student_test_id = est.id " +
                    "where " +
                    "    es.code = :userLogin " +
-                   "    and et.id in :examTestIds", nativeQuery = true)
-    List<MyExamTestWithResultRes> findAllWithResultByExamTestIds(@Param("userLogin") String userLogin,
-                                                                 @Param("examTestIds") List<String> examTestIds);
+                   "    and e.id = :examId", nativeQuery = true)
+    List<MyExamTestWithResultRes> findAllWithResultByExamId(@Param("userLogin") String userLogin,
+                                                                 @Param("examId") String examId);
 }

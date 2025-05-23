@@ -91,9 +91,9 @@ public class ExamController {
         return ResponseEntity.ok(examService.filterMyExam(pageable, myExamFilterReq));
     }
 
-    @GetMapping("/student/submissions/examTest/{examTestIds}")
-    public ResponseEntity<ResponseData<List<MyExamTestWithResultRes>>> getListTestMyExam(@PathVariable("examTestIds") String examTestIds) {
-        return ResponseEntity.ok(examService.getListTestMyExam(examTestIds));
+    @GetMapping("/student/submissions/{examId}")
+    public ResponseEntity<ResponseData<List<MyExamTestWithResultRes>>> getListTestMyExam(@PathVariable("examId") String examId) {
+        return ResponseEntity.ok(examService.getListTestMyExam(examId));
     }
 
     @GetMapping("/student/submissions/examStudentTest/{examStudentTestId}")

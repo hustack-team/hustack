@@ -348,11 +348,10 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public ResponseData<List<MyExamTestWithResultRes>> getListTestMyExam(String examTestIds) {
+    public ResponseData<List<MyExamTestWithResultRes>> getListTestMyExam(String examId) {
         ResponseData<List<MyExamTestWithResultRes>> responseData = new ResponseData<>();
 
-        List<String> ids = Arrays.asList(examTestIds.split(","));
-        List<MyExamTestWithResultRes> list = examTestRepository.findAllWithResultByExamTestIds(SecurityUtils.getUserLogin(),ids);
+        List<MyExamTestWithResultRes> list = examTestRepository.findAllWithResultByExamId(SecurityUtils.getUserLogin(), examId);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());

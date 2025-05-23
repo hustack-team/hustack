@@ -29,7 +29,7 @@ public interface ExamService {
 
     Page<MyExamFilterRes> filterMyExam(Pageable pageable, MyExamFilterReq myExamFilterReq);
 
-    ResponseData<List<MyExamTestWithResultRes>> getListTestMyExam(String examTestIds);
+    ResponseData<List<MyExamTestWithResultRes>> getListTestMyExam(String examId);
 
     ResponseData<MyExamDetailsRes> detailsMyExam(String examStudentTestId);
 
