@@ -222,6 +222,19 @@ export default function ContestManagerUserSubmission(props) {
         field: "createAt",
         cellStyle: {minWidth: 130},
       },
+      {
+        title: t("common:finalSubmission"),
+        field: "finalSelectedSubmission",
+        cellStyle: { minWidth: 120 },
+        render: (rowData) => (
+          <input
+            type="checkbox"
+            checked={rowData.finalSelectedSubmission === "Y"}
+            disabled
+          />
+        ),
+      },
+      
       // {title: "Man. Status", field: "managementStatus"},
       // {title: "Violation", field: "violationForbiddenInstruction"},
       {

@@ -2281,6 +2281,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 .fullname(getUserFullNameOfContest(contestId, submission.getUserId()))
                 .createdByIp(submission.getCreatedByIp())
                 .codeAuthorship(submission.getCodeAuthorship())
+                .finalSelectedSubmission(submission.getFinalSelectedSubmission())
                 .build());
     }
 
