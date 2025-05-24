@@ -18,9 +18,6 @@ import java.time.LocalDateTime;
 @Table(name = "exam")
 public class ExamEntity extends BaseEntity {
 
-    @Column(name = "exam_test_id")
-    private String examTestId;
-
     @Column(name = "code")
     private String code;
 

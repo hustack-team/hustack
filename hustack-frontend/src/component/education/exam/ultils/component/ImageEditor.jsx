@@ -16,9 +16,11 @@ export default function ImageEditor(props) {
   const {
     file,
     examResultDetailsIdSelected,
+    indexSelected,
     isEdit,
     isSave,
-    setImageComment
+    setImageComment,
+    setContentComment,
   } = props
 
   const [widthImage, setWidthImage] = useState(600)
@@ -60,6 +62,8 @@ export default function ImageEditor(props) {
   useEffect(() => {
     if(isSave){
       saveImage()
+      const text = texts.map(t => `<p>${t.text}</p>`).join('');
+      setContentComment(`<div><strong>Câu ${indexSelected+1}: </strong> ${text}</div>`)
     }
   }, [isSave]);
 

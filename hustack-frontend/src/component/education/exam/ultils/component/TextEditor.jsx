@@ -5,14 +5,18 @@ import {ContentState, convertToRaw, EditorState} from "draft-js";
 import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
 
-export default function RichTextEditor(props) {
+export default function TextEditor(props) {
   const [editorState, setEditorState] = useState(createEditorStateFromHTML(props.content));
   const [changeContentFromInternal, setChangeContentFromInternal] = useState(false)
 
   useEffect(() => {
-    if (changeContentFromInternal) {
-      setChangeContentFromInternal(false)
-    } else {
+    if(props.isTyping){
+      if (changeContentFromInternal) {
+        setChangeContentFromInternal(false)
+      } else {
+        setEditorState(createEditorStateFromHTML(props.content))
+      }
+    }else{
       setEditorState(createEditorStateFromHTML(props.content))
     }
   }, [props.content])
@@ -25,7 +29,7 @@ export default function RichTextEditor(props) {
   }
 
   function createEditorStateFromHTML(htmlContent) {
-    const {contentBlocks, entityMap} = htmlToDraft(htmlContent || '')
+    const {contentBlocks, entityMap} = htmlToDraft(htmlContent)
     const contentState = ContentState.createFromBlockArray(contentBlocks, entityMap);
     return EditorState.createWithContent(contentState)
   }
@@ -44,7 +48,7 @@ export default function RichTextEditor(props) {
   );
 }
 
-RichTextEditor.propTypes = {
+TextEditor.propTypes = {
   content: PropTypes.string.isRequired,
   // onContentChange: PropTypes.func.isRequired,
   editorStyle: PropTypes.object
@@ -62,6 +66,6 @@ const DEFAULT_EDITOR_STYLE = {
   }
 }
 
-RichTextEditor.defaultProps = {
+TextEditor.defaultProps = {
   editorStyle: DEFAULT_EDITOR_STYLE
 }

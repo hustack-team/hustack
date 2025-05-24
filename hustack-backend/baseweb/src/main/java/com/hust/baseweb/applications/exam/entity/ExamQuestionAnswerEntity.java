@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -13,33 +14,24 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "exam_result_details")
-public class ExamResultDetailsEntity {
+@Table(name = "exam_question_answer")
+public class ExamQuestionAnswerEntity {
 
     @Id
     @Column(length = 60)
-    private String id;
-
-    @Column(name = "exam_result_id")
-    private String examResultId;
+    protected String id;
 
     @Column(name = "exam_question_id")
     private String examQuestionId;
 
-    @Column(name = "answer")
-    private String answer;
+    @Column(name = "\"order\"")
+    private Integer order;
 
-    @Column(name = "file_path")
-    private String filePath;
+    @Column(name = "content")
+    private String content;
 
-    @Column(name = "comment_file_path")
-    private String commentFilePath;
-
-    @Column(name = "pass")
-    private boolean pass;
-
-    @Column(name = "score")
-    private Float score;
+    @Column(name = "file")
+    private String file;
 
     @PrePersist
     protected void onCreate() {

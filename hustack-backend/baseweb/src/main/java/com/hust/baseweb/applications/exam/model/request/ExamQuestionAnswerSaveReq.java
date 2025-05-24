@@ -10,9 +10,11 @@ import lombok.experimental.FieldNameConstants;
 @Setter
 @FieldNameConstants
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ExamSubjectSaveReq {
+public class ExamQuestionAnswerSaveReq {
 
-    String code;
-    String name;
-    String status;
+    String id;
+    String examQuestionId;
+    Integer order;
+    String content;
+    String file;
 }
