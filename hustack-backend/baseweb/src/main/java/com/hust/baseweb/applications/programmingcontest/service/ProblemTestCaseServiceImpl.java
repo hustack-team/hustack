@@ -380,7 +380,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                             .seq(i + 1)
                                                             .sourceCode(blockCode.getCode())
                                                             .programmingLanguage(blockCode.getLanguage())
-                                                            .completedBy(blockCode.isForStudent() ? 1 : 0)
+                                                            .completedBy(blockCode.getForStudent())
                                                             .build();
                     problemBlocks.add(problemBlock);
                 }
@@ -3831,16 +3831,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
         if (problemBlocks != null && !problemBlocks.isEmpty()) {
             List<BlockCode> blockCodes = problemBlocks.stream()
-                                                                                        .map(block -> {
-                                                                                            BlockCode blockCode = new BlockCode();
-                                                                                            blockCode.setId(String.valueOf(block.getId()));
-                                                                                            blockCode.setCode(block.getSourceCode());
-                                                                                            blockCode.setForStudent(block.getCompletedBy() == 1);
-                                                                                            blockCode.setSeq(block.getSeq());
-                                                                                            blockCode.setLanguage(block.getProgrammingLanguage());
-                                                                                            return blockCode;
-                                                                                        })
-                                                                                        .collect(Collectors.toList());
+                                                      .map(this::mapToBlockCode)
+                                                      .collect(Collectors.toList());
             problemResponse.setBlockCodes(blockCodes);
         } else {
             problemResponse.setBlockCodes(null);
@@ -3852,6 +3844,16 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         problemResponse.setCanEditBlocks(canEditBlocks);
 
         return problemResponse;
+    }
+
+    private BlockCode mapToBlockCode(ProblemBlock block) {
+        BlockCode blockCode = new BlockCode();
+        blockCode.setId(String.valueOf(block.getId()));
+        blockCode.setCode(block.getSourceCode());
+        blockCode.setForStudent(block.getCompletedBy());
+        blockCode.setSeq(block.getSeq());
+        blockCode.setLanguage(block.getProgrammingLanguage());
+        return blockCode;
     }
 
     private boolean checkCanEditBlocks(String problemId) {

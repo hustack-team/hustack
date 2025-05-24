@@ -65,7 +65,7 @@ public class StudentProblemViewService {
                                                                                         BlockCode blockCode = new BlockCode();
                                                                                         blockCode.setId(pb.getId().toString());
                                                                                         blockCode.setCode(pb.getCompletedBy() == 1 ? "" : pb.getSourceCode());
-                                                                                        blockCode.setForStudent(pb.getCompletedBy() == 1);
+                                                                                        blockCode.setForStudent(pb.getCompletedBy());
                                                                                         blockCode.setLanguage(pb.getProgrammingLanguage());
                                                                                         blockCode.setSeq(pb.getSeq());
                                                                                         return blockCode;
@@ -126,7 +126,7 @@ public class StudentProblemViewService {
                     BlockCode blockCode = new BlockCode();
                     blockCode.setId(pb.getId().toString());
                     blockCode.setCode(pb.getSourceCode());
-                    blockCode.setForStudent(pb.getCompletedBy() == 1);
+                    blockCode.setForStudent(pb.getCompletedBy());
                     blockCode.setLanguage(pb.getProgrammingLanguage());
                     return blockCode;
                 }).collect(Collectors.toList());

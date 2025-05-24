@@ -11,7 +11,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Tabs,
   Tab,
 } from "@mui/material";
 import { makeStyles } from "@material-ui/core/styles";
@@ -36,6 +35,7 @@ import TertiaryButton from "../../button/TertiaryButton";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {getLevels, getStatuses} from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
+import { StyledTabs } from "component/tab";
 
 const useStyles = makeStyles((theme) => ({
   blockCode: {
@@ -204,6 +204,9 @@ function ManagerViewProblemDetailV2() {
         onError: (error) => {
           setErrorMessage("Failed to clone the problem. Please try again.");
           console.error("Error cloning problem:", error);
+        },
+        400: (error) => {
+          setErrorMessage("Invalid request. Please check your input.");
         },
         400: (error) => {
           setErrorMessage("Invalid request. Please check your input.");
@@ -381,7 +384,7 @@ function ManagerViewProblemDetailV2() {
           <Typography variant="h6" sx={{ marginBottom: "8px" }}>
             {t("listProblemBlock")}
           </Typography>
-          <Tabs
+          <StyledTabs
             value={selectedLanguage}
             onChange={handleTabChange}
             sx={{ marginBottom: "12px" }}
@@ -389,7 +392,7 @@ function ManagerViewProblemDetailV2() {
             {PROGRAMMING_LANGUAGES.map((lang) => (
               <Tab key={lang.value} label={lang.label} value={lang.value} />
             ))}
-          </Tabs>
+          </StyledTabs>
           {blockCodes[selectedLanguage].length > 0 ? (
             blockCodes[selectedLanguage].map((block, index) => (
               <Box

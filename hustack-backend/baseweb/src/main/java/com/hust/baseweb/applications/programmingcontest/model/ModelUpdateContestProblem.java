@@ -69,10 +69,10 @@ public class ModelUpdateContestProblem {
     @ToString
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class BlockCode {
-        private String id;
-        private String code;
-        private boolean forStudent;
-        private int seq;
-        private String language;
+        String id;
+        String code;
+        int forStudent;
+        int seq;
+        String language;
     }
 }

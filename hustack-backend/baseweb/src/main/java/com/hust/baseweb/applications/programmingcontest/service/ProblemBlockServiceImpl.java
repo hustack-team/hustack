@@ -4,8 +4,11 @@ import com.hust.baseweb.applications.programmingcontest.entity.ProblemBlock;
 import com.hust.baseweb.applications.programmingcontest.model.BlockCode;
 import com.hust.baseweb.applications.programmingcontest.model.ModelCreateContestProblem;
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemBlockRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemBlockService;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,9 +19,10 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class ProblemBlockService {
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class ProblemBlockServiceImpl implements ProblemBlockService {
 
-    private final ProblemBlockRepo problemBlockRepo;
+    ProblemBlockRepo problemBlockRepo;
 
     @Transactional
     public List<ProblemBlock> createProblemBlocks(String problemId, List<BlockCode> blockCodes) {
@@ -40,7 +44,7 @@ public class ProblemBlockService {
                                                         .seq(i + 1)
                                                         .sourceCode(blockCode.getCode())
                                                         .programmingLanguage(blockCode.getLanguage())
-                                                        .completedBy(blockCode.isForStudent() ? 1 : 0)
+                                                        .completedBy(blockCode.getForStudent())
                                                         .build();
                 problemBlocks.add(problemBlock);
             }
@@ -55,7 +59,7 @@ public class ProblemBlockService {
                                 BlockCode blockCode = new BlockCode();
                                 blockCode.setId(pb.getId().toString());
                                 blockCode.setCode(pb.getSourceCode());
-                                blockCode.setForStudent(pb.getCompletedBy() == 1);
+                                blockCode.setForStudent(pb.getCompletedBy());
                                 blockCode.setLanguage(pb.getProgrammingLanguage());
                                 return blockCode;
                             })

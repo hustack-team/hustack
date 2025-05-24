@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 public class BlockCode {
     String id;
     String code;
-    boolean forStudent;
+    int forStudent;
     int seq;
     String language;
 }

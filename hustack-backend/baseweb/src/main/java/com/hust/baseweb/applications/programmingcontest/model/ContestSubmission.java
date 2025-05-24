@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContestSubmission {
-    @Id
+
     UUID contestSubmissionId;
 
     String problemId;

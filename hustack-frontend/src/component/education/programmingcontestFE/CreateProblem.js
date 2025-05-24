@@ -1,5 +1,5 @@
 import {makeStyles} from "@material-ui/core";
-import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography, Button, Tabs, Tab } from "@mui/material";
+import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography, Tabs, Tab } from "@mui/material";
 import React, {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import {useHistory} from "react-router-dom";
@@ -9,7 +9,6 @@ import {useTranslation} from "react-i18next";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
 import {errorNoti, successNoti} from "../../../utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
-import HustCodeEditorV2 from "../../common/HustCodeEditorV2";
 import {LoadingButton} from "@mui/lab";
 import RichTextEditor from "../../common/editor/RichTextEditor";
 import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
@@ -19,6 +18,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import StyledSelect from "../../select/StyledSelect";
 import TertiaryButton from "../../button/TertiaryButton";
+import PrimaryButton from "../../button/PrimaryButton";
 import FilterByTag from "../../table/FilterByTag";
 import withScreenSecurity from "../../withScreenSecurity";
 
@@ -246,8 +246,6 @@ function CreateProblem() {
           })),
         )
 
-      // Log the formatted block codes
-      console.log("Formatted block codes:", formattedBlockCodes)
     }
 
     let body = {
@@ -322,6 +320,19 @@ function CreateProblem() {
       ...prev,
       [selectedLanguage]: prev[selectedLanguage].filter((_, i) => i !== index),
     }))
+  }
+
+  const handleAddBlockCode = () => {
+    try {
+      const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17
+      setBlockCodes((prev) => ({
+        ...prev,
+        [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
+      }))
+    } catch (error) {
+      console.error("Error adding block code:", error)
+      errorNoti(t("Failed to add block code"), 3000)
+    }
   }
 
   useEffect(() => {
@@ -548,8 +559,10 @@ function CreateProblem() {
             {blockCodes[selectedLanguage].map((block, index) => (
               <Box className={classes.blockCodeContainer} key={index}>
                 <Box className={classes.codeEditorWrapper}>
-                  <HustCodeEditorV2
+                  <HustCodeEditor
                     sourceCode={block.code || ""}
+                    hideProgrammingLanguage={1} 
+                    blockEditor={1} 
                     onChangeSourceCode={(newCode) => {
                       try {
                         setBlockCodes((prev) => ({
@@ -586,36 +599,24 @@ function CreateProblem() {
                     ]}
                     sx={{ width: "250px", mt: 5 }}
                   />
-                  <Button
+                  <TertiaryButton
                     size="small"
-                    color="error"
                     onClick={() => handleDeleteBlock(index)}
                     sx={{ minWidth: "60px", px: 1 }}
                   >
                     {t("delete", { ns: "common" })}
-                  </Button>
+                  </TertiaryButton>
                 </Box>
               </Box>
             ))}
 
-            <Button
+            <TertiaryButton
               variant="outlined"
-              onClick={() => {
-                try {
-                  const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17
-                  setBlockCodes((prev) => ({
-                    ...prev,
-                    [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
-                  }))
-                } catch (error) {
-                  console.error("Error adding block code:", error)
-                  errorNoti(t("Failed to add block code"), 3000)
-                }
-              }}
+              onClick={handleAddBlockCode}
               sx={{ marginTop: "12px" }}
             >
               {t("addProblemBlock")}
-            </Button>
+            </TertiaryButton>
           </>
         )}
       </Box>
@@ -695,14 +696,14 @@ function CreateProblem() {
       </Box>
 
       <Box width="100%" sx={{marginTop: "20px"}}>
-        <LoadingButton
+        <PrimaryButton
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
           sx={{textTransform: 'capitalize'}}
         >
           {t("save", {ns: "common"})}
-        </LoadingButton>
+        </PrimaryButton>
       </Box>
 
       <ModelAddNewTag

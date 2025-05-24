@@ -13,7 +13,6 @@ import {errorNoti, successNoti} from "utils/notification";
 import {request} from "../../../api";
 import FileUploadZone from "../../../utils/FileUpload/FileUploadZone";
 import HustCodeEditor from "../../common/HustCodeEditor";
-import HustCodeEditorV2 from "../../common/HustCodeEditorV2";
 import HustCodeLanguagePicker from "../../common/HustCodeLanguagePicker";
 import {
   COMPUTER_LANGUAGES,
@@ -517,14 +516,16 @@ export default function StudentViewProgrammingContestProblemDetail() {
                         <Typography variant="subtitle1" sx={{ mb: 1 }}>
                           {block.forStudent ? `${t("forStudentBlock")}` : `${t("forTeacherBlock")} (Read-Only)`}
                         </Typography>
-                        <HustCodeEditorV2
-                          language={lang}
-                          sourceCode={block.forStudent ? blockCodeInputs[block.id] || "" : block.code}
-                          onChangeSourceCode={(code) => block.forStudent && handleBlockCodeChange(block.id, code)}
-                          height="200px"
-                          readOnly={!block.forStudent}
-                          listLanguagesAllowed={[lang]}
-                        />
+                      <HustCodeEditor
+                        language={lang}
+                        sourceCode={block.forStudent ? blockCodeInputs[block.id] || "" : block.code}
+                        onChangeSourceCode={(code) => block.forStudent && handleBlockCodeChange(block.id, code)}
+                        height="200px"
+                        readOnly={!block.forStudent}
+                        listLanguagesAllowed={[lang]}
+                        hideProgrammingLanguage={1} 
+                        blockEditor={1} 
+                      />
                       </Box>
                     ))}
                 </Stack>

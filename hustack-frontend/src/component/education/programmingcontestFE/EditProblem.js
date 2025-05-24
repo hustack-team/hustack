@@ -25,7 +25,6 @@ import {getLevels, getPublicOptions, getStatuses} from "./CreateProblem";
 import FilterByTag from "../../table/FilterByTag";
 import TertiaryButton from "../../button/TertiaryButton";
 import AddIcon from "@mui/icons-material/Add";
-import HustCodeEditorV2 from "component/common/HustCodeEditorV2";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -619,7 +618,7 @@ function EditProblem() {
               {blockCodes[selectedLanguage].map((block, index) => (
                 <Box className={classes.blockCodeContainer} key={block.id || index}>
                   <Box className={classes.codeEditorWrapper}>
-                    <HustCodeEditorV2
+                    <HustCodeEditor
                       sourceCode={block.code || ""}
                       onChangeSourceCode={(newCode) => {
                         if (!canEditBlocks) {
@@ -641,6 +640,8 @@ function EditProblem() {
                       language={selectedLanguage}
                       height="300px"
                       readOnly={!canEditBlocks}
+                      hideProgrammingLanguage={1} 
+                      blockEditor={1} 
                     />
                   </Box>
                   <Box className={classes.blockCodeControls}>
