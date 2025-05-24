@@ -1,5 +1,5 @@
 import ReplayIcon from "@mui/icons-material/Replay";
-import {Box, LinearProgress, Paper, Typography} from "@mui/material";
+import {Box, LinearProgress, Paper, Typography, Checkbox} from "@mui/material";
 import {request} from "api";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import HustModal from "component/common/HustModal";
@@ -8,9 +8,10 @@ import React, {forwardRef, useEffect, useImperativeHandle, useState} from "react
 import {useTranslation} from "react-i18next";
 import {Link, useParams} from "react-router-dom";
 import {getStatusColor} from "./lib";
-import {mapLanguageToDisplayName} from "./Constant";
+import {mapLanguageToDisplayName } from "./Constant";
 import {toFormattedDateTime} from "../../../utils/dateutils";
 import {localeOption} from "../../../utils/NumberFormat";
+import {errorNoti, successNoti} from "utils/notification";
 
 const StudentViewSubmission = forwardRef((props, ref) => {
   const {t} = useTranslation(
@@ -24,6 +25,8 @@ const StudentViewSubmission = forwardRef((props, ref) => {
   const [openModalMessage, setOpenModalMessage] = useState(false);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [currentLockedSubmissionId, setCurrentLockedSubmissionId] = useState(null);
+  const [allowPinSubmission, setAllowPinSubmission] = useState(0);
 
   const getCommentsBySubmissionId = async (submissionId) => {
     setLoadingComments(true);
@@ -50,9 +53,48 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     request("GET",
       requestUrl,
       (res) => {
-        setSubmissions(res.data.content);
+        const submissionsData = res.data.content;
+        setSubmissions(submissionsData);
+        const lockedSubmission = submissionsData.find(
+          (submission) => submission.finalSelectedSubmission === 1
+        );
+        setCurrentLockedSubmissionId(
+          lockedSubmission ? lockedSubmission.contestSubmissionId : null
+        );
+        if (submissionsData.length > 0) {
+          setAllowPinSubmission(submissionsData[0].allowParticipantPinSubmission);
+        }
         setLoading(false);
-      });
+      }
+    );
+  };
+
+  const handleSwitchSubmission = (newSubmissionId) => {
+    if (newSubmissionId === currentLockedSubmissionId) {
+      return; 
+    }
+
+    setLoading(true);
+
+    request(
+      "post",
+      `/contests/users/submissions/lock?contestId=${contestId}&problemId=${problemId}`,
+      (res) => {
+        successNoti("Submission switched successfully", 3000);
+        setCurrentLockedSubmissionId(newSubmissionId);
+        getSubmissions();
+      },
+      {
+        onError: (e) => {
+          errorNoti("Failed to switch submission", 3000);
+          setLoading(false);
+        },
+      },
+      {
+        newSubmissionId: newSubmissionId,
+        oldSubmissionId: currentLockedSubmissionId,
+      }
+    );
   };
 
   useEffect(() => {
@@ -78,35 +120,17 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     {
       title: t("submissionList.status"),
       field: "status",
-      cellStyle: {
-        minWidth: 120,
-      },
+      cellStyle: {minWidth: 120},
       render: (rowData) => (
         <span style={{color: getStatusColor(`${rowData.status}`)}}>
           {`${rowData.status}`}
         </span>
       ),
-      // cellStyle: (status) => {
-      //   switch (status) {
-      //     case "Accepted":
-      //       return { color: "green" };
-      //     case "In Progress":
-      //       return { color: "gold" };
-      //     case "Pending Evaluation":
-      //       return { color: "goldenrod" };
-      //     case "Evaluated":
-      //       return { color: "darkcyan" };
-      //     default:
-      //       return { color: "red" };
-      //   }
-      // },
-      // minWidth: "128px",
-      // align: "left",
     },
     {
       title: t("education/programmingcontest/testcase:point"),
       field: "point",
-      type: 'numeric',
+      type: "numeric",
       // headerStyle: {textAlign: "right"},
       // cellStyle: {fontWeight: 500, textAlign: "right", paddingRight: 40},
       render: (rowData) =>
@@ -122,6 +146,24 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       // align: "right",
       // minWidth: "150px",
     },
+    ...(allowPinSubmission === 1
+      ? [
+          {
+            title: t("common:finalSubmission"),
+            sorting: false,
+            cellStyle: { minWidth: 120, textAlign: "center" },
+            render: (rowData) => (
+              <Checkbox
+                checked={rowData.finalSelectedSubmission === 1}
+                onChange={() =>
+                  handleSwitchSubmission(rowData.contestSubmissionId)
+                }
+                disabled={loading}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       title: t('common:language'),
       field: "sourceCodeLanguage",
@@ -188,7 +230,7 @@ const StudentViewSubmission = forwardRef((props, ref) => {
           {comments.length > 0 ? (
             comments.map((comment) => (
               <Typography key={comment.id} variant="body2" sx={{mb: 1}}>
-                <strong>{comment.username}:</strong> {comment.comment} {/* In dam ten nguoi comment */}
+                <strong>{comment.username}:</strong> {comment.comment}
               </Typography>
             ))
           ) : (

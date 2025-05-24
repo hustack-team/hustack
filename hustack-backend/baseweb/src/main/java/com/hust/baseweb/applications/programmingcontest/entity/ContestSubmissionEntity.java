@@ -122,4 +122,6 @@ public class ContestSubmissionEntity {
     @Column(name="code_authorship")
     private String codeAuthorship;
 
+    @Column(name="final_selected_submission")
+    private Integer finalSelectedSubmission;
 }

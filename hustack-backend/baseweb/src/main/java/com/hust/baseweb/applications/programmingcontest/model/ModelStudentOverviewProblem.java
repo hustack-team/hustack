@@ -17,5 +17,6 @@ public class ModelStudentOverviewProblem {
     private boolean submitted = false;
     private boolean accepted = false;
     private Long maxSubmittedPoint;
+    private Long maxPoint;
     private List<String> tags = new ArrayList<>();
 }

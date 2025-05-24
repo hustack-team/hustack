@@ -101,6 +101,23 @@ public class SubmissionController {
         return ResponseEntity.ok().body(retLst);
     }
 
+    @PostMapping("/contests/users/submissions/lock")
+    public ResponseEntity<?> updateFinalSelectedSubmission(
+        Principal principal,
+        @RequestParam("contestId") String contestId,
+        @RequestParam("problemId") String problemId,
+        @RequestBody UpdateFinalSelectedRequest request
+    ) {
+        submissionService.updateFinalSelectedSubmission(
+            principal.getName(),
+            contestId,
+            problemId,
+            request.getNewSubmissionId(),
+            request.getOldSubmissionId()
+        );
+        return ResponseEntity.ok().body("Submission lock updated successfully");
+    }
+
     @GetMapping("/student/submissions/{submissionId}/general-info")
     public ResponseEntity<?> getContestSubmissionDetailViewedByParticipant(
         Principal principal,
