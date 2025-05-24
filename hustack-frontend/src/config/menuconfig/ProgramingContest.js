@@ -20,6 +20,14 @@ export const ProgrammingContestMenuTeacher = {
       child: [],
     },
     {
+      id: "MENU_PROGRAMMING_CONTEST_MANAGER.MENU_PROGRAMMING_CONTEST_MANAGER_LIST_GROUP",
+      path: "/programming-contest/teacher-list-group",
+      isPublic: false,
+      icon: null,
+      text: "Group",
+      child: [],
+    },
+    {
       id: "MENU_PROGRAMMING_CONTEST_MANAGER.MENU_PROGRAMMING_CONTEST_ADMIN_VIEW_ALL_CONTEST",
       path: "/programming-contest/list-all-contests",
       isPublic: false,
