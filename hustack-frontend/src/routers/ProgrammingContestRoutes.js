@@ -22,6 +22,9 @@ import SuggestProblem from "component/education/programmingcontestFE/SuggestProb
 import UserContestProblemRole from "component/education/programmingcontestFE/UserContestProblemRole";
 import {Route, Switch, useRouteMatch} from "react-router";
 import ContestLibrarytList from "component/education/programmingcontestFE/ContestLibraryList"
+import ListGroupManager from "component/education/programmingcontestFE/ListGroupManager";
+import CreateGroup from "component/education/programmingcontestFE/CreateGroup";
+import GroupManager from "component/education/programmingcontestFE/GroupManager";
 
 export default function ProgrammingContestRoutes() {
   let { path } = useRouteMatch();
@@ -44,6 +47,8 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/user-contest-problem-role-management/:problemId`}
         />
         <Route component={CreateContest} path={`${path}/create-contest`} />
+        <Route component={CreateGroup} path={`${path}/create-group`} />
+
         <Route
           component={StudentViewContestDetail}
           path={`${path}/student-view-contest-detail/:contestId`}
@@ -83,6 +88,10 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/teacher-list-contest-manager`}
         />
         <Route
+          component={ListGroupManager}
+          path={`${path}/teacher-list-group`}
+        />
+        <Route
           component={AllContestsManager}
           path={`${path}/list-all-contests`}
         />
@@ -90,6 +99,10 @@ export default function ProgrammingContestRoutes() {
         <Route
           component={ContestManager}
           path={`${path}/contest-manager/:contestId`}
+        />
+        <Route
+          component={GroupManager}
+          path={`${path}/group-manager/:groupId`}
         />
         <Route
           component={ManagerViewProblemDetailAndSubmisionsInContest}
