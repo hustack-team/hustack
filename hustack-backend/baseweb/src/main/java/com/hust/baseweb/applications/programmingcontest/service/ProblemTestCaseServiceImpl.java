@@ -1757,11 +1757,18 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 if (cp.getSubmissionMode() != null) {
                     if (!cp.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
                         problemIds.add(cp.getProblemId());
-                        mapProblemIdToCoefficient.put(cp.getProblemId(), cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1.0);
+
+                        double coefficient = 1.0;
+                        if (contest.getCanEditCoefficientPoint() != null && Integer.valueOf(1).equals(contest.getCanEditCoefficientPoint())) {
+                            coefficient = cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1.0;
+                        }
+
+                        mapProblemIdToCoefficient.put(cp.getProblemId(), coefficient);
                     }
                 }
             }
         }
+
 
         /*
         List<String> problemIds = contestRepo
@@ -1854,6 +1861,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 tmp.setPoint(point);
 
                 double coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1.0);
+                System.out.println("coeffcient points......." + coefficient);
                 long maxPoint = mProblem2MaxPoint.getOrDefault(problemId, 0L);
                 double percent = 0;
                 if (maxPoint > 0) {
