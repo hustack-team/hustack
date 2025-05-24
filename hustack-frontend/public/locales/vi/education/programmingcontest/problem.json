@@ -35,6 +35,7 @@
   "contestUsingProblem": "Cuộc thi sử dụng bài tập",
   "addTestCase": "Thêm Test Case",
   "sampleTestCase": "Test Case mẫu",
+  "noPermissionToEditBlocks": "Không thể chỉnh sửa",
   "edit": "Chỉnh sửa",
   "myProblems": "Bài tập của tôi",
   "sharedProblems": "Bài tập được chia sẻ",
@@ -46,6 +47,15 @@
     "missingField": "Trường {{fieldName}} không được bỏ trống"
   },
   "generalInfo": "Thông tin chung",
+  "problemBlock": "Bài tập ghép khối",
+  "addProblemBlock": "Thêm khối mã",
+  "listProblemBlock": "Danh sách khối mã",
+  "blocks": "Khối thứ ",
+  "forTeacher": "Dành cho giáo viên",
+  "noBlockCodes": "Không có khối mã",
+  "forStudent": "Dành cho sinh viên",
+  "forStudentBlock": "Khối mã dành cho sinh viên",
+  "forTeacherBlock": "Khối mã dành cho giáo viên",
   "manageRole": "Phân quyền",
   "clone": "Sao chép"
 }

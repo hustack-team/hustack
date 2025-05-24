@@ -11,7 +11,9 @@ import {
   Stack,
   TextField,
   Typography,
+  Tab,
 } from "@mui/material";
+import { makeStyles } from "@material-ui/core/styles";
 import {request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
 import {useEffect, useState} from "react";
@@ -20,9 +22,9 @@ import {useTranslation} from "react-i18next";
 import {useHistory, useParams} from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
 import {randomImageName} from "utils/FileUpload/covert";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant"; 
 import {PROBLEM_ROLE, PROBLEM_STATUS} from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
 import {localeOption} from "../../../utils/NumberFormat";
@@ -33,10 +35,39 @@ import TertiaryButton from "../../button/TertiaryButton";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {getLevels, getStatuses} from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
+import { StyledTabs } from "component/tab";
+
+const useStyles = makeStyles((theme) => ({
+  blockCode: {
+    border: '2px solid black',
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    position: 'relative',
+  },
+  blockCodeStudent: {
+    border: '2px solid green',
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    position: 'relative',
+  },
+  forStudentLabel: {
+    position: 'absolute',
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+    fontSize: '0.875rem',
+    color: theme.palette.text.secondary,
+  },
+}));
+
+const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
+  label: key,
+  value: COMPUTER_LANGUAGES[key],
+}));
 
 function ManagerViewProblemDetailV2() {
   const {problemId} = useParams();
   const history = useHistory();
+  const classes = useStyles();
 
   const {t} = useTranslation([
     "education/programmingcontest/problem",
@@ -45,13 +76,11 @@ function ManagerViewProblemDetailV2() {
   ]);
 
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
-
   const [openCloneDialog, setOpenCloneDialog] = useState(false);
   const [newProblemId, setNewProblemId] = useState("");
   const [newProblemName, setNewProblemName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
-
   const [problemDetail, setProblemDetail] = useState({
     problemName: "",
     description: "",
@@ -71,8 +100,13 @@ function ManagerViewProblemDetailV2() {
     tags: [],
     status: "",
     roles: [],
-    sampleTestCase: null
+    sampleTestCase: null,
+    categoryId: "",
   });
+  const [blockCodes, setBlockCodes] = useState(
+    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
+  );
+  const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
@@ -81,26 +115,45 @@ function ManagerViewProblemDetailV2() {
   useEffect(() => {
     request("get", "teacher/problems/" + problemId, (res) => {
       setLoading(false);
+      const data = res.data;
 
-      res = res.data;
-      if (res.attachment && res.attachment.length !== 0) {
-        const newFileURLArray = res.attachment.map((url) => ({
+      if (data.attachment && data.attachment.length !== 0) {
+        const newFileURLArray = data.attachment.map((url) => ({
           id: randomImageName(),
           content: url,
         }));
         newFileURLArray.forEach((file, idx) => {
-          file.fileName = res.attachmentNames[idx];
+          file.fileName = data.attachmentNames[idx];
         });
         setFetchedImageArray(newFileURLArray);
       }
 
       setProblemDetail({
-        ...res,
-        public: res.publicProblem,
-        solutionCheckerSourceCode: res.solutionCheckerSourceCode || "",
-        isCustomEvaluated: res.scoreEvaluationType === CUSTOM_EVALUATION,
-        description: res.problemDescription,
-      })
+        ...data,
+        public: data.publicProblem,
+        solutionCheckerSourceCode: data.solutionCheckerSourceCode || "",
+        isCustomEvaluated: data.scoreEvaluationType === CUSTOM_EVALUATION,
+        description: data.problemDescription,
+        categoryId: data.categoryId || "",
+      });
+
+      // Process blockCodes
+      if (data.blockCodes && data.blockCodes.length > 0) {
+        const newBlockCodes = Object.fromEntries(
+          PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
+        );
+        data.blockCodes.forEach((block) => {
+          if (newBlockCodes[block.language]) {
+            newBlockCodes[block.language].push({
+              id: block.id,
+              code: block.code,
+              forStudent: block.forStudent,
+              seq: block.seq,
+            });
+          }
+        });
+        setBlockCodes(newBlockCodes);
+      }
     });
   }, [problemId]);
 
@@ -155,6 +208,9 @@ function ManagerViewProblemDetailV2() {
         400: (error) => {
           setErrorMessage("Invalid request. Please check your input.");
         },
+        400: (error) => {
+          setErrorMessage("Invalid request. Please check your input.");
+        },
         404: (error) => {
           setErrorMessage("Original problem not found.");
         },
@@ -164,6 +220,10 @@ function ManagerViewProblemDetailV2() {
       },
       cloneRequest
     );
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedLanguage(newValue);
   };
 
   return (
@@ -176,7 +236,7 @@ function ManagerViewProblemDetailV2() {
         <Stack direction="row" spacing={2}>
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
             (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)
-          ) ? null : (<PrimaryButton
+                   ) ? null : (<PrimaryButton
             onClick={() => {
               history.push("/programming-contest/edit-problem/" + problemId);
             }}
@@ -292,7 +352,7 @@ function ManagerViewProblemDetailV2() {
               ? problemDetail.tags.map((selectedTag) => selectedTag.name).join(", ") : null,
           ],
         ].map(([key, value, sx, helpText]) => (
-          <Grid item xs={12} sm={12} md={3}>
+          <Grid item xs={12} sm={12} md={3} key={key}>
             {detail(key, value, sx, helpText)}
           </Grid>
         ))}
@@ -310,33 +370,82 @@ function ManagerViewProblemDetailV2() {
         />
       </Box>
 
-      {problemDetail.sampleTestCase && <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>}
+      {problemDetail.sampleTestCase && (
+        <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase} />
+      )}
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
-          <FileUploadZone file={file} removable={false}/>
+          <FileUploadZone key={file.id} file={file} removable={false} />
         ))}
 
-      <Box sx={{marginTop: "28px"}}/>
-      <HustCopyCodeBlock title={t("solutionSourceCode")}
-                         language={mapLanguageToCodeBlockLanguage(problemDetail.correctSolutionLanguage)}
-                         text={problemDetail.correctSolutionSourceCode}
-                         showLineNumbers/>
+      {problemDetail.blockCodes && problemDetail.blockCodes.length > 0 && (
+        <Box sx={{ marginTop: "24px" }}>
+          <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+            {t("listProblemBlock")}
+          </Typography>
+          <StyledTabs
+            value={selectedLanguage}
+            onChange={handleTabChange}
+            sx={{ marginBottom: "12px" }}
+          >
+            {PROGRAMMING_LANGUAGES.map((lang) => (
+              <Tab key={lang.value} label={lang.label} value={lang.value} />
+            ))}
+          </StyledTabs>
+          {blockCodes[selectedLanguage].length > 0 ? (
+            blockCodes[selectedLanguage].map((block, index) => (
+              <Box
+                key={block.id || index}
+                className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
+              >
+                <Typography className={classes.forStudentLabel}>
+                  {block.forStudent ? t("forStudent") : t("forTeacher")}
+                </Typography>
+                <HustCopyCodeBlock
+                  title={`${t("blocks")} ${block.seq}`}
+                  text={block.code}
+                  language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                  showLineNumbers
+                />
+              </Box>
+            ))
+          ) : (
+            <Typography>{t("noBlockCodes")}</Typography>
+          )}
+        </Box>
+      )}
 
-      {problemDetail.isPreloadCode && (<Box sx={{marginTop: "12px"}}>
-        <HustCopyCodeBlock title={t("preloadCode")}
-                           text={problemDetail.preloadCode}
-                           showLineNumbers/>
-      </Box>)}
+      <Box sx={{ marginTop: "28px" }} />
+      <HustCopyCodeBlock
+        title={t("solutionSourceCode")}
+        language={mapLanguageToCodeBlockLanguage(problemDetail.correctSolutionLanguage)}
+        text={problemDetail.correctSolutionSourceCode}
+        showLineNumbers
+      />
 
-      {problemDetail.isCustomEvaluated && (<Box sx={{marginTop: "24px"}}>
-        <HustCopyCodeBlock title={t("checkerSourceCode")}
-                           language={mapLanguageToCodeBlockLanguage(problemDetail.solutionCheckerSourceLanguage)}
-                           text={problemDetail.solutionCheckerSourceCode}
-                           showLineNumbers/>
-      </Box>)}
+      {problemDetail.isPreloadCode && (
+        <Box sx={{ marginTop: "12px" }}>
+          <HustCopyCodeBlock
+            title={t("preloadCode")}
+            text={problemDetail.preloadCode}
+            showLineNumbers
+          />
+        </Box>
+      )}
 
-      <ListTestCase mode={2}/>
+      {problemDetail.isCustomEvaluated && (
+        <Box sx={{ marginTop: "24px" }}>
+          <HustCopyCodeBlock
+            title={t("checkerSourceCode")}
+            language={mapLanguageToCodeBlockLanguage(problemDetail.solutionCheckerSourceLanguage)}
+            text={problemDetail.solutionCheckerSourceCode}
+            showLineNumbers
+          />
+        </Box>
+      )}
+
+      <ListTestCase mode={2} />
 
       <Box sx={{height: "36px"}}></Box>
       <ContestsUsingAProblem problemId={problemId}/>

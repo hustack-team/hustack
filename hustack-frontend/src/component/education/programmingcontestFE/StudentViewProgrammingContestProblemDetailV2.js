@@ -1,5 +1,5 @@
 import {LoadingButton} from "@mui/lab";
-import {Alert, Box, Button, Divider, Stack, Typography} from "@mui/material";
+import {Alert, Box, Button, Divider, Stack, Typography, Tabs, Tab} from "@mui/material";
 import {styled} from "@mui/material/styles";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import HustModal from "component/common/HustModal";
@@ -28,6 +28,26 @@ import {useTranslation} from "react-i18next";
 import _ from "lodash";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import {useHistory} from "react-router-dom";
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -108,6 +128,11 @@ export default function StudentViewProgrammingContestProblemDetail() {
   );
 
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
+  
+  const [isProblemBlock, setIsProblemBlock] = useState(false);
+  const [blockCodes, setBlockCodes] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [blockCodeInputs, setBlockCodeInputs] = useState({});
 
   const inputRef = useRef();
   const listSubmissionRef = useRef(null);
@@ -133,8 +158,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
       reader.onerror = (e) => {
-        errorNoti(tTestcase("errorReadingFile"));
-        ;reject(e)
+        errorNoti(t("errorReadingFile"));
+        reject(e);
       };
       reader.readAsText(file);
     });
@@ -144,10 +169,37 @@ export default function StudentViewProgrammingContestProblemDetail() {
     if (event) event.preventDefault();
     setIsProcessing(true);
 
+    let finalCode = "";
+    if (isProblemBlock) {
+      const blocksForLanguage = blockCodes
+        .filter(block => block.language === selectedLanguage)
+        .sort((a, b) => a.seq - b.seq);
+
+      finalCode = blocksForLanguage
+        .map(block => {
+          if (block.forStudent) {
+            return blockCodeInputs[block.id] || "";
+          } else {
+            return block.code;
+          }
+        })
+        .join("\n\n");
+    } else {
+      finalCode = codeSolution;
+    }
+
+    const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" });
+    const now = new Date();
+    const file = new File(
+      [blob],
+      `${problemId}_${now.getTime()}.txt`,
+      { type: "text/plain;charset=utf-8" }
+    );
+
     const body = {
       problemId: problemId,
       contestId: contestId,
-      language: language,
+      language: isProblemBlock ? selectedLanguage : language,
     };
 
     if (await isFileBlank(file)) {
@@ -174,27 +226,53 @@ export default function StudentViewProgrammingContestProblemDetail() {
         setIsProcessing(false);
         res = res.data;
         listSubmissionRef.current.refreshSubmission();
-        inputRef.current.value = null;
+        if (inputRef.current) {
+          inputRef.current.value = null;
+        }
+        setFile(null);
+        if (!isProblemBlock) {
+          switch (language) {
+            case COMPUTER_LANGUAGES.C:
+              setCodeSolution(DEFAULT_CODE_SEGMENT_C);
+              break;
+            case COMPUTER_LANGUAGES.CPP11:
+            case COMPUTER_LANGUAGES.CPP14:
+            case COMPUTER_LANGUAGES.CPP17:
+              setCodeSolution(DEFAULT_CODE_SEGMENT_CPP);
+              break;
+            case COMPUTER_LANGUAGES.JAVA:
+              setCodeSolution(DEFAULT_CODE_SEGMENT_JAVA);
+              break;
+            case COMPUTER_LANGUAGES.PYTHON:
+              setCodeSolution(DEFAULT_CODE_SEGMENT_PYTHON);
+              break;
+            default:
+              setCodeSolution("");
+          }
+        } else {
+          const resetInputs = {};
+          blockCodes.forEach(block => {
+            if (block.forStudent) {
+              resetInputs[block.id] = block.code || "";
+            }
+          });
+          setBlockCodeInputs(resetInputs);
+        }
 
         if (ERR_STATUS.includes(res.status)) {
           errorNoti(res.message, 3000);
         } else {
-          successNoti("Submitted", 3000);
+          successNoti("Submitted successfully", 3000);
         }
-
-        // setStatus(res.status);
-        // setMessage(res.message);
-
-        setFile(null);
-        inputRef.current.value = null;
       },
       {
         onError: (e) => {
           setIsProcessing(false);
           setFile(null);
-          inputRef.current.value = null;
-
-          errorNoti(t("common:error", 3000))
+          if (inputRef.current) {
+            inputRef.current.value = null;
+          }
+          errorNoti(t("common:error"), 3000);
         },
       },
       formData,
@@ -213,7 +291,23 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setLanguage(res.listLanguagesAllowed[0])
           setListLanguagesAllowed(res.listLanguagesAllowed);
         }
-        if (res.isPreloadCode) setCodeSolution(res.preloadCode);
+
+        if (res.blockCodes && res.blockCodes.length > 0) {
+          setIsProblemBlock(true);
+          setBlockCodes(res.blockCodes);
+          const uniqueLanguages = [...new Set(res.blockCodes.map(block => block.language))];
+          setSelectedLanguage(uniqueLanguages[0]);
+          const initialInputs = {};
+          res.blockCodes.forEach(block => {
+            if (block.forStudent) {
+              initialInputs[block.id] = block.code || "";
+            }
+          });
+          setBlockCodeInputs(initialInputs);
+        } else if (res.isPreloadCode) {
+          setCodeSolution(res.preloadCode);
+        }
+
         if (res.submissionMode) setSubmissionMode(res.submissionMode);
         if (res.attachment && res.attachment.length !== 0) {
           const newFileURLArray = res.attachment.map((url) => ({
@@ -238,7 +332,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         );
         setEditorStateDescription(statementDescription);
 
-        // public testcase    
+                // public testcase    
         /*  
         let sampleTestCaseHtml = htmlToDraft(res.sampleTestCase);
         let { contentBlocksTestCase, entityMapTestCase } = sampleTestCaseHtml;
@@ -254,7 +348,10 @@ export default function StudentViewProgrammingContestProblemDetail() {
         setSampleTestCase(res.sampleTestCase);
         //console.log('GetProblemDetail, res = ',res);
       },
-      {onError: (e) => console.log(e)}
+      { onError: (e) => {
+        errorNoti(t("errorFetchingProblem"), 3000);
+        console.error("Failed to fetch problem:", e);
+      }}
     );
   }
 
@@ -263,7 +360,9 @@ export default function StudentViewProgrammingContestProblemDetail() {
   }, []);
 
   useEffect(() => {
+    if (isProblemBlock) return;
     if (problem && problem.isPreloadCode === true) return;
+
     switch (language) {
       case COMPUTER_LANGUAGES.C:
         setCodeSolution(DEFAULT_CODE_SEGMENT_C);
@@ -280,7 +379,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         setCodeSolution(DEFAULT_CODE_SEGMENT_PYTHON);
         break;
     }
-  }, [language]);
+  }, [language, isProblemBlock, problem]);
 
   const ModalPreview = (chosenTestcase) => {
     return (
@@ -323,12 +422,29 @@ export default function StudentViewProgrammingContestProblemDetail() {
     history.push(`/programming-contest/student-view-contest-detail/${contestId}`);
   }
 
+  const groupedBlockCodes = blockCodes.reduce((acc, block) => {
+    if (!acc[block.language]) {
+      acc[block.language] = [];
+    }
+    acc[block.language].push(block);
+    return acc;
+  }, {});
+
+  const uniqueLanguages = [...new Set(blockCodes.map(block => block.language))];
+
+  const handleBlockCodeChange = (blockId, newCode) => {
+    setBlockCodeInputs(prev => ({
+      ...prev,
+      [blockId]: newCode
+    }));
+  };
+
   return (
     <ProgrammingContestLayout title={problem ? problem.problemName : ""} onBack={handleExit}>
-      <Typography variant="h6" sx={{mb: 1}}>
+      <Typography variant="h6" sx={{ mb: 1 }}>
         {t("common:description")}
       </Typography>
-      {/*{ReactHtmlParser(problemDescription)}*/}
+      {/*{ReactHtmlParser(problemDescription)}*/} 
       <Editor
         toolbarHidden
         editorState={editorStateDescription}
@@ -349,9 +465,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
       */}
       {/*ReactHtmlParser(sampleTestCase)*/}
       {/*sampleTestCase*/}
-
       {sampleTestCase && <>
-        <div style={{height: "10px"}}></div>
+        <div style={{ height: "10px" }}></div>
         <HustCopyCodeBlock
           title={t("sampleTestCase")}
           text={sampleTestCase}
@@ -360,41 +475,170 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
-          <FileUploadZone file={file} removable={false}/>
+          <FileUploadZone key={file.id} file={file} removable={false}/>
         ))}
 
-      <ModalPreview chosenTestcase={selectedTestcase}/>
+      <ModalPreview chosenTestcase={selectedTestcase} />
 
-      <Box sx={{mt: 2}}>
-        <Box>
-          <HustCodeEditor
-            title={t('common:sourceCode')}
-            language={language}
-            onChangeLanguage={(event) => {
-              setLanguage(event.target.value);
-            }}
-            sourceCode={codeSolution}
-            onChangeSourceCode={(code) => {
-              setCodeSolution(code);
-            }}
-            height={"480px"}
-            listLanguagesAllowed={listLanguagesAllowed}
-          />
+      <Box sx={{ mt: 2 }}>
+        {isProblemBlock ? (
+          <>
+            <Alert
+              variant="outlined"
+              severity="info"
+              sx={{
+                borderRadius: 1.5,
+                bgcolor: "#e5f6fd",
+                mb: 2,
+              }}
+            >
+              This is a block-based problem. Complete the sections marked as "Student Blocks". 
+              Teacher blocks are read-only and cannot be modified.
+            </Alert>
+
+            <Tabs
+              value={uniqueLanguages.indexOf(selectedLanguage)}
+              onChange={(event, newValue) => setSelectedLanguage(uniqueLanguages[newValue])}
+              aria-label="programming languages tabs"
+            >
+              {uniqueLanguages.map((lang) => (
+                <Tab key={lang} label={lang} />
+              ))}
+            </Tabs>
+
+            {uniqueLanguages.map((lang, index) => (
+              <TabPanel key={lang} value={uniqueLanguages.indexOf(selectedLanguage)} index={index}>
+                <Stack spacing={2}>
+                  {groupedBlockCodes[lang]
+                    .sort((a, b) => a.seq - b.seq)
+                    .map((block) => (
+                      <Box key={block.id}>
+                        <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                          {block.forStudent ? `${t("forStudentBlock")}` : `${t("forTeacherBlock")} (Read-Only)`}
+                        </Typography>
+                      <HustCodeEditor
+                        language={lang}
+                        sourceCode={block.forStudent ? blockCodeInputs[block.id] || "" : block.code}
+                        onChangeSourceCode={(code) => block.forStudent && handleBlockCodeChange(block.id, code)}
+                        height="200px"
+                        readOnly={!block.forStudent}
+                        listLanguagesAllowed={[lang]}
+                        hideProgrammingLanguage={1} 
+                        blockEditor={1} 
+                      />
+                      </Box>
+                    ))}
+                </Stack>
+              </TabPanel>
+            ))}
+          </>
+        ) : (
+          <Box>
+            <HustCodeEditor
+              title={t('common:sourceCode')}
+              language={language}
+              onChangeLanguage={(event) => setLanguage(event.target.value)}
+              sourceCode={codeSolution}
+              onChangeSourceCode={(code) => setCodeSolution(code)}
+              height={"480px"}
+              listLanguagesAllowed={listLanguagesAllowed}
+            />
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <LoadingButton
+                disabled={
+                  isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
+                }
+                sx={{ width: 128, mt: 1, mb: 1, textTransform: 'none' }}
+                loading={isProcessing}
+                loadingIndicator="Submitting…"
+                variant="contained"
+                color="primary"
+                type="submit"
+                onClick={submitCode}
+              >
+                {t("common:submit")}
+              </LoadingButton>
+
+              {submissionMode === SUBMISSION_MODE_NOT_ALLOWED && (
+                <Typography color="gray" ml={1}>
+                  Currently, this contest problem is not open for submissions
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        )}
+
+        {!isProblemBlock && (
+          <>
+            <Divider>Or</Divider>
+
+            <form onSubmit={handleFormSubmit}>
+              <Stack alignItems={"center"} spacing={2} sx={{ mt: 1 }}>
+                <Stack
+                  direction="row"
+                  justifyContent={"center"}
+                  alignItems="center"
+                  spacing={4}
+                >
+                  <HustCodeLanguagePicker
+                    listLanguagesAllowed={listLanguagesAllowed}
+                    language={language}
+                    onChangeLanguage={(e) => setLanguage(e.target.value)}
+                  />
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <InputFileUpload
+                      id="selected-upload-file"
+                      label={t("common:selectFile")}
+                      accept=".c, .cpp, .java, .py"
+                      onChange={onFileChange}
+                      ref={inputRef}
+                    />
+                    {file && <Typography variant="body1">{file.name}</Typography>}
+                  </Stack>
+                </Stack>
+
+                <LoadingButton
+                  disabled={
+                    isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
+                  }
+                  sx={{ width: 128, textTransform: 'none' }}
+                  loading={isProcessing}
+                  loadingIndicator="Submitting…"
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                >
+                  {t("common:submit")}
+                </LoadingButton>
+              </Stack>
+            </form>
+          </>
+        )}
+
+        {isProblemBlock && (
           <Box
             sx={{
               width: "100%",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              mt: 2,
             }}
           >
             <LoadingButton
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{width: 128, mt: 1, mb: 1, textTransform: 'none'}}
-              // loading={isProcessing}
-              // loadingIndicator="Submitting…"
+              sx={{width: 128, textTransform: 'none'}}
+              loading={isProcessing}
+              loadingIndicator="Submitting…"
               variant="contained"
               color="primary"
               type="submit"
@@ -409,61 +653,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               </Typography>
             )}
           </Box>
-        </Box>
-
-        <Divider>Or</Divider>
-
-        <form onSubmit={handleFormSubmit}>
-          <Stack alignItems={"center"} spacing={2} sx={{mt: 1}}>
-            <Stack
-              direction="row"
-              justifyContent={"center"}
-              alignItems="center"
-              spacing={4}
-            >
-              <HustCodeLanguagePicker
-                listLanguagesAllowed={listLanguagesAllowed}
-                language={language}
-                onChangeLanguage={(e) => setLanguage(e.target.value)}
-              />
-              <Stack direction="row" spacing={1} alignItems="center">
-                <InputFileUpload
-                  id="selected-upload-file"
-                  label={t("common:selectFile")}
-                  accept=".c, .cpp, .java, .py"
-                  onChange={onFileChange}
-                  ref={inputRef}
-                />
-                {file && <Typography variant="body1">{file.name}</Typography>}
-              </Stack>
-            </Stack>
-
-            <LoadingButton
-              disabled={
-                isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
-              }
-              sx={{width: 128, textTransform: 'none'}}
-              // loading={isProcessing}
-              // loadingIndicator="Submitting…"
-              variant="contained"
-              color="primary"
-              type="submit"
-              onChange={onInputChange}
-            >
-              {t("common:submit")}
-            </LoadingButton>
-          </Stack>
-        </form>
-        {/* <div>
-          <h3>
-            Status: <em>{status}</em>
-          </h3>
-        </div>
-        <div>
-          <h3>
-            Message: <em>{message}</em>
-          </h3>
-        </div> */}
+        )}
       </Box>
       {language === COMPUTER_LANGUAGES.JAVA && (
         <Alert
@@ -479,6 +669,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
           <b>public class Main {"{...}"}</b>
         </Alert>
       )}
+
       <Box sx={{mt: 3}}>
         <StudentViewSubmission problemId={problemId} ref={listSubmissionRef}/>
       </Box>

@@ -1,5 +1,5 @@
 import {makeStyles} from "@material-ui/core";
-import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography} from "@mui/material";
+import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography, Tabs, Tab } from "@mui/material";
 import React, {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import {useHistory} from "react-router-dom";
@@ -18,6 +18,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import StyledSelect from "../../select/StyledSelect";
 import TertiaryButton from "../../button/TertiaryButton";
+import PrimaryButton from "../../button/PrimaryButton";
 import FilterByTag from "../../table/FilterByTag";
 import withScreenSecurity from "../../withScreenSecurity";
 
@@ -25,8 +26,25 @@ const useStyles = makeStyles((theme) => ({
   description: {
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(3),
-  }
-}));
+  },
+  blockCodeContainer: {
+    display: "flex",
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  },
+  codeEditorWrapper: {
+    width: "75%",
+  },
+  blockCodeControls: {
+    width: "25%",
+    paddingLeft: theme.spacing(1),
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    gap: theme.spacing(1),
+  },
+}))
 
 export const getLevels = (t) => [
   {
@@ -65,6 +83,11 @@ export const getStatuses = (t) => [
   }
 ];
 
+const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
+  label: key,
+  value: COMPUTER_LANGUAGES[key],
+}))
+
 function CreateProblem() {
   const history = useHistory();
   const classes = useStyles();
@@ -78,7 +101,6 @@ function CreateProblem() {
 
   const [problemId, setProblemID] = useState("");
   const [problemName, setProblemName] = useState("");
-  // const [timeLimit, setTimeLimit] = useState(1);
   const [timeLimitCPP, setTimeLimitCPP] = useState(1);
   const [timeLimitJAVA, setTimeLimitJAVA] = useState(1);
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState(1);
@@ -107,6 +129,11 @@ function CreateProblem() {
   const [loading, setLoading] = useState(false);
 
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
+  const [isProblemBlock, setIsProblemBlock] = useState(false);
+  const [blockCodes, setBlockCodes] = useState(
+    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])),
+  );
+  const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
 
   const handleGetTagsSuccess = (res) => setTags(res.data);
 
@@ -139,6 +166,7 @@ function CreateProblem() {
       {
         onError: (e) => {
           setLoading(false)
+          setShowCompile(true)
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
@@ -191,6 +219,10 @@ function CreateProblem() {
       errorNoti(t("validateSubmit.warningCheckSolutionCompile"), 5000);
       return false;
     }
+    if (isProblemBlock && Object.values(blockCodes).every((blocks) => blocks.length === 0)) {
+      errorNoti(t("validateSubmit.noBlockCodesAdded"), 5000);
+      return false;
+    }
     return true;
   }
 
@@ -200,6 +232,21 @@ function CreateProblem() {
     setLoading(true);
     const fileId = attachmentFiles.map((file) => file.name);
     const tagIds = selectedTags.map((tag) => tag.tagId);
+
+    let formattedBlockCodes = []
+    if (isProblemBlock) {
+      formattedBlockCodes = Object.keys(blockCodes)
+        .filter((language) => blockCodes[language].length > 0)
+        .flatMap((language) =>
+          blockCodes[language].map((block, index) => ({
+            id: `${language}_${index}`,
+            code: block.code,
+            forStudent: block.forStudent ? 1 : 0,
+            language: language,
+          })),
+        )
+
+    }
 
     let body = {
       problemId: problemId,
@@ -223,11 +270,13 @@ function CreateProblem() {
       scoreEvaluationType: isCustomEvaluated ? CUSTOM_EVALUATION : NORMAL_EVALUATION,
       tagIds: tagIds,
       status: status,
-      sampleTestCase: sampleTestCase
+      sampleTestCase: sampleTestCase,
+      categoryId: isProblemBlock ? 1 : 0,
+      blockCodes: formattedBlockCodes,
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json'}));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -260,6 +309,30 @@ function CreateProblem() {
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
+  }
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedLanguage(newValue)
+  }
+
+  const handleDeleteBlock = (index) => {
+    setBlockCodes((prev) => ({
+      ...prev,
+      [selectedLanguage]: prev[selectedLanguage].filter((_, i) => i !== index),
+    }))
+  }
+
+  const handleAddBlockCode = () => {
+    try {
+      const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17
+      setBlockCodes((prev) => ({
+        ...prev,
+        [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
+      }))
+    } catch (error) {
+      console.error("Error adding block code:", error)
+      errorNoti(t("Failed to add block code"), 3000)
+    }
   }
 
   useEffect(() => {
@@ -441,6 +514,13 @@ function CreateProblem() {
             {t("common:add", {name: t('tag')})}
           </TertiaryButton>
         </Grid>
+
+        <Grid item xs={3}>
+          <FormControlLabel
+            label={t("problemBlock")}
+            control={<Checkbox checked={isProblemBlock} onChange={() => setIsProblemBlock(!isProblemBlock)} />}
+          />
+        </Grid>
       </Grid>
 
       <Link sx={{mt: 3, display: 'inline-block'}} href="/programming-contest/suggest-problem" target="_blank"
@@ -468,18 +548,78 @@ function CreateProblem() {
           }}
         />
         <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)}/>
-      </Box>
-      {/* this function is not implemented yet
-              <Box>
-                <Typography>
-                  <h2>{t("problemSuggestion")}</h2>
-                </Typography>
-                <RichTextEditor
-                  content={solution}
-                  onContentChange={text => setSolution(text)}
-                />
+        {isProblemBlock && (
+          <>
+            <Tabs value={selectedLanguage} onChange={handleTabChange} sx={{ marginTop: "12px" }}>
+              {PROGRAMMING_LANGUAGES.map((lang) => (
+                <Tab key={lang.value} label={lang.label} value={lang.value} />
+              ))}
+            </Tabs>
+
+            {blockCodes[selectedLanguage].map((block, index) => (
+              <Box className={classes.blockCodeContainer} key={index}>
+                <Box className={classes.codeEditorWrapper}>
+                  <HustCodeEditor
+                    sourceCode={block.code || ""}
+                    hideProgrammingLanguage={1} 
+                    blockEditor={1} 
+                    onChangeSourceCode={(newCode) => {
+                      try {
+                        setBlockCodes((prev) => ({
+                          ...prev,
+                          [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                            i === index ? { ...b, code: newCode } : b,
+                          ),
+                        }))
+                      } catch (error) {
+                        console.error("Error updating code:", error)
+                        errorNoti(t("Failed to update code"), 3000)
+                      }
+                    }}
+                    language={selectedLanguage}
+                    height="300px"
+                  />
+
+                </Box>
+                <Box className={classes.blockCodeControls}>
+                  <StyledSelect
+                    size="small"
+                    value={block.forStudent ? "student" : "teacher"}
+                    onChange={(event) => {
+                      setBlockCodes((prev) => ({
+                        ...prev,
+                        [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                          i === index ? { ...b, forStudent: event.target.value === "student" } : b,
+                        ),
+                      }))
+                    }}
+                    options={[
+                      { label: t("forTeacher"), value: "teacher" },
+                      { label: t("forStudent"), value: "student" },
+                    ]}
+                    sx={{ width: "250px", mt: 5 }}
+                  />
+                  <TertiaryButton
+                    size="small"
+                    onClick={() => handleDeleteBlock(index)}
+                    sx={{ minWidth: "60px", px: 1 }}
+                  >
+                    {t("delete", { ns: "common" })}
+                  </TertiaryButton>
+                </Box>
               </Box>
-              */}
+            ))}
+
+            <TertiaryButton
+              variant="outlined"
+              onClick={handleAddBlockCode}
+              sx={{ marginTop: "12px" }}
+            >
+              {t("addProblemBlock")}
+            </TertiaryButton>
+          </>
+        )}
+      </Box>
 
       <HustCodeEditor
         title={t("solutionSourceCode") + " *"}
@@ -556,14 +696,14 @@ function CreateProblem() {
       </Box>
 
       <Box width="100%" sx={{marginTop: "20px"}}>
-        <LoadingButton
+        <PrimaryButton
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
           sx={{textTransform: 'capitalize'}}
         >
           {t("save", {ns: "common"})}
-        </LoadingButton>
+        </PrimaryButton>
       </Box>
 
       <ModelAddNewTag
