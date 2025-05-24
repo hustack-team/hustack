@@ -229,7 +229,7 @@ export default function ContestManagerUserSubmission(props) {
         render: (rowData) => (
           <input
             type="checkbox"
-            checked={rowData.finalSelectedSubmission === "Y"}
+            checked={rowData.finalSelectedSubmission === 1}
             disabled
           />
         ),

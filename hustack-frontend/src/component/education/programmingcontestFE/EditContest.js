@@ -83,8 +83,8 @@ function EditContest() {
     participantViewComment: [],
     contestPublic: [],
     allowParticipantPinSubmission: [ 
-      { label: "No", value: "0" },
-      { label: "Yes", value: "1" },
+      { label: t("common:no"), value: "0" },
+      { label: t("common:yes"), value: "1" },
     ],
   });
 
@@ -198,8 +198,8 @@ function EditContest() {
           {label: "No", value: false},
         ],
         allowParticipantPinSubmission: [
-          { label: "No", value: "0" },
-          { label: "Yes", value: "1" },
+          {label: t("common:no"), value: "0"},
+          {label: t("common:yes"), value: "1"},
         ],
       });
 

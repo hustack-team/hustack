@@ -156,7 +156,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 source,
                 model.getLanguage(),
                 getClientIp(request),
-                numOfSubmissions == 0 ? "Y" : "N"
+                numOfSubmissions == 0 ? 1 : 0
                 );
 
 
@@ -280,12 +280,12 @@ public class SubmissionServiceImpl implements SubmissionService {
                 if (!contestId.equals(oldSubmission.getContestId()) || !problemId.equals(oldSubmission.getProblemId())) {
                     throw new IllegalArgumentException("Old submission does not belong to the specified contest or problem");
                 }
-                oldSubmission.setFinalSelectedSubmission(null);
+                oldSubmission.setFinalSelectedSubmission(0);
                 contestSubmissionRepo.save(oldSubmission);
             }
         }
 
-        newSubmission.setFinalSelectedSubmission("Y");
+        newSubmission.setFinalSelectedSubmission(1);
         contestSubmissionRepo.save(newSubmission);
     }
 

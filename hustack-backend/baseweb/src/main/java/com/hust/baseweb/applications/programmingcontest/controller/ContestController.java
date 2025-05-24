@@ -14,7 +14,9 @@ import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -39,12 +41,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestController {
 
-    private final TestCaseRepo testCaseRepo;
+    TestCaseRepo testCaseRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
@@ -336,7 +338,7 @@ public class ContestController {
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
 
         List<ModelProblemMaxSubmissionPoint> submittedProblems;
-        if (contest.getAllowParticipantPinSubmission() == 1) {
+        if (Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission())) {
             submittedProblems = contestSubmissionRepo.findFinalSelectedSubmittedProblemsOfUser(userId, contestId);
         } else {
             submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(userId, contestId);
@@ -358,7 +360,7 @@ public class ContestController {
             long totalPoint = 0;
             List<TestCaseEntity> testCases = testCaseRepo.findAllByProblemId(problemId);
             for (TestCaseEntity tc : testCases) {
-                if (contest.getEvaluateBothPublicPrivateTestcase().equals("Y")) {
+                if ("Y".equals(contest.getEvaluateBothPublicPrivateTestcase())) {
                     totalPoint += tc.getTestCasePoint();
                 } else {
                     if (tc.getIsPublic().equals("N")) {

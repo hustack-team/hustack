@@ -129,7 +129,7 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
     @Query(value = "SELECT problem_id AS problemId, MAX(point) AS maxPoint FROM contest_submission_new " +
                    "WHERE user_submission_id = :user_id " +
                    "AND contest_id = :contest_id " +
-                   "AND final_selected_submission = 'Y' " +
+                   "AND final_selected_submission = 1 " +
                    "GROUP BY problem_id",
            nativeQuery = true)
     List<ModelProblemMaxSubmissionPoint> findFinalSelectedSubmittedProblemsOfUser(
@@ -161,7 +161,7 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         "from ContestSubmissionEntity c " +
         "where c.userId = ?1 " +
         "and c.contestId = ?2 " +
-        "and c.finalSelectedSubmission = 'Y' " +
+        "and c.finalSelectedSubmission = 1 " +
         "and (c.managementStatus is null or c.managementStatus != 'DISABLED') " +
         "group by c.problemId")
     List<ModelSubmissionInfoRanking> getHighestPinnedSubmissions(String userId, String contestId);
@@ -171,7 +171,7 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         "from ContestSubmissionEntity c " +
         "where c.userId = ?1 " +
         "and c.contestId = ?2 " +
-        "and c.finalSelectedSubmission = 'Y' " +
+        "and c.finalSelectedSubmission = 1 " +
         "and (c.managementStatus is null or c.managementStatus != 'DISABLED') " +
         "and c.createdAt = (select c2.createdAt " +
         "                    from ContestSubmissionEntity c2 " +

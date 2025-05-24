@@ -1781,7 +1781,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             long totalPoint = 0;
             List<TestCaseEntity> TC = testCaseRepo.findAllByProblemId(problemId);
             for (TestCaseEntity tc : TC) {
-                if (contest.getEvaluateBothPublicPrivateTestcase().equals("Y")) {
+                if ("Y".equals(contest.getEvaluateBothPublicPrivateTestcase())) {
                     totalPoint += tc.getTestCasePoint();
                 } else {
                     if (tc.getIsPublic().equals("N")) {
@@ -1806,7 +1806,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             List<ModelSubmissionInfoRanking> submissionsByUser = new ArrayList<>();
 
-            boolean allowPinSubmission = contest != null && contest.getAllowParticipantPinSubmission() == 1;
+            boolean allowPinSubmission = contest != null && Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission());
 
             switch (getPointForRankingType) {
                 case HIGHEST:

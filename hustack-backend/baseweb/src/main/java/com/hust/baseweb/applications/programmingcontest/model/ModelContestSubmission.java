@@ -21,6 +21,6 @@ public class ModelContestSubmission {
 
     String createdByIp;
 
-    String finalSelectedSubmission;
+    Integer finalSelectedSubmission;
 
 }

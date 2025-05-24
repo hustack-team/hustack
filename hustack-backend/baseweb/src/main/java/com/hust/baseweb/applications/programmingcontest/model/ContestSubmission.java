@@ -46,7 +46,7 @@ public class ContestSubmission {
 
     String codeAuthorship;
 
-    String finalSelectedSubmission;
+    Integer finalSelectedSubmission;
 
     Integer allowParticipantPinSubmission;
 }

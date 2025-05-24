@@ -1,8 +1,7 @@
 import * as React from "react";
 import {useTranslation} from "react-i18next";
-// import StudentViewProblemList from "./StudentViewProblemList";
 import {a11yProps, AntTab, AntTabs, TabPanel} from "component/tab";
-import StudentViewProblemList from "./StudentViewProblemListV2";
+import StudentViewProblemList from "./StudentViewProblemList";
 import StudentViewSubmission from "./StudentViewSubmission";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import {useHistory} from "react-router-dom";

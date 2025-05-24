@@ -293,6 +293,6 @@ public class ContestEntity implements Serializable {
     @Column(name = "contest_show_comment")
     private String contestShowComment;
 
-    @Column(name = "use_participant_selected_submission")
+    @Column(name = "allow_participant_pin_submission")
     private Integer allowParticipantPinSubmission;
 }

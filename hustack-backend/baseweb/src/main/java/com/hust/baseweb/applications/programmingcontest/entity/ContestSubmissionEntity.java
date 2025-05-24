@@ -123,5 +123,5 @@ public class ContestSubmissionEntity {
     private String codeAuthorship;
 
     @Column(name="final_selected_submission")
-    private String finalSelectedSubmission;
+    private Integer finalSelectedSubmission;
 }
