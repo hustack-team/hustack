@@ -15,7 +15,7 @@ public class ContestSubmissionsByUser {
     private List<ModelSubmissionInfoRanking> mapProblemsToPoints;
     private String userId;
     private String fullname;
-    private long totalPoint;
+    private double totalPoint;
     private double totalPercentagePoint;
     private String stringTotalPercentagePoint;
 }

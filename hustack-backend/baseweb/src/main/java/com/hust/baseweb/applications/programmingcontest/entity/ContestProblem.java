@@ -50,4 +50,7 @@ public class ContestProblem {
 
     @Column(name="forbidden_instructions")
     private String forbiddenInstructions;
+
+    @Column(name="coefficient_point")
+    private Double coefficientPoint;
 }
