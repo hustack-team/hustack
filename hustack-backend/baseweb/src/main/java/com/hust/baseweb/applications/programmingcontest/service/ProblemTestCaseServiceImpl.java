@@ -193,7 +193,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .timeLimitJAVA(dto.getTimeLimitJAVA())
                                              .timeLimitPYTHON(dto.getTimeLimitPYTHON())
                                              .levelId(dto.getLevelId())
-                                             .categoryId(dto.getCategoryId() != null && dto.getCategoryId() == 1 ? 1 : 0)
+                                             .categoryId(dto.getCategoryId())
                                              .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
                                              .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
                                              .solution(dto.getSolution())
@@ -212,7 +212,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .build();
         problem = problemService.saveProblemWithCache(problem);
 
-        if (dto.getCategoryId() != null && dto.getCategoryId() == 1 && dto.getBlockCodes() != null) {
+        if (dto.getCategoryId() != null && Integer.valueOf(1).equals(dto.getCategoryId()) && dto.getBlockCodes() != null) {
             problemBlockService.createProblemBlocks(problemId, dto.getBlockCodes());
         }
 

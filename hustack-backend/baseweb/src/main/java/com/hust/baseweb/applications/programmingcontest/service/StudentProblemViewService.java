@@ -58,13 +58,13 @@ public class StudentProblemViewService {
             model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowedInContest());
             model.setSampleTestCase(problemEntity.getSampleTestCase());
 
-            if (problem.getCategoryId() != null && problem.getCategoryId() == 1) {
+            if (problem.getCategoryId() != null && Integer.valueOf(1).equals(problem.getCategoryId())) {
                 List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
                 List<BlockCode> blockCodes = problemBlocks.stream()
                                                                                     .map(pb -> {
                                                                                         BlockCode blockCode = new BlockCode();
                                                                                         blockCode.setId(pb.getId().toString());
-                                                                                        blockCode.setCode(pb.getCompletedBy() == 1 ? "" : pb.getSourceCode());
+                                                                                        blockCode.setCode(Integer.valueOf(1).equals(pb.getCompletedBy())? "" : pb.getSourceCode());
                                                                                         blockCode.setForStudent(pb.getCompletedBy());
                                                                                         blockCode.setLanguage(pb.getProgrammingLanguage());
                                                                                         blockCode.setSeq(pb.getSeq());
@@ -120,7 +120,7 @@ public class StudentProblemViewService {
             int blockProblemValue = blockProblem != null ? blockProblem : 0;
             response.setBlockProblem(blockProblemValue);
 
-            if (blockProblemValue == 1) {
+            if (Integer.valueOf(1).equals(blockProblemValue)) {
                 List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
                 List<BlockCode> blockCodes = problemBlocks.stream().map(pb -> {
                     BlockCode blockCode = new BlockCode();
