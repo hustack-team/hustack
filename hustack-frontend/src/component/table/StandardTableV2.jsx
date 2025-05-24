@@ -198,6 +198,6 @@ StandardTable.propTypes = {
   data: PropTypes.oneOfType([PropTypes.array, PropTypes.func]),
   commandBarComponents: PropTypes.element,
   editable: PropTypes.object,
-  totalSubmittedPoints: PropTypes.number, // Thêm prop mới
-  totalMaxPoints: PropTypes.number, // Thêm prop mới
+  totalSubmittedPoints: PropTypes.number, 
+  totalMaxPoints: PropTypes.number, 
 };
