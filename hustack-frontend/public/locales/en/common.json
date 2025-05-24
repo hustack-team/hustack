@@ -32,6 +32,7 @@
   "createdTime": "Created time",
   "lastModified":  "Last modified",
   "canEditCoefficientPoint": "Edit Coefficient Points",
+  "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)",
   "language": "Language",
   "enabled": "Enabled",
   "sourceCode": "Source code",

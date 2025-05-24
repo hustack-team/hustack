@@ -148,7 +148,7 @@ const ModalAddProblemToContest = (props) => {
         fullWidth
         required
         type="number"
-        label={"Score Coefficient (Min: 1, Max: 100)"}
+        label={t("common:scoreCoefficientTitle")}
         placeholder={"Enter a positive integer from 1 to 100 (default is 1)"}
         value={coefficientPoint}
         onChange={(event) => {

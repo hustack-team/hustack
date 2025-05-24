@@ -805,7 +805,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                    .contestShowTag(modelUpdateContest.getContestShowTag())
                                                    .contestShowComment(modelUpdateContest.getContestShowComment())
                                                    .contestPublic(modelUpdateContest.getContestPublic())
-                                                   .contestPublic(modelUpdateContest.getContestPublic())
                                                    .canEditCoefficientPoint(modelUpdateContest.getCanEditCoefficientPoint())
                                                    .build();
         return contestService.updateContestWithCache(contestEntity);
@@ -1864,15 +1863,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 totalWeightedPoint += point * coefficient;
                 totalWeightedPercent += percent * coefficient;
                 totalCoefficient += coefficient;
-
-                log.info("RANKING, problem " +
-                                   problemId +
-                                   " point = " + point +
-                                   " max = " + maxPoint +
-                                   " percent = " + percent +
-                                   " coefficient = " + coefficient +
-                                   " weighted point = " + (point * coefficient) +
-                                   " weighted percent = " + (percent * coefficient));
 
                 tmp.setPointPercentage(percent);
                 mapProblemsToPoints.add(tmp);
