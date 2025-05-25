@@ -51,7 +51,7 @@ export function ListTeacherGroupByMembership() {
 
   const columns = [
     {
-      title: t("groupName"),
+      title: t("common:groupName"),
       field: "name",
       render: (rowData) => (
         <Link
@@ -68,7 +68,7 @@ export function ListTeacherGroupByMembership() {
       field: "status",
     },
     {
-      title: t("description"),
+      title: t("common:description"),
       field: "description",
     },
     {
@@ -81,7 +81,7 @@ export function ListTeacherGroupByMembership() {
       render: (rowData) => toFormattedDateTime(rowData.lastUpdatedStamp),
     },
     {
-      title: t("editGroup"),
+      title: t("common:delete"),
       render: (rowData) => (
         <DeleteIcon
           style={{ cursor: "pointer", color: "#f44336" }}

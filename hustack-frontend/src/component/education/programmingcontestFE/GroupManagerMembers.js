@@ -12,6 +12,7 @@ import PrimaryButton from "component/button/PrimaryButton";
 import StandardTable from "component/table/StandardTable";
 import { isEmpty, trim } from "lodash";
 import { toFormattedDateTime } from "utils/dateutils";
+import { t } from "i18next";
 
 // Styled components for Autocomplete Popper
 const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
@@ -97,7 +98,7 @@ function GroupManagerMembers({ groupId, screenAuthorization, refresh }) {
       ),
     },
     {
-      title: "Added Time",
+      title: "Add Time",
       field: "addedTime",
       render: (rowData) => toFormattedDateTime(rowData.addedTime),
     },
@@ -253,7 +254,7 @@ function GroupManagerMembers({ groupId, screenAuthorization, refresh }) {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Add Members"
+              label={t("common:addMember")}
               placeholder="Search by ID or name"
               inputProps={{
                 ...params.inputProps,
@@ -286,7 +287,7 @@ function GroupManagerMembers({ groupId, screenAuthorization, refresh }) {
         </PrimaryButton>
       </Stack>
       <StandardTable
-        title="Group Members"
+        title={t("common:groupMember")}
         columns={columns}
         data={members}
         hideCommandBar

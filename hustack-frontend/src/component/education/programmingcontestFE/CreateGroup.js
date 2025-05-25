@@ -12,8 +12,10 @@ import { useHistory } from "react-router-dom";
 import { errorNoti, successNoti } from "utils/notification";
 import HustContainerCard from "../../common/HustContainerCard";
 import { sleep } from "./lib";
+import { useTranslation } from "react-i18next";
 
 function CreateGroup(props) {
+  const { t } = useTranslation("common");
   const history = useHistory();
 
   const [groupName, setGroupName] = useState("");
@@ -57,7 +59,7 @@ function CreateGroup(props) {
   return (
     <div>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <HustContainerCard title={"Create Teacher Group"}>
+        <HustContainerCard title={t("common:createGroup")}>
           {!loading && (
             <Box>
               <Grid container rowSpacing={3} spacing={2}>
@@ -67,8 +69,8 @@ function CreateGroup(props) {
                     autoFocus
                     required
                     value={groupName}
-                    id="groupName"
-                    label="Group Name"
+                    label={t("common:groupName")}
+                    id="GroupName"
                     onChange={(event) => {
                       setGroupName(event.target.value);
                     }}
@@ -87,7 +89,7 @@ function CreateGroup(props) {
                     required
                     value={status}
                     id="status"
-                    label="Status"
+                    label={t("common:status")}
                     onChange={(event) => {
                       setStatus(event.target.value);
                     }}
@@ -103,7 +105,7 @@ function CreateGroup(props) {
                     rows={4}
                     value={description}
                     id="description"
-                    label="Description"
+                    label={t("common:description")}
                     onChange={(event) => {
                       setDescription(event.target.value);
                     }}

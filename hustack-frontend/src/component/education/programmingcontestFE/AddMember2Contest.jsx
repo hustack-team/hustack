@@ -251,7 +251,7 @@ export default function AddMember2Contest(props) {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Users or Groups"
+              label="Search Users or Groups"
               placeholder="Search by user ID, name, or group name"
               inputProps={{
                 ...params.inputProps,
