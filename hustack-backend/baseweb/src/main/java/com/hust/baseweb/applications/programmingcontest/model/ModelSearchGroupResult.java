@@ -10,6 +10,6 @@ import java.util.List;
 public class ModelSearchGroupResult {
     private String id;
     private String name;
-    private List<String> users; // Optional, for user IDs
+    private List<String> users;
 
 }

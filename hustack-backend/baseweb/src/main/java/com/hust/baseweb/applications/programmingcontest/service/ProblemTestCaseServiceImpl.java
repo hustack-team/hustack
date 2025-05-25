@@ -2029,12 +2029,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     @Transactional
     @Override
     public void addUsers2ToContest(String contestId, AddUsers2Contest addUsers2Contest) {
-        // 1. Lấy danh sách userIds trực tiếp từ request
         List<String> userIds = addUsers2Contest.getUserIds() != null
             ? addUsers2Contest.getUserIds()
             : new ArrayList<>();
 
-        // 2. Lấy userIds từ groupIds
         List<String> groupUserIds = new ArrayList<>();
         if (addUsers2Contest.getGroupIds() != null) {
             for (UUID groupId : addUsers2Contest.getGroupIds()) {
@@ -2045,21 +2043,17 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
         }
 
-        // 3. Hợp nhất 2 danh sách và loại bỏ trùng
         Set<String> allUserIds = new HashSet<>();
         allUserIds.addAll(userIds);
         allUserIds.addAll(groupUserIds);
-        System.out.println("sssssssss" + allUserIds);
-        // 4. Gọi hàm addUserToContest cho từng userId
         for (String userId : allUserIds) {
             ModelAddUserToContest model = new ModelAddUserToContest(
                 contestId,
                 userId,
                 addUsers2Contest.getRole(),
-                "" // fullname để trống
+                ""
             );
-            System.out.println("addingggggg" + model.getUserId());
-            addUserToContest(model); // Gọi method bạn đã viết sẵn
+            addUserToContest(model);
         }
     }
 

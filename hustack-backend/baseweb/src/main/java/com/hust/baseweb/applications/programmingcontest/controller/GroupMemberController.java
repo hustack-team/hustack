@@ -3,12 +3,15 @@ package com.hust.baseweb.applications.programmingcontest.controller;
 import com.hust.baseweb.applications.programmingcontest.entity.TeacherGroup;
 import com.hust.baseweb.applications.programmingcontest.entity.TeacherGroupRelation;
 import com.hust.baseweb.applications.programmingcontest.entity.TeacherGroupRelationId;
+import com.hust.baseweb.applications.programmingcontest.model.AllGroupReponseDTO;
 import com.hust.baseweb.applications.programmingcontest.model.GroupMemberDTO;
 import com.hust.baseweb.applications.programmingcontest.model.MemberDTO;
 import com.hust.baseweb.applications.programmingcontest.model.ModelSearchGroupResult;
-import com.hust.baseweb.applications.programmingcontest.service.TeacherGroupService;
+import com.hust.baseweb.applications.programmingcontest.repo.TeacherGroupRelationServiceRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.TeacherGroupService;
 import com.hust.baseweb.applications.programmingcontest.service.TeacherGroupRelationService;
 import com.hust.baseweb.applications.programmingcontest.service.TeacherGroupServiceImpl;
+import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -32,20 +35,20 @@ import java.util.stream.Collectors;
 public class GroupMemberController {
 
     TeacherGroupService teacherGroupService;
-    TeacherGroupRelationService teacherGroupRelationService;
-    private final UserServiceImpl userServiceImpl;
-    private final TeacherGroupServiceImpl teacherGroupServiceImpl;
+    TeacherGroupRelationServiceRepo teacherGroupRelationService;
+    UserService userServiceImpl;
+    TeacherGroupService teacherGroupServiceImpl;
 
     @Autowired
     public GroupMemberController(
-        TeacherGroupService teacherGroupService,
         TeacherGroupRelationService teacherGroupRelationService,
         UserServiceImpl userServiceImpl,
+        TeacherGroupService teacherGroupService,
         TeacherGroupServiceImpl teacherGroupServiceImpl
     ) {
-        this.teacherGroupService = teacherGroupService;
         this.teacherGroupRelationService = teacherGroupRelationService;
         this.userServiceImpl = userServiceImpl;
+        this.teacherGroupService = teacherGroupService;
         this.teacherGroupServiceImpl = teacherGroupServiceImpl;
     }
 
@@ -67,18 +70,26 @@ public class GroupMemberController {
     }
 
     @GetMapping("/groups/{id}")
-    public ResponseEntity<GroupMemberDTO> getGroup(@PathVariable UUID id) {
-        return teacherGroupService.findById(id)
-                                  .map(group -> ResponseEntity.ok(convertToGroupDTO(group)))
-                                  .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    public ResponseEntity<AllGroupReponseDTO> getGroup(@PathVariable UUID id, Authentication authentication) {
+        String userId = authentication.getName();
+        return (ResponseEntity<AllGroupReponseDTO>) teacherGroupService.findById(id)
+                                                                       .map(group -> {
+                                      if (!group.getCreatedByUserId().equals(userId)) {
+                                          return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                                      }
+                                      return ResponseEntity.ok(convertToGroupDTO(group));
+                                  })
+                                                                       .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping("/search-groups")
     public ResponseEntity<?> search(
         Pageable pageable,
         @RequestParam(value = "keyword", required = false) String keyword,
-        @RequestParam(value = "exclude", required = false) List<String> excludeIds
+        @RequestParam(value = "exclude", required = false) List<String> excludeIds,
+        Authentication authentication
     ) {
+        String userId = authentication.getName();
         if (keyword == null) {
             keyword = "";
         }
@@ -87,23 +98,30 @@ public class GroupMemberController {
             excludeIds = Collections.emptyList();
         }
 
-        Page<ModelSearchGroupResult> resp = teacherGroupServiceImpl.search(keyword, excludeIds, pageable);
+        Page<ModelSearchGroupResult> resp = teacherGroupServiceImpl.search(keyword, excludeIds, pageable, userId);
         return ResponseEntity.status(200).body(resp);
     }
 
     @GetMapping("/groups")
-    public ResponseEntity<List<GroupMemberDTO>> getAllGroups() {
+    public ResponseEntity<List<GroupMemberDTO>> getAllGroups(Authentication authentication) {
+        String userId = authentication.getName();
         List<GroupMemberDTO> groups = teacherGroupService.findAll()
-                                                   .stream()
-                                                   .map(this::convertToGroupDTO)
-                                                   .collect(Collectors.toList());
+                                                         .stream()
+                                                         .filter(group -> group.getCreatedByUserId().equals(userId))
+                                                         .map(this::convertToGroupDTO)
+                                                         .collect(Collectors.toList());
         return ResponseEntity.ok(groups);
     }
 
     @PutMapping("/groups/{id}")
-    public ResponseEntity<GroupMemberDTO> updateGroup(@PathVariable UUID id, @Valid @RequestBody GroupMemberDTO groupDTO) {
+    public ResponseEntity<GroupMemberDTO> updateGroup(@PathVariable UUID id, @Valid @RequestBody GroupMemberDTO groupDTO, Authentication authentication) {
         try {
-            TeacherGroup group = new TeacherGroup();
+            String userId = authentication.getName();
+            TeacherGroup group = teacherGroupService.findById(id)
+                                                    .orElseThrow(() -> new RuntimeException("TeacherGroup not found with id: " + id));
+            if (!group.getCreatedByUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
             group.setName(groupDTO.getName());
             group.setStatus(groupDTO.getStatus());
             group.setDescription(groupDTO.getDescription());
@@ -116,8 +134,14 @@ public class GroupMemberController {
     }
 
     @DeleteMapping("/groups/{id}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteGroup(@PathVariable UUID id, Authentication authentication) {
         try {
+            String userId = authentication.getName();
+            TeacherGroup group = teacherGroupService.findById(id)
+                                                    .orElseThrow(() -> new RuntimeException("TeacherGroup not found with id: " + id));
+            if (!group.getCreatedByUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
             teacherGroupService.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -128,9 +152,16 @@ public class GroupMemberController {
     @PostMapping("/groups/{groupId}/members")
     public ResponseEntity<List<MemberDTO>> addMembers(
         @PathVariable UUID groupId,
-        @Valid @RequestBody List<String> userIds
+        @Valid @RequestBody List<String> userIds,
+        Authentication authentication
     ) {
         try {
+            String userId = authentication.getName();
+            TeacherGroup group = teacherGroupService.findById(groupId)
+                                                    .orElseThrow(() -> new RuntimeException("TeacherGroup not found with id: " + groupId));
+            if (!group.getCreatedByUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
             List<TeacherGroupRelation> relations = teacherGroupService.addMembers(groupId, userIds);
             List<MemberDTO> memberDTOs = relations.stream()
                                                   .map(this::convertToMemberDTO)
@@ -144,7 +175,13 @@ public class GroupMemberController {
     }
 
     @GetMapping("/groups/{groupId}/members")
-    public ResponseEntity<List<MemberDTO>> getMembers(@PathVariable UUID groupId) {
+    public ResponseEntity<List<MemberDTO>> getMembers(@PathVariable UUID groupId, Authentication authentication) {
+        String userId = authentication.getName();
+        TeacherGroup group = teacherGroupService.findById(groupId)
+                                                .orElseThrow(() -> new RuntimeException("TeacherGroup not found with id: " + groupId));
+        if (!group.getCreatedByUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
         List<MemberDTO> members = teacherGroupRelationService.findAll()
                                                              .stream()
                                                              .filter(relation -> relation.getGroupId().equals(groupId))
@@ -154,7 +191,13 @@ public class GroupMemberController {
     }
 
     @GetMapping("/groups/{groupId}/members/{userId}")
-    public ResponseEntity<MemberDTO> getMember(@PathVariable UUID groupId, @PathVariable String userId) {
+    public ResponseEntity<MemberDTO> getMember(@PathVariable UUID groupId, @PathVariable String userId, Authentication authentication) {
+        String currentUserId = authentication.getName();
+        TeacherGroup group = teacherGroupService.findById(groupId)
+                                                .orElseThrow(() -> new RuntimeException("TeacherGroup not found with id: " + groupId));
+        if (!group.getCreatedByUserId().equals(currentUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         TeacherGroupRelationId id = new TeacherGroupRelationId();
         id.setGroupId(groupId);
         id.setUserId(userId);
@@ -164,8 +207,14 @@ public class GroupMemberController {
     }
 
     @DeleteMapping("/groups/{groupId}/members/{userId}")
-    public ResponseEntity<Void> removeMember(@PathVariable UUID groupId, @PathVariable String userId) {
+    public ResponseEntity<Void> removeMember(@PathVariable UUID groupId, @PathVariable String userId, Authentication authentication) {
         try {
+            String currentUserId = authentication.getName();
+            TeacherGroup group = teacherGroupService.findById(groupId)
+                                                    .orElseThrow(() -> new RuntimeException("TeacherGroup not found with id: " + groupId));
+            if (!group.getCreatedByUserId().equals(currentUserId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
             teacherGroupService.removeMember(groupId, userId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {

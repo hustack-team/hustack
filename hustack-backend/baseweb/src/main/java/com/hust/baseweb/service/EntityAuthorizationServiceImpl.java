@@ -24,7 +24,6 @@ public class EntityAuthorizationServiceImpl implements EntityAuthorizationServic
         List<EntityAuthorization> entityAuthorizations = entityAuthorizationRepo.findAllByIdStartingWithAndRoleIdIn(
             id,
             roleIds);
-        System.out.println("rolesss22222222222" + entityAuthorizations);
         return entityAuthorizations != null ? entityAuthorizations
             .stream()
             .map(EntityAuthorization::getId)
