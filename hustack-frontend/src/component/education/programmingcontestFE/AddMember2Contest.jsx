@@ -1,4 +1,5 @@
-import { makeStyles } from "@material-ui/core/styles";
+//import { makeStyles } from "@mui/styles"; //"@material-ui/core/styles";
+import {makeStyles} from "@material-ui/core/styles";
 import {
   Autocomplete,
   Avatar,
@@ -10,18 +11,19 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { autocompleteClasses } from "@mui/material/Autocomplete";
-import { styled } from "@mui/material/styles";
-import { debounce } from "@mui/material/utils";
-import { request } from "api";
+import {autocompleteClasses} from "@mui/material/Autocomplete";
+import {styled} from "@mui/material/styles";
+import {debounce} from "@mui/material/utils";
+import {request} from "api";
 import PrimaryButton from "component/button/PrimaryButton";
 import StyledSelect from "component/select/StyledSelect";
-import { getTextAvatar } from "layout/account/AccountButton";
-import { isEmpty, trim } from "lodash";
-import { useEffect, useMemo, useState } from "react";
-import { successNoti } from "utils/notification";
+import {getTextAvatar} from "layout/account/AccountButton";
+import {isEmpty, trim} from "lodash";
+import {useEffect, useMemo, useState} from "react";
+import {successNoti} from "utils/notification";
 import UploadUserToContestDialog from "./UploadUserToContestDialog";
 import UploadUserUpdateFullNameContestDialog from "./UploadUserUpdateFullNameContestDialog";
+
 
 // https://mui.com/material-ui/react-avatar/#letter-avatars
 function stringToColor(string) {
@@ -29,6 +31,7 @@ function stringToColor(string) {
   let hash = 0;
   let i;
 
+  /* eslint-disable no-bitwise */
   for (i = 0; i < string.length; i += 1) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
@@ -39,6 +42,7 @@ function stringToColor(string) {
     const value = (hash >> (i * 8)) & 0xff;
     color += `00${value.toString(16)}`.slice(-2);
   }
+  /* eslint-enable no-bitwise */
 
   return color;
 }
@@ -59,12 +63,15 @@ const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
     margin: 0,
     padding: 8,
     borderRadius: 8,
+    // backgroundColor: "black",
   },
   [`& .${autocompleteClasses.listbox}`]: {
     padding: 0,
+    // backgroundColor: "orange",
     [`& .${autocompleteClasses.option}`]: {
       padding: "0px 8px",
       borderRadius: 8,
+      // backgroundColor: "red",
       "&:hover": {
         backgroundColor: "#eeeeee",
       },
@@ -73,6 +80,8 @@ const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
 }));
 
 export function PopperComponent(props) {
+  // console.log(props);
+  // const { disablePortal, anchorEl, open, ...other } = props;
   return <StyledAutocompletePopper {...props} />;
 }
 
@@ -107,9 +116,11 @@ export default function AddMember2Contest(props) {
   const classes = useStyles();
   const [selectedRole, setSelectedRole] = useState(roles[0].value);
 
+  //
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
   const [openUploadToUpdateUserFullnameDialog, setOpenUploadToUpdateUserFullnameDialog] = useState(false);
 
+  //
   const [value, setValue] = useState([]);
   const [options, setOptions] = useState([]);
   const [keyword, setKeyword] = useState("");
@@ -201,6 +212,12 @@ export default function AddMember2Contest(props) {
   useEffect(() => {
     let active = true;
 
+    // if (keyword === "" && value) {
+    //   setOptions(value ? [value] : []);
+    //   return undefined;
+    // }
+
+    // console.log(value);
     const excludeUsers = value.filter((item) => item.type === "user").map((item) => item.id);
     const excludeGroups = value.filter((item) => item.type === "group").map((item) => item.id);
 
@@ -235,10 +252,14 @@ export default function AddMember2Contest(props) {
           size="small"
           PopperComponent={PopperComponent}
           getOptionLabel={(option) =>
+            // console.log("getOptionLabel with option", option);
             option.type === "group" ? `Group: ${option.name}` : option.name
           }
-          filterOptions={(x) => x}
+          filterOptions={(x) => x} // disable filtering on client
           options={options}
+          // autoComplete
+          // includeInputInList
+          // filterSelectedOptions
           value={value}
           noOptionsText="No matches found"
           onChange={(event, newValue) => {

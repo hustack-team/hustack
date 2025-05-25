@@ -1,6 +1,7 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

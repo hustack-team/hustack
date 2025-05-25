@@ -28,7 +28,9 @@ import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
@@ -69,71 +71,72 @@ import static com.hust.baseweb.utils.PdfUtils.exportPdf;
 @Slf4j
 @Service
 @AllArgsConstructor(onConstructor_ = {@Autowired})
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
-    private final ProblemRepo problemRepo;
-    private final TeacherGroupRelationRepository teacherGroupRelationRepository;
-    private final ProblemTestCaseServiceCache problemTestCaseServiceCache;
+    ProblemRepo problemRepo;
+    TeacherGroupRelationRepository teacherGroupRelationRepository;
+    ProblemTestCaseServiceCache problemTestCaseServiceCache;
 
-    private TestCaseRepo testCaseRepo;
+    TestCaseRepo testCaseRepo;
 
-    private UserLoginRepo userLoginRepo;
+    UserLoginRepo userLoginRepo;
 
-    private ContestRepo contestRepo;
+    ContestRepo contestRepo;
 
-    private Constants constants;
+    Constants constants;
 
-    private ContestPagingAndSortingRepo contestPagingAndSortingRepo;
+    ContestPagingAndSortingRepo contestPagingAndSortingRepo;
 
-    private ContestSubmissionRepo contestSubmissionRepo;
+    ContestSubmissionRepo contestSubmissionRepo;
 
-    private UserRegistrationContestRepo userRegistrationContestRepo;
+    UserRegistrationContestRepo userRegistrationContestRepo;
 
-    private NotificationsService notificationsService;
+    NotificationsService notificationsService;
 
-    private UserRegistrationContestPagingAndSortingRepo userRegistrationContestPagingAndSortingRepo;
+    UserRegistrationContestPagingAndSortingRepo userRegistrationContestPagingAndSortingRepo;
 
-    private ContestSubmissionPagingAndSortingRepo contestSubmissionPagingAndSortingRepo;
+    ContestSubmissionPagingAndSortingRepo contestSubmissionPagingAndSortingRepo;
 
-    private ContestSubmissionTestCaseEntityRepo contestSubmissionTestCaseEntityRepo;
+    ContestSubmissionTestCaseEntityRepo contestSubmissionTestCaseEntityRepo;
 
-    private UserService userService;
+    UserService userService;
 
-    private ContestRoleRepo contestRoleRepo;
+    ContestRoleRepo contestRoleRepo;
 
-    private CodePlagiarismRepo codePlagiarismRepo;
+    CodePlagiarismRepo codePlagiarismRepo;
 
-    private ContestSubmissionHistoryRepo contestSubmissionHistoryRepo;
+    ContestSubmissionHistoryRepo contestSubmissionHistoryRepo;
 
-    private ContestProblemRepo contestProblemRepo;
+    ContestProblemRepo contestProblemRepo;
 
-    private UserContestProblemRoleRepo userContestProblemRoleRepo;
+    UserContestProblemRoleRepo userContestProblemRoleRepo;
 
-    private TagRepo tagRepo;
+    TagRepo tagRepo;
 
-    private MongoContentService mongoContentService;
+    MongoContentService mongoContentService;
 
-    private ProblemService problemService;
+    ProblemService problemService;
 
-    private ContestService contestService;
+    ContestService contestService;
 
-    private TestCaseService testCaseService;
+    TestCaseService testCaseService;
 
-    private RabbitTemplate rabbitTemplate;
+    RabbitTemplate rabbitTemplate;
 
-    private ProblemTestCaseServiceCache cacheService;
+    ProblemTestCaseServiceCache cacheService;
 
-    private ContestProblemExportService exporter;
+    ContestProblemExportService exporter;
 
-    private ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
+    ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
 
-    private UserRegistrationContestService userRegistrationContestService;
+    UserRegistrationContestService userRegistrationContestService;
 
-    private Judge0Service judge0Service;
+    Judge0Service judge0Service;
 
-    private ProblemTagRepo problemTagRepo;
+    ProblemTagRepo problemTagRepo;
 
     ObjectMapper objectMapper;
 
@@ -708,7 +711,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             urc.setStatus(UserRegistrationContestEntity.STATUS_SUCCESSFUL);
             userRegistrationContestRepo.save(urc);
 
-            // add account admin to the contest
             String admin = "admin";
             UserLogin u = userLoginRepo.findByUserLoginId(admin);
             if (u != null && !"admin".equals(u.getUserLoginId())) {
@@ -2050,9 +2052,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             ModelAddUserToContest model = new ModelAddUserToContest(
                 contestId,
                 userId,
-                addUsers2Contest.getRole(),
-                ""
-            );
+                addUsers2Contest.getRole(), "");
             addUserToContest(model);
         }
     }
