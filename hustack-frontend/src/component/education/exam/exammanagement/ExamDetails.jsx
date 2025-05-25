@@ -189,6 +189,24 @@ function ExamDetails(props) {
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái đáp án:</h4>
                 <span>{data?.answerStatus === 'NO_OPEN' ? 'Ẩn' : 'Hiện'}</span>
               </div>
+              <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Hình thức giám sát:</h4>
+                <span>
+                  {{
+                    0: 'Không giám sát',
+                    1: 'Thao tác trình duyệt',
+                    2: 'Thao tác trình duyệt + Camera'
+                  }[data?.monitor] || 'Không giám sát'}
+                </span>
+              </div>
+              {
+                (data?.monitor === 1 || data?.monitor === 2) && (
+                  <div style={{display: "flex"}}>
+                    <h4 style={{margin: '0 5px 0 0', padding: 0}}>Khoá màn hình khi vi phạm:</h4>
+                    <span>{data?.blockScreen === 0 ? 'Không khoá' : `${data?.blockScreen} giây`}</span>
+                  </div>
+                )
+              }
             </div>
 
             <div>

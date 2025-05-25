@@ -126,6 +126,32 @@ function ExamCreateUpdate(props) {
     }
   ]
 
+  const monitorList = [
+    {
+      value: 0,
+      name: 'Không giám sát'
+    },
+    {
+      value: 1,
+      name: 'Thao tác trình duyệt'
+    },
+    {
+      value: 2,
+      name: 'Thao tác trình duyệt + Camera'
+    }
+  ]
+
+  const blockScreenList = [
+    {
+      value: 0,
+      name: 'Không khoá'
+    },
+    {
+      value: 1,
+      name: 'Khoá'
+    },
+  ]
+
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
@@ -140,6 +166,9 @@ function ExamCreateUpdate(props) {
   const [name, setName] = useState(data?.name);
   const [status, setStatus] = useState(data?.status);
   const [answerStatus, setAnswerStatus] = useState(data?.answerStatus);
+  const [monitor, setMonitor] = useState(data?.monitor);
+  const [blockScreen, setBlockScreen] = useState(data?.blockScreen > 0 ? 1 : 0);
+  const [timeBlockScreen, setTimeBlockScreen] = useState(data?.blockScreen);
   const [description, setDescription] = useState(data?.description ? data?.description : '');
   const [startTime, setStartTime] = useState(data?.startTime);
   const [endTime, setEndTime] = useState(data?.endTime);
@@ -167,6 +196,8 @@ function ExamCreateUpdate(props) {
       description: description,
       status: status,
       answerStatus: answerStatus,
+      monitor: monitor,
+      blockScreen: blockScreen === 0 ? 0 : timeBlockScreen,
       startTime: formatDateTimeApi(startTime),
       endTime: formatDateTimeApi(endTime),
       examExamTests: examExamTests,
@@ -384,7 +415,6 @@ function ExamCreateUpdate(props) {
                       })
                     }
                   </TextField>
-
                   <TextField
                     required
                     autoFocus
@@ -404,7 +434,6 @@ function ExamCreateUpdate(props) {
                       })
                     }
                   </TextField>
-
                   <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
                     <DateTimePicker
                       label="Thời gian bắt đầu"
@@ -422,6 +451,72 @@ function ExamCreateUpdate(props) {
                       renderInput={(params) => <TextField {...params} error={false} style={{marginRight: '16px'}}/>}
                     />
                   </LocalizationProvider>
+                </div>
+
+                <div>
+                  <TextField
+                    required
+                    autoFocus
+                    id="ExamMonitor"
+                    select
+                    label="Hình thức giám sát"
+                    value={monitor}
+                    onChange={(event) => {
+                      setMonitor(event.target.value);
+                    }}
+                  >
+                    {
+                      monitorList.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+
+                  {
+                    (monitor === 1 || monitor === 2) && (
+                      <TextField
+                        required
+                        autoFocus
+                        id="ExamBlockScreen"
+                        select
+                        label="Khoá màn hình khi vi phạm"
+                        value={blockScreen}
+                        onChange={(event) => {
+                          setBlockScreen(event.target.value);
+                        }}
+                      >
+                        {
+                          blockScreenList.map(item => {
+                            return (
+                              <MenuItem value={item.value}>{item.name}</MenuItem>
+                            )
+                          })
+                        }
+                      </TextField>
+                    )
+                  }
+
+                  {
+                    ((monitor === 1 || monitor === 2) && blockScreen === 1) && (
+                      <TextField
+                        autoFocus
+                        required
+                        id="ExamTimeBlockScreen"
+                        label="Thời gian khoá(giây)"
+                        placeholder="Nhập số giây khoá"
+                        type={"number"}
+                        value={timeBlockScreen}
+                        onChange={(event) => {
+                          setTimeBlockScreen(event.target.value);
+                        }}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    )
+                  }
                 </div>
 
                 <div>

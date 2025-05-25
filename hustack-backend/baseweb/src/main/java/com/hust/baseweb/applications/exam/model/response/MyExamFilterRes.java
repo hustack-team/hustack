@@ -6,6 +6,8 @@ public interface MyExamFilterRes {
     String getExamCode();
     String getExamName();
     String getExamDescription();
+    Integer getExamMonitor();
+    Integer getExamBlockScreen();
     String getStartTime();
     String getEndTime();
 }

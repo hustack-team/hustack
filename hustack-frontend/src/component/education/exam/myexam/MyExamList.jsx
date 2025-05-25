@@ -15,6 +15,7 @@ import PrimaryButton from "../../../button/PrimaryButton";
 import SecondaryButton from "../ultils/component/SecondaryButton";
 import {useLocation} from "react-router";
 import TertiaryButton from "../../../button/TertiaryButton";
+import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
 
 const baseColumn = {
   sortable: false,
@@ -89,35 +90,47 @@ function MyExamList(props) {
   const location = useLocation();
   const data = location.state?.data
   const exam = location.state?.exam
-
-  console.log('data',data)
+  const { closeMenu, openMenu } = useMenu();
 
   if(data === undefined){
     window.location.href = '/exam/my-exam';
+    openMenu()
   }
 
   const handleDoingExam = (rowData) => {
-    request(
-      "get",
-      `/exam/student/submissions/examStudentTest/${rowData?.examStudentTestId}`,
-      (res) => {
-        if(res.status === 200){
-          if(res.data.resultCode === 200){
-            history.push({
-              pathname: `/exam/doing`,
-              state: {
-                data: res.data.data
-              },
-            });
-          }else{
-            toast.error(res.data.resultMsg)
+    closeMenu()
+    if(exam?.examMonitor === 1 ||
+      exam?.examMonitor === 2){
+      history.push({
+        pathname: `/exam/my-exam-preview`,
+        state: {
+          test: rowData,
+          exam,
+        },
+      });
+    }else{
+      request(
+        "get",
+        `/exam/student/submissions/examStudentTest/${rowData?.examStudentTestId}`,
+        (res) => {
+          if(res.status === 200){
+            if(res.data.resultCode === 200){
+              history.push({
+                pathname: `/exam/doing`,
+                state: {
+                  data: res.data.data
+                },
+              });
+            }else{
+              toast.error(res.data.resultMsg)
+            }
+          }else {
+            toast.error(res)
           }
-        }else {
-          toast.error(res)
-        }
-      },
-      { onError: (e) => toast.error(e) },
-    );
+        },
+        { onError: (e) => toast.error(e) },
+      );
+    }
   };
 
   return (
@@ -151,7 +164,10 @@ function MyExamList(props) {
         <CardActions style={{justifyContent: 'flex-end'}}>
           <TertiaryButton
             variant="outlined"
-            onClick={() => history.push("/exam/my-exam")}
+            onClick={() => {
+              history.push("/exam/my-exam");
+              openMenu()
+            }}
           >
             Hủy
           </TertiaryButton>

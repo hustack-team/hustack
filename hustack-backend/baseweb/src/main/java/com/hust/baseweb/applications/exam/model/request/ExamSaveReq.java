@@ -22,6 +22,8 @@ public class ExamSaveReq {
     String description;
     Integer status;
     String answerStatus;
+    Integer monitor;
+    Integer blockScreen;
     String startTime;
     String endTime;
     List<ExamExamTestEntity> examExamTests;

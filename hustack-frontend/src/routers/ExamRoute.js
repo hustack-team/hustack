@@ -10,6 +10,7 @@ import MyExamDetails from "../component/education/exam/myexam/MyExamDetails";
 import ExamSubjectManagement from "../component/education/exam/subject/ExamSubjectManagement";
 import ExamSubjectCreateUpdate from "../component/education/exam/subject/ExamSubjectCreateUpdate";
 import MyExamList from "../component/education/exam/myexam/MyExamList";
+import MyExamPreview from "../component/education/exam/myexam/MyExamPreview";
 
 export default function ExamRoute() {
   let { path } = useRouteMatch();
@@ -69,6 +70,11 @@ export default function ExamRoute() {
           component={MyExamList}
           exact
           path={`${path}/my-exam-test`}
+        ></Route>
+        <Route
+          component={MyExamPreview}
+          exact
+          path={`${path}/my-exam-preview`}
         ></Route>
         <Route
           component={MyExamDetails}

@@ -79,6 +79,8 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.description, " +
                    "    e.status, " +
                    "    e.answer_status as answerStatus, " +
+                   "    e.monitor as monitor, " +
+                   "    e.block_screen as blockScreen, " +
                    "    e.start_time as startTime, " +
                    "    e.end_time as endTime, " +
                    "    COALESCE(json_agg(json_build_object('id', et.id, 'examExamTestId', eet.id, 'code', et.code, 'name', et.name, 'description', et.description)) FILTER (WHERE et.id IS NOT NULL), '[]') AS examTests  " +
@@ -112,6 +114,8 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.code as examCode, " +
                    "    e.name as examName, " +
                    "    e.description as examDescription, " +
+                   "    e.monitor as examMonitor, " +
+                   "    e.block_screen as examBlockScreen, " +
                    "    e.start_time as startTime, " +
                    "    e.end_time as endTime " +
                    "from " +
@@ -134,6 +138,8 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.code, " +
                    "    e.name, " +
                    "    e.description, " +
+                   "    e.monitor, " +
+                   "    e.block_screen, " +
                    "    e.start_time, " +
                    "    e.end_time " +
                    "order by " +
@@ -160,6 +166,8 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                         "    e.code, " +
                         "    e.name, " +
                         "    e.description, " +
+                        "    e.monitor, " +
+                        "    e.block_screen, " +
                         "    e.start_time, " +
                         "    e.end_time ",
            nativeQuery = true)
@@ -176,6 +184,8 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.code as examCode, " +
                    "    e.name as examName, " +
                    "    e.description as examDescription, " +
+                   "    e.monitor as examMonitor, " +
+                   "    e.block_screen as examBlockScreen, " +
                    "    e.start_time as startTime, " +
                    "    e.end_time as endTime, " +
                    "    et.id as examTestId, " +

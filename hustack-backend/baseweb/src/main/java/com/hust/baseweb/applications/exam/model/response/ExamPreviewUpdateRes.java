@@ -21,6 +21,8 @@ public class ExamPreviewUpdateRes {
     String description;
     Integer status;
     String answerStatus;
+    Integer monitor;
+    Integer blockScreen;
     String startTime;
     String endTime;
     List<ExamExamTestPreviewUpdateRes> examExamTests;

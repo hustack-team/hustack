@@ -7,6 +7,8 @@ public interface MyExamDetailsResDB {
     String getExamCode();
     String getExamName();
     String getExamDescription();
+    String getExamMonitor();
+    String getExamBlockScreen();
     String getStartTime();
     String getEndTime();
     String getExamTestId();

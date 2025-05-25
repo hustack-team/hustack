@@ -19,6 +19,8 @@ public class MyExamDetailsRes {
     String examCode;
     String examName;
     String examDescription;
+    Integer examMonitor;
+    Integer examBlockScreen;
     String startTime;
     String endTime;
     String examTestId;

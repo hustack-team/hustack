@@ -33,6 +33,8 @@ import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import MyExamMonitor from "./MyExamMonitor";
+import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -56,6 +58,7 @@ function MyExamDetails(props) {
   const history = useHistory();
   const location = useLocation();
   const data = location.state?.data
+  const { openMenu } = useMenu();
 
   if(data === undefined){
     window.location.href = '/exam/my-exam';
@@ -106,9 +109,11 @@ function MyExamDetails(props) {
   };
 
   const handleAnswerRadioChange = (event, questionOrder) => {
-    dataAnswers[questionOrder-1].answer = event.target.value
-
-    setDataAnswers(dataAnswers)
+    setDataAnswers((prev) => {
+      const newAnswers = [...prev];
+      newAnswers[questionOrder-1].answer = event.target.value
+      return newAnswers;
+    })
   };
 
   const handleAnswerTextChange = (value, questionOrder) => {
@@ -189,9 +194,11 @@ function MyExamDetails(props) {
             toast.error(res.data.resultMsg)
             setIsLoading(false)
           }
+          openMenu()
         }else {
           toast.error(res)
           setIsLoading(false)
+          openMenu()
         }
       },
       { onError: (e) => toast.error(e) },
@@ -219,33 +226,11 @@ function MyExamDetails(props) {
     setStartDoing(true)
   }
 
-  // Checking focus tab
-  useEffect(() => {
-    // handleCheckingFocusTab()
-  }, []);
-  const onFocus = () => {
-    console.log("Tab is in focus");
-  };
-  // const onBlur = () => {
-  //   console.log("Tab is blurred");
-  // };
-  const onVisibilitychange = () => {
-    console.log('document.visibilityState',document.visibilityState)
-    console.log("Ghi lại nội dung tab hiện tại:", document.documentURI, document.title);
-  };
-  const handleCheckingFocusTab = () => {
-    window.addEventListener("focus", onFocus);
-    // window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVisibilitychange);
-    onFocus();
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      // window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibilitychange);
-    };
-  }
   return (
-    <div>
+    <MyExamMonitor
+      monitor={data?.examMonitor}
+      blockScreen={data?.examBlockScreen}
+    >
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Card>
           <CardContent>
@@ -399,11 +384,14 @@ function MyExamDetails(props) {
                                       </Box>
                                     </FormGroup>
                                   }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes(`${index+1}`)}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, `${index+1}`, event.target.checked)
-                                                     }/>}
+                                  control={
+                                    <Checkbox
+                                      color="primary"
+                                      checked={value?.answer?.includes(`${index+1}`)}
+                                      disabled={data?.examResultId != null}
+                                      onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, `${index+1}`, event.target.checked)}
+                                    />
+                                  }
                                 />
                               ))
                             }
@@ -415,28 +403,34 @@ function MyExamDetails(props) {
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
                             <p style={{margin: 0, padding: 0, fontWeight: "bold"}}>Chọn đáp án đúng nhất:</p>
                             <RadioGroup
-                              aria-labelledby="demo-radio-buttons-group-label"
-                              name="radio-buttons-group"
+                              aria-labelledby="answer-radio-buttons-group-label"
+                              name="answer-radio-buttons-group"
                               value={dataAnswers[value?.questionOrder - 1]?.answer}
                               onChange={(event) => handleAnswerRadioChange(event, value?.questionOrder)}
                             >
                               {
                                 Array.from({ length: value?.questionNumberAnswer }, (_, index) => (
-                                  <FormControlLabel value={index+1}
-                                                    control={<Radio checked={value?.answer?.includes(`${index+1}`)}
-                                                    disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <div>
-                                                            <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
-                                                            {value.questionAnswers[index]?.file && (
-                                                              <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
-                                                            )}
-                                                          </div>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes(`${index+1}`)) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>}
+                                  <FormControlLabel
+                                    value={`${index + 1}`}
+                                    control={
+                                      <Radio
+                                        checked={value?.answer?.includes(`${index+1}`)}
+                                        disabled={data?.examResultId != null}
+                                      />
+                                    }
+                                    label={
+                                      <FormGroup row>
+                                        <Box display="flex" alignItems="center">
+                                          <div>
+                                            <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                            {value.questionAnswers[index]?.file && (
+                                              <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
+                                          {( data?.totalScore != null && value?.questionAnswer?.includes(`${index+1}`)) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
+                                        </Box>
+                                      </FormGroup>
+                                    }
                                   />
                                 ))
                               }
@@ -607,7 +601,10 @@ function MyExamDetails(props) {
           <CardActions style={{justifyContent: 'flex-end'}}>
             <TertiaryButton
               variant="outlined"
-              onClick={() => history.push("/exam/my-exam")}
+              onClick={() => {
+                history.push("/exam/my-exam")
+                openMenu()
+              }}
             >
               Hủy
             </TertiaryButton>
@@ -633,7 +630,7 @@ function MyExamDetails(props) {
           file={filePreview}>
         </QuestionFilePreview>
       </LocalizationProvider>
-    </div>
+    </MyExamMonitor>
   );
 }
 
