@@ -21,13 +21,6 @@ public class TeacherGroupRelationService {
 
     @Transactional
     public TeacherGroupRelation save(TeacherGroupRelation teacherGroupRelation) {
-        if (!List.of(
-            TeacherGroupRelation.ROLE_OWNER,
-            TeacherGroupRelation.ROLE_MANAGER,
-            TeacherGroupRelation.ROLE_PARTICIPANT
-        ).contains(teacherGroupRelation.getRole())) {
-            throw new IllegalArgumentException("Invalid role: " + teacherGroupRelation.getRole());
-        }
         return teacherGroupRelationRepository.save(teacherGroupRelation);
     }
 

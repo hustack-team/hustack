@@ -11,10 +11,6 @@ import java.util.UUID;
 @Data
 public class TeacherGroupRelation {
 
-    public static final String ROLE_OWNER = "OWNER";
-    public static final String ROLE_MANAGER = "MANAGER";
-    public static final String ROLE_PARTICIPANT = "PARTICIPANT";
-
     @Id
     @Column(name = "group_id")
     private UUID groupId;
@@ -22,9 +18,6 @@ public class TeacherGroupRelation {
     @Id
     @Column(name = "user_id")
     private String userId;
-
-    @Column(name = "role", length = 100)
-    private String role;
 
     @Column(name = "last_updated_stamp")
     private LocalDateTime lastUpdatedStamp;

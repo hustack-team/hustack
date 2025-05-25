@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,21 +32,19 @@ public class TeacherGroupService {
     public TeacherGroup create(TeacherGroup teacherGroup, String creatorUserId, List<String> userIds) {
         TeacherGroup savedGroup = teacherGroupRepository.save(teacherGroup);
 
-        // Thêm creator làm OWNER
+        // Add creator as a member
         TeacherGroupRelation creatorRelation = new TeacherGroupRelation();
         creatorRelation.setGroupId(savedGroup.getId());
         creatorRelation.setUserId(creatorUserId);
-        creatorRelation.setRole(TeacherGroupRelation.ROLE_OWNER);
         teacherGroupRelationRepository.save(creatorRelation);
 
-        // Thêm các userIds làm PARTICIPANT
+        // Add other users as members
         if (userIds != null) {
             for (String userId : userIds) {
-                if (!userId.equals(creatorUserId)) { // Tránh thêm creator lần nữa
+                if (!userId.equals(creatorUserId)) { // Avoid adding creator twice
                     TeacherGroupRelation relation = new TeacherGroupRelation();
                     relation.setGroupId(savedGroup.getId());
                     relation.setUserId(userId);
-                    relation.setRole(TeacherGroupRelation.ROLE_PARTICIPANT);
                     teacherGroupRelationRepository.save(relation);
                 }
             }
@@ -87,24 +86,19 @@ public class TeacherGroupService {
     }
 
     @Transactional
-    public TeacherGroupRelation addMember(UUID groupId, String userId, String role) {
-        if (!List.of(
-            TeacherGroupRelation.ROLE_OWNER,
-            TeacherGroupRelation.ROLE_MANAGER,
-            TeacherGroupRelation.ROLE_PARTICIPANT
-        ).contains(role)) {
-            throw new IllegalArgumentException("Invalid role: " + role);
-        }
-
+    public List<TeacherGroupRelation> addMembers(UUID groupId, List<String> userIds) {
         if (!teacherGroupRepository.existsById(groupId)) {
             throw new RuntimeException("TeacherGroup not found with id: " + groupId);
         }
 
-        TeacherGroupRelation relation = new TeacherGroupRelation();
-        relation.setGroupId(groupId);
-        relation.setUserId(userId);
-        relation.setRole(role);
-        return teacherGroupRelationRepository.save(relation);
+        List<TeacherGroupRelation> relations = new ArrayList<>();
+        for (String userId : userIds) {
+            TeacherGroupRelation relation = new TeacherGroupRelation();
+            relation.setGroupId(groupId);
+            relation.setUserId(userId);
+            relations.add(teacherGroupRelationRepository.save(relation));
+        }
+        return relations;
     }
 
     @Transactional

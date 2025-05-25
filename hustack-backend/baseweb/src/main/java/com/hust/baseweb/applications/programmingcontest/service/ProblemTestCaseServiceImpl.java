@@ -74,6 +74,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
     private final ProblemRepo problemRepo;
+    private final TeacherGroupRelationRepository teacherGroupRelationRepository;
+    private final ProblemTestCaseServiceCache problemTestCaseServiceCache;
 
     private TestCaseRepo testCaseRepo;
 
@@ -709,7 +711,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             // add account admin to the contest
             String admin = "admin";
             UserLogin u = userLoginRepo.findByUserLoginId(admin);
-            if (u != null) {
+            if (u != null && !"admin".equals(u.getUserLoginId())) {
                 urc = new UserRegistrationContestEntity();
                 urc.setContestId(modelCreateContest.getContestId());
                 urc.setRoleId(UserRegistrationContestEntity.ROLE_OWNER);
@@ -2027,14 +2029,40 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     @Transactional
     @Override
     public void addUsers2ToContest(String contestId, AddUsers2Contest addUsers2Contest) {
-        addUsers2Contest
-            .getUserIds()
-            .stream()
-            .forEach(userId -> addUserToContest(new ModelAddUserToContest(
+        // 1. Lấy danh sách userIds trực tiếp từ request
+        List<String> userIds = addUsers2Contest.getUserIds() != null
+            ? addUsers2Contest.getUserIds()
+            : new ArrayList<>();
+
+        // 2. Lấy userIds từ groupIds
+        List<String> groupUserIds = new ArrayList<>();
+        if (addUsers2Contest.getGroupIds() != null) {
+            for (UUID groupId : addUsers2Contest.getGroupIds()) {
+                List<TeacherGroupRelation> relations = teacherGroupRelationRepository.findByGroupId(groupId);
+                for (TeacherGroupRelation relation : relations) {
+                    groupUserIds.add(relation.getUserId());
+                }
+            }
+        }
+
+        // 3. Hợp nhất 2 danh sách và loại bỏ trùng
+        Set<String> allUserIds = new HashSet<>();
+        allUserIds.addAll(userIds);
+        allUserIds.addAll(groupUserIds);
+        System.out.println("sssssssss" + allUserIds);
+        // 4. Gọi hàm addUserToContest cho từng userId
+        for (String userId : allUserIds) {
+            ModelAddUserToContest model = new ModelAddUserToContest(
                 contestId,
                 userId,
-                addUsers2Contest.getRole(), "")));
+                addUsers2Contest.getRole(),
+                "" // fullname để trống
+            );
+            System.out.println("addingggggg" + model.getUserId());
+            addUserToContest(model); // Gọi method bạn đã viết sẵn
+        }
     }
+
 
     @Override
     public ModelAddUserToContestGroupResponse addUserToContestGroup(ModelAddUserToContestGroup modelAddUserToContestGroup) {

@@ -31,8 +31,8 @@ export function ListTeacherGroupByMembership() {
       field: "status",
     },
     {
-      title: t("role"),
-      field: "role",
+      title: t("description"),
+      field: "description",
     },
     {
       title: t("common:createdBy"),
@@ -40,8 +40,8 @@ export function ListTeacherGroupByMembership() {
     },
     {
       title: t("common:createdTime"),
-      field: "createdStamp",
-      render: (rowData) => toFormattedDateTime(rowData.createdStamp),
+      field: "lastUpdatedStamp",
+      render: (rowData) => toFormattedDateTime(rowData.lastUpdatedStamp),
     },
   ];
 

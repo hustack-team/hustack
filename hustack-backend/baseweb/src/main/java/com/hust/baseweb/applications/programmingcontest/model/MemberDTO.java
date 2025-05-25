@@ -3,6 +3,7 @@ package com.hust.baseweb.applications.programmingcontest.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -10,5 +11,7 @@ import java.util.UUID;
 public class MemberDTO {
     private UUID groupId;
     private String userId;
-    private String role;
+    private String fullName;
+    private LocalDateTime addedTime;
+
 }

@@ -1,20 +1,18 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
-public class GroupDTO {
+@Data
+public class GroupMemberDTO {
     private UUID id;
-    @NotBlank(message = "Group name is required")
     private String name;
     private String status;
     private String description;
     private String createdByUserId;
+    private LocalDateTime lastUpdatedStamp;
     private List<String> userIds;
 }

@@ -6,7 +6,6 @@ function ListContestManager() {
   return (
     <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
       <ListTeacherGroupByMembership/>
-      {/*<ListContestAll/>*/}
     </Paper>
   );
 }

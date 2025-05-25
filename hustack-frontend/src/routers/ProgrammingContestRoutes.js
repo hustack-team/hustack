@@ -25,6 +25,7 @@ import ContestLibrarytList from "component/education/programmingcontestFE/Contes
 import ListGroupManager from "component/education/programmingcontestFE/ListGroupManager";
 import CreateGroup from "component/education/programmingcontestFE/CreateGroup";
 import GroupManager from "component/education/programmingcontestFE/GroupManager";
+import EditGroup from "component/education/programmingcontestFE/EditGroup";
 
 export default function ProgrammingContestRoutes() {
   let { path } = useRouteMatch();
@@ -112,6 +113,11 @@ export default function ProgrammingContestRoutes() {
         <Route
           component={EditContest}
           path={`${path}/contest-edit/:contestId`}
+        />
+
+        <Route
+          component={EditGroup}
+          path={`${path}/group-edit/:groupId`}
         />
         <Route
           component={EditTestCase}
