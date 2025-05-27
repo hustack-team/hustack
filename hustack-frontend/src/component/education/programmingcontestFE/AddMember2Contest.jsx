@@ -23,6 +23,7 @@ import {useEffect, useMemo, useState} from "react";
 import {successNoti} from "utils/notification";
 import UploadUserToContestDialog from "./UploadUserToContestDialog";
 import UploadUserUpdateFullNameContestDialog from "./UploadUserUpdateFullNameContestDialog";
+import { t } from "i18next";
 
 
 // https://mui.com/material-ui/react-avatar/#letter-avatars
@@ -272,8 +273,8 @@ export default function AddMember2Contest(props) {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Search Users or Groups"
-              placeholder="Search by user ID, name, or group name"
+              label={t("common:searchMemberGroupTitle")}
+              placeholder={t("common:searchMemberGroup")}
               inputProps={{
                 ...params.inputProps,
                 autoComplete: "new-password",
