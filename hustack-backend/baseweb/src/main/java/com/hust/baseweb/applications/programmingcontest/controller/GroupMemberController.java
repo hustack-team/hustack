@@ -15,12 +15,14 @@ import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +32,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/members")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor (onConstructor_ = {@Autowired})
 public class GroupMemberController {
 
     TeacherGroupService teacherGroupService;
@@ -39,19 +41,7 @@ public class GroupMemberController {
     UserService userServiceImpl;
     TeacherGroupService teacherGroupServiceImpl;
 
-    @Autowired
-    public GroupMemberController(
-        TeacherGroupRelationService teacherGroupRelationService,
-        UserServiceImpl userServiceImpl,
-        TeacherGroupService teacherGroupService,
-        TeacherGroupServiceImpl teacherGroupServiceImpl
-    ) {
-        this.teacherGroupRelationService = teacherGroupRelationService;
-        this.userServiceImpl = userServiceImpl;
-        this.teacherGroupService = teacherGroupService;
-        this.teacherGroupServiceImpl = teacherGroupServiceImpl;
-    }
-
+    @Secured("ROLE_TEACHER")
     @PostMapping("/groups")
     public ResponseEntity<GroupMemberDTO> createGroup(@Valid @RequestBody GroupMemberDTO groupDTO, Authentication authentication) {
         try {
@@ -69,6 +59,7 @@ public class GroupMemberController {
         }
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/groups/{id}")
     public ResponseEntity<AllGroupReponseDTO> getGroup(@PathVariable UUID id, Authentication authentication) {
         String userId = authentication.getName();
@@ -82,6 +73,7 @@ public class GroupMemberController {
                                                                        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/search-groups")
     public ResponseEntity<?> search(
         Pageable pageable,
@@ -102,6 +94,7 @@ public class GroupMemberController {
         return ResponseEntity.status(200).body(resp);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/groups")
     public ResponseEntity<List<GroupMemberDTO>> getAllGroups(Authentication authentication) {
         String userId = authentication.getName();
@@ -113,6 +106,7 @@ public class GroupMemberController {
         return ResponseEntity.ok(groups);
     }
 
+    @Secured("ROLE_TEACHER")
     @PutMapping("/groups/{id}")
     public ResponseEntity<GroupMemberDTO> updateGroup(@PathVariable UUID id, @Valid @RequestBody GroupMemberDTO groupDTO, Authentication authentication) {
         try {
@@ -133,6 +127,7 @@ public class GroupMemberController {
         }
     }
 
+    @Secured("ROLE_TEACHER")
     @DeleteMapping("/groups/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable UUID id, Authentication authentication) {
         try {
@@ -149,6 +144,7 @@ public class GroupMemberController {
         }
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/groups/{groupId}/members")
     public ResponseEntity<List<MemberDTO>> addMembers(
         @PathVariable UUID groupId,
@@ -174,6 +170,7 @@ public class GroupMemberController {
         }
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/groups/{groupId}/members")
     public ResponseEntity<List<MemberDTO>> getMembers(@PathVariable UUID groupId, Authentication authentication) {
         String userId = authentication.getName();
@@ -190,6 +187,7 @@ public class GroupMemberController {
         return ResponseEntity.ok(members);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/groups/{groupId}/members/{userId}")
     public ResponseEntity<MemberDTO> getMember(@PathVariable UUID groupId, @PathVariable String userId, Authentication authentication) {
         String currentUserId = authentication.getName();
@@ -206,6 +204,7 @@ public class GroupMemberController {
                                           .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    @Secured("ROLE_TEACHER")
     @DeleteMapping("/groups/{groupId}/members/{userId}")
     public ResponseEntity<Void> removeMember(@PathVariable UUID groupId, @PathVariable String userId, Authentication authentication) {
         try {
