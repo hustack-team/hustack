@@ -19,6 +19,7 @@ public class ExamTestDetailsRes {
     String id;
     String code;
     String name;
+    Integer duration;
     String description;
     List<ExamTestQuestionDetailsRes> examTestQuestionDetails;
 }

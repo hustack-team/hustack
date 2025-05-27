@@ -101,6 +101,11 @@ public class ExamController {
         return ResponseEntity.ok(examService.detailsMyExam(examStudentTestId));
     }
 
+    @GetMapping("/student/submissions/{examStudentTestId}/attempts")
+    public ResponseEntity<ResponseData<ExamResultEntity>> startDoingMyExam(@PathVariable("examStudentTestId") String examStudentTestId) {
+        return ResponseEntity.ok(examService.startDoingMyExam(examStudentTestId));
+    }
+
     @PostMapping("/student/submissions")
     public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
                                                                       @RequestPart(value = "files", required = false) MultipartFile[] files) {

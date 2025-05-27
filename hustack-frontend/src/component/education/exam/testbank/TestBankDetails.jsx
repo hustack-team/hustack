@@ -75,8 +75,16 @@ function TestBankDetails(props) {
         title={data?.name}
         content={
           <div>
-            <h4 style={{margin: '0'}}>Mã đề: {data?.code}</h4>
-            <p>{parseHTMLToString(data?.description)}</p>
+            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+              <h4 style={{margin: '0'}}>Mã đề: {data?.code}</h4>
+              {
+                data?.duration && (
+                  <h4 style={{margin: '0'}}>Thời gian làm: {data?.duration} phút</h4>
+                )
+              }
+            </div>
+
+            <>{parseHTMLToString(data?.description)}</>
 
             <div>
               {

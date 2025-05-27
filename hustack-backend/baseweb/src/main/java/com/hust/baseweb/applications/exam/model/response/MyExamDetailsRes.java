@@ -26,6 +26,7 @@ public class MyExamDetailsRes {
     String examTestId;
     String examTestCode;
     String examTestName;
+    Integer examTestDuration;
     String examResultId;
     Float totalScore;
     Integer totalTime;

@@ -5,7 +5,10 @@ public interface MyExamTestWithResultRes {
     String getExamTestId();
     String getExamTestCode();
     String getExamTestName();
+    Integer getExamTestDuration();
     String getExamTestDescription();
+    String getExamResultId();
     Float getTotalScore();
     Integer getTotalTime();
+    Integer getTotalViolate();
 }

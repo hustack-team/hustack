@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
 import {
   Box,
@@ -16,6 +16,7 @@ import SecondaryButton from "../ultils/component/SecondaryButton";
 import {useLocation} from "react-router";
 import TertiaryButton from "../../../button/TertiaryButton";
 import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
+import ExamViolateDialog from "../exammanagement/ExamViolateDialog";
 
 const baseColumn = {
   sortable: false,
@@ -32,6 +33,19 @@ function MyExamList(props) {
       ...baseColumn
     },
     {
+      field: "examTestDuration",
+      headerName: "Thời gian làm",
+      minWidth: 120,
+      maxWidth: 150,
+      renderCell: (rowData) => {
+        if(rowData.value){
+          return `${rowData.value} phút`
+        }
+        return ''
+      },
+      ...baseColumn
+    },
+    {
       field: "examTestDescription",
       headerName: "Mô tả",
       minWidth: 200,
@@ -45,14 +59,35 @@ function MyExamList(props) {
       field: "totalScore",
       headerName: "Tổng điểm",
       ...baseColumn,
-      minWidth: 170,
-      maxWidth: 170,
+      minWidth: 120,
+      maxWidth: 150,
     },
     {
       field: "totalTime",
       headerName: "Tổng thời gian làm",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 140,
+      maxWidth: 160,
+    },
+    {
+      field: "totalViolate",
+      headerName: "Lỗi vi phạm",
+      renderCell: (rowData) => {
+        if(rowData?.value){
+          return (
+            <p
+              style={{fontWeight: 'bolder', cursor: 'pointer', textDecoration: 'underline', color: 'red'}}
+              onClick={() => handleOpenPopupExamViolate(rowData?.row?.examResultId)}
+            >
+              {String(rowData?.value).padStart(2, '0')} lỗi
+            </p>
+          )
+        }
+        return ''
+      },
+      ...baseColumn,
+      minWidth: 100,
+      maxWidth: 120,
     },
     {
       field: "",
@@ -97,10 +132,12 @@ function MyExamList(props) {
     openMenu()
   }
 
+  const [openExamViolateDialog, setOpenExamViolateDialog] = useState(false);
+  const [examResultIdViolate, setExamResultIdViolate] = useState(null);
+
   const handleDoingExam = (rowData) => {
     closeMenu()
-    if(exam?.examMonitor === 1 ||
-      exam?.examMonitor === 2){
+    if(exam?.examMonitor && exam?.examMonitor > 0 && rowData?.totalScore == null && rowData?.totalTime == null){
       history.push({
         pathname: `/exam/my-exam-preview`,
         state: {
@@ -132,6 +169,11 @@ function MyExamList(props) {
       );
     }
   };
+
+  const handleOpenPopupExamViolate = (examResultId) => {
+    setOpenExamViolateDialog(true)
+    setExamResultIdViolate(examResultId)
+  }
 
   return (
     <div>
@@ -173,6 +215,15 @@ function MyExamList(props) {
           </TertiaryButton>
         </CardActions>
       </Card>
+      {
+        openExamViolateDialog && (
+          <ExamViolateDialog
+            open={openExamViolateDialog}
+            setOpen={setOpenExamViolateDialog}
+            examResultId={examResultIdViolate}
+          />
+        )
+      }
     </div>
   );
 }

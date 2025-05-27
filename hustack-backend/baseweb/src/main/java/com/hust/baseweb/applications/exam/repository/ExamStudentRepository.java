@@ -52,6 +52,7 @@ public interface ExamStudentRepository extends JpaRepository<ExamStudentEntity, 
                    "    er.id as examResultId, " +
                    "    er.total_score as totalScore, " +
                    "    er.total_time as totalTime, " +
+                   "    count(em.id) as totalViolate, " +
                    "    er.submited_at as submitedAt " +
                    "from " +
                    "    exam_student es " +
@@ -59,9 +60,22 @@ public interface ExamStudentRepository extends JpaRepository<ExamStudentEntity, 
                    "    es.id = est.exam_student_id " +
                    "left join exam_result er on " +
                    "    er.exam_student_test_id = est.id " +
+                   "left join exam_monitor em on " +
+                   "    er.id = em.exam_result_id " +
                    "where " +
                    "    est.exam_exam_test_id = :examExamTestId " +
+                   "group by " +
+                   "    est.id, " +
+                   "    es.id, " +
+                   "    es.code, " +
+                   "    es.name, " +
+                   "    es.email, " +
+                   "    es.phone, " +
+                   "    er.id, " +
+                   "    er.total_score, " +
+                   "    er.submited_at, " +
+                   "    er.total_time " +
                    "order by " +
-                   "    es.name", nativeQuery = true)
+                   "    es.name " , nativeQuery = true)
     List<ExamStudentResultDetailsRes> findAllWithResult(@Param("examExamTestId") String examExamTestId);
 }

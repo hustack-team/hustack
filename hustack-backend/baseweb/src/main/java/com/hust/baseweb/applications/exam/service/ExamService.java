@@ -33,6 +33,8 @@ public interface ExamService {
 
     ResponseData<MyExamDetailsRes> detailsMyExam(String examStudentTestId);
 
+    ResponseData<ExamResultEntity> startDoingMyExam(String examStudentTestId);
+
     ResponseData<ExamResultEntity> doingMyExam(MyExamResultSaveReq myExamResultSaveReq, MultipartFile[] files);
 
     ResponseData<ExamMarkingDetailsRes> detailsExamMarking(String examStudentTestId);

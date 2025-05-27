@@ -20,7 +20,7 @@ import RichTextEditor from "../../../common/editor/RichTextEditor";
 import {makeStyles} from "@material-ui/core/styles";
 import {useHistory} from "react-router-dom";
 import {useLocation} from "react-router";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, formatTimeToMMSS} from "../ultils/DateUltils";
 import {DropzoneArea} from "material-ui-dropzone";
 import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer, CheckCircle, Check} from "@mui/icons-material";
 import {
@@ -59,6 +59,7 @@ function MyExamDetails(props) {
   const location = useLocation();
   const data = location.state?.data
   const { openMenu } = useMenu();
+  const initialSeconds = data?.examTestDuration * 60 || 0;
 
   if(data === undefined){
     window.location.href = '/exam/my-exam';
@@ -71,7 +72,8 @@ function MyExamDetails(props) {
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [startLoadTime, setStartLoadTime] = useState(null);
-  const [startDoing, setStartDoing] = useState(false);
+  const [startDoing, setStartDoing] = useState((data?.examMonitor && data?.examMonitor > 0) ? true : false);
+  const [countdown, setCountdown] = useState(data?.submitedAt ? 0 : initialSeconds);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -91,6 +93,27 @@ function MyExamDetails(props) {
     setAnswersFiles(tmpFileAnswers)
     setStartLoadTime(new Date());
   }, []);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // Thực hiện nộp bài
+            handleSubmit()
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [countdown]);
+  const progress = (countdown / initialSeconds) * 100;
+  const strokeDasharray = 283;
+  const strokeDashoffset = (progress / 100) * strokeDasharray;
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
     if(isChecked){
@@ -146,6 +169,7 @@ function MyExamDetails(props) {
     const totalTime = Math.round((endLoadTime - startLoadTime) / 60000);
 
     const body = {
+      id: data?.examResultId,
       examStudentTestId: data?.examStudentTestId,
       totalTime: totalTime,
       examResultDetails: dataAnswers
@@ -230,6 +254,8 @@ function MyExamDetails(props) {
     <MyExamMonitor
       monitor={data?.examMonitor}
       blockScreen={data?.examBlockScreen}
+      data={data}
+      isCancel={isLoading}
     >
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Card>
@@ -238,13 +264,56 @@ function MyExamDetails(props) {
               <h1 style={{margin: 0, padding: 0}}>{data?.examName}</h1>
               <p style={{margin: 0, padding: 0}}>{parseHTMLToString(data?.examDescription)}</p>
               <h2 style={{margin: 0, padding: 0}}>{data?.examTestName}</h2>
-              <div style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Mã đề:</span>{data?.examTestCode}</div>
-              <div style={{display: "flex"}}>
-                <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>
-                <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>
-              </div>
+              {/*<div style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Mã đề:</span>{data?.examTestCode}</div>*/}
+              {/*<div style={{display: "flex"}}>*/}
+              {/*  <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>*/}
+              {/*  <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>*/}
+              {/*</div>*/}
               {
-                data?.examResultId == null && !startDoing && (
+                countdown > 0 && (
+                  <div style={{display: "flex", justifyContent: 'flex-end', width: '100%'}}>
+                    {/*Thời gian còn lại: <strong style={{fontSize: '16px'}}>{formatTimeToMMSS(countdown)}</strong>*/}
+                    <div style={{position: 'relative', width: '100px', height: '100px'}}>
+                      <svg width="100" height="100" viewBox="0 0 100 100">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          fill="none"
+                          stroke="#e6e6e6"
+                          strokeWidth="10"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          fill="none"
+                          stroke="#ff4d4f"
+                          strokeWidth="10"
+                          strokeDasharray={strokeDasharray}
+                          strokeDashoffset={strokeDashoffset}
+                          transform="rotate(-90 50 50)"
+                        />
+                      </svg>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          fontSize: '20px',
+                          fontWeight: 'bold',
+                          color: '#333',
+                        }}
+                      >
+                        {formatTimeToMMSS(countdown)}
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+              {
+                data?.submitedAt == null && !startDoing && (
                   <PrimaryButton
                     variant="contained"
                     color="primary"
@@ -259,7 +328,7 @@ function MyExamDetails(props) {
             </div>
 
             {
-              data?.examResultId != null && (
+              data?.submitedAt != null && (
                 <div>
                   <div style={{
                     display: "flex",
@@ -270,9 +339,21 @@ function MyExamDetails(props) {
                   }}>
                     <div style={{display: "flex", flexDirection: "column", width: '200px'}}>
                       <h3 style={{margin: 0, padding: '10px', borderBottom: '2px solid #000000b8'}}>Điểm</h3>
-                      <p style={{padding: 0, margin: "auto", height: '150px', lineHeight: '150px', fontWeight: "bold", fontSize: '70px'}}>{data?.totalScore}</p>
+                      <p style={{
+                        padding: 0,
+                        margin: "auto",
+                        height: '150px',
+                        lineHeight: '150px',
+                        fontWeight: "bold",
+                        fontSize: '70px'
+                      }}>{data?.totalScore}</p>
                     </div>
-                    <div style={{display: "flex", flexDirection: "column", borderLeft: '2px solid #000000b8', width: 'calc(100% - 200px)'}}>
+                    <div style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      borderLeft: '2px solid #000000b8',
+                      width: 'calc(100% - 200px)'
+                    }}>
                       <h3 style={{margin: 0, padding: '10px', borderBottom: '2px solid #000000b8'}}>Nhận xét</h3>
                       <p style={{padding: '0 10px', margin: 0, height: '150px'}}>{data?.comment ? parseHTMLToString(data?.comment) : ''}</p>
                     </div>
@@ -388,7 +469,7 @@ function MyExamDetails(props) {
                                     <Checkbox
                                       color="primary"
                                       checked={value?.answer?.includes(`${index+1}`)}
-                                      disabled={data?.examResultId != null}
+                                      disabled={data?.submitedAt != null}
                                       onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, `${index+1}`, event.target.checked)}
                                     />
                                   }
@@ -415,7 +496,7 @@ function MyExamDetails(props) {
                                     control={
                                       <Radio
                                         checked={value?.answer?.includes(`${index+1}`)}
-                                        disabled={data?.examResultId != null}
+                                        disabled={data?.submitedAt != null}
                                       />
                                     }
                                     label={
@@ -442,7 +523,7 @@ function MyExamDetails(props) {
                         value?.questionType === 1 && (
                           <div key={questionOrder}>
                             {
-                              data?.examResultId == null && startDoing && (
+                              data?.submitedAt == null && startDoing && (
                                 <div>
                                   <RichTextEditor
                                     content={tmpTextAnswer}
@@ -481,13 +562,13 @@ function MyExamDetails(props) {
                               )
                             }
                             {
-                              data?.examResultId != null && (
+                              data?.submitedAt != null && (
                                 <div><strong style={{marginRight: '10px'}}>Trả
                                   lời:</strong>{parseHTMLToString(value?.answer)}</div>
                               )
                             }
                             {
-                              data?.examResultId != null && value?.filePathAnswer != null && value?.filePathAnswer !== '' && (
+                              data?.submitedAt != null && value?.filePathAnswer != null && value?.filePathAnswer !== '' && (
                                 <div style={{marginTop: '10px'}}>
                                   <strong>File trả lời đính kèm:</strong>
                                   {
@@ -542,7 +623,7 @@ function MyExamDetails(props) {
             }
 
             {/*{*/}
-            {/*  data?.examResultId == null && (*/}
+            {/*  data?.submitedAt == null && (*/}
             {/*    <DropzoneArea*/}
             {/*      dropzoneClass={classes.dropZone}*/}
             {/*      filesLimit={20}*/}
@@ -573,7 +654,7 @@ function MyExamDetails(props) {
             {/*}*/}
 
             {/*{*/}
-            {/*  data?.examResultId != null && (*/}
+            {/*  data?.submitedAt != null && (*/}
             {/*    <div>*/}
             {/*      <h4 style={{marginBottom: 0, fontSize: '18px'}}>File đính kèm:</h4>*/}
             {/*      {*/}
@@ -599,17 +680,21 @@ function MyExamDetails(props) {
 
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <TertiaryButton
-              variant="outlined"
-              onClick={() => {
-                history.push("/exam/my-exam")
-                openMenu()
-              }}
-            >
-              Hủy
-            </TertiaryButton>
             {
-              data?.examResultId == null && startDoing && (
+              !(data?.examMonitor && data?.examMonitor > 0 && data?.submitedAt == null) && (
+                <TertiaryButton
+                  variant="outlined"
+                  onClick={() => {
+                    history.push("/exam/my-exam")
+                    openMenu()
+                  }}
+                >
+                  Hủy
+                </TertiaryButton>
+              )
+            }
+            {
+              data?.submitedAt == null && startDoing && (
                 <PrimaryButton
                   disabled={isLoading}
                   variant="contained"

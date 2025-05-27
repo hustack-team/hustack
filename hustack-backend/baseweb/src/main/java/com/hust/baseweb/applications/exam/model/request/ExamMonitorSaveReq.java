@@ -6,15 +6,18 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @FieldNameConstants
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MyExamResultSaveReq {
-    String id;
-    String examStudentTestId;
-    Integer totalTime;
-    List<MyExamResultDetailsSaveReq> examResultDetails;
+public class ExamMonitorSaveReq {
+
+    String examResultId;
+    Integer platform;
+    Integer type;
+    String startTime;
+    String toTime;
+    String note;
 }

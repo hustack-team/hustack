@@ -78,6 +78,7 @@ public class ExamTestServiceImpl implements ExamTestService {
                                  .id(examTestEntity.get().getId())
                                  .code(examTestEntity.get().getCode())
                                  .name(examTestEntity.get().getName())
+                                 .duration(examTestEntity.get().getDuration())
                                  .description(examTestEntity.get().getDescription())
                                  .examTestQuestionDetails(list).build());
         return responseData;

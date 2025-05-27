@@ -4,7 +4,7 @@ import {Error} from "@material-ui/icons";
 
 function MyExamBlockScreenDialog(props) {
 
-  const { open, setOpen, blockScreen } = props;
+  const { open, setOpen, blockScreen, description } = props;
 
   const [countdown, setCountdown] = useState(blockScreen);
 
@@ -46,11 +46,14 @@ function MyExamBlockScreenDialog(props) {
           </div>
         }
         content={
-          <p style={{marginBottom: "30px", display: "flex", justifyContent: 'space-between'}}>
-            Thí sinh cần chờ
-            <strong style={{width: '25px', display: 'block', textAlign: 'center'}}>{countdown}</strong> giây
-            để tiếp tục làm bài thi.
-          </p>
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <p style={{fontWeight: 'bolder'}}>{description}</p>
+            <p style={{marginBottom: "30px", display: "flex", justifyContent: 'space-between'}}>
+              Thí sinh cần chờ
+              <strong style={{width: '25px', display: 'block', textAlign: 'center'}}>{String(countdown).padStart(2, '0')}</strong> giây
+              để tiếp tục làm bài thi.
+            </p>
+          </div>
         }
       />
     </div>

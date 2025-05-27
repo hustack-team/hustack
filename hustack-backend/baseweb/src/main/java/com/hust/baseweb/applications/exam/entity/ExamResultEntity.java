@@ -36,12 +36,15 @@ public class ExamResultEntity{
     @Column(name = "comment")
     private String comment;
 
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
     @Column(name = "submited_at")
     private LocalDateTime submitedAt;
 
     @PrePersist
     protected void onCreate() {
         id = UUID.randomUUID().toString();
-        submitedAt = LocalDateTime.now();
+        startedAt = LocalDateTime.now();
     }
 }

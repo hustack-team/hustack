@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
 import {
   Card, CardActions,
-  CardContent,
+  CardContent, CircularProgress,
 } from "@material-ui/core";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
@@ -20,30 +20,54 @@ function MyExamPreview(props) {
   const location = useLocation();
   const exam = location.state?.exam
   const test = location.state?.test
-  const { openMenu } = useMenu();
+  const { closeMenu, openMenu } = useMenu();
 
   if(test === undefined){
     window.location.href = '/exam/my-exam';
   }
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleDoingExam = () => {
+    setIsLoading(true)
     request(
       "get",
-      `/exam/student/submissions/examStudentTest/${test?.examStudentTestId}`,
-      (res) => {
-        if(res.status === 200){
-          if(res.data.resultCode === 200){
-            history.push({
-              pathname: `/exam/doing`,
-              state: {
-                data: res.data.data
+      `/exam/student/submissions/${test?.examStudentTestId}/attempts`,
+      (res1) => {
+        if(res1.status === 200){
+          if(res1.data.resultCode === 200){
+            request(
+              "get",
+              `/exam/student/submissions/examStudentTest/${test?.examStudentTestId}`,
+              (res) => {
+                if(res.status === 200){
+                  setIsLoading(false)
+                  if(res.data.resultCode === 200){
+                    history.push({
+                      pathname: `/exam/doing`,
+                      state: {
+                        data: res.data.data
+                      },
+                    });
+                  }else{
+                    toast.error(res.data.resultMsg)
+                  }
+                }else {
+                  toast.error(res)
+                  setIsLoading(false)
+                }
               },
-            });
+              { onError: (e) => toast.error(e) },
+            );
           }else{
-            toast.error(res.data.resultMsg)
+            toast.error(res1.data.resultMsg)
+            setIsLoading(false)
           }
+          closeMenu()
         }else {
-          toast.error(res)
+          toast.error(res1)
+          setIsLoading(false)
+          closeMenu()
         }
       },
       { onError: (e) => toast.error(e) },
@@ -90,11 +114,12 @@ function MyExamPreview(props) {
 
           <div style={{textAlign: 'center'}}>
             <PrimaryButton
+              disabled={isLoading}
               variant="contained"
               color="primary"
               onClick={handleDoingExam}
             >
-              Bắt đầu làm bài
+              {isLoading ? <CircularProgress/> : "Bắt đầu làm bài"}
             </PrimaryButton>
           </div>
         </CardContent>

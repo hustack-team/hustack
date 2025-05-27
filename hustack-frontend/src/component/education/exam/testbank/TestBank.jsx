@@ -185,6 +185,7 @@ function TestBank(props) {
               data: {
                 code: res.data.data.code,
                 name: res.data.data.name,
+                duration: res.data.data.duration,
                 description: res.data.data.description,
                 questions: tmpQuestions
               },

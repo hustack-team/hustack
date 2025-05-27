@@ -404,11 +404,43 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    public ResponseData<ExamResultEntity> startDoingMyExam(String examStudentTestId) {
+        ResponseData<ExamResultEntity> responseData = new ResponseData<>();
+
+        List<ExamResultEntity> examResultExist = examResultRepository.findAllByExamStudentTestId(examStudentTestId);
+        if(!examResultExist.isEmpty()){
+            responseData.setHttpStatus(HttpStatus.NOT_FOUND);
+            responseData.setResultCode(HttpStatus.NOT_FOUND.value());
+            responseData.setResultMsg("Thí sinh đã làm bài thi hoặc đã vào bài thi!");
+            return responseData;
+        }
+
+        ExamResultEntity examResultEntity = new ExamResultEntity();
+        examResultEntity.setExamStudentTestId(examStudentTestId);
+        examResultEntity = examResultRepository.save(examResultEntity);
+
+        responseData.setHttpStatus(HttpStatus.OK);
+        responseData.setResultCode(HttpStatus.OK.value());
+        responseData.setData(examResultEntity);
+        responseData.setResultMsg("Nộp bài thành công");
+        return responseData;
+    }
+
+    @Override
     @Transactional
     public ResponseData<ExamResultEntity> doingMyExam(MyExamResultSaveReq myExamResultSaveReq, MultipartFile[] files) {
         ResponseData<ExamResultEntity> responseData = new ResponseData<>();
 
-        ExamResultEntity examResultEntity = modelMapper.map(myExamResultSaveReq, ExamResultEntity.class);
+        Optional<ExamResultEntity> examResultExist = examResultRepository.findById(myExamResultSaveReq.getId());
+        if(examResultExist.isEmpty()){
+            responseData.setHttpStatus(HttpStatus.NOT_FOUND);
+            responseData.setResultCode(HttpStatus.NOT_FOUND.value());
+            responseData.setResultMsg("Not Found!");
+            return responseData;
+        }
+        ExamResultEntity examResultEntity = modelMapper.map(examResultExist.get(), ExamResultEntity.class);
+        examResultEntity.setSubmitedAt(LocalDateTime.now());
+        examResultEntity.setTotalTime(myExamResultSaveReq.getTotalTime());
         examResultEntity = examResultRepository.save(examResultEntity);
 
         if(files != null){

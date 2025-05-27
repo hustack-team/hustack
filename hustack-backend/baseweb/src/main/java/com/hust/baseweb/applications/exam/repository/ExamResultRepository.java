@@ -21,4 +21,6 @@ public interface ExamResultRepository extends JpaRepository<ExamResultEntity, St
                    "where " +
                    "    eet.exam_id = :examId", nativeQuery = true)
     List<ExamResultEntity> findAllByExamId(String examId);
+
+    List<ExamResultEntity> findAllByExamStudentTestId(String examStudentTestId);
 }

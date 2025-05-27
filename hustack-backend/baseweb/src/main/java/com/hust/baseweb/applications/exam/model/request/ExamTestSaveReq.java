@@ -16,6 +16,7 @@ public class ExamTestSaveReq {
 
     String code;
     String name;
+    Integer duration;
     String description;
     List<ExamTestQuestionSaveReq> examTestQuestionSaveReqList;
     List<ExamTestQuestionSaveReq> examTestQuestionDeleteReqList;

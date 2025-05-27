@@ -318,7 +318,8 @@ function ExamMarking(props) {
                           <TextField
                             id={`scoreInput-${questionOrder}`}
                             label="Nhập điểm"
-                            onKeyPress={handleKeyPressNumber}
+                            // onKeyPress={handleKeyPressNumber}
+                            type={'number'}
                             style={{width: "90px", marginLeft: "16px"}}
                             size="small"
                             value={dataAnswers[questionOrder - 1]?.score}

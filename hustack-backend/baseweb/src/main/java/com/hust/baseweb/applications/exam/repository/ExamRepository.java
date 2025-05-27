@@ -83,7 +83,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.block_screen as blockScreen, " +
                    "    e.start_time as startTime, " +
                    "    e.end_time as endTime, " +
-                   "    COALESCE(json_agg(json_build_object('id', et.id, 'examExamTestId', eet.id, 'code', et.code, 'name', et.name, 'description', et.description)) FILTER (WHERE et.id IS NOT NULL), '[]') AS examTests  " +
+                   "    COALESCE(json_agg(json_build_object('id', et.id, 'examExamTestId', eet.id, 'code', et.code, 'name', et.name, 'duration', et.duration, 'description', et.description)) FILTER (WHERE et.id IS NOT NULL), '[]') AS examTests  " +
                    "from  " +
                    "    exam e " +
                    "left join exam_exam_test eet on " +
@@ -191,6 +191,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    et.id as examTestId, " +
                    "    et.code as examTestCode, " +
                    "    et.name as examTestName, " +
+                   "    et.duration as examTestDuration, " +
                    "    er.id as examResultId, " +
                    "    er.total_score as totalScore, " +
                    "    er.total_time as totalTime, " +

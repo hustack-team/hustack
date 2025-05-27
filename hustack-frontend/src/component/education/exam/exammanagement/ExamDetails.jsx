@@ -17,6 +17,7 @@ import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import ExamViolateDialog from "./ExamViolateDialog";
 
 const baseColumn = {
   sortable: false,
@@ -32,13 +33,13 @@ function ExamDetails(props) {
     {
       field: "code",
       headerName: "Mã học viên",
-      minWidth: 170,
+      minWidth: 140,
       ...baseColumn
     },
     {
       field: "name",
       headerName: "Họ và tên",
-      minWidth: 200,
+      minWidth: 160,
       flex: 1,
       ...baseColumn
     },
@@ -47,25 +48,46 @@ function ExamDetails(props) {
       headerName: "Email",
       ...baseColumn,
       flex: 1,
-      minWidth: 200,
+      minWidth: 160,
     },
     {
       field: "phone",
       headerName: "Số điện thoại",
       ...baseColumn,
-      minWidth: 200,
+      minWidth: 120,
     },
     {
       field: "totalScore",
       headerName: "Điểm",
       ...baseColumn,
-      minWidth: 100,
+      minWidth: 60,
+      maxWidth: 80,
     },
     {
       field: "totalTime",
       headerName: "Thời gian làm",
       ...baseColumn,
-      minWidth: 130,
+      minWidth: 120,
+    },
+    {
+      field: "totalViolate",
+      headerName: "Lỗi vi phạm",
+      renderCell: (rowData) => {
+        if(rowData?.value){
+          return (
+            <p
+              style={{fontWeight: 'bolder', cursor: 'pointer', textDecoration: 'underline', color: 'red'}}
+              onClick={() => handleOpenPopupExamViolate(rowData?.row?.examResultId)}
+            >
+              {String(rowData?.value).padStart(2, '0')} lỗi
+            </p>
+          )
+        }
+        return ''
+      },
+      ...baseColumn,
+      minWidth: 100,
+      maxWidth: 120,
     },
     {
       field: "",
@@ -111,6 +133,8 @@ function ExamDetails(props) {
   const [openExamDetailsMarkingDialog, setOpenExamDetailsMarkingDialog] = useState(false);
   const [examDetailsMarking, setExamDetailsMarking] = useState(null)
   const [expanded, setExpanded] = useState(false)
+  const [openExamViolateDialog, setOpenExamViolateDialog] = useState(false);
+  const [examResultIdViolate, setExamResultIdViolate] = useState(null);
 
   const handleOpenPopupTestDetails = (test) =>{
     request(
@@ -126,6 +150,11 @@ function ExamDetails(props) {
       },
       { onError: (e) => toast.error(e) },
     );
+  }
+
+  const handleOpenPopupExamViolate = (examResultId) => {
+    setOpenExamViolateDialog(true)
+    setExamResultIdViolate(examResultId)
   }
 
   const closeDialog = () => {
@@ -248,10 +277,10 @@ function ExamDetails(props) {
                         style={{ flexDirection: 'row-reverse' , paddingLeft: 0}}
                       >
                         <Box display="flex" alignItems="center" width="100%" justifyContent="space-between">
-                          <Box display="flex" alignItems="center">
+                          <Box display="flex" alignItems="center" width="calc(100% - 90px)">
                             <Box display="flex"
                                  flexDirection='column'
-                                 width="calc(100% - 80px)"
+                                 width="100%"
                                  style={{
                                    userSelect: "none",
                                    WebkitUserSelect: "none",
@@ -263,8 +292,13 @@ function ExamDetails(props) {
                                 <span style={{display: "block", fontWeight: 'bold'}}>{test?.name}</span>
                               </div>
                               {
+                                test?.duration && (
+                                  <p style={{margin: '0'}}><strong>Thời gian làm:</strong> {test?.duration} phút</p>
+                                )
+                              }
+                              {
                                 test?.description && test?.description !== '' && (
-                                  <p>{parseHTMLToString(test?.description)}</p>
+                                  <>{parseHTMLToString(test?.description)}</>
                                 )
                               }
                             </Box>
@@ -273,6 +307,7 @@ function ExamDetails(props) {
                           <button
                             style={{
                               height: 'max-content',
+                              width: '80px',
                               padding: '8px',
                               border: 'none',
                               borderRadius: '8px',
@@ -332,6 +367,15 @@ function ExamDetails(props) {
             setOpen={setOpenExamDetailsMarkingDialog}
             data={examDetailsMarking}
             setDataDetails={setData}
+          />
+        )
+      }
+      {
+        openExamViolateDialog && (
+          <ExamViolateDialog
+            open={openExamViolateDialog}
+            setOpen={setOpenExamViolateDialog}
+            examResultId={examResultIdViolate}
           />
         )
       }

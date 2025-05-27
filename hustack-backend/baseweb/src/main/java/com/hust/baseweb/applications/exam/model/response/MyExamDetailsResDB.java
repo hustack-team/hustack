@@ -14,6 +14,7 @@ public interface MyExamDetailsResDB {
     String getExamTestId();
     String getExamTestCode();
     String getExamTestName();
+    String getExamTestDuration();
     String getExamResultId();
     Float getTotalScore();
     Integer getTotalTime();

@@ -34,6 +34,12 @@ export function formatDate(value){
   return null
 }
 
+export function formatTimeToMMSS(seconds){
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
 export function formatDateApi(value) {
   if(value != null && value !== ''){
     let date = new Date(value);
