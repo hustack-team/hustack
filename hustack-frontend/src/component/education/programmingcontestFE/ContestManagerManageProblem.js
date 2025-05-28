@@ -72,6 +72,7 @@ export function ContestManagerManageProblem(props) {
 
   const [problems, setProblems] = useState([]);
   const [contestProblems, setContestProblems] = useState([]);
+  const [contestData, setContestData] = useState({}); // Added to store contest data
   const [loading, setLoading] = useState(true);
 
   const [searchProblemValue, setSearchProblemValue] = useState("");
@@ -184,7 +185,12 @@ export function ContestManagerManageProblem(props) {
   const getProblemsInContest = () => {
     request("get", "/contests/" + contestId, (res) => {
       setLoading(false);
-      setContestProblems(res.data.list);
+      const updatedProblems = res.data.list.map(problem => ({
+        ...problem,
+        coefficientPoint: res.data.canEditCoefficientPoint === 0 ? 1 : problem.coefficientPoint
+      }));
+      setContestProblems(updatedProblems);
+      setContestData(res.data); // Store contest data
     });
   };
 
@@ -356,6 +362,7 @@ export function ContestManagerManageProblem(props) {
         isOpen={openModalAddProblem}
         handleSuccess={handleAddProblemToContestSuccess}
         handleClose={handleCloseModal}
+        canEditCoefficientPoint={contestData?.canEditCoefficientPoint} // Added prop
       />
 
       <ModalUpdateProblemInfoInContest
@@ -364,6 +371,7 @@ export function ContestManagerManageProblem(props) {
         isOpen={openModalUpdateProblem}
         handleSuccess={handleAddProblemToContestSuccess}
         handleClose={handleCloseModal}
+        canEditCoefficientPoint={contestData?.canEditCoefficientPoint} // Added prop
       />
 
       <ModalImportProblemsFromContest
