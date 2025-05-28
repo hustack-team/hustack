@@ -78,6 +78,14 @@ export default function StandardTable(props) {
     []
   );
 
+  const getPointsColor = () => {
+    const submitted = props.totalSubmittedPoints || 0;
+    const max = props.totalMaxPoints || 0;
+    if (submitted === 0) return "#f44336"; 
+    if (submitted < max) return "#0288d1"; 
+    return "#4caf50";
+  };
+
   return (
     <>
       {!props.hideCommandBar && (
@@ -148,10 +156,7 @@ export default function StandardTable(props) {
                   <Typography
                     variant="h6"
                     sx={{
-                      color:
-                        props.totalSubmittedPoints == props.totalMaxPoints
-                          ? "green"
-                          : "red",
+                      color: getPointsColor(),
                     }}
                   >
                     {t("common:maxSubmittedPoint")}:{" "} 

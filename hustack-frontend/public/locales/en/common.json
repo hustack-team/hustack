@@ -50,5 +50,7 @@
   "codeAuthorship": "Authorship (prediction)",
   "finalSubmission": "Final Submission",
   "maxPoint": "Max points",
-  "maxSubmittedPoint": "Points earned"
+  "maxSubmittedPoint": "Points earned",
+  "selectSubmissionWarning": "Are you sure you want to select this submission as final? It does not have the highest score",
+  "confirmChangeFinalSubmission": "Confirm Change Final Submission" 
 }

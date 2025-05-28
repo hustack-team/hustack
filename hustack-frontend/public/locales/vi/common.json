@@ -50,5 +50,7 @@
   "codeAuthorship": "Nguồn gốc (dự đoán)",
   "finalSubmission": "Bài nộp cuối cùng",
   "maxPoint": "Điểm tối đa",
-  "maxSubmittedPoint": "Điểm đạt được"
+  "maxSubmittedPoint": "Điểm đạt được",
+  "selectSubmissionWarning": "Bạn có chắc chắn muốn chọn bài nộp này là bài nộp cuối cùng không? Bài nộp này không có điểm cao nhất",
+  "confirmChangeFinalSubmission": "Xác nhận thay đổi bài nộp" 
 }

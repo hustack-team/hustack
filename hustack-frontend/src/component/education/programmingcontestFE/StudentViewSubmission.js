@@ -8,7 +8,7 @@ import React, {forwardRef, useEffect, useImperativeHandle, useState} from "react
 import {useTranslation} from "react-i18next";
 import {Link, useParams} from "react-router-dom";
 import {getStatusColor} from "./lib";
-import {mapLanguageToDisplayName } from "./Constant";
+import {mapLanguageToDisplayName} from "./Constant";
 import {toFormattedDateTime} from "../../../utils/dateutils";
 import {localeOption} from "../../../utils/NumberFormat";
 import {errorNoti, successNoti} from "utils/notification";
@@ -27,6 +27,9 @@ const StudentViewSubmission = forwardRef((props, ref) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [currentLockedSubmissionId, setCurrentLockedSubmissionId] = useState(null);
   const [allowPinSubmission, setAllowPinSubmission] = useState(0);
+  const [openConfirmModal, setOpenConfirmModal] = useState(false); // Added for confirmation popup
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null); // Added to track selected submission
+  const [pendingSubmission, setPendingSubmission] = useState(null); // Added to store submission during confirmation
 
   const getCommentsBySubmissionId = async (submissionId) => {
     setLoadingComments(true);
@@ -74,6 +77,22 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       return; 
     }
 
+    const selectedSubmission = submissions.find(
+      (submission) => submission.contestSubmissionId === newSubmissionId
+    );
+    const maxPoint = Math.max(...submissions.map(s => s.point || 0));
+    const selectedPoint = selectedSubmission?.point || 0;
+
+    if (selectedPoint < maxPoint) {
+      setPendingSubmission(selectedSubmission);
+      setSelectedSubmissionId(newSubmissionId);
+      setOpenConfirmModal(true);
+    } else {
+      confirmSwitchSubmission(newSubmissionId);
+    }
+  };
+
+  const confirmSwitchSubmission = (newSubmissionId) => {
     setLoading(true);
 
     request(
@@ -95,6 +114,21 @@ const StudentViewSubmission = forwardRef((props, ref) => {
         oldSubmissionId: currentLockedSubmissionId,
       }
     );
+  };
+
+  const handleConfirmSwitch = () => {
+    setOpenConfirmModal(false);
+    if (selectedSubmissionId) {
+      confirmSwitchSubmission(selectedSubmissionId);
+    }
+    setSelectedSubmissionId(null);
+    setPendingSubmission(null);
+  };
+
+  const handleCancelSwitch = () => {
+    setOpenConfirmModal(false);
+    setSelectedSubmissionId(null);
+    setPendingSubmission(null);
   };
 
   useEffect(() => {
@@ -163,23 +197,23 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       // minWidth: "128px"
     },
     ...(allowPinSubmission === 1
-  ? [
-      {
-        title: t("common:finalSubmission"),
-        sorting: false,
-        cellStyle: { minWidth: 120, textAlign: "center" },
-        render: (rowData) => (
-          <Checkbox
-            checked={rowData.finalSelectedSubmission === 1}
-            onChange={() =>
-              handleSwitchSubmission(rowData.contestSubmissionId)
-            }
-            disabled={loading}
-          />
-        ),
-      },
-    ]
-  : []),
+      ? [
+          {
+            title: t("common:finalSubmission"),
+            sorting: false,
+            cellStyle: { minWidth: 120, textAlign: "center" },
+            render: (rowData) => (
+              <Checkbox
+                checked={rowData.finalSelectedSubmission === 1}
+                onChange={() =>
+                  handleSwitchSubmission(rowData.contestSubmissionId)
+                }
+                disabled={loading}
+              />
+            ),
+          },
+        ]
+      : []),
     // {
     //   title: t('common:message'),
     //   sorting: false,
@@ -265,6 +299,18 @@ const StudentViewSubmission = forwardRef((props, ref) => {
         ]}
       />
       <ModalMessage rowData={selectedRowData}/>
+      <HustModal
+        open={openConfirmModal}
+        onOk={handleConfirmSwitch}
+        onClose={handleCancelSwitch}
+        title={t("common:confirmChangeFinalSubmission")}
+        textOk="Confirm"
+        textClose="Cancel"
+      >
+        <Typography variant="body1">
+          {t("common:selectSubmissionWarning")}
+        </Typography>
+      </HustModal>
     </>
   );
 });
