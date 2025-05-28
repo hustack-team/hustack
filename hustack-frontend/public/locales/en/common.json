@@ -51,6 +51,6 @@
   "finalSubmission": "Final Submission",
   "maxPoint": "Max points",
   "maxSubmittedPoint": "Points earned",
-  "selectSubmissionWarning": "Are you sure you want to select this submission as final? It does not have the highest score",
-  "confirmChangeFinalSubmission": "Confirm Change Final Submission" 
+  "selectSubmissionWarning": "This submission does not have the highest score. Are you sure you want to mark this submission as final? ",
+  "confirmChangeFinalSubmission": "Change Final Submission" 
 }

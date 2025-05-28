@@ -1,8 +1,7 @@
 import ReplayIcon from "@mui/icons-material/Replay";
-import {Box, LinearProgress, Paper, Typography, Checkbox} from "@mui/material";
+import {Box, LinearProgress, Paper, Typography, Checkbox, Button} from "@mui/material";
 import {request} from "api";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
-import HustModal from "component/common/HustModal";
 import StandardTable from "component/table/StandardTable";
 import React, {forwardRef, useEffect, useImperativeHandle, useState} from "react";
 import {useTranslation} from "react-i18next";
@@ -12,6 +11,7 @@ import {mapLanguageToDisplayName} from "./Constant";
 import {toFormattedDateTime} from "../../../utils/dateutils";
 import {localeOption} from "../../../utils/NumberFormat";
 import {errorNoti, successNoti} from "utils/notification";
+import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 
 const StudentViewSubmission = forwardRef((props, ref) => {
   const {t} = useTranslation(
@@ -74,7 +74,7 @@ const StudentViewSubmission = forwardRef((props, ref) => {
 
   const handleSwitchSubmission = (newSubmissionId) => {
     if (newSubmissionId === currentLockedSubmissionId) {
-      return; 
+      return;
     }
 
     const selectedSubmission = submissions.find(
@@ -251,27 +251,29 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     }
 
     return (
-      <HustModal
+      <CustomizedDialogs
         open={openModalMessage}
-        onClose={() => setOpenModalMessage(false)}
-        isNotShowCloseButton
-        showCloseBtnTitle={false}
-      >
-        <HustCopyCodeBlock title="Message" text={message}/>
-        <Typography variant="h6" sx={{mt: 2}}>Comments:</Typography>
-        <Box sx={{maxHeight: "400px", overflowY: "auto"}}>
-          {loadingComments && <LinearProgress/>}
-          {comments.length > 0 ? (
-            comments.map((comment) => (
-              <Typography key={comment.id} variant="body2" sx={{mb: 1}}>
-                <strong>{comment.username}:</strong> {comment.comment}
-              </Typography>
-            ))
-          ) : (
-            <Typography variant="body2" sx={{mb: 1}}>No comments available.</Typography>
-          )}
-        </Box>
-      </HustModal>
+        handleClose={() => setOpenModalMessage(false)}
+        title="Submission Details"
+        content={
+          <>
+            <HustCopyCodeBlock title="Message" text={message}/>
+            <Typography variant="h6" sx={{mt: 2}}>Comments:</Typography>
+            <Box sx={{maxHeight: "400px", overflowY: "auto"}}>
+              {loadingComments && <LinearProgress/>}
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <Typography key={comment.id} variant="body2" sx={{mb: 1}}>
+                    <strong>{comment.username}:</strong> {comment.comment}
+                  </Typography>
+                ))
+              ) : (
+                <Typography variant="body2" sx={{mb: 1}}>No comments available.</Typography>
+              )}
+            </Box>
+          </>
+        }
+      />
     );
   };
 
@@ -299,18 +301,34 @@ const StudentViewSubmission = forwardRef((props, ref) => {
         ]}
       />
       <ModalMessage rowData={selectedRowData}/>
-      <HustModal
+      <CustomizedDialogs
         open={openConfirmModal}
-        onOk={handleConfirmSwitch}
-        onClose={handleCancelSwitch}
+        handleClose={handleCancelSwitch}
         title={t("common:confirmChangeFinalSubmission")}
-        textOk="Confirm"
-        textClose="Cancel"
-      >
-        <Typography variant="body1">
-          {t("common:selectSubmissionWarning")}
-        </Typography>
-      </HustModal>
+        content={
+          <Typography variant="body1">
+            {t("common:selectSubmissionWarning")}
+          </Typography>
+        }
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleCancelSwitch}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleConfirmSwitch}
+            >
+              Confirm
+            </Button>
+          </>
+        }
+      />
     </>
   );
 });

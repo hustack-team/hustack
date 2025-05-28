@@ -54,7 +54,7 @@ export default function StudentViewProblemList() {
       ),
     },
     {
-      title: t("education/programmingcontest/testcase:point"),
+      title: t("common:maxSubmittedPoint"),
       field: "maxSubmittedPoint",
       type: 'numeric',
       render: (rowData) => (
@@ -82,7 +82,7 @@ export default function StudentViewProblemList() {
       minWidth: 160,
     },
     {
-      title: t("maxPoint"),
+      title: t("common:maxPoint"),
       field: "maxPoint",
       type: "numeric",
       render: (rowData) => (
