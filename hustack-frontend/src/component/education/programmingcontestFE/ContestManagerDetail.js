@@ -30,7 +30,8 @@ export function ContestManagerDetail(props) {
     maxSourceCodeLength: 50000,
     minTimeBetweenTwoSubmissions: 0,
     participantViewSubmissionMode: "",
-    contestType:""
+    contestType:"",
+    canEditCoefficientPoint: 0, // Added to store canEditCoefficientPoint
   });
 
   const [loading, setLoading] = useState(true);
@@ -58,7 +59,8 @@ export function ContestManagerDetail(props) {
           maxSourceCodeLength: data.maxSourceCodeLength,
           participantViewSubmissionMode: data.participantViewSubmissionMode,
           languagesAllowed: data.languagesAllowed,
-          contestType: data.contestType
+          contestType: data.contestType,
+          canEditCoefficientPoint: data.canEditCoefficientPoint, // Added to set canEditCoefficientPoint
         }));
       });
     };
@@ -195,6 +197,12 @@ export function ContestManagerDetail(props) {
             contestDetail.participantViewSubmissionMode,
             undefined,
             "Allow or disallow participant to view their own submissions",
+          ],
+          [
+            "Edit coefficient point",
+            contestDetail.canEditCoefficientPoint === 0 ? "N" : "Y",
+            undefined,
+            "Allow or disallow editing of problem coefficient points",
           ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={4}>
