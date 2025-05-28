@@ -146,24 +146,6 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       // align: "right",
       // minWidth: "150px",
     },
-    ...(allowPinSubmission === 1
-      ? [
-          {
-            title: t("common:finalSubmission"),
-            sorting: false,
-            cellStyle: { minWidth: 120, textAlign: "center" },
-            render: (rowData) => (
-              <Checkbox
-                checked={rowData.finalSelectedSubmission === 1}
-                onChange={() =>
-                  handleSwitchSubmission(rowData.contestSubmissionId)
-                }
-                disabled={loading}
-              />
-            ),
-          },
-        ]
-      : []),
     {
       title: t('common:language'),
       field: "sourceCodeLanguage",
@@ -180,6 +162,24 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       render: (rowData) => toFormattedDateTime(rowData.createAt),
       // minWidth: "128px"
     },
+    ...(allowPinSubmission === 1
+  ? [
+      {
+        title: t("common:finalSubmission"),
+        sorting: false,
+        cellStyle: { minWidth: 120, textAlign: "center" },
+        render: (rowData) => (
+          <Checkbox
+            checked={rowData.finalSelectedSubmission === 1}
+            onChange={() =>
+              handleSwitchSubmission(rowData.contestSubmissionId)
+            }
+            disabled={loading}
+          />
+        ),
+      },
+    ]
+  : []),
     // {
     //   title: t('common:message'),
     //   sorting: false,

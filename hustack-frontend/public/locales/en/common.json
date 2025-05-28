@@ -13,11 +13,8 @@
   "no": "No",
   "missingField": "must not be null",
   "create": "Create {{name}}",
-  "maxPoint": "Max points",
-  "maxSubmittedPoint": "Points earned",
   "addSuccess": "{{name}} created successfully",
   "add": "Add {{name}}",
-  "finalSubmission": "Final Submission",
   "status": "Status",
   "success": "Success",
   "login": "Login",
@@ -50,5 +47,8 @@
   "registered": "Registered",
   "complete": "Complete",
   "reset": "Reset",
-  "codeAuthorship": "Authorship (prediction)"
+  "codeAuthorship": "Authorship (prediction)",
+  "finalSubmission": "Final Submission",
+  "maxPoint": "Max points",
+  "maxSubmittedPoint": "Points earned"
 }

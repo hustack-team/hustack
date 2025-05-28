@@ -13,11 +13,8 @@
   "no": "Không",
   "missingField": "không được bỏ trống",
   "create": "Thêm mới {{name}}",
-  "maxPoint": "Điểm tối đa",
-  "maxSubmittedPoint": "Điểm đạt được",
   "addSuccess": "Thêm mới {{name}} thãnh công",
   "add": "Thêm {{name}}",
-  "finalSubmission": "Bài nộp cuối cùng",
   "status": "Trạng thái",
   "success": "Thành công",
   "login": "Đăng nhập",
@@ -50,5 +47,8 @@
   "registered": "Đã đăng ký",
   "complete": "Hoàn thành",
   "reset": "Đặt lại",
-  "codeAuthorship": "Nguồn gốc (dự đoán)"
+  "codeAuthorship": "Nguồn gốc (dự đoán)",
+  "finalSubmission": "Bài nộp cuối cùng",
+  "maxPoint": "Điểm tối đa",
+  "maxSubmittedPoint": "Điểm đạt được"
 }

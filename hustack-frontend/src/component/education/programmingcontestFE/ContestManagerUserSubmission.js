@@ -17,6 +17,7 @@ import PrimaryButton from "../../button/PrimaryButton";
 import SearchIcon from "@mui/icons-material/Search";
 import {localeOption} from "../../../utils/NumberFormat";
 import {RiCodeSSlashLine} from "react-icons/ri";
+import CheckIcon from "@mui/icons-material/Check"; 
 
 const filterInitValue = {
   userId: "",
@@ -227,14 +228,11 @@ export default function ContestManagerUserSubmission(props) {
         field: "finalSelectedSubmission",
         cellStyle: { minWidth: 120 },
         render: (rowData) => (
-          <input
-            type="checkbox"
-            checked={rowData.finalSelectedSubmission === 1}
-            disabled
-          />
+          rowData.finalSelectedSubmission === 1 ? (
+            <CheckIcon sx={{ color: "green" }} />
+          ) : null
         ),
       },
-      
       // {title: "Man. Status", field: "managementStatus"},
       // {title: "Violation", field: "violationForbiddenInstruction"},
       {
