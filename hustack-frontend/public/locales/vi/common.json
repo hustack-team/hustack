@@ -18,8 +18,6 @@
   "status": "Trạng thái",
   "success": "Thành công",
   "login": "Đăng nhập",
-  "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
-  "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số",
   "loginSubtext": "Khám phá hành trình tri thức về công nghệ thông tin",
   "download": "Tải xuống",
   "copy": "Sao chép",
@@ -49,5 +47,7 @@
   "registered": "Đã đăng ký",
   "complete": "Hoàn thành",
   "reset": "Đặt lại",
-  "codeAuthorship": "Nguồn gốc (dự đoán)"
+  "codeAuthorship": "Nguồn gốc (dự đoán)",
+  "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
+  "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số"
 }

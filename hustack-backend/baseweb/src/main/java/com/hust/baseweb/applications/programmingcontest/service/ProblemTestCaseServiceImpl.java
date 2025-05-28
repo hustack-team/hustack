@@ -1861,7 +1861,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 tmp.setPoint(point);
 
                 double coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1.0);
-                System.out.println("coeffcient points......." + coefficient);
                 long maxPoint = mProblem2MaxPoint.getOrDefault(problemId, 0L);
                 double percent = 0;
                 if (maxPoint > 0) {
