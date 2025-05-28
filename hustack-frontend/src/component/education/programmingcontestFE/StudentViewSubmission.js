@@ -27,9 +27,9 @@ const StudentViewSubmission = forwardRef((props, ref) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [currentLockedSubmissionId, setCurrentLockedSubmissionId] = useState(null);
   const [allowPinSubmission, setAllowPinSubmission] = useState(0);
-  const [openConfirmModal, setOpenConfirmModal] = useState(false); // Added for confirmation popup
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null); // Added to track selected submission
-  const [pendingSubmission, setPendingSubmission] = useState(null); // Added to store submission during confirmation
+  const [openConfirmModal, setOpenConfirmModal] = useState(false); 
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null); 
+  const [pendingSubmission, setPendingSubmission] = useState(null);
 
   const getCommentsBySubmissionId = async (submissionId) => {
     setLoadingComments(true);
@@ -154,17 +154,35 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     {
       title: t("submissionList.status"),
       field: "status",
-      cellStyle: {minWidth: 120},
+      cellStyle: {
+        minWidth: 120
+      },
       render: (rowData) => (
         <span style={{color: getStatusColor(`${rowData.status}`)}}>
           {`${rowData.status}`}
         </span>
       ),
+      // cellStyle: (status) => {
+      //   switch (status) {
+      //     case "Accepted":
+      //       return { color: "green" };
+      //     case "In Progress":
+      //       return { color: "gold" };
+      //     case "Pending Evaluation":
+      //       return { color: "goldenrod" };
+      //     case "Evaluated":
+      //       return { color: "darkcyan" };
+      //     default:
+      //       return { color: "red" };
+      //   }
+      // },
+      // minWidth: "128px",
+      // align: "left",
     },
     {
       title: t("education/programmingcontest/testcase:point"),
       field: "point",
-      type: "numeric",
+      type: 'numeric',
       // headerStyle: {textAlign: "right"},
       // cellStyle: {fontWeight: 500, textAlign: "right", paddingRight: 40},
       render: (rowData) =>
