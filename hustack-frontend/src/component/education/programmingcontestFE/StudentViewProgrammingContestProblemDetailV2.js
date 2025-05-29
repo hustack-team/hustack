@@ -115,6 +115,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
     SUBMISSION_MODE_SOURCE_CODE
   );
   const [isSubmitCode, setIsSubmitCode] = useState(0);
+
   const [openModalPreview, setOpenModalPreview] = useState(false);
   const [selectedTestcase, setSelectedTestcase] = useState();
   const [isProcessing, setIsProcessing] = React.useState(false);
@@ -289,7 +290,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setIsProcessing(false);
           setFile(null);
           inputRef.current.value = null;
-          errorNoti(t("common:error"), 3000);
+
+          errorNoti(t("common:error"), 3000)
         },
       },
       formData,

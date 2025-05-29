@@ -5,17 +5,17 @@ import {useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import displayTime from "utils/DateTimeUtils";
 import {localeOption} from "utils/NumberFormat";
-import {detail, resolveLanguage} from "./ContestProblemSubmissionDetailViewedByManager";
+import {detail, resolveLanguage,} from "./ContestProblemSubmissionDetailViewedByManager";
 import ParticipantProgramSubmissionDetailTestCaseByTestCase
   from "./ParticipantProgramSubmissionDetailTestCaseByTestCase";
 import {getStatusColor} from "./lib";
 import {useTranslation} from "react-i18next";
-import {errorNoti} from "utils/notification";
 import {mapLanguageToDisplayName } from "./Constant";
 import {makeStyles} from "@material-ui/core/styles";
 import {Collapse, IconButton} from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
+import { errorNoti } from "utils/notification";
 
 const useStyles = makeStyles((theme) => ({
   expandIcon: {
@@ -47,7 +47,7 @@ export default function ContestProblemSubmissionDetail() {
       {
         onError: (e) => {
           errorNoti(t("common:error"))
-        }
+        },
       }
     );
 
@@ -55,14 +55,8 @@ export default function ContestProblemSubmissionDetail() {
       `submissions/${problemSubmissionId}/comments`,
       (res) => {
         setComments(res.data);
-      },
-      {
-        onError: (e) => {
-          errorNoti(t("common:error"));
-        },
-      }
-    );
-  }, [problemSubmissionId, t]);
+      });
+  }, [problemSubmissionId]);
 
   return (
     <Stack sx={{minWidth: 400, flexDirection: {xs: 'column', md: 'row'}, gap: {xs: 2, md: 0}}}>
@@ -128,18 +122,18 @@ export default function ContestProblemSubmissionDetail() {
             </Collapse>
           </Box>
           {comments?.length > 0 && (<Box>
-              <Typography variant="h6" sx={{mb: 1}}>
-                {t('common:comment')}
+            <Typography variant="h6" sx={{mb: 1}}>
+              {t('common:comment')}
+            </Typography>
+            {comments.map((comment) => (
+              <Typography key={comment.id} variant="body2" sx={{mb: 1}}>
+                <strong>{comment.username}:</strong> {comment.comment}
               </Typography>
-              {comments.map((comment) => (
-                <Typography key={comment.id} variant="body2" sx={{ mb: 1 }}>
-                  <strong>{comment.username}:</strong> {comment.comment}
-                </Typography>
-              ))}
-            </Box>)}
+            ))}
+          </Box>)}
         </Paper>
       </Stack>
-      <Box sx={{order: { xs: 0, md: 1 }}}>
+      <Box sx={{order: {xs: 0, md: 1}}}>
         <Paper
           elevation={1}
           sx={{
@@ -153,9 +147,9 @@ export default function ContestProblemSubmissionDetail() {
           <Typography variant="subtitle1" sx={{fontWeight: 600}}>
             {t('common:submissionDetails')}
           </Typography>
-          <Divider sx={{mb: 1}} />
+          <Divider sx={{mb: 1}}/>
           <Typography variant="subtitle2" sx={{fontWeight: 600}}>
-            {t('common:status')}
+            {t("common:status")}
           </Typography>
           <Typography
             variant="subtitle2"

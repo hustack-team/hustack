@@ -26,12 +26,12 @@ import {useTranslation} from "react-i18next";
 import {useHistory, useParams} from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
 import {randomImageName} from "utils/FileUpload/covert";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant";
 import {PROBLEM_ROLE, PROBLEM_STATUS} from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
-import {localeOption} from "utils/NumberFormat";
+import { localeOption } from "utils/NumberFormat";
 import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
@@ -54,7 +54,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
     position: 'relative',
-    backgroundColor: '#E8F5E9', // Light green background for student blocks
+    backgroundColor: '#E8F5E9',
   },
   forStudentLabel: {
     position: 'absolute',
@@ -226,7 +226,7 @@ function ManagerViewProblemDetailV2() {
           console.error("Error cloning problem:", error);
         },
         400: (error) => {
-          setErrorMessage(t("common:invalidInput"));
+          setErrorMessage("Invalid request. Please check your input.");
         },
         404: (error) => {
           setErrorMessage("Original problem not found.");
@@ -290,7 +290,7 @@ function ManagerViewProblemDetailV2() {
               onClick={() => {
                 history.push(
                   "/programming-contest/user-contest-problem-role-management/" +
-                    problemId
+                  problemId
                 );
               }}
             >
@@ -300,7 +300,7 @@ function ManagerViewProblemDetailV2() {
       </Stack>
 
       <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
-        <DialogTitle>{t("cloneProblem")}</DialogTitle>
+        <DialogTitle>{"Clone Problem"}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus

@@ -437,6 +437,7 @@ function CreateProblem() {
             required
             id="problemName"
             label={t("problemName")}
+            value={problemName}
             //error={hasSpecialCharacterProblemName()}
             helperText={
               //hasSpecialCharacterProblemName()
@@ -444,7 +445,6 @@ function CreateProblem() {
               //  : ""
               ""
             }
-            value={problemName}
             onChange={(event) => {
               setProblemName(event.target.value);
             }}
@@ -465,6 +465,7 @@ function CreateProblem() {
             }}
           />
         </Grid>
+
         <Grid item xs={3}>
           <StyledSelect
             fullWidth
@@ -522,7 +523,7 @@ function CreateProblem() {
             size='small'
             required
             id="timeLimitPYTHON"
-            label={t("timeLimit") + " Python"}
+            label={t("timeLimit") + ' Python'}
             type="number"
             value={timeLimitPYTHON}
             onChange={(event) => {
@@ -585,22 +586,22 @@ function CreateProblem() {
         </Grid>
       </Grid>
 
-      <Link sx={{ mt: 3, display: "inline-block" }} href="/programming-contest/suggest-problem" target="_blank" underline="hover">
+      <Link sx={{mt: 3, display: 'inline-block'}} href="/programming-contest/suggest-problem" target="_blank"
+            underline="hover">
         <Typography variant="body1" color="primary">
           Struggling to create a fresh and exciting challenge? Try our new <b>Problem Suggestion</b> feature
-          <Chip label="Beta" color="secondary" variant="outlined" size="small" 
-                sx={{marginLeft: "8px", marginBottom: "8px", fontWeight: "bold"}}/>
-        </Typography>
+          <Chip label="Beta" color="secondary" variant="outlined" size="small"
+                sx={{marginLeft: "8px", marginBottom: "8px", fontWeight: "bold"}}/></Typography>
       </Link>
 
       <Box className={classes.description}>
         <Typography variant="h6" sx={{marginTop: "8px", marginBottom: "8px"}}>
           {t("problemDescription")}
         </Typography>
-        <RichTextEditor content={description} onContentChange={(text) => setDescription(text)}/>
+        <RichTextEditor content={description} onContentChange={text => setDescription(text)}/>
         {/*  
          <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
-      */}
+        */}
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -609,7 +610,7 @@ function CreateProblem() {
             setSampleTestCase(code);
           }}
         />
-        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)} />
+        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)}/>
         {isProblemBlock && (
           <>
             <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
@@ -774,7 +775,7 @@ function CreateProblem() {
               onChange={() => setIsPreloadCode(!isPreloadCode)}
             />}
         />
-        {isPreloadCode && 
+        {isPreloadCode &&
           <HustCodeEditor
             title={t("preloadCode")}
             sourceCode={preloadCode}
@@ -798,7 +799,7 @@ function CreateProblem() {
         />
         <Typography variant="body2" color="gray">{t("customEvaluationNote1")}</Typography>
 
-        {isCustomEvaluated && 
+        {isCustomEvaluated &&
           <HustCodeEditor
             title={t("checkerSourceCode")}
             language={solutionCheckerLanguage}
