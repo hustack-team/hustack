@@ -44,7 +44,7 @@ public class ProblemBlockServiceImpl implements ProblemBlockService {
                                                         .seq(i + 1)
                                                         .sourceCode(blockCode.getCode())
                                                         .programmingLanguage(blockCode.getLanguage())
-                                                        .completedBy(blockCode.getForStudent() == 1 ? 1 : 0)
+                                                        .completedBy(Integer.valueOf(1).equals(blockCode.getForStudent()) ? 1 : 0)
                                                         .build();
                 problemBlocks.add(problemBlock);
             }

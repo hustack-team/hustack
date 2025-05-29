@@ -380,7 +380,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                             .seq(i + 1)
                                                             .sourceCode(blockCode.getCode())
                                                             .programmingLanguage(blockCode.getLanguage())
-                                                            .completedBy(blockCode.getForStudent() == 1 ? 1 : 0)
+                                                            .completedBy(Integer.valueOf(1).equals(blockCode.getForStudent()) ? 1 : 0)
                                                             .build();
                     problemBlocks.add(problemBlock);
                 }
@@ -3865,7 +3865,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         for (ContestProblem cp : contestProblems) {
             ContestEntity contest = contestRepo.findContestByContestId(cp.getContestId());
-            if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+            if (contest != null && !ContestEntity.CONTEST_STATUS_CREATED.equals(contest.getStatusId())) {
                 return false;
             }
         }

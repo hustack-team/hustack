@@ -305,7 +305,7 @@ function CreateProblem() {
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
-      isProblemBlock: isProblemBlock ? 1 : 0,
+      categoryId: isProblemBlock ? 1 : 0,
       blockCodes: formattedBlockCodes,
     };
 
