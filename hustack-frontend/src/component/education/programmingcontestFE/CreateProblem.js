@@ -275,7 +275,7 @@ function CreateProblem() {
           blockCodes[language].map((block, index) => ({
             id: `${language}_${index}`,
             code: block.code,
-            forStudent: block.forStudent,
+            forStudent: block.forStudent ? 1 : 0,
             language: language,
             seq: index + 1,
           }))
