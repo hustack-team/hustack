@@ -1,4 +1,4 @@
-import EditIcon from "@mui/icons-material/Edit";
+import { makeStyles } from "@material-ui/core/styles";
 import {
   Box,
   Button,
@@ -12,30 +12,35 @@ import {
   TextField,
   Typography,
   Tab,
+  IconButton,
+  Collapse,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
-import { makeStyles } from "@material-ui/core/styles";
-import {request} from "api";
+import { request } from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {useTranslation} from "react-i18next";
-import {useHistory, useParams} from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useHistory, useParams } from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import {randomImageName} from "utils/FileUpload/covert";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant"; 
-import {PROBLEM_ROLE, PROBLEM_STATUS} from "utils/constants";
+import { randomImageName } from "utils/FileUpload/covert";
+import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage } from "./Constant";
+import { PROBLEM_ROLE, PROBLEM_STATUS } from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
-import {localeOption} from "../../../utils/NumberFormat";
-import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
+import { localeOption } from "utils/NumberFormat";
+import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import {getLevels, getStatuses} from "./CreateProblem";
+import EditIcon from "@mui/icons-material/Edit";
+import { getLevels, getStatuses } from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
 import { StyledTabs } from "component/tab";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const useStyles = makeStyles((theme) => ({
   blockCode: {
@@ -45,10 +50,11 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
   },
   blockCodeStudent: {
-    border: '2px solid green',
+    border: '2px solid #4CAF50',
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
     position: 'relative',
+    backgroundColor: '#E8F5E9', // Light green background for student blocks
   },
   forStudentLabel: {
     position: 'absolute',
@@ -56,6 +62,14 @@ const useStyles = makeStyles((theme) => ({
     right: theme.spacing(1),
     fontSize: '0.875rem',
     color: theme.palette.text.secondary,
+  },
+  expandIcon: {
+    transition: theme.transitions.create('transform', {
+      duration: theme.transitions.duration.shortest,
+    }),
+  },
+  expandIconOpen: {
+    transform: 'rotate(180deg)',
   },
 }));
 
@@ -65,11 +79,11 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 }));
 
 function ManagerViewProblemDetailV2() {
-  const {problemId} = useParams();
+  const { problemId } = useParams();
   const history = useHistory();
   const classes = useStyles();
 
-  const {t} = useTranslation([
+  const { t } = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
@@ -107,10 +121,12 @@ function ManagerViewProblemDetailV2() {
     Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
   );
   const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
+  const [isBlockCodesExpanded, setIsBlockCodesExpanded] = useState(false);
+  const [blockDisplayMode, setBlockDisplayMode] = useState("individual");
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
-  }
+  };
 
   useEffect(() => {
     request("get", "teacher/problems/" + problemId, (res) => {
@@ -152,6 +168,10 @@ function ManagerViewProblemDetailV2() {
             });
           }
         });
+        // Sort blocks by seq to ensure correct order
+        Object.keys(newBlockCodes).forEach((lang) => {
+          newBlockCodes[lang].sort((a, b) => a.seq - b.seq);
+        });
         setBlockCodes(newBlockCodes);
       }
     });
@@ -174,7 +194,6 @@ function ManagerViewProblemDetailV2() {
     setNewProblemId("");
     setNewProblemName("");
     setErrorMessage("");
-    history.push("/programming-contest/list-problems"); // comment this line : not return to list-problems when click cancel
   };
 
   const handleClone = () => {
@@ -206,10 +225,7 @@ function ManagerViewProblemDetailV2() {
           console.error("Error cloning problem:", error);
         },
         400: (error) => {
-          setErrorMessage("Invalid request. Please check your input.");
-        },
-        400: (error) => {
-          setErrorMessage("Invalid request. Please check your input.");
+          setErrorMessage(t("common:invalidInput"));
         },
         404: (error) => {
           setErrorMessage("Original problem not found.");
@@ -226,130 +242,140 @@ function ManagerViewProblemDetailV2() {
     setSelectedLanguage(newValue);
   };
 
+  const handleToggleBlockDisplayMode = () => {
+    setBlockDisplayMode((prev) => (prev === "individual" ? "combined" : "individual"));
+  };
+
+  // Combine block codes for combined mode
+  const getCombinedBlockCode = () => {
+    const blocks = blockCodes[selectedLanguage] || [];
+    if (blocks.length === 0) return "// No blocks available";
+    return blocks
+      .map((block, index) => `// --- Block ${block.seq} (${block.forStudent ? t("forStudent") : t("forTeacher")}) ---\n${block.code}`)
+      .join("\n\n");
+  };
+
   return (
     <ProgrammingContestLayout title={t("viewProblem")} onBack={handleExit}>
       <Stack direction="row" spacing={2} mb={1.5} justifyContent="space-between">
-        <Typography variant="h6" component='span'>
+        <Typography variant="h6" component="span">
           {t("generalInfo")}
         </Typography>
 
         <Stack direction="row" spacing={2}>
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
-            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)
-                   ) ? null : (<PrimaryButton
-            onClick={() => {
-              history.push("/programming-contest/edit-problem/" + problemId);
-            }}
-            startIcon={<EditIcon/>}
-          >
-            {t("common:edit", {name: ''})}
-          </PrimaryButton>)
-          }
+            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
+            <PrimaryButton
+              onClick={() => {
+                history.push("/programming-contest/edit-problem/" + problemId);
+              }}
+              startIcon={<EditIcon />}
+            >
+              {t("common:edit", { name: "" })}
+            </PrimaryButton>
+          )}
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
-            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) ||
-              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (<TertiaryButton
-            variant="outlined"
-            onClick={handleCloneDialogOpen}
-            startIcon={<ContentCopyIcon/>}
-          >
-            {t("clone")}
-          </TertiaryButton>)
-          }
+            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
+            <TertiaryButton
+              variant="outlined"
+              onClick={handleCloneDialogOpen}
+              startIcon={<ContentCopyIcon />}
+            >
+              {t("clone")}
+            </TertiaryButton>
+          )}
           {problemDetail.roles.includes(PROBLEM_ROLE.OWNER) && (
             <TertiaryButton
               variant="outlined"
               onClick={() => {
                 history.push(
                   "/programming-contest/user-contest-problem-role-management/" +
-                  problemId
+                    problemId
                 );
               }}
             >
               {t("manageRole")}
             </TertiaryButton>
-          )}</Stack>
+          )}
+        </Stack>
       </Stack>
 
       <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
-        <DialogTitle>{"Clone Problem"}</DialogTitle>
+        <DialogTitle>{t("cloneProblem")}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="New Problem ID"
+            label={t("problemId")}
             type="text"
             fullWidth
             variant="outlined"
             value={newProblemId}
             onChange={(e) => setNewProblemId(e.target.value)}
             error={hasSpecialCharacterProblemId()}
-            helperText={hasSpecialCharacterProblemId() ? "Invalid characters in Problem ID." : ""}
+            helperText={hasSpecialCharacterProblemId() ? t("invalidProblemId") : ""}
           />
           <TextField
             margin="dense"
-            label="New Problem Name"
+            label={t("problemName")}
             type="text"
             fullWidth
             variant="outlined"
             value={newProblemName}
             onChange={(e) => setNewProblemName(e.target.value)}
-            //error={hasSpecialCharacterProblemName()}
-            //helperText={hasSpecialCharacterProblemName() ? "Invalid characters in Problem Name." : ""}
             helperText={""}
           />
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloneDialogClose} color="primary">
-            Cancel
+            {t("common:cancel")}
           </Button>
           <Button onClick={handleClone} color="primary">
-            Create
+            {t("common:create")}
           </Button>
         </DialogActions>
       </Dialog>
-      {loading && <LinearProgress/>}
+
+      {loading && <LinearProgress />}
       <Grid container spacing={2} display={loading ? "none" : ""}>
         {[
           [t("problemName"), problemDetail.problemName],
-          [t("level"), getLevels(t).find(item => item.value === problemDetail.levelId)?.label],
-          [t("status"), getStatuses(t).find(item => item.value === problemDetail.status)?.label],
+          [t("level"), getLevels(t).find((item) => item.value === problemDetail.levelId)?.label],
+          [t("status"), getStatuses(t).find((item) => item.value === problemDetail.status)?.label],
           [
-            t("public", {ns: "common"}),
+            t("public", { ns: "common" }),
             problemDetail.public ? t("common:yes") : t("common:no"),
           ],
           [
-            t("timeLimit") + ' C/CPP',
-            problemDetail.timeLimitCPP ? `${problemDetail.timeLimitCPP.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (s)` : null,
+            t("timeLimit") + " C/CPP",
+            problemDetail.timeLimitCPP
+              ? `${problemDetail.timeLimitCPP.toLocaleString("fr-FR", localeOption)} (s)`
+              : null,
           ],
           [
-            t("timeLimit") + ' Java',
-            problemDetail.timeLimitJAVA ? `${problemDetail.timeLimitJAVA.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (s)` : null,
+            t("timeLimit") + " Java",
+            problemDetail.timeLimitJAVA
+              ? `${problemDetail.timeLimitJAVA.toLocaleString("fr-FR", localeOption)} (s)`
+              : null,
           ],
           [
-            t("timeLimit") + ' Python',
-            problemDetail.timeLimitPYTHON ? `${problemDetail.timeLimitPYTHON.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (s)` : null,
+            t("timeLimit") + " Python",
+            problemDetail.timeLimitPYTHON
+              ? `${problemDetail.timeLimitPYTHON.toLocaleString("fr-FR", localeOption)} (s)`
+              : null,
           ],
           [
             t("memoryLimit"),
-            problemDetail.memoryLimit ? `${problemDetail.memoryLimit.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (MB)` : null,
+            problemDetail.memoryLimit
+              ? `${problemDetail.memoryLimit.toLocaleString("fr-FR", localeOption)} (MB)`
+              : null,
           ],
           [
             t("tag"),
             problemDetail.tags
-              ? problemDetail.tags.map((selectedTag) => selectedTag.name).join(", ") : null,
+              ? problemDetail.tags.map((selectedTag) => selectedTag.name).join(", ")
+              : null,
           ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={3} key={key}>
@@ -358,15 +384,15 @@ function ManagerViewProblemDetailV2() {
         ))}
       </Grid>
 
-      <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
-        <Typography variant="h6" sx={{marginBottom: "8px"}}>
+      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
+        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
           {t("common:description")}
         </Typography>
         <RichTextEditor
           toolbarHidden
           content={problemDetail.description}
           readOnly
-          editorStyle={{editor: {}}}
+          editorStyle={{ editor: {} }}
         />
       </Box>
 
@@ -384,35 +410,75 @@ function ManagerViewProblemDetailV2() {
           <Typography variant="h6" sx={{ marginBottom: "8px" }}>
             {t("listProblemBlock")}
           </Typography>
-          <StyledTabs
-            value={selectedLanguage}
-            onChange={handleTabChange}
-            sx={{ marginBottom: "12px" }}
-          >
-            {PROGRAMMING_LANGUAGES.map((lang) => (
-              <Tab key={lang.value} label={lang.label} value={lang.value} />
-            ))}
-          </StyledTabs>
-          {blockCodes[selectedLanguage].length > 0 ? (
-            blockCodes[selectedLanguage].map((block, index) => (
-              <Box
-                key={block.id || index}
-                className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
-              >
-                <Typography className={classes.forStudentLabel}>
-                  {block.forStudent ? t("forStudent") : t("forTeacher")}
-                </Typography>
-                <HustCopyCodeBlock
-                  title={`${t("blocks")} ${block.seq}`}
-                  text={block.code}
-                  language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
-                  showLineNumbers
-                />
-              </Box>
-            ))
-          ) : (
-            <Typography>{t("noBlockCodes")}</Typography>
-          )}
+          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+            <IconButton
+              onClick={() => setIsBlockCodesExpanded(!isBlockCodesExpanded)}
+              aria-expanded={isBlockCodesExpanded}
+              aria-label={t("common:toggleBlockCodes")}
+              style={{ color: '#00bcd4' }}
+              size="small"
+            >
+              <ExpandMoreIcon
+                className={`${classes.expandIcon} ${isBlockCodesExpanded ? classes.expandIconOpen : ""}`}
+              />
+            </IconButton>
+            <Typography variant="body1">{t("common:toggleBlockCodes")}</Typography>
+          </Box>
+          <Collapse in={isBlockCodesExpanded}>
+            <Box sx={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={blockDisplayMode === "combined"}
+                    onChange={handleToggleBlockDisplayMode}
+                  />
+                }
+                label={
+                  blockDisplayMode === "combined"
+                    ? t("common:individualBlocks")
+                    : t("common:combinedBlock")
+                }
+              />
+            </Box>
+            <StyledTabs
+              value={selectedLanguage}
+              onChange={handleTabChange}
+              sx={{ marginBottom: "12px" }}
+            >
+              {PROGRAMMING_LANGUAGES.map((lang) => (
+                <Tab key={lang.value} label={lang.label} value={lang.value} />
+              ))}
+            </StyledTabs>
+            {blockDisplayMode === "individual" ? (
+              blockCodes[selectedLanguage].length > 0 ? (
+                blockCodes[selectedLanguage].map((block, index) => (
+                  <Box
+                    key={block.id || index}
+                    className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
+                  >
+                    <Typography className={classes.forStudentLabel}>
+                      {block.forStudent ? t("forStudent") : t("forTeacher")}
+                    </Typography>
+                    <HustCopyCodeBlock
+                      title={`${t("blocks")} ${block.seq}`}
+                      text={block.code}
+                      language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                      showLineNumbers
+                      isStudentBlock={block.forStudent}
+                    />
+                  </Box>
+                ))
+              ) : (
+                <Typography>{t("noBlockCodes")}</Typography>
+              )
+            ) : (
+              <HustCopyCodeBlock
+                text={getCombinedBlockCode()}
+                language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                showLineNumbers
+              />
+            )}
+          </Collapse>
         </Box>
       )}
 
@@ -447,8 +513,8 @@ function ManagerViewProblemDetailV2() {
 
       <ListTestCase mode={2} />
 
-      <Box sx={{height: "36px"}}></Box>
-      <ContestsUsingAProblem problemId={problemId}/>
+      <Box sx={{ height: "36px" }}></Box>
+      <ContestsUsingAProblem problemId={problemId} />
     </ProgrammingContestLayout>
   );
 }

@@ -35,7 +35,6 @@
   "contestUsingProblem": "Cuộc thi sử dụng bài tập",
   "addTestCase": "Thêm Test Case",
   "sampleTestCase": "Test Case mẫu",
-  "noPermissionToEditBlocks": "Không thể chỉnh sửa",
   "edit": "Chỉnh sửa",
   "myProblems": "Bài tập của tôi",
   "sharedProblems": "Bài tập được chia sẻ",
@@ -56,6 +55,7 @@
   "forStudent": "Dành cho sinh viên",
   "forStudentBlock": "Khối mã dành cho sinh viên",
   "forTeacherBlock": "Khối mã dành cho giáo viên",
+  "noPermissionToEditBlocks": "Không thể chỉnh sửa",
   "manageRole": "Phân quyền",
   "clone": "Sao chép"
 }

@@ -1,16 +1,16 @@
-import {LoadingButton} from "@mui/lab";
-import {Alert, Box, Button, Divider, Stack, Typography, Tabs, Tab} from "@mui/material";
-import {styled} from "@mui/material/styles";
+import { LoadingButton } from "@mui/lab";
+import { Alert, Box, Button, Divider, Stack, Typography, Tabs, Tab } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import HustModal from "component/common/HustModal";
-import {ContentState, EditorState} from "draft-js";
+import { ContentState, EditorState } from "draft-js";
 import htmlToDraft from "html-to-draftjs";
-import React, {forwardRef, useEffect, useRef, useState} from "react";
-import {Editor} from "react-draft-wysiwyg";
-import {useParams} from "react-router";
-import {randomImageName} from "utils/FileUpload/covert";
-import {errorNoti, successNoti} from "utils/notification";
-import {request} from "../../../api";
+import React, { forwardRef, useEffect, useRef, useState } from "react";
+import { Editor } from "react-draft-wysiwyg";
+import { useParams } from "react-router";
+import { randomImageName } from "utils/FileUpload/covert";
+import { errorNoti, successNoti } from "utils/notification";
+import { request } from "../../../api";
 import FileUploadZone from "../../../utils/FileUpload/FileUploadZone";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustCodeLanguagePicker from "../../common/HustCodeLanguagePicker";
@@ -24,10 +24,12 @@ import {
   SUBMISSION_MODE_SOURCE_CODE,
 } from "./Constant";
 import StudentViewSubmission from "./StudentViewSubmission";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 import _ from "lodash";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import {useHistory} from "react-router-dom";
+import { useHistory } from "react-router-dom";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import TertiaryButton from "component/button/TertiaryButton";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -62,12 +64,12 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export const InputFileUpload = forwardRef((props, ref) => {
-  const {label, buttonProps, ...otherProps} = props;
+  const { label, buttonProps, ...otherProps } = props;
   return (
     <Button
       component="label"
       variant="outlined"
-      sx={{textTransform: "none"}}
+      sx={{ textTransform: "none" }}
       {...buttonProps}
     >
       {label}
@@ -97,38 +99,24 @@ const ERR_STATUS = [
 ];
 
 export default function StudentViewProgrammingContestProblemDetail() {
-  const {problemId, contestId} = useParams();
+  const { problemId, contestId } = useParams();
   const history = useHistory();
-  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
+  const { t } = useTranslation(["education/programmingcontest/problem", "common"]);
 
   const [problem, setProblem] = useState(null);
   const [testCases, setTestCases] = useState([]);
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [listLanguagesAllowed, setListLanguagesAllowed] = useState([]);
-  // const [status, setStatus] = useState("");
-  // const [message, setMessage] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
-  const [submissionMode, setSubmissionMode] = useState(
-    SUBMISSION_MODE_SOURCE_CODE
-  );
+  const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE);
   const [isSubmitCode, setIsSubmitCode] = useState(0);
-
   const [openModalPreview, setOpenModalPreview] = useState(false);
   const [selectedTestcase, setSelectedTestcase] = useState();
   const [isProcessing, setIsProcessing] = React.useState(false);
-  // const [problemDescription, setProblemDescription] = useState(
-  //   ""
-  // );
-  const [editorStateDescription, setEditorStateDescription] = useState(
-    EditorState.createEmpty()
-  );
-  const [sampleTestCase, setSampleTestCase] = useState(
-    null//EditorState.createEmpty()
-  );
-
+  const [editorStateDescription, setEditorStateDescription] = useState(EditorState.createEmpty());
+  const [sampleTestCase, setSampleTestCase] = useState(null);
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
-  
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState(null);
@@ -164,6 +152,21 @@ export default function StudentViewProgrammingContestProblemDetail() {
       reader.readAsText(file);
     });
   }
+
+  const handleCopyAllBlocks = async () => {
+    const blocksForLanguage = blockCodes
+      .filter(block => block.language === selectedLanguage)
+      .sort((a, b) => a.seq - b.seq);
+
+    const combinedCode = blocksForLanguage
+      .map(block => {
+        const code = block.forStudent ? (blockCodeInputs[block.id] || "") : block.code;
+        return `// --- Block ${block.seq} (${block.forStudent ? t("forStudent") : t("forTeacher")}) ---\n${code}`;
+      })
+      .join("\n\n");
+
+    await navigator.clipboard.writeText(combinedCode);
+  };
 
   const handleFormSubmit = async (event) => {
     if (event) event.preventDefault();
@@ -209,7 +212,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
     }
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
     formData.append("file", file);
 
     const config = {
@@ -218,7 +221,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
       },
     };
 
-    //TODO: consider remove duplicate code
     request(
       "post",
       "/submissions/file-upload",
@@ -288,7 +290,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         res = res.data;
         setProblem(res);
         if (res.listLanguagesAllowed != null && res.listLanguagesAllowed.length > 0) {
-          setLanguage(res.listLanguagesAllowed[0])
+          setLanguage(res.listLanguagesAllowed[0]);
           setListLanguagesAllowed(res.listLanguagesAllowed);
         }
 
@@ -320,38 +322,23 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setFetchedImageArray(newFileURLArray);
         }
 
-        // setProblemDescription(res?.problemStatement || "");
         let problemDescriptionHtml = htmlToDraft(res.problemStatement);
-        let {contentBlocks, entityMap} = problemDescriptionHtml;
+        let { contentBlocks, entityMap } = problemDescriptionHtml;
         let contentDescriptionState = ContentState.createFromBlockArray(
           contentBlocks,
           entityMap
         );
-        let statementDescription = EditorState.createWithContent(
-          contentDescriptionState
-        );
+        let statementDescription = EditorState.createWithContent(contentDescriptionState);
         setEditorStateDescription(statementDescription);
 
-                // public testcase    
-        /*  
-        let sampleTestCaseHtml = htmlToDraft(res.sampleTestCase);
-        let { contentBlocksTestCase, entityMapTestCase } = sampleTestCaseHtml;
-        let contentDescriptionStateTestCase = ContentState.createFromBlockArray(
-          contentBlocksTestCase,
-          entityMapTestCase
-        );
-        let editorSampleTestCase = EditorState.createWithContent(
-          contentDescriptionStateTestCase
-        );
-        //setSampleTestCase(editorSampleTestCase);
-        */
         setSampleTestCase(res.sampleTestCase);
-        //console.log('GetProblemDetail, res = ',res);
       },
-      { onError: (e) => {
-        errorNoti(t("errorFetchingProblem"), 3000);
-        console.error("Failed to fetch problem:", e);
-      }}
+      {
+        onError: (e) => {
+          errorNoti(t("errorFetchingProblem"), 3000);
+          console.error("Failed to fetch problem:", e);
+        },
+      }
     );
   }
 
@@ -403,12 +390,12 @@ export default function StudentViewProgrammingContestProblemDetail() {
   };
 
   async function submitCode() {
-    const blob = new Blob([codeSolution], {type: "text/plain;charset=utf-8"});
+    const blob = new Blob([codeSolution], { type: "text/plain;charset=utf-8" });
     const now = new Date();
     const file = new File(
       [blob],
       `${problemId}_${now.getTime()}.txt`,
-      {type: "text/plain;charset=utf-8"}
+      { type: "text/plain;charset=utf-8" }
     );
     setFile(file);
     setIsSubmitCode(isSubmitCode + 1);
@@ -420,7 +407,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
   const handleExit = () => {
     history.push(`/programming-contest/student-view-contest-detail/${contestId}`);
-  }
+  };
 
   const groupedBlockCodes = blockCodes.reduce((acc, block) => {
     if (!acc[block.language]) {
@@ -435,7 +422,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
   const handleBlockCodeChange = (blockId, newCode) => {
     setBlockCodeInputs(prev => ({
       ...prev,
-      [blockId]: newCode
+      [blockId]: newCode,
     }));
   };
 
@@ -444,7 +431,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
       <Typography variant="h6" sx={{ mb: 1 }}>
         {t("common:description")}
       </Typography>
-      {/*{ReactHtmlParser(problemDescription)}*/} 
       <Editor
         toolbarHidden
         editorState={editorStateDescription}
@@ -452,30 +438,19 @@ export default function StudentViewProgrammingContestProblemDetail() {
         readOnly
         editorStyle={editorStyle.editor}
       />
-      {/*
-        <Typography variant="h5">Sample testcase</Typography>
-        
-        <Editor
-          toolbarHidden
-          editorState={sampleTestCase}
-          handlePastedText={() => false}
-          readOnly
-          editorStyle={editorStyle.editor}
-        />
-      */}
-      {/*ReactHtmlParser(sampleTestCase)*/}
-      {/*sampleTestCase*/}
-      {sampleTestCase && <>
-        <div style={{ height: "10px" }}></div>
-        <HustCopyCodeBlock
-          title={t("sampleTestCase")}
-          text={sampleTestCase}
-        />
-      </>}
+      {sampleTestCase && (
+        <>
+          <div style={{ height: "10px" }}></div>
+          <HustCopyCodeBlock
+            title={t("sampleTestCase")}
+            text={sampleTestCase}
+          />
+        </>
+      )}
 
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
-          <FileUploadZone key={file.id} file={file} removable={false}/>
+          <FileUploadZone key={file.id} file={file} removable={false} />
         ))}
 
       <ModalPreview chosenTestcase={selectedTestcase} />
@@ -506,31 +481,44 @@ export default function StudentViewProgrammingContestProblemDetail() {
               ))}
             </Tabs>
 
+
             {uniqueLanguages.map((lang, index) => (
               <TabPanel key={lang} value={uniqueLanguages.indexOf(selectedLanguage)} index={index}>
                 <Stack spacing={2}>
                   {groupedBlockCodes[lang]
-                    .sort((a, b) => a.seq - b.seq)
+                    ?.sort((a, b) => a.seq - b.seq)
                     .map((block) => (
                       <Box key={block.id}>
                         <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                          {block.forStudent ? `${t("forStudentBlock")}` : `${t("forTeacherBlock")} (Read-Only)`}
+                          {block.forStudent
+                            ? `${t("forStudentBlock")}`
+                            : `${t("forTeacherBlock")} (Read-Only)`}
                         </Typography>
-                      <HustCodeEditor
-                        language={lang}
-                        sourceCode={block.forStudent ? blockCodeInputs[block.id] || "" : block.code}
-                        onChangeSourceCode={(code) => block.forStudent && handleBlockCodeChange(block.id, code)}
-                        height="200px"
-                        readOnly={!block.forStudent}
-                        listLanguagesAllowed={[lang]}
-                        hideProgrammingLanguage={1} 
-                        blockEditor={1} 
-                      />
+                        <HustCodeEditor
+                          language={lang}
+                          sourceCode={block.forStudent ? blockCodeInputs[block.id] || "" : block.code}
+                          onChangeSourceCode={(code) => block.forStudent && handleBlockCodeChange(block.id, code)}
+                          height="200px"
+                          readOnly={!block.forStudent}
+                          listLanguagesAllowed={[lang]}
+                          hideProgrammingLanguage={1}
+                          blockEditor={1}
+                        />
                       </Box>
                     ))}
                 </Stack>
               </TabPanel>
             ))}
+            <Box sx={{ mt: 1, mb: 2 }}>
+              <TertiaryButton
+                variant="outlined"
+                startIcon={<ContentCopyIcon />}
+                onClick={handleCopyAllBlocks}
+                sx={{ textTransform: 'none' }}
+              >
+                {t("common:copyAllCode")}
+              </TertiaryButton>
+            </Box>
           </>
         ) : (
           <Box>
@@ -636,7 +624,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{width: 128, textTransform: 'none'}}
+              sx={{ width: 128, textTransform: 'none' }}
               loading={isProcessing}
               loadingIndicator="Submitting…"
               variant="contained"
@@ -665,13 +653,12 @@ export default function StudentViewProgrammingContestProblemDetail() {
             mt: 3,
           }}
         >
-          With Java, the public class must be declared as:{" "}
-          <b>public class Main {"{...}"}</b>
+          With Java, the public class must be declared as: <b>public class Main {"{...}"}</b>
         </Alert>
       )}
 
-      <Box sx={{mt: 3}}>
-        <StudentViewSubmission problemId={problemId} ref={listSubmissionRef}/>
+      <Box sx={{ mt: 3 }}>
+        <StudentViewSubmission problemId={problemId} ref={listSubmissionRef} />
       </Box>
     </ProgrammingContestLayout>
   );

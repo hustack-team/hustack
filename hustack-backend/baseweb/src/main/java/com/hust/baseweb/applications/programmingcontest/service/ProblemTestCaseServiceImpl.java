@@ -380,7 +380,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                             .seq(i + 1)
                                                             .sourceCode(blockCode.getCode())
                                                             .programmingLanguage(blockCode.getLanguage())
-                                                            .completedBy(blockCode.getForStudent())
+                                                            .completedBy(blockCode.getForStudent() == 1 ? 1 : 0)
                                                             .build();
                     problemBlocks.add(problemBlock);
                 }

@@ -47,5 +47,14 @@
   "registered": "Đã đăng ký",
   "complete": "Hoàn thành",
   "reset": "Đặt lại",
-  "codeAuthorship": "Nguồn gốc (dự đoán)"
+  "codeAuthorship": "Nguồn gốc (dự đoán)",
+  "invalidInput": "Vui lòng kiểm tra lại dữ liệu.",
+  "toggleBlockCodes": "Hiện/Ẩn Code",
+  "moveDown": "Di chuyển khối mã xuống dưới",
+  "moveUp": "Di chuyển khối mã lên trên",
+  "insertAbove": "Thêm khối mã phía trên",
+  "insertBelow": "Thêm khối mã phía dưới",
+  "copyAllCode": "Sao chép tất cả mã",
+  "individualBlocks": "Tách tất cả các khối mã",
+  "combinedBlock":"Ghép tất cả các khối mã"
 }

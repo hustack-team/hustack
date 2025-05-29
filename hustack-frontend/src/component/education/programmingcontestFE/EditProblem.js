@@ -1,30 +1,54 @@
-import {makeStyles} from "@material-ui/core/styles";
-import {LoadingButton} from "@mui/lab";
-import {Box, Checkbox, FormControlLabel, Grid, InputAdornment, Stack, TextField, Typography, Tabs, Tab, Button, Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material";
-import {extractErrorMessage, request} from "api";
+import { makeStyles } from "@material-ui/core/styles";
+import { LoadingButton } from "@mui/lab";
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  InputAdornment,
+  Stack,
+  TextField,
+  Typography,
+  Tabs,
+  Tab,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Collapse,
+} from "@mui/material";
+import { extractErrorMessage, request } from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {useTranslation} from "react-i18next";
-import {useParams} from "react-router";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import {randomImageName} from "utils/FileUpload/covert";
-import {errorNoti, successNoti} from "utils/notification";
+import { randomImageName } from "utils/FileUpload/covert";
+import { errorNoti, successNoti } from "utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import {CompileStatus} from "./CompileStatus";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION,} from "./Constant";
+import { CompileStatus } from "./CompileStatus";
+import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
 import ListTestCase from "./ListTestCase";
 import ModelAddNewTag from "./ModelAddNewTag";
-import {getAllTags} from "./service/TagService";
+import { getAllTags } from "./service/TagService";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import {useHistory} from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import StyledSelect from "../../select/StyledSelect";
-import {getLevels, getPublicOptions, getStatuses} from "./CreateProblem";
+import { getLevels, getPublicOptions, getStatuses } from "./CreateProblem";
 import FilterByTag from "../../table/FilterByTag";
 import TertiaryButton from "../../button/TertiaryButton";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -52,6 +76,18 @@ const useStyles = makeStyles((theme) => ({
     opacity: 0.6,
     pointerEvents: "none",
   },
+  controlButtons: {
+    display: "flex",
+    gap: theme.spacing(0.5),
+  },
+  expandIcon: {
+    transition: theme.transitions.create('transform', {
+      duration: theme.transitions.duration.shortest,
+    }),
+  },
+  expandIconOpen: {
+    transform: 'rotate(180deg)',
+  },
 }));
 
 const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
@@ -61,21 +97,16 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 
 function EditProblem() {
   const history = useHistory();
-  const {problemId} = useParams();
+  const { problemId } = useParams();
   const classes = useStyles();
-  const {t} = useTranslation([
-    "education/programmingcontest/problem",
-    "common",
-    "validation",
-  ]);
+  const { t } = useTranslation(["education/programmingcontest/problem", "common", "validation"]);
   const levels = getLevels(t);
-  const publicOptions = getPublicOptions(t)
-  const statuses = getStatuses(t)
+  const publicOptions = getPublicOptions(t);
+  const statuses = getStatuses(t);
 
   const [problemName, setProblemName] = useState("");
   const [description, setDescription] = useState("");
   const [solution, setSolution] = useState("");
-  // const [timeLimit, setTimeLimit] = useState('');
   const [timeLimitCPP, setTimeLimitCPP] = useState('');
   const [timeLimitJAVA, setTimeLimitJAVA] = useState('');
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState('');
@@ -102,15 +133,14 @@ function EditProblem() {
   const [sampleTestCase, setSampleTestCase] = useState(null);
   const [problem, setProblem] = useState({});
   const [canEditBlocks, setCanEditBlocks] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState(
     Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
   );
   const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
+  const [isBlockCodesExpanded, setIsBlockCodesExpanded] = useState(false);
 
   const handleGetTagsSuccess = (res) => setTags(res.data);
 
@@ -141,54 +171,43 @@ function EditProblem() {
       "post",
       "/check-compile",
       (res) => {
-        setLoading(false)
-
+        setLoading(false);
         setShowCompile(true);
         setStatusSuccessful(res.data.status !== "Compilation Error");
-        setCompileMessage(res.data)
+        setCompileMessage(res.data);
       },
       {
         onError: (e) => {
-          setLoading(false)
+          setLoading(false);
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
-        }
+        },
       },
       body
     );
-  }
+  };
 
   const validateSubmit = () => {
     if (problemName === "") {
-      errorNoti(
-        t("validation:missingField", {fieldName: t("problemName")}),
-        3000
-      );
+      errorNoti(t("validation:missingField", { fieldName: t("problemName") }), 3000);
       return false;
     }
-    if (timeLimitCPP < 1
-      || timeLimitJAVA < 1
-      || timeLimitPYTHON < 1
-      || timeLimitCPP > 300
-      || timeLimitJAVA > 300
-      || timeLimitPYTHON > 300
+    if (
+      timeLimitCPP < 1 ||
+      timeLimitJAVA < 1 ||
+      timeLimitPYTHON < 1 ||
+      timeLimitCPP > 300 ||
+      timeLimitJAVA > 300 ||
+      timeLimitPYTHON > 300
     ) {
       errorNoti(
-        t("validation:numberBetween", {
-          fieldName: t("timeLimit"),
-          min: 1,
-          max: 300,
-        }),
+        t("validation:numberBetween", { fieldName: t("timeLimit"), min: 1, max: 300 }),
         3000
       );
       return false;
     }
     if (memoryLimit < 3 || memoryLimit > 1024) {
       errorNoti(
-        t("validation:numberBetween", {
-          fieldName: t("memoryLimit"),
-          min: 3,
-          max: 1024,
-        }),
+        t("validation:numberBetween", { fieldName: t("memoryLimit"), min: 3, max: 1024 }),
         3000
       );
       return false;
@@ -197,11 +216,21 @@ function EditProblem() {
       errorNoti(t("validateSubmit.warningCheckSolutionCompile"), 5000);
       return false;
     }
-    if (isProblemBlock && Object.values(blockCodes).every(blocks => blocks.length === 0)) {
+    if (isProblemBlock && Object.values(blockCodes).every((blocks) => blocks.length === 0)) {
       errorNoti(t("validateSubmit.noBlockCodesAdded"), 5000);
       return false;
     }
     return true;
+  };
+
+  const handleCopyAllCode = async () => {
+    const blocks = blockCodes[selectedLanguage] || [];
+    if (blocks.length === 0) {
+      errorNoti(t("noBlockCodesToCopy"), 3000);
+      return;
+    }
+    const allCode = blocks.map(block => block.code).join('\n\n');
+    await navigator.clipboard.writeText(allCode);
   };
 
   function handleSubmit() {
@@ -226,12 +255,12 @@ function EditProblem() {
     let formattedBlockCodes = [];
     if (isProblemBlock) {
       formattedBlockCodes = Object.keys(blockCodes)
-        .filter(language => blockCodes[language].length > 0)
+        .filter((language) => blockCodes[language].length > 0)
         .flatMap((language) =>
           blockCodes[language].map((block, index) => ({
             id: block.id || `${language}_${index}`,
             code: block.code,
-            forStudent: block.forStudent,
+            forStudent: block.forStudent ? 1 : 0,
             seq: block.seq || index + 1,
             language: language,
           }))
@@ -241,7 +270,6 @@ function EditProblem() {
     const body = {
       problemName: problemName,
       problemDescription: description,
-      // timeLimit: timeLimit,
       timeLimitCPP: timeLimitCPP,
       timeLimitJAVA: timeLimitJAVA,
       timeLimitPYTHON: timeLimitPYTHON,
@@ -266,7 +294,7 @@ function EditProblem() {
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -283,7 +311,7 @@ function EditProblem() {
       "/problems/" + problemId,
       (res) => {
         setLoading(false);
-        successNoti(t("common:editSuccess", {name: t("problem")}), 3000);
+        successNoti(t("common:editSuccess", { name: t("problem") }), 3000);
         history.push("/programming-contest/manager-view-problem-detail/" + problemId);
       },
       {
@@ -299,11 +327,11 @@ function EditProblem() {
 
   const handleBackToList = () => {
     history.push(`/programming-contest/list-problems`);
-  }
+  };
 
   const handleExit = () => {
     history.push(`/programming-contest/manager-view-problem-detail/` + problemId);
-  }
+  };
 
   const handleTabChange = (event, newValue) => {
     setSelectedLanguage(newValue);
@@ -320,6 +348,56 @@ function EditProblem() {
     }));
   };
 
+  const handleMoveUp = (index) => {
+    if (!canEditBlocks) {
+      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      return;
+    }
+    if (index === 0) return;
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]];
+      [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
+      return { ...prev, [selectedLanguage]: newBlocks };
+    });
+  };
+
+  const handleMoveDown = (index) => {
+    if (!canEditBlocks) {
+      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      return;
+    }
+    if (index === blockCodes[selectedLanguage].length - 1) return;
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]];
+      [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
+      return { ...prev, [selectedLanguage]: newBlocks };
+    });
+  };
+
+  const handleInsertAbove = (index) => {
+    if (!canEditBlocks) {
+      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      return;
+    }
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]];
+      newBlocks.splice(index, 0, { code: "// Write your code here", forStudent: 0, seq: index });
+      return { ...prev, [selectedLanguage]: newBlocks };
+    });
+  };
+
+  const handleInsertBelow = (index) => {
+    if (!canEditBlocks) {
+      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      return;
+    }
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]];
+      newBlocks.splice(index + 1, 0, { code: "// Write your code here", forStudent: 0, seq: index + 2 });
+      return { ...prev, [selectedLanguage]: newBlocks };
+    });
+  };
+
   const handleAddBlock = () => {
     if (!canEditBlocks) {
       errorNoti(t("noPermissionToEditBlocks"), 3000);
@@ -329,7 +407,7 @@ function EditProblem() {
       const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17;
       setBlockCodes((prev) => ({
         ...prev,
-        [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false }],
+        [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: 0, seq: prev[language].length + 1 }],
       }));
     } catch (error) {
       console.error("Error adding block code:", error);
@@ -343,7 +421,7 @@ function EditProblem() {
       "teacher/problems/" + problemId,
       (res) => {
         const data = res.data;
-        setProblem(data)
+        setProblem(data);
 
         if (data.attachment && data.attachment.length !== 0) {
           const newFileURLArray = data.attachment.map((url) => ({
@@ -358,7 +436,6 @@ function EditProblem() {
 
         setProblemName(data.problemName);
         setLevelId(data.levelId);
-        // setTimeLimit(data.timeLimit);
         setTimeLimitCPP(data.timeLimitCPP);
         setTimeLimitJAVA(data.timeLimitJAVA);
         setTimeLimitPYTHON(data.timeLimitPYTHON);
@@ -377,11 +454,8 @@ function EditProblem() {
         setSampleTestCase(data.sampleTestCase);
         setIsOwner(data.roles?.includes("OWNER"));
         setCanEditBlocks(data.canEditBlocks || false);
-        
-        // Updated condition for block problem
         setIsProblemBlock(data.blockCodes && data.blockCodes.length > 0);
 
-        // Initialize blockCodes from API data
         if (data.blockCodes && data.blockCodes.length > 0) {
           const newBlockCodes = Object.fromEntries(
             PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
@@ -402,25 +476,24 @@ function EditProblem() {
       {
         onError: (e) => {
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
-        }
-      });
+        },
+      }
+    );
   }, [problemId, t]);
 
   useEffect(() => {
     getAllTags(handleGetTagsSuccess);
-  }, [])
+  }, []);
 
   return (
-    <ProgrammingContestLayout title={t("common:edit", {name: t("problem")})} onBack={handleBackToList}>
-      <Typography variant="h6">
-        {t("generalInfo")}
-      </Typography>
+    <ProgrammingContestLayout title={t("common:edit", { name: t("problem") })} onBack={handleBackToList}>
+      <Typography variant="h6">{t("generalInfo")}</Typography>
 
       <Grid container spacing={2} mt={0}>
         <Grid item xs={3}>
           <TextField
             fullWidth
-            size='small'
+            size="small"
             required
             id="problemName"
             label={t("problemName")}
@@ -430,7 +503,6 @@ function EditProblem() {
             }}
           />
         </Grid>
-
         <Grid item xs={3}>
           <StyledSelect
             fullWidth
@@ -439,13 +511,12 @@ function EditProblem() {
             label={t("level")}
             options={levels}
             value={levelId}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: "unset", mr: "unset" }}
             onChange={(event) => {
               setLevelId(event.target.value);
             }}
           />
         </Grid>
-
         <Grid item xs={3}>
           <StyledSelect
             fullWidth
@@ -454,14 +525,13 @@ function EditProblem() {
             label={t("status")}
             options={statuses}
             value={status}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: "unset", mr: "unset" }}
             onChange={(event) => {
               setStatus(event.target.value);
             }}
             disabled={!isOwner}
           />
         </Grid>
-
         <Grid item xs={3}>
           <StyledSelect
             fullWidth
@@ -469,21 +539,20 @@ function EditProblem() {
             key={t("common:public")}
             label={t("common:public")}
             options={publicOptions}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: "unset", mr: "unset" }}
             value={isPublic}
             onChange={(event) => {
               setIsPublic(event.target.value);
             }}
           />
         </Grid>
-
         <Grid item xs={3}>
           <TextField
             fullWidth
-            size='small'
+            size="small"
             required
             id="timeLimitCPP"
-            label={t("timeLimit") + ' C/CPP'}
+            label={t("timeLimit") + " C/CPP"}
             type="number"
             value={timeLimitCPP}
             onChange={(event) => {
@@ -494,14 +563,13 @@ function EditProblem() {
             }}
           />
         </Grid>
-
         <Grid item xs={3}>
           <TextField
             fullWidth
-            size='small'
+            size="small"
             required
             id="timeLimitJAVA"
-            label={t("timeLimit") + ' Java'}
+            label={t("timeLimit") + " Java"}
             type="number"
             value={timeLimitJAVA}
             onChange={(event) => {
@@ -512,14 +580,13 @@ function EditProblem() {
             }}
           />
         </Grid>
-
         <Grid item xs={3}>
           <TextField
             fullWidth
-            size='small'
+            size="small"
             required
             id="timeLimitPYTHON"
-            label={t("timeLimit") + ' Python'}
+            label={t("timeLimit") + " Python"}
             type="number"
             value={timeLimitPYTHON}
             onChange={(event) => {
@@ -530,11 +597,10 @@ function EditProblem() {
             }}
           />
         </Grid>
-
         <Grid item xs={3}>
           <TextField
             fullWidth
-            size='small'
+            size="small"
             required
             id="memoryLimit"
             label={t("memoryLimit")}
@@ -548,19 +614,14 @@ function EditProblem() {
             }}
           />
         </Grid>
-
         <Grid item xs={9}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
         </Grid>
         <Grid item xs={3}>
-          <TertiaryButton
-            startIcon={<AddIcon/>}
-            onClick={() => setOpenModalAddNewTag(true)}
-          >
-            {t("common:add", {name: t('tag')})}
+          <TertiaryButton startIcon={<AddIcon />} onClick={() => setOpenModalAddNewTag(true)}>
+            {t("common:add", { name: t("tag") })}
           </TertiaryButton>
         </Grid>
-
         <Grid item xs={3}>
           <FormControlLabel
             label={t("problemBlock")}
@@ -576,19 +637,10 @@ function EditProblem() {
       </Grid>
 
       <Box className={classes.description}>
-        <Typography
-          variant="h6"
-          sx={{marginTop: "8px", marginBottom: "8px"}}
-        >
+        <Typography variant="h6" sx={{ marginTop: "8px", marginBottom: "8px" }}>
           {t("problemDescription")}
         </Typography>
-        <RichTextEditor
-          content={description}
-          onContentChange={(text) => setDescription(text)}
-        />
-        {/*
-        <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
-              */}
+        <RichTextEditor content={description} onContentChange={(text) => setDescription(text)} />
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -597,98 +649,150 @@ function EditProblem() {
             setSampleTestCase(code);
           }}
         />
-
-        <HustDropzoneArea
-          onChangeAttachment={(files) => handleAttachmentFiles(files)}
-        />
-        
+        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)} />
         {isProblemBlock && (
           <>
-            <Tabs
-              value={selectedLanguage}
-              onChange={handleTabChange}
-              sx={{ marginTop: "12px" }}
-            >
-              {PROGRAMMING_LANGUAGES.map((lang) => (
-                <Tab key={lang.value} label={lang.label} value={lang.value} />
-              ))}
-            </Tabs>
-
-            <Box className={!canEditBlocks ? classes.disabledBlock : undefined}>
-              {blockCodes[selectedLanguage].map((block, index) => (
-                <Box className={classes.blockCodeContainer} key={block.id || index}>
-                  <Box className={classes.codeEditorWrapper}>
-                    <HustCodeEditor
-                      sourceCode={block.code || ""}
-                      onChangeSourceCode={(newCode) => {
-                        if (!canEditBlocks) {
-                          errorNoti(t("noPermissionToEditBlocks"), 3000);
-                          return;
-                        }
-                        try {
+            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
+              <IconButton
+                onClick={() => setIsBlockCodesExpanded(!isBlockCodesExpanded)}
+                aria-expanded={isBlockCodesExpanded}
+                aria-label={t("common:toggleBlockCodes")}
+                style={{ color: '#00bcd4' }}
+                size="small"
+              >
+                <ExpandMoreIcon
+                  className={`${classes.expandIcon} ${isBlockCodesExpanded ? classes.expandIconOpen : ''}`}
+                />
+              </IconButton>
+              <Typography variant="body1">
+                {t("common:toggleBlockCodes")}
+              </Typography>
+            </Box>
+            <Collapse in={isBlockCodesExpanded}>
+              <Tabs value={selectedLanguage} onChange={handleTabChange} sx={{ marginTop: "12px" }}>
+                {PROGRAMMING_LANGUAGES.map((lang) => (
+                  <Tab key={lang.value} label={lang.label} value={lang.value} />
+                ))}
+              </Tabs>
+              
+              <Box className={!canEditBlocks ? classes.disabledBlock : undefined}>
+                {blockCodes[selectedLanguage].map((block, index) => (
+                  <Box className={classes.blockCodeContainer} key={block.id || index}>
+                    <Box className={classes.codeEditorWrapper}>
+                      <HustCodeEditor
+                        sourceCode={block.code || ""}
+                        onChangeSourceCode={(newCode) => {
+                          if (!canEditBlocks) {
+                            errorNoti(t("noPermissionToEditBlocks"), 3000);
+                            return;
+                          }
+                          try {
+                            setBlockCodes((prev) => ({
+                              ...prev,
+                              [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                                i === index ? { ...b, code: newCode } : b
+                              ),
+                            }));
+                          } catch (error) {
+                            console.error("Error updating code:", error);
+                            errorNoti(t("Failed to update code"), 3000);
+                          }
+                        }}
+                        language={selectedLanguage}
+                        height="300px"
+                        readOnly={!canEditBlocks}
+                        hideProgrammingLanguage={1}
+                        blockEditor={1}
+                        isStudentBlock={block.forStudent}
+                      />
+                    </Box>
+                    <Box className={classes.blockCodeControls}>
+                      <StyledSelect
+                        size="small"
+                        value={block.forStudent ? "student" : "teacher"}
+                        onChange={(event) => {
+                          if (!canEditBlocks) {
+                            errorNoti(t("noPermissionToEditBlocks"), 3000);
+                            return;
+                          }
                           setBlockCodes((prev) => ({
                             ...prev,
                             [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                              i === index ? { ...b, code: newCode } : b,
+                              i === index ? { ...b, forStudent: event.target.value === "student" } : b
                             ),
                           }));
-                        } catch (error) {
-                          console.error("Error updating code:", error);
-                          errorNoti(t("Failed to update code"), 3000);
-                        }
-                      }}
-                      language={selectedLanguage}
-                      height="300px"
-                      readOnly={!canEditBlocks}
-                      hideProgrammingLanguage={1} 
-                      blockEditor={1} 
-                    />
+                        }}
+                        options={[
+                          { label: t("forTeacher"), value: "teacher" },
+                          { label: t("forStudent"), value: "student" },
+                        ]}
+                        sx={{ width: "250px", mt: 5 }}
+                        disabled={!canEditBlocks}
+                      />
+                      <Box className={classes.controlButtons} sx={{ mt: 1 }}>
+                        <IconButton
+                          onClick={() => handleMoveUp(index)}
+                          disabled={!canEditBlocks || index === 0}
+                          title={t("moveUp", { ns: "common" })}
+                          size="small"
+                        >
+                          <ArrowUpwardIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleMoveDown(index)}
+                          disabled={!canEditBlocks || index === blockCodes[selectedLanguage].length - 1}
+                          title={t("moveDown", { ns: "common" })}
+                          size="small"
+                        >
+                          <ArrowDownwardIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleInsertAbove(index)}
+                          disabled={!canEditBlocks}
+                          title={t("insertAbove", { ns: "common" })}
+                          size="small"
+                        >
+                          <AddCircleOutlineIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleInsertBelow(index)}
+                          disabled={!canEditBlocks}
+                          title={t("insertBelow", { ns: "common" })}
+                          size="small"
+                        >
+                          <AddCircleOutlineIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleDeleteBlock(index)}
+                          disabled={!canEditBlocks}
+                          title={t("delete", { ns: "common" })}
+                          size="small"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
                   </Box>
-                  <Box className={classes.blockCodeControls}>
-                    <StyledSelect
-                      size="small"
-                      value={block.forStudent ? "student" : "teacher"}
-                      onChange={(event) => {
-                        if (!canEditBlocks) {
-                          errorNoti(t("noPermissionToEditBlocks"), 3000);
-                          return;
-                        }
-                        setBlockCodes((prev) => ({
-                          ...prev,
-                          [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                            i === index ? { ...b, forStudent: event.target.value === "student" } : b,
-                          ),
-                        }));
-                      }}
-                      options={[
-                        { label: t("forTeacher"), value: "teacher" },
-                        { label: t("forStudent"), value: "student" },
-                      ]}
-                      sx={{ width: "250px", mt: 5 }}
-                      disabled={!canEditBlocks}
-                    />
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteBlock(index)}
-                      sx={{ minWidth: "60px", px: 1 }}
-                      disabled={!canEditBlocks}
-                    >
-                      {t("delete", { ns: "common" })}
-                    </Button>
-                  </Box>
-                </Box>
-              ))}
-
+                ))}
+              </Box>
+            </Collapse>
+            <Stack direction="row" spacing={2} sx={{ marginTop: "12px" }}>
               <Button
                 variant="outlined"
                 onClick={handleAddBlock}
-                sx={{ marginTop: "12px" }}
                 disabled={!canEditBlocks}
               >
                 {t("addProblemBlock")}
               </Button>
-            </Box>
+              <TertiaryButton
+                variant="outlined"
+                startIcon={<ContentCopyIcon />}
+                onClick={handleCopyAllCode}
+                disabled={!(blockCodes[selectedLanguage]?.length > 0)}
+              >
+                {t("common:copyAllCode")}
+              </TertiaryButton>
+            </Stack>
           </>
         )}
       </Box>
@@ -703,7 +807,7 @@ function EditProblem() {
           />
         ))}
 
-      <Box sx={{marginTop: "32px"}}/>
+      <Box sx={{ marginTop: "32px" }} />
       <HustCodeEditor
         title={t("solutionSourceCode") + " *"}
         language={languageSolution}
@@ -720,7 +824,7 @@ function EditProblem() {
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{margin: "12px 0", textTransform: 'none'}}
+        sx={{ margin: "12px 0", textTransform: "none" }}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -731,7 +835,7 @@ function EditProblem() {
         detail={compileMessage}
       />
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isPreloadCode")}
           control={
@@ -754,7 +858,7 @@ function EditProblem() {
         )}
       </Box>
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
@@ -764,9 +868,7 @@ function EditProblem() {
             />
           }
         />
-        <Typography variant="body2" color="gray">
-          {t("customEvaluationNote1")}
-        </Typography>
+        <Typography variant="body2" color="gray">{t("customEvaluationNote1")}</Typography>
 
         {isCustomEvaluated && (
           <HustCodeEditor
@@ -784,7 +886,7 @@ function EditProblem() {
         )}
       </Box>
 
-      <ListTestCase/>
+      <ListTestCase />
 
       <Stack direction="row" spacing={2} mt={2}>
         <TertiaryButton variant="outlined" onClick={handleExit}>
@@ -794,16 +896,16 @@ function EditProblem() {
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
-          sx={{textTransform: 'capitalize'}}
+          sx={{ textTransform: "capitalize" }}
         >
-          {t("save", {ns: "common"})}
+          {t("save", { ns: "common" })}
         </LoadingButton>
       </Stack>
 
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", {name: t('tag')}), 3000)
+          successNoti(t("common:addSuccess", { name: t("tag") }), 3000);
           getAllTags(handleGetTagsSuccess);
         }}
         handleClose={() => setOpenModalAddNewTag(false)}
