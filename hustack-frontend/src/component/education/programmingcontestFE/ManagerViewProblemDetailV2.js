@@ -31,7 +31,7 @@ import RichTextEditor from "../../common/editor/RichTextEditor";
 import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
-import { localeOption } from "utils/NumberFormat";
+import {localeOption} from "utils/NumberFormat";
 import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
@@ -401,6 +401,7 @@ function ManagerViewProblemDetailV2() {
       </Box>
 
       {problemDetail.sampleTestCase && <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>}
+      
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
           <FileUploadZone key={file.id} file={file} removable={false}/>

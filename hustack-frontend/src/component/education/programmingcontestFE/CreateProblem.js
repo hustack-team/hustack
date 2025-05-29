@@ -11,7 +11,7 @@ import {errorNoti, successNoti} from "../../../utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
 import {LoadingButton} from "@mui/lab";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
 import {getAllTags} from "./service/TagService";
 import ModelAddNewTag from "./ModelAddNewTag";
 import AddIcon from '@mui/icons-material/Add';

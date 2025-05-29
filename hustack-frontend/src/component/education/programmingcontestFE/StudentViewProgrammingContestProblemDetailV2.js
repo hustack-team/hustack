@@ -291,7 +291,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setFile(null);
           inputRef.current.value = null;
 
-          errorNoti(t("common:error"), 3000)
+          errorNoti(t("common:error", 3000))
         },
       },
       formData,
@@ -377,7 +377,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
 
   useEffect(() => {
     if (problem && problem.isPreloadCode === true) return;
-
     switch (language) {
       case COMPUTER_LANGUAGES.C:
         setCodeSolution(DEFAULT_CODE_SEGMENT_C);
@@ -664,9 +663,9 @@ export default function StudentViewProgrammingContestProblemDetail() {
               disabled={
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
-              sx={{ width: 128, textTransform: 'none' }}
-              loading={isProcessing}
-              loadingIndicator="Submitting…"
+              sx={{width: 128, textTransform: 'none'}}
+              // loading={isProcessing}
+              // loadingIndicator="Submitting…"
               variant="contained"
               color="primary"
               type="submit"
@@ -693,7 +692,8 @@ export default function StudentViewProgrammingContestProblemDetail() {
             mt: 3,
           }}
         >
-          With Java, the public class must be declared as: <b>public class Main {"{...}"}</b>
+          With Java, the public class must be declared as:{" "}
+          <b>public class Main {"{...}"}</b>
         </Alert>
       )}
 

@@ -28,7 +28,7 @@ import HustCodeEditor from "../../common/HustCodeEditor";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
 import RichTextEditor from "../../common/editor/RichTextEditor";
 import {CompileStatus} from "./CompileStatus";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION,} from "./Constant";
 import ListTestCase from "./ListTestCase";
 import ModelAddNewTag from "./ModelAddNewTag";
 import {getAllTags} from "./service/TagService";
@@ -573,7 +573,7 @@ function EditProblem() {
             size='small'
             required
             id="timeLimitCPP"
-            label={t("timeLimit") + " C/CPP"}
+            label={t("timeLimit") + ' C/CPP'}
             type="number"
             value={timeLimitCPP}
             onChange={(event) => {
@@ -640,7 +640,7 @@ function EditProblem() {
         </Grid>
 
         <Grid item xs={9}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
@@ -846,17 +846,6 @@ function EditProblem() {
             onRemove={() => handleDeleteImageAttachment(file.fileName)}
           />
         ))}
-      {/* this function is not implemented yet
-      <Box>
-        <Typography>
-          <h2>{t("problemSuggestion")}</h2>
-        </Typography>
-        <RichTextEditor
-          content={solution}
-          onContentChange={text => setSolution(text)}
-        />
-      </Box>
-      */}
 
       <Box sx={{marginTop: "32px"}}/>
       <HustCodeEditor

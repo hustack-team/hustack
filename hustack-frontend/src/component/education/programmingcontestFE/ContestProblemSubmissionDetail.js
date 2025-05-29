@@ -47,8 +47,8 @@ export default function ContestProblemSubmissionDetail() {
       {
         onError: (e) => {
           errorNoti(t("common:error"))
-        },
-      }
+        }
+      },
     );
 
     request("GET",
