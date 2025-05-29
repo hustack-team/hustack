@@ -1,19 +1,19 @@
-import { Divider, Link, Paper, Stack, Typography } from "@mui/material";
+import {Divider, Link, Paper, Stack, Typography} from "@mui/material";
 import Box from "@mui/material/Box";
-import { request } from "api";
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {request} from "api";
+import {useEffect, useState} from "react";
+import {useParams} from "react-router-dom";
 import displayTime from "utils/DateTimeUtils";
-import { localeOption } from "utils/NumberFormat";
-import { detail, resolveLanguage } from "./ContestProblemSubmissionDetailViewedByManager";
+import {localeOption} from "utils/NumberFormat";
+import {detail, resolveLanguage} from "./ContestProblemSubmissionDetailViewedByManager";
 import ParticipantProgramSubmissionDetailTestCaseByTestCase
   from "./ParticipantProgramSubmissionDetailTestCaseByTestCase";
-import { getStatusColor } from "./lib";
-import { useTranslation } from "react-i18next";
-import { errorNoti } from "utils/notification";
-import { mapLanguageToDisplayName } from "./Constant";
-import { makeStyles } from "@material-ui/core/styles";
-import { Collapse, IconButton } from "@mui/material";
+import {getStatusColor} from "./lib";
+import {useTranslation} from "react-i18next";
+import {errorNoti} from "utils/notification";
+import {mapLanguageToDisplayName } from "./Constant";
+import {makeStyles} from "@material-ui/core/styles";
+import {Collapse, IconButton} from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 
@@ -30,13 +30,8 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ContestProblemSubmissionDetail() {
   const classes = useStyles();
-  const { problemSubmissionId } = useParams();
-  const { t } = useTranslation([
-    "education/programmingcontest/testcase",
-    "education/programmingcontest/problem",
-    "education/programmingcontest/contest",
-    "common"
-  ]);
+  const {problemSubmissionId} = useParams();
+  const {t} = useTranslation(["education/programmingcontest/testcase", "education/programmingcontest/problem", "education/programmingcontest/contest", 'common']);
 
   const [submission, setSubmission] = useState({});
   const [comments, setComments] = useState([]);
@@ -51,13 +46,12 @@ export default function ContestProblemSubmissionDetail() {
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error"));
-        },
+          errorNoti(t("common:error"))
+        }
       }
     );
 
-    request(
-      "get",
+    request("GET",
       `submissions/${problemSubmissionId}/comments`,
       (res) => {
         setComments(res.data);
@@ -71,17 +65,17 @@ export default function ContestProblemSubmissionDetail() {
   }, [problemSubmissionId, t]);
 
   return (
-    <Stack sx={{ minWidth: 400, flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 0 } }}>
+    <Stack sx={{minWidth: 400, flexDirection: {xs: 'column', md: 'row'}, gap: {xs: 2, md: 0}}}>
       <Stack
         sx={{
           display: "flex",
           flexGrow: 1,
           boxShadow: 1,
           overflowY: "auto",
-          borderRadius: { xs: 4, md: "16px 0 0 16px" },
+          borderRadius: {xs: 4, md: "16px 0 0 16px"},
           backgroundColor: "#fff",
-          height: { md: "calc(100vh - 112px)" },
-          order: { xs: 1, md: 0 },
+          height: {md: "calc(100vh - 112px)"},
+          order: {xs: 1, md: 0}
         }}
       >
         <Paper
@@ -91,9 +85,9 @@ export default function ContestProblemSubmissionDetail() {
             backgroundColor: "transparent",
           }}
         >
-          {(submission.status && submission.status !== "In Progress") &&
-            (submission.message && !['Evaluated', 'Evaluating', 'Successful'].includes(submission.message)) && (
-              <Box sx={{ mb: 4 }}>
+          {(submission.status && submission.status !== "In Progress")
+            && (submission.message && !['Evaluated', 'Evaluating', 'Successful'].includes(submission.message))
+            && (<Box sx={{mb: 4}}>
                 <HustCopyCodeBlock
                   title={t('common:message')}
                   text={submission.message}
@@ -101,9 +95,10 @@ export default function ContestProblemSubmissionDetail() {
                 />
               </Box>
             )}
-          {submission.status &&
-            !["Compile Error", "In Progress", "N/E Forbidden Ins."].includes(submission.status) && (
-              <Box sx={{ mb: 4 }}>
+          {submission.status
+            && !["Compile Error", "In Progress", "N/E Forbidden Ins."].includes(submission.status)
+            && (
+              <Box sx={{mb: 4}}>
                 <ParticipantProgramSubmissionDetailTestCaseByTestCase
                   submissionId={problemSubmissionId}
                 />
@@ -132,10 +127,8 @@ export default function ContestProblemSubmissionDetail() {
               />
             </Collapse>
           </Box>
-          {/* Note: If submission supports blockCodes (e.g., submission.blockCodes), add dual display modes (individual/combined) similar to ManagerViewProblemDetailV2.js */}
-          {comments?.length > 0 && (
-            <Box>
-              <Typography variant="h6" sx={{ mb: 1 }}>
+          {comments?.length > 0 && (<Box>
+              <Typography variant="h6" sx={{mb: 1}}>
                 {t('common:comment')}
               </Typography>
               {comments.map((comment) => (
@@ -143,27 +136,26 @@ export default function ContestProblemSubmissionDetail() {
                   <strong>{comment.username}:</strong> {comment.comment}
                 </Typography>
               ))}
-            </Box>
-          )}
+            </Box>)}
         </Paper>
       </Stack>
-      <Box sx={{ order: { xs: 0, md: 1 } }}>
+      <Box sx={{order: { xs: 0, md: 1 }}}>
         <Paper
           elevation={1}
           sx={{
             p: 2,
-            width: { md: 300 },
+            width: {md: 300},
             overflowY: "auto",
-            borderRadius: { xs: 4, md: "0 16px 16px 0" },
-            height: { md: "calc(100vh - 112px)" },
+            borderRadius: {xs: 4, md: "0 16px 16px 0"},
+            height: {md: "calc(100vh - 112px)"},
           }}
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            {t("common:submissionDetails")}
+          <Typography variant="subtitle1" sx={{fontWeight: 600}}>
+            {t('common:submissionDetails')}
           </Typography>
-          <Divider sx={{ mb: 1 }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            {t("common:status")}
+          <Divider sx={{mb: 1}} />
+          <Typography variant="subtitle2" sx={{fontWeight: 600}}>
+            {t('common:status')}
           </Typography>
           <Typography
             variant="subtitle2"
@@ -181,7 +173,7 @@ export default function ContestProblemSubmissionDetail() {
               t("pass"),
               submission.testCasePass
                 ? `${submission.testCasePass} test case`
-                : '',
+                : "",
             ],
             [
               t("point"),
@@ -202,6 +194,7 @@ export default function ContestProblemSubmissionDetail() {
             ],
             [t("common:createdBy"), submission.submittedByUserId],
             [t("common:createdTime"), displayTime(submission.createdAt)],
+            // [t("common:lastModified"), displayTime(submission.updateAt)],
             [
               t("education/programmingcontest/problem:problem"),
               <Link

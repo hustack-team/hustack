@@ -1,12 +1,12 @@
 import React from "react";
 import AceEditor from "react-ace";
-import { Box, Typography } from "@mui/material";
+import {Box, Typography} from "@mui/material";
 import HustCodeLanguagePicker from "./HustCodeLanguagePicker";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-monokai";
-import { COMPUTER_LANGUAGES } from "../education/programmingcontestFE/Constant";
+import {COMPUTER_LANGUAGES} from "../education/programmingcontestFE/Constant";
 
 const HustCodeEditor = (props) => {
   const {
@@ -45,12 +45,10 @@ const HustCodeEditor = (props) => {
 
   const minLines = blockEditor === 1 ? 8 : 40;
 
-  // Define the CSS class for student block gutter background
   const editorClassName = isStudentBlock ? "student-block-editor" : "";
 
   return (
     <>
-      {/* Inline CSS for AceEditor gutter */}
       <style>
         {`
           .student-block-editor .ace_gutter {
@@ -84,7 +82,7 @@ const HustCodeEditor = (props) => {
             height={height}
             minLines={minLines}
             maxLines={Infinity}
-            className={editorClassName} // Apply custom class conditionally
+            className={editorClassName} 
             style={{
               paddingTop: "6px",
               padding: "8px",

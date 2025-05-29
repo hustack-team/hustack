@@ -1,4 +1,5 @@
-import { makeStyles } from "@material-ui/core/styles";
+import EditIcon from "@mui/icons-material/Edit";
+import {makeStyles} from "@material-ui/core/styles";
 import {
   Box,
   Button,
@@ -17,29 +18,28 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
-import { request } from "api";
+import {request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import {useTranslation} from "react-i18next";
+import {useHistory, useParams} from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import { randomImageName } from "utils/FileUpload/covert";
-import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage } from "./Constant";
-import { PROBLEM_ROLE, PROBLEM_STATUS } from "utils/constants";
+import {randomImageName} from "utils/FileUpload/covert";
+import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage} from "./Constant";
+import {PROBLEM_ROLE, PROBLEM_STATUS} from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
-import { localeOption } from "utils/NumberFormat";
-import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import {localeOption} from "utils/NumberFormat";
+import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import EditIcon from "@mui/icons-material/Edit";
-import { getLevels, getStatuses } from "./CreateProblem";
+import {getLevels, getStatuses} from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
-import { StyledTabs } from "component/tab";
+import {StyledTabs} from "component/tab";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const useStyles = makeStyles((theme) => ({
@@ -79,22 +79,24 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 }));
 
 function ManagerViewProblemDetailV2() {
-  const { problemId } = useParams();
+  const {problemId} = useParams();
   const history = useHistory();
   const classes = useStyles();
 
-  const { t } = useTranslation([
+  const {t} = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
   ]);
 
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
+
   const [openCloneDialog, setOpenCloneDialog] = useState(false);
   const [newProblemId, setNewProblemId] = useState("");
   const [newProblemName, setNewProblemName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
+
   const [problemDetail, setProblemDetail] = useState({
     problemName: "",
     description: "",
@@ -126,7 +128,7 @@ function ManagerViewProblemDetailV2() {
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
-  };
+  }
 
   useEffect(() => {
     request("get", "teacher/problems/" + problemId, (res) => {
@@ -153,7 +155,6 @@ function ManagerViewProblemDetailV2() {
         categoryId: data.categoryId || "",
       });
 
-      // Process blockCodes
       if (data.blockCodes && data.blockCodes.length > 0) {
         const newBlockCodes = Object.fromEntries(
           PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
@@ -168,7 +169,6 @@ function ManagerViewProblemDetailV2() {
             });
           }
         });
-        // Sort blocks by seq to ensure correct order
         Object.keys(newBlockCodes).forEach((lang) => {
           newBlockCodes[lang].sort((a, b) => a.seq - b.seq);
         });
@@ -194,6 +194,7 @@ function ManagerViewProblemDetailV2() {
     setNewProblemId("");
     setNewProblemName("");
     setErrorMessage("");
+    history.push("/programming-contest/list-problems"); // comment this line : not return to list-problems when click cancel
   };
 
   const handleClone = () => {
@@ -246,7 +247,6 @@ function ManagerViewProblemDetailV2() {
     setBlockDisplayMode((prev) => (prev === "individual" ? "combined" : "individual"));
   };
 
-  // Combine block codes for combined mode
   const getCombinedBlockCode = () => {
     const blocks = blockCodes[selectedLanguage] || [];
     if (blocks.length === 0) return "// No blocks available";
@@ -258,32 +258,32 @@ function ManagerViewProblemDetailV2() {
   return (
     <ProgrammingContestLayout title={t("viewProblem")} onBack={handleExit}>
       <Stack direction="row" spacing={2} mb={1.5} justifyContent="space-between">
-        <Typography variant="h6" component="span">
+        <Typography variant="h6" component='span'>
           {t("generalInfo")}
         </Typography>
 
         <Stack direction="row" spacing={2}>
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
-            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
-            <PrimaryButton
-              onClick={() => {
-                history.push("/programming-contest/edit-problem/" + problemId);
-              }}
-              startIcon={<EditIcon />}
-            >
-              {t("common:edit", { name: "" })}
-            </PrimaryButton>
-          )}
+            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)
+          ) ? null : (<PrimaryButton
+            onClick={() => {
+              history.push("/programming-contest/edit-problem/" + problemId);
+            }}
+            startIcon={<EditIcon/>}
+          >
+            {t("common:edit", {name: ''})}
+          </PrimaryButton>)
+          }
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
-            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
-            <TertiaryButton
-              variant="outlined"
-              onClick={handleCloneDialogOpen}
-              startIcon={<ContentCopyIcon />}
-            >
-              {t("clone")}
-            </TertiaryButton>
-          )}
+            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) ||
+              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (<TertiaryButton
+            variant="outlined"
+            onClick={handleCloneDialogOpen}
+            startIcon={<ContentCopyIcon/>}
+          >
+            {t("clone")}
+          </TertiaryButton>)
+          }
           {problemDetail.roles.includes(PROBLEM_ROLE.OWNER) && (
             <TertiaryButton
               variant="outlined"
@@ -296,8 +296,7 @@ function ManagerViewProblemDetailV2() {
             >
               {t("manageRole")}
             </TertiaryButton>
-          )}
-        </Stack>
+          )}</Stack>
       </Stack>
 
       <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
@@ -306,76 +305,81 @@ function ManagerViewProblemDetailV2() {
           <TextField
             autoFocus
             margin="dense"
-            label={t("problemId")}
+            label="New Problem ID"
             type="text"
             fullWidth
             variant="outlined"
             value={newProblemId}
             onChange={(e) => setNewProblemId(e.target.value)}
             error={hasSpecialCharacterProblemId()}
-            helperText={hasSpecialCharacterProblemId() ? t("invalidProblemId") : ""}
+            helperText={hasSpecialCharacterProblemId() ? "Invalid characters in Problem ID." : ""}
           />
           <TextField
             margin="dense"
-            label={t("problemName")}
+            label="New Problem Name"
             type="text"
             fullWidth
             variant="outlined"
             value={newProblemName}
             onChange={(e) => setNewProblemName(e.target.value)}
+            //error={hasSpecialCharacterProblemName()}
+            //helperText={hasSpecialCharacterProblemName() ? "Invalid characters in Problem Name." : ""}
             helperText={""}
           />
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloneDialogClose} color="primary">
-            {t("common:cancel")}
+            Cancel
           </Button>
           <Button onClick={handleClone} color="primary">
-            {t("common:create")}
+            Create
           </Button>
         </DialogActions>
       </Dialog>
 
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress/>}
       <Grid container spacing={2} display={loading ? "none" : ""}>
         {[
           [t("problemName"), problemDetail.problemName],
-          [t("level"), getLevels(t).find((item) => item.value === problemDetail.levelId)?.label],
-          [t("status"), getStatuses(t).find((item) => item.value === problemDetail.status)?.label],
+          [t("level"), getLevels(t).find(item => item.value === problemDetail.levelId)?.label],
+          [t("status"), getStatuses(t).find(item => item.value === problemDetail.status)?.label],
           [
-            t("public", { ns: "common" }),
+            t("public", {ns: "common"}),
             problemDetail.public ? t("common:yes") : t("common:no"),
           ],
           [
-            t("timeLimit") + " C/CPP",
-            problemDetail.timeLimitCPP
-              ? `${problemDetail.timeLimitCPP.toLocaleString("fr-FR", localeOption)} (s)`
-              : null,
+            t("timeLimit") + ' C/CPP',
+            problemDetail.timeLimitCPP ? `${problemDetail.timeLimitCPP.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (s)` : null,
           ],
           [
-            t("timeLimit") + " Java",
-            problemDetail.timeLimitJAVA
-              ? `${problemDetail.timeLimitJAVA.toLocaleString("fr-FR", localeOption)} (s)`
-              : null,
+            t("timeLimit") + ' Java',
+            problemDetail.timeLimitJAVA ? `${problemDetail.timeLimitJAVA.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (s)` : null,
           ],
           [
-            t("timeLimit") + " Python",
-            problemDetail.timeLimitPYTHON
-              ? `${problemDetail.timeLimitPYTHON.toLocaleString("fr-FR", localeOption)} (s)`
-              : null,
+            t("timeLimit") + ' Python',
+            problemDetail.timeLimitPYTHON ? `${problemDetail.timeLimitPYTHON.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (s)` : null,
           ],
           [
             t("memoryLimit"),
-            problemDetail.memoryLimit
-              ? `${problemDetail.memoryLimit.toLocaleString("fr-FR", localeOption)} (MB)`
-              : null,
+            problemDetail.memoryLimit ? `${problemDetail.memoryLimit.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (MB)` : null,
           ],
           [
             t("tag"),
             problemDetail.tags
-              ? problemDetail.tags.map((selectedTag) => selectedTag.name).join(", ")
-              : null,
+              ? problemDetail.tags.map((selectedTag) => selectedTag.name).join(", ") : null,
           ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={3} key={key}>
@@ -384,25 +388,22 @@ function ManagerViewProblemDetailV2() {
         ))}
       </Grid>
 
-      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
-        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+      <Box sx={{marginTop: "24px", marginBottom: "24px"}}>
+        <Typography variant="h6" sx={{marginBottom: "8px"}}>
           {t("common:description")}
         </Typography>
         <RichTextEditor
           toolbarHidden
           content={problemDetail.description}
           readOnly
-          editorStyle={{ editor: {} }}
+          editorStyle={{editor: {}}}
         />
       </Box>
 
-      {problemDetail.sampleTestCase && (
-        <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase} />
-      )}
-
+      {problemDetail.sampleTestCase && <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase}/>}
       {fetchedImageArray.length !== 0 &&
         fetchedImageArray.map((file) => (
-          <FileUploadZone key={file.id} file={file} removable={false} />
+          <FileUploadZone key={file.id} file={file} removable={false}/>
         ))}
 
       {problemDetail.blockCodes && problemDetail.blockCodes.length > 0 && (
