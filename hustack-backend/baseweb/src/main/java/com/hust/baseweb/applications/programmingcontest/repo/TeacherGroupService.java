@@ -2,7 +2,7 @@ package com.hust.baseweb.applications.programmingcontest.repo;
 
 import com.hust.baseweb.applications.programmingcontest.entity.TeacherGroup;
 import com.hust.baseweb.applications.programmingcontest.entity.TeacherGroupRelation;
-import com.hust.baseweb.applications.programmingcontest.model.ModelSearchGroupResult;
+import com.hust.baseweb.applications.programmingcontest.model.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -19,10 +19,13 @@ public interface TeacherGroupService {
     List<TeacherGroupRelation> addMembers(UUID groupId, List<String> userIds);
     void removeMember(UUID groupId, String userId);
 
-    Page<ModelSearchGroupResult> search(
-        String keyword,
-        List<String> excludeIds,
-        Pageable pageable,
-        String userId
-    );
+    GroupMemberDTO createGroup(GroupMemberDTO groupDTO, String userId) throws IllegalArgumentException;
+    AllGroupReponseDTO getGroup(UUID id, String userId);
+    GroupMemberDTO updateGroup(UUID id, GroupMemberDTO groupDTO, String userId);
+    void deleteGroup(UUID id, String userId);
+    List<MemberDTO> addGroupMembers(UUID groupId, List<String> userIds, String userId);
+    List<MemberDTO> getGroupMembers(UUID groupId, String userId);
+    MemberDTO getGroupMember(UUID groupId, String userId, String currentUserId);
+    void removeGroupMember(UUID groupId, String userId, String currentUserId);
+    Page<ModelSearchGroupResult> getGroups(GroupFilter filter, String userId);
 }

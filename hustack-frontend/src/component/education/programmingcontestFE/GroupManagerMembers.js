@@ -153,7 +153,7 @@ function GroupManagerMembers({ groupId, screenAuthorization, refresh }) {
   function getMembers() {
     request(
       "get",
-      `/members/groups/${groupId}/members`,
+      `/groups/${groupId}/members`,
       (res) => {
         const data = res.data.map((e) => ({
           userId: e.userId,
@@ -178,7 +178,7 @@ function GroupManagerMembers({ groupId, screenAuthorization, refresh }) {
     setLoading(true);
     request(
       "post",
-      `/members/groups/${groupId}/members`,
+      `/groups/${groupId}/members`,
       (res) => {
         successNoti("Users were successfully added to the group", 3000);
         setValue([]);
@@ -200,7 +200,7 @@ function GroupManagerMembers({ groupId, screenAuthorization, refresh }) {
     setLoading(true);
     request(
       "delete",
-      `/members/groups/${groupId}/members/${userId}`,
+      `/groups/${groupId}/members/${userId}`,
       (res) => {
         successNoti("Member removed successfully", 3000);
         getMembers();

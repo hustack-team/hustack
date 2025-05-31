@@ -2036,23 +2036,21 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             : new ArrayList<>();
 
         List<String> groupUserIds = new ArrayList<>();
-        if (addUsers2Contest.getGroupIds() != null) {
-            for (UUID groupId : addUsers2Contest.getGroupIds()) {
-                List<TeacherGroupRelation> relations = teacherGroupRelationRepository.findByGroupId(groupId);
-                for (TeacherGroupRelation relation : relations) {
-                    groupUserIds.add(relation.getUserId());
-                }
-            }
+        if (addUsers2Contest.getGroupIds() != null && !addUsers2Contest.getGroupIds().isEmpty()) {
+            groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(addUsers2Contest.getGroupIds());
         }
 
         Set<String> allUserIds = new HashSet<>();
         allUserIds.addAll(userIds);
         allUserIds.addAll(groupUserIds);
+
         for (String userId : allUserIds) {
             ModelAddUserToContest model = new ModelAddUserToContest(
                 contestId,
                 userId,
-                addUsers2Contest.getRole(), "");
+                addUsers2Contest.getRole(),
+                ""
+            );
             addUserToContest(model);
         }
     }

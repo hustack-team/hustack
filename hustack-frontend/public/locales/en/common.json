@@ -16,9 +16,17 @@
   "groupMember": "Group members",
   "addMember": "Add member",
   "createGroup": "Create Group",
+  "member": "Members",
+  "groupList": "Group List",
   "groupName": "Group Name",
   "searchMemberGroup": "Search by userId or groupId",
   "searchMemberGroupTitle": "Search Users or Groups",
+  "searchMember": "Search User by ID or name",  
+  "statusActive": "Active",
+  "statusInactive": "Inactive",
+  "viewGroup": "View Group information",
+  "lastModifiedDate": "Last Modified Date",
+  "generalInfo": "General information",
   "addSuccess": "{{name}} created successfully",
   "add": "Add {{name}}",
   "status": "Status",
@@ -54,4 +62,5 @@
   "complete": "Complete",
   "reset": "Reset",
   "codeAuthorship": "Authorship (prediction)"
+
 }

@@ -170,7 +170,7 @@ export default function AddMember2Contest(props) {
     return new Promise((resolve) => {
       request(
         "get",
-        `/members/search-groups?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${
+        `/groups?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${
           excludeGroups
             ? excludeGroups.map((id) => "&exclude=" + id).join("")
             : ""

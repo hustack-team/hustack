@@ -19,20 +19,20 @@ public class TeacherGroupRelation {
     @Column(name = "user_id")
     private String userId;
 
-    @Column(name = "last_updated_stamp")
-    private LocalDateTime lastUpdatedStamp;
+    @Column(name = "last_modified_date")
+    private LocalDateTime lastModifiedDate;
 
-    @Column(name = "created_stamp")
-    private LocalDateTime createdStamp;
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
 
     @PrePersist
     protected void onCreate() {
-        createdStamp = LocalDateTime.now();
-        lastUpdatedStamp = LocalDateTime.now();
+        createdDate = LocalDateTime.now();
+        lastModifiedDate = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        lastUpdatedStamp = LocalDateTime.now();
+        lastModifiedDate = LocalDateTime.now();
     }
 }

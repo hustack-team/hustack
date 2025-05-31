@@ -5,6 +5,7 @@ import com.hust.baseweb.applications.programmingcontest.entity.TeacherGroupRelat
 import com.hust.baseweb.applications.programmingcontest.repo.TeacherGroupRelationRepository;
 import com.hust.baseweb.applications.programmingcontest.repo.TeacherGroupRelationServiceRepo;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,13 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class TeacherGroupRelationService implements TeacherGroupRelationServiceRepo {
     private final TeacherGroupRelationRepository teacherGroupRelationRepository;
-
-    @Autowired
-    public TeacherGroupRelationService(TeacherGroupRelationRepository teacherGroupRelationRepository) {
-        this.teacherGroupRelationRepository = teacherGroupRelationRepository;
-    }
 
     @Transactional
     public TeacherGroupRelation save(TeacherGroupRelation teacherGroupRelation) {

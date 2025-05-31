@@ -2,6 +2,7 @@ package com.hust.baseweb.applications.programmingcontest.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -15,8 +16,8 @@ public class TeacherGroup {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "created_by_user_id", length = 60)
-    private String createdByUserId;
+    @Column(name = "created_by", length = 60)
+    private String createdBy;
 
     @Column(name = "name", length = 100)
     private String name;
@@ -27,20 +28,23 @@ public class TeacherGroup {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "last_updated_stamp")
-    private LocalDateTime lastUpdatedStamp;
+    @Column(name = "last_modified_date")
+    private LocalDateTime lastModifiedDate;
 
-    @Column(name = "created_stamp")
-    private LocalDateTime createdStamp;
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
+
+    @Column(name = "last_modified_by", length = 60)
+    private String lastModifiedBy;
 
     @PrePersist
     protected void onCreate() {
-        createdStamp = LocalDateTime.now();
-        lastUpdatedStamp = LocalDateTime.now();
+        createdDate = LocalDateTime.now();
+        lastModifiedDate = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        lastUpdatedStamp = LocalDateTime.now();
+        lastModifiedDate = LocalDateTime.now();
     }
 }

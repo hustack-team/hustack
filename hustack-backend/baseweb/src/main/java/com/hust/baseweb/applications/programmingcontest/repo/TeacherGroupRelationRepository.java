@@ -14,4 +14,10 @@ public interface TeacherGroupRelationRepository extends JpaRepository<TeacherGro
     @Query("SELECT tgr.groupId FROM TeacherGroupRelation tgr WHERE tgr.userId LIKE %:keyword%")
     List<UUID> findGroupIdsByUserIdContaining(@Param("keyword") String keyword);
     List<TeacherGroupRelation> findByGroupId(UUID groupId);
+
+    @Query("SELECT tgr.userId FROM TeacherGroupRelation tgr WHERE tgr.groupId IN :groupIds")
+    List<String> findUserIdsByGroupIds(@Param("groupIds") List<UUID> groupIds);
+    @Query("SELECT r.groupId FROM TeacherGroupRelation r " +
+           "WHERE r.userId = :userId")
+    List<UUID> findGroupIdsByUserId(@Param("userId") String userId);
 }

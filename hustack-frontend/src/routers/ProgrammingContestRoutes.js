@@ -117,7 +117,7 @@ export default function ProgrammingContestRoutes() {
 
         <Route
           component={EditGroup}
-          path={`${path}/group-edit/:groupId`}
+          path={`${path}/edit-group/:groupId`}
         />
         <Route
           component={EditTestCase}

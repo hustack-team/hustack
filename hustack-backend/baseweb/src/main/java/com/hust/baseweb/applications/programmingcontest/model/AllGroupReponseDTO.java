@@ -12,6 +12,6 @@ public class AllGroupReponseDTO {
     private String name;
     private String status;
     private String description;
-    private String createdByUserId;
-    private LocalDateTime lastUpdatedStamp;
+    private String createdBy;
+    private LocalDateTime lastModifiedDate;
 }
