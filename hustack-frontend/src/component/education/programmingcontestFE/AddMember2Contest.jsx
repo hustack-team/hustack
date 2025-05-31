@@ -124,6 +124,7 @@ export default function AddMember2Contest(props) {
   //
   const [value, setValue] = useState([]);
   const [options, setOptions] = useState([]);
+  // const [roles, setRoles] = useState([]);
   const [keyword, setKeyword] = useState("");
 
   const delayedSearch = useMemo(
