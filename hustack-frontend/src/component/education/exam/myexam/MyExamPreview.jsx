@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
 import {
   Card, CardActions,
@@ -13,6 +13,8 @@ import {useLocation} from "react-router";
 import TertiaryButton from "../../../button/TertiaryButton";
 import PrimaryButton from "../../../button/PrimaryButton";
 import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
+import * as faceapi from "face-api.js";
+import {errorNoti} from "../../../../utils/notification";
 
 function MyExamPreview(props) {
 
@@ -43,10 +45,11 @@ function MyExamPreview(props) {
                 if(res.status === 200){
                   setIsLoading(false)
                   if(res.data.resultCode === 200){
+                    stopCamera()
                     history.push({
                       pathname: `/exam/doing`,
                       state: {
-                        data: res.data.data
+                        data: res.data.data,
                       },
                     });
                   }else{
@@ -74,6 +77,53 @@ function MyExamPreview(props) {
     );
   };
 
+  // Bật camera
+  const videoRef = useRef(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const waitForVideo = (videoElement) => {
+    return new Promise((resolve, reject) => {
+      if (videoElement.readyState >= 2) {
+        resolve();
+      } else {
+        videoElement.onloadedmetadata = () => resolve();
+        videoElement.onerror = () => reject(errorNoti("Không thể tải video từ webcam", true));
+      }
+    });
+  };
+  const loadModels = async () => {
+    try {
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+      ]);
+      console.log('Đã tải model face-api.js');
+    } catch (err) {
+      errorNoti(`Lỗi khi tải model: ${err}`, true)
+    }
+  };
+  const startCamera = async () => {
+    try {
+      await loadModels();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoRef.current.srcObject = stream;
+      await waitForVideo(videoRef.current);
+      setIsCameraOn(true);
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        errorNoti("Quyền truy cập webcam bị từ chối. Vui lòng cấp quyền để bắt đầu giám sát.", true)
+      } else {
+        errorNoti("Không thể truy cập webcam. Vui lòng kiểm tra quyền truy cập hoặc thiết bị.", true)
+      }
+      return
+    }
+  };
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    }
+    setIsCameraOn(false);
+  };
+
   return (
     <div>
       <Card elevation={5} >
@@ -96,17 +146,25 @@ function MyExamPreview(props) {
           <div>
             <h3>* Nội quy thi:</h3>
             <ol style={{fontSize: "15px", paddingLeft: '28px'}}>
-              <li style={{marginBottom: '5px'}}>Bài thi chỉ được làm 01 lần duy nhất, làm bài trong thời gian quy định.</li>
+              <li style={{marginBottom: '5px'}}>Bài thi chỉ được làm 01 lần duy nhất, làm bài trong thời gian quy
+                định.
+              </li>
               <li style={{marginBottom: '5px'}}>Không được sử dụng tài liêu, thiết bị điện tử gian lận thi.</li>
-              <li style={{marginBottom: '5px'}}>Các thao tác thi đều được giám sát trực tiếp, mọi hành vi thoát khỏi màn hình / tab làm bài đều được coi là gian lận và vi phạm quy chế thi.</li>
+              <li style={{marginBottom: '5px'}}>Các thao tác thi đều được giám sát trực tiếp, mọi hành vi thoát khỏi màn
+                hình / tab làm bài đều được coi là gian lận và vi phạm quy chế thi.
+              </li>
               {
                 exam?.examMonitor === 2 && (
-                  <li style={{marginBottom: '5px'}}>Cho phép quyền truy cập camera để thực hiện giám sát (Thí sinh nên thi trong môi trường đầy đủ ánh sáng).</li>
+                  <li style={{marginBottom: '5px'}}>Cho phép quyền <span
+                    style={{fontWeight: "bold", textDecoration: 'underline', cursor: 'pointer', color: 'blue'}}
+                    onClick={startCamera}>truy cập camera</span> để thực hiện giám sát (Thí sinh nên thi trong
+                    môi trường đầy đủ ánh sáng).</li>
                 )
               }
               {
                 exam?.examBlockScreen > 0 && (
-                  <li style={{marginBottom: '5px'}}>Mỗi lần vi phạm thí sinh sẽ bị tạm dừng thi <strong>{exam?.examBlockScreen}</strong> giây.</li>
+                  <li style={{marginBottom: '5px'}}>Mỗi lần vi phạm thí sinh sẽ bị tạm dừng
+                    thi <strong>{exam?.examBlockScreen}</strong> giây.</li>
                 )
               }
             </ol>
@@ -114,7 +172,7 @@ function MyExamPreview(props) {
 
           <div style={{textAlign: 'center'}}>
             <PrimaryButton
-              disabled={isLoading}
+              disabled={isLoading || (exam?.examMonitor === 2 && !isCameraOn)}
               variant="contained"
               color="primary"
               onClick={handleDoingExam}
@@ -122,9 +180,11 @@ function MyExamPreview(props) {
               {isLoading ? <CircularProgress/> : "Bắt đầu làm bài"}
             </PrimaryButton>
           </div>
+
+          <video ref={videoRef} autoPlay playsInline style={{width: '300px', position: 'fixed', top: '88px', right: '24px', borderRadius: '5px'}}/>
         </CardContent>
         <CardActions style={{justifyContent: 'flex-end'}}>
-          <TertiaryButton
+        <TertiaryButton
             variant="outlined"
             onClick={() => {
               history.push("/exam/my-exam")
