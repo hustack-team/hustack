@@ -197,7 +197,7 @@ function TeacherListGroup() {
           <TextField
             size="small"
             fullWidth
-            label={t("common:search")}
+            label={t("common:groupName")}
             value={filter.keyword}
             onChange={handleChangeKeyword}
           />

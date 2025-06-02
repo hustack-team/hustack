@@ -180,6 +180,8 @@ export default function AddMember2Contest(props) {
           const data = res.data.content.map((e) => ({
             id: e.id,
             name: e.name,
+            memberCount: e.memberCount,
+            description: e.description,
             type: "group",
           }));
           resolve(data);
@@ -234,6 +236,15 @@ export default function AddMember2Contest(props) {
     };
   }, [value, keyword, delayedSearch]);
 
+  const getGroupDisplayName = (group) => {
+    return `${group.name} (${group.memberCount} ${t("common:member")})`;
+  };
+
+  const formatDescription = (description) => {
+    if (!description) return "";
+    return description.replace(/\n/g, " ").trim();
+  };
+
   return (
     <>
       <Stack
@@ -255,7 +266,7 @@ export default function AddMember2Contest(props) {
           PopperComponent={PopperComponent}
           getOptionLabel={(option) =>
             // console.log("getOptionLabel with option", option);
-            option.type === "group" ? `Group: ${option.name}` : option.name
+            option.type === "group" ? getGroupDisplayName(option) : option.name
           }
           filterOptions={(x) => x} // disable filtering on client
           options={options}
@@ -305,8 +316,15 @@ export default function AddMember2Contest(props) {
                 </ListItemAvatar>
               )}
               <ListItemText
-                primary={option.type === "group" ? `Group: ${option.name}` : option.name}
-                secondary={option.id}
+                primary={option.type === "group" ? getGroupDisplayName(option) : option.name}
+                secondary={option.type === "group" ? formatDescription(option.description) : option.id}
+                secondaryTypographyProps={{
+                  sx: {
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }
+                }}
               />
             </ListItem>
           )}

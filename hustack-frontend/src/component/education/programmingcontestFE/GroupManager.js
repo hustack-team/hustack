@@ -21,6 +21,7 @@ import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import StandardTable from "component/table/StandardTable";
 import withScreenSecurity from "../../withScreenSecurity";
+import { Paper } from "@material-ui/core";
 
 function stringToColor(string) {
   if (!string) return "#000";
@@ -233,6 +234,9 @@ function GroupManager({ screenAuthorization }) {
             pageSize: 5,
             search: false,
             sorting: true,
+          }}
+          components={{
+            Container: (props) => <Paper {...props} elevation={0} />,
           }}
         />
       </Box>
