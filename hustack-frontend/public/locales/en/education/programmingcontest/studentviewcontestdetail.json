@@ -5,6 +5,7 @@
   "level": "Level",
   "submitted": "Submitted",
   "accepted": "Accepted",
+  "point": "Point",
   "maxPoint": "Achieved Point",
   "tags": "Tags",
   "problemList": {

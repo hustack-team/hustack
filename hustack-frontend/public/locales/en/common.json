@@ -47,5 +47,10 @@
   "registered": "Registered",
   "complete": "Complete",
   "reset": "Reset",
-  "codeAuthorship": "Authorship (prediction)"
+  "codeAuthorship": "Authorship (prediction)",
+  "finalSubmission": "Final Submission",
+  "maxPoint": "Max points",
+  "maxSubmittedPoint": "Points earned",
+  "selectSubmissionWarning": "This submission does not have the highest score. Are you sure you want to mark this submission as final? ",
+  "confirmChangeFinalSubmission": "Change Final Submission" 
 }

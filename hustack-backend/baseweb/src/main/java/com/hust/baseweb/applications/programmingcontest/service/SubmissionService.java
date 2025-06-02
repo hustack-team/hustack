@@ -26,4 +26,10 @@ public interface SubmissionService {
     CodeClassificationResult detectCodeAuthorshipOfSubmission(UUID submissionId);
 
     CodeClassificationResponse detectCodeAuthorship(List<CodeClassificationRequest> requests);
+
+    void updateFinalSelectedSubmission(String userId,
+                                       String contestId,
+                                       String problemId,
+                                       UUID newSubmissionId,
+                                       UUID oldSubmissionId);
 }

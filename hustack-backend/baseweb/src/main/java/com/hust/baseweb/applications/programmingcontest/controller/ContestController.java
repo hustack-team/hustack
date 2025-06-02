@@ -7,17 +7,16 @@ import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -42,11 +41,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestController {
 
+    TestCaseRepo testCaseRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
@@ -336,13 +336,39 @@ public class ContestController {
 
         List<ProblemEntity> problems = contest.getProblems();
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
-        List<ModelProblemMaxSubmissionPoint> submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(
-            userId,
-            contestId);
+
+        List<ModelProblemMaxSubmissionPoint> submittedProblems;
+        if (Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission())) {
+            submittedProblems = contestSubmissionRepo.findFinalSelectedSubmittedProblemsOfUser(userId, contestId);
+        } else {
+            submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(userId, contestId);
+        }
 
         Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
         for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
             mapProblemToMaxSubmissionPoint.put(problem.getProblemId(), problem.getMaxPoint());
+        }
+
+        Map<String, Long> mProblem2MaxPoint = new HashMap<>();
+        List<ContestProblem> listContestProblem = contestProblemRepo.findAllByContestId(contestId);
+        List<String> listProblemId = listContestProblem.stream()
+                                                 .filter(cp -> !ContestProblem.SUBMISSION_MODE_HIDDEN.equals(cp.getSubmissionMode()))
+                                                 .map(ContestProblem::getProblemId)
+                                                 .collect(Collectors.toList());
+
+        for (String problemId : listProblemId) {
+            long totalPoint = 0;
+            List<TestCaseEntity> testCases = testCaseRepo.findAllByProblemId(problemId);
+            for (TestCaseEntity tc : testCases) {
+                if ("Y".equals(contest.getEvaluateBothPublicPrivateTestcase())) {
+                    totalPoint += tc.getTestCasePoint();
+                } else {
+                    if (tc.getIsPublic().equals("N")) {
+                        totalPoint += tc.getTestCasePoint();
+                    }
+                }
+            }
+            mProblem2MaxPoint.put(problemId, totalPoint);
         }
 
         List<ModelStudentOverviewProblem> responses = new ArrayList<>();
@@ -371,6 +397,7 @@ public class ContestController {
                 response.setProblemName(contestProblem.getProblemRename());
                 response.setProblemCode(contestProblem.getProblemRecode());
                 response.setLevelId(problem.getLevelId());
+                response.setMaxPoint(mProblem2MaxPoint.getOrDefault(problemId, 0L)); // Gán maxPoint
 
                 if (contest.getContestShowTag() != null && contest.getContestShowTag().equals("N")) {
                     response.setTags(new ArrayList<>());
@@ -745,7 +772,8 @@ public class ContestController {
                 problemId);
         return ResponseEntity.ok().body(page);
     }
-
+    
+    
     @Async
     protected void logGetSubmissionsOfContest(String userId, String contestId) {
         if (true) {

@@ -5,7 +5,8 @@
   "level": "Mức độ",
   "submitted": "Đã nộp",
   "accepted": "Đã hoàn thành",
-  "maxPoint": "Điểm đạt được",
+  "point": "Điểm đạt được",
+  "maxPoint": "Điểm tối đa",
   "tags": "Nhãn",
   "problemList": {
     "title": "Bài tập"

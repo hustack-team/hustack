@@ -805,6 +805,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                    .contestShowTag(modelUpdateContest.getContestShowTag())
                                                    .contestShowComment(modelUpdateContest.getContestShowComment())
                                                    .contestPublic(modelUpdateContest.getContestPublic())
+                                                   .allowParticipantPinSubmission(modelUpdateContest.getAllowParticipantPinSubmission())
                                                    .build();
         return contestService.updateContestWithCache(contestEntity);
 
@@ -1780,7 +1781,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             long totalPoint = 0;
             List<TestCaseEntity> TC = testCaseRepo.findAllByProblemId(problemId);
             for (TestCaseEntity tc : TC) {
-                if (contest.getEvaluateBothPublicPrivateTestcase().equals("Y")) {
+                if ("Y".equals(contest.getEvaluateBothPublicPrivateTestcase())) {
                     totalPoint += tc.getTestCasePoint();
                 } else {
                     if (tc.getIsPublic().equals("N")) {
@@ -1805,13 +1806,29 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             List<ModelSubmissionInfoRanking> submissionsByUser = new ArrayList<>();
 
+            boolean allowPinSubmission = contest != null && Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission());
+
             switch (getPointForRankingType) {
                 case HIGHEST:
-                    submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+                    if (allowPinSubmission) {
+                        submissionsByUser = contestSubmissionRepo.getHighestPinnedSubmissions(userId, contestId);
+                        if (submissionsByUser.isEmpty()) {
+                            submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+                        }
+                    } else {
+                        submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+                    }
                     break;
 
                 case LATEST:
-                    submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
+                    if (allowPinSubmission) {
+                        submissionsByUser = contestSubmissionRepo.getLatestPinnedSubmissions(userId, contestId);
+                        if (submissionsByUser.isEmpty()) {
+                            submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
+                        }
+                    } else {
+                        submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
+                    }
                     break;
             }
             //log.info("getRankingByContestIdNew, submisionByUser.sz = " + submissionsByUser.size());
@@ -2146,6 +2163,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         String problemId
     ) {
         //log.info("findContestSubmissionByUserLoginIdAndContestIdPaging, user = " + userLoginId + " contestId = " + contestId);
+        ContestEntity contest = contestRepo.findContestByContestId(contestId);
+        Integer allowParticipantPinSubmission = contest != null ? contest.getAllowParticipantPinSubmission() : 0;
         return contestSubmissionPagingAndSortingRepo
             .findAllByUserIdAndContestIdAndProblemId(pageable, userLoginId, contestId, problemId)
             .map(contestSubmissionEntity -> ContestSubmission
@@ -2164,6 +2183,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 .status(contestSubmissionEntity.getStatus())
                 .message(contestSubmissionEntity.getMessage())
                 .userId(contestSubmissionEntity.getUserId())
+                .finalSelectedSubmission(contestSubmissionEntity.getFinalSelectedSubmission())
+                .allowParticipantPinSubmission(allowParticipantPinSubmission)
                 .build()
             );
     }
@@ -2260,6 +2281,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 .fullname(getUserFullNameOfContest(contestId, submission.getUserId()))
                 .createdByIp(submission.getCreatedByIp())
                 .codeAuthorship(submission.getCodeAuthorship())
+                .finalSelectedSubmission(submission.getFinalSelectedSubmission())
                 .build());
     }
 

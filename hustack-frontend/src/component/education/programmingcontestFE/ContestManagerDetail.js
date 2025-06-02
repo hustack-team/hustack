@@ -30,7 +30,8 @@ export function ContestManagerDetail(props) {
     maxSourceCodeLength: 50000,
     minTimeBetweenTwoSubmissions: 0,
     participantViewSubmissionMode: "",
-    contestType:""
+    contestType:"",
+    allowParticipantPinSubmission: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -38,33 +39,35 @@ export function ContestManagerDetail(props) {
   const [newContestId, setNewContestId] = useState("");
   const [newContestName, setNewContestName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     const getContestDetail = () => {
       request("get", "/contests/" + contestId, (res) => {
+        console.log("API Response:", res.data); // Debug
         setLoading(false);
 
-        const data = res.data;
+        const data = res.data || {};
         setContestDetail((prev) => ({
           ...prev,
-          name: data.contestName,
-          statusId: data.statusId,
-          submissionActionType: data.submissionActionType,
-          participantViewResultMode: data.participantViewResultMode,
-          maxNumberSubmission: data.maxNumberSubmission,
-          problemDescriptionViewType: data.problemDescriptionViewType,
-          minTimeBetweenTwoSubmissions: data.minTimeBetweenTwoSubmissions,
-          evaluateBothPublicPrivateTestcase:
-            data.evaluateBothPublicPrivateTestcase,
-          maxSourceCodeLength: data.maxSourceCodeLength,
-          participantViewSubmissionMode: data.participantViewSubmissionMode,
-          languagesAllowed: data.languagesAllowed,
-          contestType: data.contestType
+          name: data.contestName || "",
+          statusId: data.statusId || "",
+          submissionActionType: data.submissionActionType || "",
+          participantViewResultMode: data.participantViewResultMode || "",
+          maxNumberSubmission: data.maxNumberSubmission || 10,
+          problemDescriptionViewType: data.problemDescriptionViewType || "",
+          minTimeBetweenTwoSubmissions: data.minTimeBetweenTwoSubmissions || 0,
+          evaluateBothPublicPrivateTestcase: data.evaluateBothPublicPrivateTestcase || "",
+          maxSourceCodeLength: data.maxSourceCodeLength || 50000,
+          participantViewSubmissionMode: data.participantViewSubmissionMode || "",
+          languagesAllowed: data.languagesAllowed || "",
+          contestType: data.contestType || "",
+          allowParticipantPinSubmission: data.allowParticipantPinSubmission || 0,
         }));
       });
     };
 
     getContestDetail();
-  }, []);
+  }, [contestId]);
 
   const handleEdit = () => {
     history.push("/programming-contest/contest-edit/" + contestId);
@@ -73,8 +76,6 @@ export function ContestManagerDetail(props) {
   const hasSpecialCharacterContestId = () => {
     return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(newContestId); 
   };
-
-
 
   const handleCloneDialogOpen = () => {
     setOpenCloneDialog(true);
@@ -94,7 +95,6 @@ export function ContestManagerDetail(props) {
         return;
     }
 
-
     const cloneRequest = {
         fromContestId: contestId,
         toContestId: newContestId,
@@ -110,17 +110,17 @@ export function ContestManagerDetail(props) {
         },
         {
             onError: (error) => {
-                setErrorMessage("Failed to clone the problem. Please try again.");
-                console.error("Error cloning problem:", error);
+                setErrorMessage("Failed to clone the contest. Please try again.");
+                console.error("Error cloning contest:", error);
             },
             400: (error) => {
                 setErrorMessage("Invalid request. Please check your input.");
             },
             404: (error) => {
-                setErrorMessage("Original problem not found.");
+                setErrorMessage("Original contest not found.");
             },
             500: (error) => {
-              setErrorMessage("Original problem already exists.");
+              setErrorMessage("Contest already exists.");
           },
         },
         cloneRequest 
@@ -141,67 +141,74 @@ export function ContestManagerDetail(props) {
         </PrimaryButton>        
       }      
     >
-
       {loading && <LinearProgress />}
-      <Grid container spacing={2} display={loading ? "none" : ""}>
-        {[
-          ["Name", contestDetail.name],
-          ["Status", contestDetail.statusId],
-          ["Type", contestDetail.contestType],
-          [
-            "View problem description",
-            contestDetail.problemDescriptionViewType,
-          ],
-          [
-            "Max submissions",
-            `${contestDetail.maxNumberSubmission} (per problem)`,
-          ],
-          [
-            "Source length limit",
-            `${contestDetail.maxSourceCodeLength.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (chars)`,
-          ],
-          [
-            "Submission interval",
-            `${contestDetail.minTimeBetweenTwoSubmissions.toLocaleString(
-              "fr-FR",
-              localeOption
-            )} (s)`,
-            undefined,
-            "Minimum time between two consecutive submissions by a participant",
-          ],
-          [
-            "Languages allowed",
-            !contestDetail.languagesAllowed ||
-            _.isEmpty(contestDetail.languagesAllowed.trim())
-              ? "All supported languages"
-              : contestDetail.languagesAllowed,
-          ],
-          ["Action on submission", contestDetail.submissionActionType],
-          [
-            "Evaluate both public and private testcases",
-            contestDetail.evaluateBothPublicPrivateTestcase,
-          ],
-          [
-            "View testcase detail",
-            contestDetail.participantViewResultMode,
-            undefined,
-            "Allow or disallow participant to view the input and output of each testcase",
-          ],
-          [
-            "Participant view submission",
-            contestDetail.participantViewSubmissionMode,
-            undefined,
-            "Allow or disallow participant to view their own submissions",
-          ],
-        ].map(([key, value, sx, helpText]) => (
-          <Grid item xs={12} sm={12} md={4}>
-            {detail(key, value, sx, helpText)}
-          </Grid>
-        ))}
-      </Grid>
+      {!loading && (
+        <Grid container spacing={2}>
+          {[
+            ["Name", contestDetail.name],
+            ["Status", contestDetail.statusId],
+            ["Type", contestDetail.contestType],
+            [
+              "View problem description",
+              contestDetail.problemDescriptionViewType,
+            ],
+            [
+              "Max submissions",
+              `${contestDetail.maxNumberSubmission} (per problem)`,
+            ],
+            [
+              "Source length limit",
+              `${contestDetail.maxSourceCodeLength.toLocaleString(
+                "fr-FR",
+                localeOption
+              )} (chars)`,
+            ],
+            [
+              "Submission interval",
+              `${contestDetail.minTimeBetweenTwoSubmissions.toLocaleString(
+                "fr-FR",
+                localeOption
+              )} (s)`,
+              undefined,
+              "Minimum time between two consecutive submissions by a participant",
+            ],
+            [
+              "Languages allowed",
+              !contestDetail.languagesAllowed ||
+              _.isEmpty((contestDetail.languagesAllowed || "").trim())
+                ? "All supported languages"
+                : contestDetail.languagesAllowed,
+            ],
+            ["Action on submission", contestDetail.submissionActionType],
+            [
+              "Evaluate both public and private testcases",
+              contestDetail.evaluateBothPublicPrivateTestcase,
+            ],
+            [
+              "View testcase detail",
+              contestDetail.participantViewResultMode,
+              undefined,
+              "Allow or disallow participant to view the input and output of each testcase",
+            ],
+            [
+              "Participant view submission",
+              contestDetail.participantViewSubmissionMode || "N/A",
+              undefined,
+              "Allow or disallow participant to view their own submissions",
+            ],
+            [
+              "Allow participant pin submission",
+              contestDetail.allowParticipantPinSubmission === 0 ? "N" : "Y",
+              undefined,
+              "Allow or disallow participants to pin their submissions",
+            ],
+          ].map(([key, value, sx, helpText]) => (
+            <Grid item xs={12} sm={12} md={4} key={key}>
+              {detail(key, value, sx, helpText)}
+            </Grid>
+          ))}
+        </Grid>
+      )}
       <PrimaryButton onClick={handleCloneDialogOpen}>
         Clone
       </PrimaryButton>
@@ -244,7 +251,6 @@ export function ContestManagerDetail(props) {
           </Button>
         </DialogActions>
       </Dialog>
-
     </>
   );
 }
