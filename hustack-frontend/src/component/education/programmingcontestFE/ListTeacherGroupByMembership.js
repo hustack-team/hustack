@@ -176,7 +176,7 @@ function TeacherListGroup() {
       render: (rowData) => toFormattedDateTime(rowData.lastModifiedDate),
     },
     {
-      title: t("common:delete"),
+      title: t("common:operation"),
       cellStyle: { minWidth: 120 },
       render: (rowData) => (
         <DeleteIcon
@@ -192,8 +192,8 @@ function TeacherListGroup() {
       <Typography variant="h6" sx={{ marginBottom: "12px" }}>
         {t("common:search")}
       </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={6}>
+      <Grid container spacing={3} alignItems="flex-end">
+        <Grid item xs={3}>
           <TextField
             size="small"
             fullWidth
@@ -202,7 +202,7 @@ function TeacherListGroup() {
             onChange={handleChangeKeyword}
           />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={3}>
           <StyledSelect
             fullWidth
             key={t("common:status")}
@@ -213,23 +213,26 @@ function TeacherListGroup() {
             onChange={handleChangeStatus}
           />
         </Grid>
+        <Grid item xs={3} />
+        <Grid item xs={3}>
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <TertiaryButton
+              onClick={resetFilter}
+              variant="outlined"
+              startIcon={<AutorenewIcon />}
+            >
+              {t("common:reset")}
+            </TertiaryButton>
+            <PrimaryButton
+              disabled={loading}
+              onClick={handleSearch}
+              startIcon={<SearchIcon />}
+            >
+              {t("common:search")}
+            </PrimaryButton>
+          </Stack>
+        </Grid>
       </Grid>
-      <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
-        <TertiaryButton
-          onClick={resetFilter}
-          variant="outlined"
-          startIcon={<AutorenewIcon />}
-        >
-          {t("common:reset")}
-        </TertiaryButton>
-        <PrimaryButton
-          disabled={loading}
-          onClick={handleSearch}
-          startIcon={<SearchIcon />}
-        >
-          {t("common:search")}
-        </PrimaryButton>
-      </Stack>
 
       <Divider sx={{ mt: 2, mb: 2 }} />
 
@@ -238,7 +241,7 @@ function TeacherListGroup() {
         <PrimaryButton
           startIcon={<AddIcon />}
           onClick={() => {
-            window.open("/programming-contest/create-group");
+            window.open("/programming-contest/group-form");
           }}
         >
           {t("common:create", { name: "" })}

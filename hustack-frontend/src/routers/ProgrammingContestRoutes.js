@@ -26,6 +26,7 @@ import ListGroupManager from "component/education/programmingcontestFE/ListGroup
 import CreateGroup from "component/education/programmingcontestFE/CreateGroup";
 import GroupManager from "component/education/programmingcontestFE/GroupManager";
 import EditGroup from "component/education/programmingcontestFE/EditGroup";
+import GroupForm from "component/education/programmingcontestFE/GroupForm";
 
 export default function ProgrammingContestRoutes() {
   let { path } = useRouteMatch();
@@ -48,7 +49,7 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/user-contest-problem-role-management/:problemId`}
         />
         <Route component={CreateContest} path={`${path}/create-contest`} />
-        <Route component={CreateGroup} path={`${path}/create-group`} />
+        {/* <Route component={CreateGroup} path={`${path}/create-group`} /> */}
 
         <Route
           component={StudentViewContestDetail}
@@ -115,10 +116,11 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/contest-edit/:contestId`}
         />
 
-        <Route
+        {/* <Route
           component={EditGroup}
           path={`${path}/edit-group/:groupId`}
-        />
+        /> */}
+        <Route component={GroupForm} path={`${path}/group-form/:groupId?`} />
         <Route
           component={EditTestCase}
           path={`${path}/edit-testcase/:problemId/:testCaseId`}

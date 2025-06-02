@@ -19,6 +19,7 @@
   "member": "Members",
   "groupList": "Group List",
   "groupName": "Group Name",
+  "operation": "Operation",
   "searchMemberGroup": "Search by userId or groupId",
   "searchMemberGroupTitle": "Search Users or Groups",
   "searchMember": "Search User by ID or name",  

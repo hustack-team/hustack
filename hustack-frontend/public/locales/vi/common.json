@@ -15,6 +15,7 @@
   "create": "Thêm mới {{name}}",
   "groupList": "Danh sách nhóm",
   "groupName": "Tên nhóm",
+  "operation": "Thao tác",
   "createGroup": "Tạo nhóm",
   "member": "Thành viên",
   "groupMember": "Thành viên nhóm",

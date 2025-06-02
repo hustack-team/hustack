@@ -10,16 +10,17 @@ import {
   Avatar,
   ListItemAvatar,
   ListItemText,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { request } from "api";
 import { errorNoti } from "utils/notification";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import StandardTable from "component/table/StandardTable";
-import RichTextEditor from "../../common/editor/RichTextEditor";
 import withScreenSecurity from "../../withScreenSecurity";
-import { toFormattedDateTime } from "utils/dateutils";
 
 function stringToColor(string) {
   if (!string) return "#000";
@@ -55,6 +56,33 @@ const getStatuses = (t) => [
   { label: t("common:statusInactive"), value: "INACTIVE" },
 ];
 
+function detail(key, value, sx, helpText) {
+  return (
+    <Stack>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600, ...sx?.key }}>
+        {helpText ? (
+          <>
+            {key}
+            <Tooltip arrow title={helpText}>
+              <IconButton sx={{ p: 0.5, pt: 0 }}>
+                <HelpOutlineIcon sx={{ fontSize: 16, color: "#000000de" }} />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : (
+          key
+        )}
+      </Typography>
+      <Typography>{value || "-"}</Typography>
+      {helpText && (
+        <Typography variant="caption" color="error">
+          {helpText}
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
 function GroupManager({ screenAuthorization }) {
   const { groupId } = useParams();
   const history = useHistory();
@@ -70,6 +98,8 @@ function GroupManager({ screenAuthorization }) {
   });
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const statuses = getStatuses(t);
 
   const handleExit = () => {
     history.push("/programming-contest/teacher-list-group");
@@ -158,12 +188,12 @@ function GroupManager({ screenAuthorization }) {
     <ProgrammingContestLayout title={t("viewGroup")} onBack={handleExit}>
       <Stack direction="row" spacing={2} mb={1.5} justifyContent="space-between">
         <Typography variant="h6" component="span">
-          {t("generalInfo")}
+          {t("common:generalInfo")}
         </Typography>
         <Stack direction="row" spacing={2}>
           <PrimaryButton
             onClick={() => {
-              history.push(`/programming-contest/edit-group/${groupId}`);
+              history.push(`/programming-contest/group-form/${groupId}`);
             }}
             startIcon={<EditIcon />}
           >
@@ -173,39 +203,24 @@ function GroupManager({ screenAuthorization }) {
       </Stack>
 
       {loading && <LinearProgress />}
+      
       <Grid container spacing={2} display={loading ? "none" : ""}>
-        {[
-          [t("groupName"), groupDetail.name],
-          [
-            t("status"),
-            getStatuses(t).find((item) => item.value === groupDetail.status)?.label,
-          ],
-          [t("createdBy"), groupDetail.createdBy],
-          [
-            t("common:lastModifiedDate"),
-            groupDetail.lastModifiedDate ? toFormattedDateTime(groupDetail.lastModifiedDate) : "N/A",
-          ],
-        ].map(([key, value, sx, helpText]) => (
-          <Grid item xs={12} sm={12} md={3} key={key}>
-            <Typography variant="subtitle2" color="textSecondary">
-              {key}
-            </Typography>
-            <Typography variant="body1">{value || "N/A"}</Typography>
-          </Grid>
-        ))}
+        <Grid item xs={12} sm={12} md={6}>
+          <Stack spacing={2}>
+            {[
+              [t("groupName"), groupDetail.name],
+              [t("status"), statuses.find(item => item.value === groupDetail.status)?.label],
+            ].map(([key, value, sx, helpText]) => (
+              <div key={key}>
+                {detail(key, value, sx, helpText)}
+              </div>
+            ))}
+          </Stack>
+        </Grid>
+        <Grid item xs={12} sm={12} md={6}>
+          {detail(t("description"), groupDetail.description || "-")}
+        </Grid>
       </Grid>
-
-      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
-        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
-          {t("description")}
-        </Typography>
-        <RichTextEditor
-          toolbarHidden
-          content={groupDetail.description}
-          readOnly
-          editorStyle={{ editor: {} }}
-        />
-      </Box>
 
       <Box sx={{ marginTop: "24px" }}>
         <StandardTable
