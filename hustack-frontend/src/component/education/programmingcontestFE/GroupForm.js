@@ -523,6 +523,8 @@ function GroupForm() {
                 selection: false,
                 pagination: false, 
                 serverSide: false,
+                pageSize: 5,
+                pageSizeOptions: [5, 10, 20],
                 totalCount: selectedMembers.length,
                 search: false,
                 sorting: true,
@@ -532,7 +534,6 @@ function GroupForm() {
                 Container: (props) => <Paper {...props} elevation={0} />,
               }}
               isLoading={loading}
-              // Removed pagination-related props
             />
           </Box>
 
