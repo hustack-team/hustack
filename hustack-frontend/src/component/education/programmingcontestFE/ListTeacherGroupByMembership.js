@@ -14,6 +14,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import { ConfirmDeleteDialog } from "component/dialog/ConfirmDeleteDialog";
 import StyledSelect from "../../select/StyledSelect";
 import { IconButton } from "@mui/material";
+import { LockOpen, LockOutlined } from "@material-ui/icons";
 
 const INITIAL_FILTER = { keyword: "", status: "" };
 
@@ -141,7 +142,6 @@ function TeacherListGroup() {
         setGroups((prevGroups) =>
           prevGroups.map((g) => (g.id === group.id ? { ...g, status: newStatus } : g))
         );
-        successNoti(t("common:statusUpdated"), 3000);
       },
       {
         403: () => errorNoti(t("common:noPermission"), 3000),
@@ -198,22 +198,22 @@ function TeacherListGroup() {
       render: (rowData) => (
         <Stack direction="row" spacing={1} justifyContent="center">
           <IconButton
+            onClick={() => handleToggleStatus(rowData)}
+            disabled={isLoading || toggleLoading[rowData.id]}
+            color="primary"
+          >
+            {rowData.status === "INACTIVE" ? <LockOpen /> : <LockOutlined />}
+          </IconButton>
+          <IconButton
             onClick={() => handleOpenDeleteDialog(rowData)}
             disabled={isLoading || toggleLoading[rowData.id]}
             color="error"
           >
             <DeleteIcon />
           </IconButton>
-          <IconButton
-            onClick={() => handleToggleStatus(rowData)}
-            disabled={isLoading || toggleLoading[rowData.id]}
-            color="primary"
-          >
-            <AutorenewIcon />
-          </IconButton>
         </Stack>
       ),
-    },
+    }
   ];
 
   return (

@@ -331,8 +331,8 @@ function GroupForm() {
     {
       title: t("common:member"),
       field: "userId",
-      minWidth: 70,
-      maxWidth: 280,
+      minWidth: 100,
+      maxWidth: 320,
       cellStyle: { padding: "0 4px" },
       render: (rowData) => (
         <Stack direction="row" alignItems="center">
@@ -350,8 +350,8 @@ function GroupForm() {
       ),
     },
     {
-      title: t("common:operation"),
-      minWidth: 120,
+      title: t("common:action"),
+      minWidth: 100,
       cellStyle: { padding: "0 4px" },
       render: (row) => (
         <IconButton
@@ -503,7 +503,6 @@ function GroupForm() {
                 {t("common:addMember")}
               </PrimaryButton>
             </Stack>
-            <Divider sx={{ mt: 2, mb: 2 }} />
             <Stack direction="row" justifyContent="space-between" mb={1.5}>
               <Typography variant="h6">{t("common:groupMember")}</Typography>
               <PrimaryButton
@@ -537,7 +536,7 @@ function GroupForm() {
             />
           </Box>
 
-          <Box width="100%" sx={{ marginTop: "20px" }}>
+          <Box width="100%" sx={{ marginTop: "40px" }}>
             <Stack direction="row" spacing={2.5} justifyContent="flex-start">
               <TertiaryButton
                 variant="outlined"

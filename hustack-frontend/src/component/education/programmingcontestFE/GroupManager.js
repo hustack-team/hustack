@@ -213,13 +213,11 @@ function GroupManager({ screenAuthorization }) {
         <Grid item xs={12} sm={12} md={3}>
           {detail(t("status"), statuses.find(item => item.value === groupDetail.status)?.label)}
         </Grid>
-        <Grid item xs={12} sm={12} md={3}>
+        <Grid item xs={12} sm={12} md={6}>
           {detail(t("description"), groupDetail.description || "-")}
         </Grid>
         <Grid item xs={12} sm={12} md={3} />
       </Grid>
-
-      <Divider sx={{ mt: 2, mb: 2 }} />
 
       <Stack direction="row" justifyContent="space-between" mb={1.5} mt={2}>
         <Typography variant="h6">{t("common:groupMember")}</Typography>
