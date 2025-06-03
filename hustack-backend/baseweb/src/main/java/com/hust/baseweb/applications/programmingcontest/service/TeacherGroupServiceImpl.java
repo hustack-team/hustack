@@ -99,6 +99,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
                                                                 ModelSearchGroupResult result = new ModelSearchGroupResult();
                                                                 result.setId(g.getId().toString());
                                                                 result.setName(g.getName());
+                                                                result.setMemberCount(teacherGroupRelationRepository.countByGroupId(g.getId()));
                                                                 result.setStatus(g.getStatus());
                                                                 result.setDescription(g.getDescription());
                                                                 result.setCreatedBy(g.getCreatedBy());

@@ -21,7 +21,7 @@ import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import StandardTable from "component/table/StandardTable";
 import withScreenSecurity from "../../withScreenSecurity";
-import { Paper } from "@material-ui/core";
+import { Divider, Paper } from "@material-ui/core";
 
 function stringToColor(string) {
   if (!string) return "#000";
@@ -141,6 +141,7 @@ function GroupManager({ screenAuthorization }) {
           userId: member.userId,
           fullName: member.fullName || "Anonymous",
         }));
+        membersData.sort((a, b) => a.fullName.localeCompare(b.fullName));
         setMembers(membersData);
       },
       {
@@ -160,7 +161,7 @@ function GroupManager({ screenAuthorization }) {
 
   const columns = [
     {
-      title: t("common:member"),
+      title: t("common:member"), 
       field: "userId",
       minWidth: 300,
       render: (rowData) => (
@@ -205,30 +206,29 @@ function GroupManager({ screenAuthorization }) {
 
       {loading && <LinearProgress />}
       
-      <Grid container spacing={2} display={loading ? "none" : ""}>
-        <Grid item xs={12} sm={12} md={6}>
-          <Stack spacing={2}>
-            {[
-              [t("groupName"), groupDetail.name],
-              [t("status"), statuses.find(item => item.value === groupDetail.status)?.label],
-            ].map(([key, value, sx, helpText]) => (
-              <div key={key}>
-                {detail(key, value, sx, helpText)}
-              </div>
-            ))}
-          </Stack>
+      <Grid container spacing={2} display={loading ? "none" : ""} mb={1}>
+        <Grid item xs={12} sm={12} md={3}>
+          {detail(t("groupName"), groupDetail.name)}
         </Grid>
-        <Grid item xs={12} sm={12} md={6}>
+        <Grid item xs={12} sm={12} md={3}>
+          {detail(t("status"), statuses.find(item => item.value === groupDetail.status)?.label)}
+        </Grid>
+        <Grid item xs={12} sm={12} md={3}>
           {detail(t("description"), groupDetail.description || "-")}
         </Grid>
+        <Grid item xs={12} sm={12} md={3} />
       </Grid>
 
-      <Box sx={{ marginTop: "24px" }}>
-        <StandardTable
-          title={t("common:groupMember")}
+      <Divider sx={{ mt: 2, mb: 2 }} />
+
+      <Stack direction="row" justifyContent="space-between" mb={1.5} mt={2}>
+        <Typography variant="h6">{t("common:groupMember")}</Typography>
+      </Stack>
+      <StandardTable
           columns={columns}
           data={members}
           hideCommandBar
+          hideToolBar
           options={{
             selection: false,
             pageSize: 5,
@@ -239,7 +239,6 @@ function GroupManager({ screenAuthorization }) {
             Container: (props) => <Paper {...props} elevation={0} />,
           }}
         />
-      </Box>
     </ProgrammingContestLayout>
   );
 }

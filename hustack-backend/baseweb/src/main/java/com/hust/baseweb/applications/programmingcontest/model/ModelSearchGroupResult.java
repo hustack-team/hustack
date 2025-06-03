@@ -11,7 +11,7 @@ import java.util.List;
 public class ModelSearchGroupResult {
     private String id;
     private String name;
-    private List<String> users;
+    private int memberCount;
     private String status;
     private String description;
     private String createdBy;

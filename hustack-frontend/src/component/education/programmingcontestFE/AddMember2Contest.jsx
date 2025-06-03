@@ -177,13 +177,15 @@ export default function AddMember2Contest(props) {
             : ""
         }`,
         (res) => {
-          const data = res.data.content.map((e) => ({
-            id: e.id,
-            name: e.name,
-            memberCount: e.memberCount,
-            description: e.description,
-            type: "group",
-          }));
+          const data = res.data.content
+            .filter((e) => e.memberCount > 0)
+            .map((e) => ({
+              id: e.id,
+              name: e.name,
+              memberCount: e.memberCount,
+              description: e.description,
+              type: "group",
+            }));
           resolve(data);
         }
       );
@@ -237,7 +239,8 @@ export default function AddMember2Contest(props) {
   }, [value, keyword, delayedSearch]);
 
   const getGroupDisplayName = (group) => {
-    return `${group.name} (${group.memberCount} ${t("common:member")})`;
+    const memberText = group.memberCount === 1 ? t("common:countMember") : t("common:countMembers");
+    return `${group.name} (${group.memberCount} ${memberText})`;
   };
 
   const formatDescription = (description) => {
@@ -311,7 +314,6 @@ export default function AddMember2Contest(props) {
                   <Avatar
                     sx={{ bgcolor: "#1976d2" }}
                   >
-                    G
                   </Avatar>
                 </ListItemAvatar>
               )}

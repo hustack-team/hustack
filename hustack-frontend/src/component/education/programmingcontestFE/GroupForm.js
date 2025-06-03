@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -121,8 +120,6 @@ function GroupForm() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
 
   const isValidGroupName = () => {
     return new RegExp(/[%^/\\|.?\[\];]/g).test(groupDetail.name);
@@ -186,7 +183,6 @@ function GroupForm() {
         "post",
         `/groups/${groupId}/members`,
         () => {
-          successNoti("Users were successfully added to the group", 3000);
           setSelectedUsers([]);
           setKeyword("");
           setSearchOptions([]);
@@ -220,7 +216,6 @@ function GroupForm() {
         "delete",
         `/groups/${groupId}/members/${userId}`,
         () => {
-          successNoti("Member removed successfully", 3000);
           fetchMembers();
           setLoading(false);
         },
@@ -331,14 +326,6 @@ function GroupForm() {
     history.push(isEditMode ? `/programming-contest/group-manager/${groupId}` : "/programming-contest/teacher-list-group");
   };
 
-  const handleChangePage = (newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (newSize) => {
-    setPage(0);
-    setPageSize(newSize);
-  };
 
   const columns = [
     {
@@ -529,17 +516,14 @@ function GroupForm() {
             </Stack>
             <StandardTable
               columns={columns}
-              data={selectedMembers.slice(page * pageSize, (page + 1) * pageSize)}
+              data={selectedMembers} 
               hideCommandBar
               hideToolBar
               options={{
                 selection: false,
-                pageSize,
-                pageSizeOptions: [5, 10, 20],
-                pagination: true,
+                pagination: false, 
                 serverSide: false,
                 totalCount: selectedMembers.length,
-                page,
                 search: false,
                 sorting: true,
                 elevation: 0,
@@ -548,10 +532,7 @@ function GroupForm() {
                 Container: (props) => <Paper {...props} elevation={0} />,
               }}
               isLoading={loading}
-              page={page}
-              totalCount={selectedMembers.length}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
+              // Removed pagination-related props
             />
           </Box>
 
