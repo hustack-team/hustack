@@ -27,6 +27,7 @@
   "searchMemberGroup": "Search by userId or groupId",
   "searchMemberGroupTitle": "Search Users or Groups",
   "searchMember": "Search User by ID or name",  
+  "searchMemberTitle": "Search User",
   "statusActive": "Active",
   "statusInactive": "Inactive",
   "viewGroup": "View Group information",
