@@ -236,7 +236,7 @@ function TeacherListGroup() {
         open={openDeleteDialog}
         handleClose={handleCloseDeleteDialog}
         handleDelete={handleDeleteGroup}
-        entity={t("education/programmingcontest/group:group")}
+        entity={t("common:group2")}
         name={selectedGroup?.name}
       />
     </Paper>
