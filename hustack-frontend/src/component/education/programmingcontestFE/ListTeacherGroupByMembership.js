@@ -1,4 +1,4 @@
-import { Box, Divider, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Box, Divider, Grid, Paper, Stack, TextField, Typography, Tooltip } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -15,8 +15,9 @@ import { ConfirmDeleteDialog } from "component/dialog/ConfirmDeleteDialog";
 import StyledSelect from "../../select/StyledSelect";
 import { IconButton } from "@mui/material";
 import { LockOpen, LockOutlined } from "@material-ui/icons";
+import { width } from "@mui/system";
 
-const INITIAL_FILTER = { keyword: "", status: "" };
+const INITIAL_FILTER = { keyword: "" };
 
 function TeacherListGroup() {
   const { t } = useTranslation(["education/programmingcontest/group", "common"]);
@@ -30,11 +31,6 @@ function TeacherListGroup() {
   const [excludeIds, setExcludeIds] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
-
-  const statusOptions = [
-    { value: "ACTIVE", label: t("common:statusActive") },
-    { value: "INACTIVE", label: t("common:statusInactive") },
-  ];
 
   const handleOpenDeleteDialog = (group) => {
     setSelectedGroup(group);
@@ -72,10 +68,6 @@ function TeacherListGroup() {
 
   const handleChangeKeyword = (event) => {
     setFilter((prev) => ({ ...prev, keyword: event.target.value }));
-  };
-
-  const handleChangeStatus = (event) => {
-    setFilter((prev) => ({ ...prev, status: event.target.value }));
   };
 
   const resetFilter = () => {
@@ -116,45 +108,8 @@ function TeacherListGroup() {
   const buildSearchUrl = () => {
     let url = `/groups?page=${encodeURIComponent(page)}&size=${encodeURIComponent(pageSize)}`;
     if (filter.keyword?.trim()) url += `&keyword=${encodeURIComponent(filter.keyword)}`;
-    url += `&status=${encodeURIComponent(filter.status)}`;
     if (excludeIds.length > 0) url += `&exclude=${encodeURIComponent(excludeIds.join(","))}`;
     return url;
-  };
-
-  const handleToggleStatus = (group) => {
-    const newStatus = group.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    setToggleLoading((prev) => ({ ...prev, [group.id]: true }));
-
-    const updatedGroupDTO = {
-      id: group.id,
-      name: group.name,
-      status: newStatus,
-      description: group.description || "",
-      createdBy: group.createdBy || "",
-      lastModifiedDate: group.lastModifiedDate || null,
-      userIds: [],
-    };
-
-    request(
-      "put",
-      `/groups/${group.id}`,
-      (res) => {
-        setGroups((prevGroups) =>
-          prevGroups.map((g) => (g.id === group.id ? { ...g, status: newStatus } : g))
-        );
-      },
-      {
-        403: () => errorNoti(t("common:noPermission"), 3000),
-        404: () => errorNoti(t("common:groupNotFound"), 3000),
-      },
-      updatedGroupDTO
-    )
-      .catch((err) => {
-        errorNoti(t("common:statusUpdateFailed"), 3000);
-      })
-      .finally(() => {
-        setToggleLoading((prev) => ({ ...prev, [group.id]: false }));
-      });
   };
 
   useEffect(() => {
@@ -176,16 +131,6 @@ function TeacherListGroup() {
       ),
     },
     {
-      title: t("common:status"),
-      field: "status",
-      cellStyle: { minWidth: 120 },
-      render: (rowData) => (
-        <Typography>
-          {rowData.status === "ACTIVE" ? t("common:statusActive") : t("common:statusInactive")}
-        </Typography>
-      ),
-    },
-    {
       title: t("common:description"),
       field: "description",
       cellStyle: { minWidth: 300 },
@@ -194,26 +139,21 @@ function TeacherListGroup() {
       title: t("common:action"),
       sorting: false,
       align: "center",
-      cellStyle: { minWidth: 90 },
+      width: 60,
       render: (rowData) => (
         <Stack direction="row" spacing={1} justifyContent="center">
-          <IconButton
-            onClick={() => handleToggleStatus(rowData)}
-            disabled={isLoading || toggleLoading[rowData.id]}
-            color="primary"
-          >
-            {rowData.status === "INACTIVE" ? <LockOpen /> : <LockOutlined />}
-          </IconButton>
-          <IconButton
-            onClick={() => handleOpenDeleteDialog(rowData)}
-            disabled={isLoading || toggleLoading[rowData.id]}
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
+          <Tooltip title={t("common:delete")} placement="top">
+            <IconButton
+              onClick={() => handleOpenDeleteDialog(rowData)}
+              disabled={isLoading || toggleLoading[rowData.id]}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         </Stack>
       ),
-    }
+    },
   ];
 
   return (
@@ -231,17 +171,6 @@ function TeacherListGroup() {
                 label={t("common:groupName")}
                 value={filter.keyword}
                 onChange={handleChangeKeyword}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <StyledSelect
-                fullWidth
-                key={t("common:status")}
-                label={t("common:status")}
-                options={statusOptions}
-                value={filter.status}
-                sx={{ minWidth: "unset", mr: "unset" }}
-                onChange={handleChangeStatus}
               />
             </Grid>
             <Grid item xs={6} />

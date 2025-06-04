@@ -95,11 +95,6 @@ function stringAvatar(id, name) {
   };
 }
 
-const getStatuses = (t) => [
-  { label: t("common:statusActive"), value: "ACTIVE" },
-  { label: t("common:statusInactive"), value: "INACTIVE" },
-];
-
 function GroupForm() {
   const { groupId } = useParams();
   const { t } = useTranslation(["common", "validation"]);
@@ -107,11 +102,8 @@ function GroupForm() {
   const classes = useStyles();
   const isEditMode = !!groupId;
 
-  const statuses = getStatuses(t);
-
   const [groupDetail, setGroupDetail] = useState({
     name: "",
-    status: "ACTIVE",
     description: "",
   });
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -136,10 +128,6 @@ function GroupForm() {
     }
     if (hasSpecialCharacterGroupName()) {
       errorNoti("Group Name must only contain alphanumeric characters and spaces.", 3000);
-      return false;
-    }
-    if (isEditMode && !groupDetail.status) {
-      errorNoti(t("validation:missingField", { fieldName: t("status") }), 3000);
       return false;
     }
     return true;
@@ -241,7 +229,6 @@ function GroupForm() {
         const data = res.data;
         setGroupDetail({
           name: data.name,
-          status: data.status,
           description: data.description || "",
         });
         setFetching(false);
@@ -290,12 +277,10 @@ function GroupForm() {
     const body = isEditMode
       ? {
           name: groupDetail.name,
-          status: groupDetail.status,
           description: groupDetail.description,
         }
       : {
           name: groupDetail.name,
-          status: groupDetail.status,
           description: groupDetail.description,
           userIds: selectedMembers.map((m) => m.userId),
         };
@@ -326,7 +311,6 @@ function GroupForm() {
     history.push(isEditMode ? `/programming-contest/group-manager/${groupId}` : "/programming-contest/teacher-list-group");
   };
 
-
   const columns = [
     {
       title: t("common:member"),
@@ -351,8 +335,8 @@ function GroupForm() {
     },
     {
       title: t("common:action"),
-      minWidth: 100,
-      cellStyle: { padding: "0 4px" },
+      width: 60,
+      cellStyle: { padding: "0 4px", width: 60 }, 
       render: (row) => (
         <IconButton
           onClick={() => handleRemoveMember(row.userId)}
@@ -392,57 +376,53 @@ function GroupForm() {
         <>
           <Typography variant="h6">{t("common:generalInfo")}</Typography>
 
-          <Grid container spacing={2} mt={0} alignItems="flex-end">
+          <Grid container spacing={2} mt={0} alignItems="flex-start">
             <Grid item xs={6}>
-              <TextField
-                fullWidth
-                size="small"
-                autoFocus
-                required
-                id="groupName"
-                label={t("groupName")}
-                value={groupDetail.name}
-                onChange={(event) => {
-                  setGroupDetail({ ...groupDetail, name: event.target.value });
-                }}
-                error={isValidGroupName()}
-                helperText={
-                  isValidGroupName()
-                    ? "Group Name must not contain special characters including %^/\\|.?\[\];"
-                    : ""
-                }
-                sx={{ marginBottom: "12px" }}
-              />
-              <StyledSelect
-                fullWidth
-                required
-                key={t("status")}
-                label={t("status")}
-                options={statuses}
-                value={groupDetail.status}
-                sx={{ minWidth: "unset", mr: "unset" }}
-                onChange={(event) => {
-                  setGroupDetail({ ...groupDetail, status: event.target.value });
-                }}
-              />
+              <Stack spacing={2}>
+                {/* Group Name */}
+                <TextField
+                  fullWidth
+                  size="small"
+                  autoFocus
+                  required
+                  id="groupName"
+                  label={t("groupName")}
+                  value={groupDetail.name}
+                  onChange={(event) => {
+                    setGroupDetail({ ...groupDetail, name: event.target.value });
+                  }}
+                  error={isValidGroupName()}
+                  helperText={
+                    isValidGroupName()
+                      ? "Group Name must not contain special characters including %^/\\|.?\[\];"
+                      : ""
+                  }
+                />
+                
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={6}
+                  value={groupDetail.description}
+                  id="description"
+                  label={t("description")}
+                  onChange={(event) => {
+                    setGroupDetail({ ...groupDetail, description: event.target.value });
+                  }}
+                  sx={{
+                    "& .MuiInputBase-root": {
+                      minHeight: "20px", 
+                      alignItems: "flex-start",
+                    },
+                    "& .MuiInputBase-input": {
+                      minHeight: "20px !important",
+                      resize: "vertical",
+                    },
+                  }}
+                />
+              </Stack>
             </Grid>
             <Grid item xs={6}>
-              <TextField
-                fullWidth
-                multiline
-                rows={2}
-                value={groupDetail.description}
-                id="description"
-                label={t("description")}
-                onChange={(event) => {
-                  setGroupDetail({ ...groupDetail, description: event.target.value });
-                }}
-                sx={{
-                  "& .MuiInputBase-root": {
-                    height: "92px",
-                  },
-                }}
-              />
             </Grid>
           </Grid>
 
@@ -503,7 +483,7 @@ function GroupForm() {
                 {t("common:addMember")}
               </PrimaryButton>
             </Stack>
-            <Stack direction="row" justifyContent="space-between" mb={1.5}>
+            <Stack direction="row" justifyContent="space-between" mb={1.5} mt={1.5}>
               <Typography variant="h6">{t("common:groupMember")}</Typography>
               <PrimaryButton
                 disabled

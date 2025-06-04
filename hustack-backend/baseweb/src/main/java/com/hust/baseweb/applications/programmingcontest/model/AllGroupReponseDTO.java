@@ -10,7 +10,7 @@ import java.util.UUID;
 public class AllGroupReponseDTO {
     private UUID id;
     private String name;
-    private String status;
+//    private String status;
     private String description;
     private String createdBy;
     private LocalDateTime lastModifiedDate;

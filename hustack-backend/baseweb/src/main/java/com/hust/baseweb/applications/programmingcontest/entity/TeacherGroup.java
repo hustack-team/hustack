@@ -22,8 +22,8 @@ public class TeacherGroup {
     @Column(name = "name", length = 100)
     private String name;
 
-    @Column(name = "status", length = 100)
-    private String status;
+//    @Column(name = "status", length = 100)
+//    private String status;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;

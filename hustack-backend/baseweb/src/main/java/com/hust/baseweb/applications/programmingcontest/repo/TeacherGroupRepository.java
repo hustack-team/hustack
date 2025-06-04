@@ -14,22 +14,22 @@ public interface TeacherGroupRepository extends JpaRepository<TeacherGroup, UUID
     Page<TeacherGroup> findByCreatedBy(String createdBy, Pageable pageable);
 
     @Query("SELECT g FROM TeacherGroup g WHERE g.createdBy = :userId " +
-           "AND (:keyword IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-           "AND (:status IS NULL OR g.status = :status)")
+           "AND (:keyword IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) ")
+//           "AND (:status IS NULL OR g.status = :status)")
     Page<TeacherGroup> findAllBy(
         @Param("userId") String userId,
         @Param("keyword") String keyword,
-        @Param("status") String status,
+//        @Param("status") String status,
         Pageable pageable);
 
     @Query("SELECT g FROM TeacherGroup g WHERE g.createdBy = :userId " +
            "AND (:keyword IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-           "AND (:status IS NULL OR g.status = :status) " +
+//           "AND (:status IS NULL OR g.status = :status) " +
            "AND (:excludeIds IS NULL OR g.id NOT IN :excludeIds)")
     Page<TeacherGroup> findByUserIdAndNameContainingAndNotInExcludeIds(
         @Param("userId") String userId,
         @Param("keyword") String keyword,
-        @Param("status") String status,
+//        @Param("status") String status,
         @Param("excludeIds") List<UUID> excludeIds,
         Pageable pageable);
 }

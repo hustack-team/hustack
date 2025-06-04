@@ -52,10 +52,10 @@ function stringAvatar(id, name) {
   };
 }
 
-const getStatuses = (t) => [
-  { label: t("common:statusActive"), value: "ACTIVE" },
-  { label: t("common:statusInactive"), value: "INACTIVE" },
-];
+// const getStatuses = (t) => [
+//   { label: t("common:statusActive"), value: "ACTIVE" },
+//   { label: t("common:statusInactive"), value: "INACTIVE" },
+// ];
 
 function detail(key, value, sx, helpText) {
   return (
@@ -92,7 +92,7 @@ function GroupManager({ screenAuthorization }) {
   const [groupDetail, setGroupDetail] = useState({
     id: "",
     name: "",
-    status: "",
+    // status: "",
     description: "",
     createdBy: "",
     lastModifiedDate: "",
@@ -100,7 +100,7 @@ function GroupManager({ screenAuthorization }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const statuses = getStatuses(t);
+  // const statuses = getStatuses(t);
 
   const handleExit = () => {
     history.push("/programming-contest/teacher-list-group");
@@ -115,7 +115,7 @@ function GroupManager({ screenAuthorization }) {
         setGroupDetail({
           id: data.id,
           name: data.name,
-          status: data.status,
+          // status: data.status,
           description: data.description || "",
           createdBy: data.createdBy,
           lastModifiedDate: data.lastModifiedDate,
@@ -210,9 +210,9 @@ function GroupManager({ screenAuthorization }) {
         <Grid item xs={12} sm={12} md={3}>
           {detail(t("groupName"), groupDetail.name)}
         </Grid>
-        <Grid item xs={12} sm={12} md={3}>
+        {/* <Grid item xs={12} sm={12} md={3}>
           {detail(t("status"), statuses.find(item => item.value === groupDetail.status)?.label)}
-        </Grid>
+        </Grid> */}
         <Grid item xs={12} sm={12} md={6}>
           {detail(t("description"), groupDetail.description || "-")}
         </Grid>

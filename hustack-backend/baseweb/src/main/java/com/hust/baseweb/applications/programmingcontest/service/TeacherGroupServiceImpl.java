@@ -38,7 +38,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     public GroupMemberDTO createGroup(GroupMemberDTO groupDTO, String userId) throws IllegalArgumentException {
         TeacherGroup group = new TeacherGroup();
         group.setName(groupDTO.getName());
-        group.setStatus(groupDTO.getStatus());
+//        group.setStatus(groupDTO.getStatus());
         group.setDescription(groupDTO.getDescription());
         group.setCreatedBy(userId);
 
@@ -62,7 +62,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         AllGroupReponseDTO dto = new AllGroupReponseDTO();
         dto.setId(group.getId());
         dto.setName(group.getName());
-        dto.setStatus(group.getStatus());
+//        dto.setStatus(group.getStatus());
         dto.setCreatedBy(group.getCreatedBy());
         dto.setDescription(group.getDescription());
         dto.setLastModifiedDate(group.getLastModifiedDate());
@@ -75,7 +75,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
 
         String keyword = StringUtils.isNotBlank(filter.getKeyword()) ? filter.getKeyword().trim() : null;
-        String status = StringUtils.isNotBlank(filter.getStatus()) ? filter.getStatus() : null;
+//        String status = StringUtils.isNotBlank(filter.getStatus()) ? filter.getStatus() : null;
         List<UUID> excludeUuids = filter.getExcludeIds() != null ? filter.getExcludeIds().stream()
                                                                          .map(UUID::fromString)
                                                                          .collect(Collectors.toList()) : Collections.emptyList();
@@ -84,11 +84,11 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
 
 
         Page<TeacherGroup> teacherGroups;
-        if (keyword == null && status == null && excludeUuids.isEmpty()) {
+        if (keyword == null && excludeUuids.isEmpty()) {
             teacherGroups = teacherGroupRepository.findByCreatedBy(userId, pageable);
         } else {
             teacherGroups = teacherGroupRepository.findByUserIdAndNameContainingAndNotInExcludeIds(
-                userId, keyword != null ? keyword : "", status, excludeUuids, pageable);
+                userId, keyword != null ? keyword : "", excludeUuids, pageable);
         }
 
         List<UUID> groupIdsByUser = teacherGroupRelationRepository.findGroupIdsByUserId(userId);
@@ -100,7 +100,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
                                                                 result.setId(g.getId().toString());
                                                                 result.setName(g.getName());
                                                                 result.setMemberCount(teacherGroupRelationRepository.countByGroupId(g.getId()));
-                                                                result.setStatus(g.getStatus());
+//                                                                result.setStatus(g.getStatus());
                                                                 result.setDescription(g.getDescription());
                                                                 result.setCreatedBy(g.getCreatedBy());
                                                                 result.setLastModifiedDate(g.getLastModifiedDate());
@@ -120,7 +120,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
             throw new SecurityException("User does not have permission to update this group");
         }
         group.setName(groupDTO.getName());
-        group.setStatus(groupDTO.getStatus());
+//        group.setStatus(groupDTO.getStatus());
         group.setDescription(groupDTO.getDescription());
 
         TeacherGroup updatedGroup = update(id, group);
@@ -233,7 +233,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         if (existingGroup.isPresent()) {
             TeacherGroup group = existingGroup.get();
             group.setName(updatedGroup.getName());
-            group.setStatus(updatedGroup.getStatus());
+//            group.setStatus(updatedGroup.getStatus());
             group.setDescription(updatedGroup.getDescription());
             return teacherGroupRepository.save(group);
         } else {
@@ -282,7 +282,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         GroupMemberDTO dto = new GroupMemberDTO();
         dto.setId(group.getId());
         dto.setName(group.getName());
-        dto.setStatus(group.getStatus());
+//        dto.setStatus(group.getStatus());
         dto.setDescription(group.getDescription());
         dto.setCreatedBy(group.getCreatedBy());
         dto.setLastModifiedDate(group.getLastModifiedDate());
