@@ -446,7 +446,7 @@ function GroupForm() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={t("common:searchMemberTitle")}
+                    // label={t("common:searchMemberTitle")}
                     placeholder={t("common:searchMember")}
                     inputProps={{
                       ...params.inputProps,
