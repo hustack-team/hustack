@@ -360,6 +360,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         problem.setTags(tags);
         problem.setSampleTestcase(dto.getSampleTestCase());
 
+        Integer oldCategoryId = problem.getCategoryId();
+        Integer newCategoryId = dto.getCategoryId();
+        if (Integer.valueOf(1).equals(oldCategoryId) && Integer.valueOf(0).equals(newCategoryId)) {
+            problemBlockRepo.deleteByProblemId(problemId);
+        }
+        problem.setCategoryId(newCategoryId);
+
         if (userId.equals(problem.getCreatedBy())) {
             problem.setStatusId(dto.getStatus().toString());
         }

@@ -1,18 +1,33 @@
-import {makeStyles} from "@material-ui/core";
-import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography, Tabs, Tab, IconButton, Stack, Collapse} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import { makeStyles } from "@material-ui/core";
+import {
+  Box,
+  Checkbox,
+  Chip,
+  FormControlLabel,
+  Grid,
+  InputAdornment,
+  Link,
+  TextField,
+  Typography,
+  Tabs,
+  Tab,
+  IconButton,
+  Stack,
+  Collapse,
+} from "@mui/material";
+import React, { useEffect, useState, useCallback } from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {useHistory} from "react-router-dom";
-import {CompileStatus} from "./CompileStatus";
-import {extractErrorMessage, request} from "../../../api";
-import {useTranslation} from "react-i18next";
+import { useHistory } from "react-router-dom";
+import { CompileStatus } from "./CompileStatus";
+import { extractErrorMessage, request } from "../../../api";
+import { useTranslation } from "react-i18next";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
-import {errorNoti, successNoti} from "../../../utils/notification";
+import { errorNoti, successNoti } from "../../../utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
-import {LoadingButton} from "@mui/lab";
+import { LoadingButton } from "@mui/lab";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
-import {getAllTags} from "./service/TagService";
+import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
+import { getAllTags } from "./service/TagService";
 import ModelAddNewTag from "./ModelAddNewTag";
 import AddIcon from '@mui/icons-material/Add';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
@@ -108,20 +123,28 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
   value: COMPUTER_LANGUAGES[key],
 }));
 
+// Custom debounce function
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 function CreateProblem() {
   const history = useHistory();
   const classes = useStyles();
 
-  const {t} = useTranslation(
+  const { t } = useTranslation(
     ["education/programmingcontest/problem", "common", "validation"]
   );
   const levels = getLevels(t);
-  const publicOptions = getPublicOptions(t)
-  const statuses = getStatuses(t)
+  const publicOptions = getPublicOptions(t);
+  const statuses = getStatuses(t);
 
   const [problemId, setProblemID] = useState("");
   const [problemName, setProblemName] = useState("");
-  // const [timeLimit, setTimeLimit] = useState(1);
   const [timeLimitCPP, setTimeLimitCPP] = useState(1);
   const [timeLimitJAVA, setTimeLimitJAVA] = useState(1);
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState(1);
@@ -179,23 +202,21 @@ function CreateProblem() {
       "post",
       "/check-compile",
       (res) => {
-        setLoading(false)
-
+        setLoading(false);
         setShowCompile(true);
         setStatusSuccessful(res.data.status !== "Compilation Error");
-        setCompileMessage(res.data)
+        setCompileMessage(res.data);
       },
       {
         onError: (e) => {
-          setLoading(false)
-
+          setLoading(false);
           setShowCompile(true);
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
       body
     );
-  }
+  };
 
   const isValidProblemId = () => {
     return new RegExp(/[%^/\\|.?;[\]]/g).test(problemId);
@@ -210,7 +231,7 @@ function CreateProblem() {
 
   const validateSubmit = () => {
     if (problemId === "") {
-      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemId")}), 3000);
+      errorNoti(t("missingField", { ns: "validation", fieldName: t("problemId") }), 3000);
       return false;
     }
     if (hasSpecialCharacterProblemId()) {
@@ -218,24 +239,16 @@ function CreateProblem() {
       return false;
     }
     if (problemName === "") {
-      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemName")}), 3000);
+      errorNoti(t("missingField", { ns: "validation", fieldName: t("problemName") }), 3000);
       return false;
     }
-    //if (hasSpecialCharacterProblemName()) {
-    //  errorNoti("Problem name must only contain alphanumeric characters.", 3000);
-    //  return false;
-    //}
-    if (timeLimitCPP < 1
-      || timeLimitJAVA < 1
-      || timeLimitPYTHON < 1
-      || timeLimitCPP > 300
-      || timeLimitJAVA > 300
-      || timeLimitPYTHON > 300) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300}), 3000);
+    if (timeLimitCPP < 1 || timeLimitJAVA < 1 || timeLimitPYTHON < 1 ||
+        timeLimitCPP > 300 || timeLimitJAVA > 300 || timeLimitPYTHON > 300) {
+      errorNoti(t("numberBetween", { ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300 }), 3000);
       return false;
     }
     if (memoryLimit < 3 || memoryLimit > 1024) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024}), 3000);
+      errorNoti(t("numberBetween", { ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024 }), 3000);
       return false;
     }
     if (!statusSuccessful) {
@@ -249,16 +262,14 @@ function CreateProblem() {
     return true;
   };
 
- const handleCopyAllCode = () => {
-  const blocks = blockCodes[selectedLanguage] || [];
-  if (blocks.length === 0) {
-    return;
-  }
-
-  const allCode = blocks.map(block => block.code).join('\n\n');
-  navigator.clipboard.writeText(allCode);
-};
-
+  const handleCopyAllCode = () => {
+    const blocks = blockCodes[selectedLanguage] || [];
+    if (blocks.length === 0) {
+      return;
+    }
+    const allCode = blocks.map(block => block.code).join('\n\n');
+    navigator.clipboard.writeText(allCode);
+  };
 
   function handleSubmit() {
     if (!validateSubmit()) return;
@@ -286,7 +297,6 @@ function CreateProblem() {
       problemId: problemId,
       problemName: problemName,
       problemDescription: description,
-      // timeLimit: timeLimit,
       timeLimitCPP: timeLimitCPP,
       timeLimitJAVA: timeLimitJAVA,
       timeLimitPYTHON: timeLimitPYTHON,
@@ -310,7 +320,7 @@ function CreateProblem() {
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -327,7 +337,7 @@ function CreateProblem() {
       "/problems",
       (res) => {
         setLoading(false);
-        successNoti(t("common:addSuccess", {name: t("problem")}), 3000);
+        successNoti(t("common:addSuccess", { name: t("problem") }), 3000);
         history.push("/programming-contest/list-problems");
       },
       {
@@ -343,7 +353,7 @@ function CreateProblem() {
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
-  }
+  };
 
   const handleTabChange = (event, newValue) => {
     setSelectedLanguage(newValue);
@@ -356,37 +366,73 @@ function CreateProblem() {
     }));
   };
 
-  const handleMoveUp = (index) => {
+  const handleMoveUp = useCallback((index) => {
+    // Original guard: prevent moving up if already at the top
     if (index === 0) return;
-    setBlockCodes((prev) => {
-      const newBlocks = [...prev[selectedLanguage]];
-      [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
-      return { ...prev, [selectedLanguage]: newBlocks };
-    });
-  };
 
-  const handleMoveDown = (index) => {
-    if (index === blockCodes[selectedLanguage].length - 1) return;
     setBlockCodes((prev) => {
-      const newBlocks = [...prev[selectedLanguage]];
-      [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
-      return { ...prev, [selectedLanguage]: newBlocks };
+      const newBlocks = [...prev[selectedLanguage]]; // Create a new array for immutability
+      // Swap elements, preserving all properties (code, forStudent, seq)
+      [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
+      // Update sequence numbers to reflect new order
+      const updatedBlocks = newBlocks.map((block, i) => ({
+        ...block,
+        seq: i + 1, // Reassign sequence to match new position
+      }));
+      return { ...prev, [selectedLanguage]: updatedBlocks };
     });
-  };
+  }, [selectedLanguage]);
+
+  const handleMoveDown = useCallback((index) => {
+    // Original guard: prevent moving down if already at the bottom
+    if (index === blockCodes[selectedLanguage].length - 1) return;
+
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]]; // Create a new array for immutability
+      // Swap elements, preserving all properties (code, forStudent, seq)
+      [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
+      // Update sequence numbers to reflect new order
+      const updatedBlocks = newBlocks.map((block, i) => ({
+        ...block,
+        seq: i + 1, // Reassign sequence to match new position
+      }));
+      return { ...prev, [selectedLanguage]: updatedBlocks };
+    });
+  }, [selectedLanguage]);
+
+  // Debounced versions
+  const debouncedMoveUp = useCallback(debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
+  const debouncedMoveDown = useCallback(debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
 
   const handleInsertAbove = (index) => {
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
-      newBlocks.splice(index, 0, { code: "// Write your code here", forStudent: false, seq: index });
-      return { ...prev, [selectedLanguage]: newBlocks };
+      newBlocks.splice(index, 0, {
+        code: "// Write your code here",
+        forStudent: false,
+        seq: index,
+        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+      });
+      return {
+        ...prev,
+        [selectedLanguage]: newBlocks.map((block, i) => ({ ...block, seq: i + 1 })),
+      };
     });
   };
 
   const handleInsertBelow = (index) => {
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
-      newBlocks.splice(index + 1, 0, { code: "// Write your code here", forStudent: false, seq: index + 2 });
-      return { ...prev, [selectedLanguage]: newBlocks };
+      newBlocks.splice(index + 1, 0, {
+        code: "// Write your code here",
+        forStudent: false,
+        seq: index + 2,
+        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+      });
+      return {
+        ...prev,
+        [selectedLanguage]: newBlocks.map((block, i) => ({ ...block, seq: i + 1 })),
+      };
     });
   };
 
@@ -394,16 +440,39 @@ function CreateProblem() {
     const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17;
     setBlockCodes((prev) => ({
       ...prev,
-      [language]: [...(prev[language] || []), { code: "// Write your code here", forStudent: false, seq: prev[language].length + 1 }],
+      [language]: [
+        ...(prev[language] || []),
+        {
+          code: "// Write your code here",
+          forStudent: false,
+          seq: prev[language].length + 1,
+          id: `${language}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        },
+      ],
     }));
   };
 
+  // Memoized handler for code changes
+  const handleCodeChange = useCallback((newCode, index) => {
+    try {
+      setBlockCodes((prev) => ({
+        ...prev,
+        [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+          i === index ? { ...b, code: newCode } : b
+        ),
+      }));
+    } catch (error) {
+      console.error("Error updating code:", error);
+      errorNoti(t("Failed to update code"), 3000);
+    }
+  }, [selectedLanguage, t]);
+
   useEffect(() => {
     getAllTags(handleGetTagsSuccess);
-  }, [])
+  }, []);
 
   return (
-    <ProgrammingContestLayout title={t("common:create", {name: t("problem")})} onBack={handleExit}>
+    <ProgrammingContestLayout title={t("common:create", { name: t("problem") })} onBack={handleExit}>
       <Typography variant="h6">
         {t("generalInfo")}
       </Typography>
@@ -427,7 +496,7 @@ function CreateProblem() {
                 ? "Problem ID must not contain special characters including %^/\\|.?;[]"
                 : ""
             }
-            sx={{marginBottom: "12px"}}
+            sx={{ marginBottom: "12px" }}
           />
         </Grid>
         <Grid item xs={3}>
@@ -438,13 +507,6 @@ function CreateProblem() {
             id="problemName"
             label={t("problemName")}
             value={problemName}
-            //error={hasSpecialCharacterProblemName()}
-            helperText={
-              //hasSpecialCharacterProblemName()
-              //  ? "Problem ID must not contain special characters including %^/\\|.?;[]"
-              //  : ""
-              ""
-            }
             onChange={(event) => {
               setProblemName(event.target.value);
             }}
@@ -459,7 +521,7 @@ function CreateProblem() {
             label={t("status")}
             options={statuses}
             value={status}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             onChange={(event) => {
               setStatus(event.target.value);
             }}
@@ -473,7 +535,7 @@ function CreateProblem() {
             key={t("common:public")}
             label={t("common:public")}
             options={publicOptions}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             value={isPublic}
             onChange={(event) => {
               setIsPublic(event.target.value);
@@ -547,7 +609,7 @@ function CreateProblem() {
             onChange={(event) => {
               setMemoryLimit(event.target.value);
             }}
-            InputProps={{endAdornment: <InputAdornment position="end">MB</InputAdornment>,}}
+            InputProps={{ endAdornment: <InputAdornment position="end">MB</InputAdornment> }}
           />
         </Grid>
 
@@ -559,7 +621,7 @@ function CreateProblem() {
             label={t("level")}
             options={levels}
             value={levelId}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             onChange={(event) => {
               setLevelId(event.target.value);
             }}
@@ -567,41 +629,39 @@ function CreateProblem() {
         </Grid>
 
         <Grid item xs={6}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
-            startIcon={<AddIcon/>}
+            startIcon={<AddIcon />}
             onClick={() => setOpenModalAddNewTag(true)}
           >
-            {t("common:add", {name: t('tag')})}
+            {t("common:add", { name: t('tag') })}
           </TertiaryButton>
         </Grid>
 
         <Grid item xs={3}>
           <FormControlLabel
             label={t("problemBlock")}
-            control={<Checkbox checked={isProblemBlock} onChange={() => setIsProblemBlock(!isProblemBlock)}/>}
+            control={<Checkbox checked={isProblemBlock} onChange={() => setIsProblemBlock(!isProblemBlock)} />}
           />
         </Grid>
       </Grid>
 
-      <Link sx={{mt: 3, display: 'inline-block'}} href="/programming-contest/suggest-problem" target="_blank"
+      <Link sx={{ mt: 3, display: 'inline-block' }} href="/programming-contest/suggest-problem" target="_blank"
             underline="hover">
         <Typography variant="body1" color="primary">
           Struggling to create a fresh and exciting challenge? Try our new <b>Problem Suggestion</b> feature
           <Chip label="Beta" color="secondary" variant="outlined" size="small"
-                sx={{marginLeft: "8px", marginBottom: "8px", fontWeight: "bold"}}/></Typography>
+                sx={{ marginLeft: "8px", marginBottom: "8px", fontWeight: "bold" }} />
+        </Typography>
       </Link>
 
       <Box className={classes.description}>
-        <Typography variant="h6" sx={{marginTop: "8px", marginBottom: "8px"}}>
+        <Typography variant="h6" sx={{ marginTop: "8px", marginBottom: "8px" }}>
           {t("problemDescription")}
         </Typography>
-        <RichTextEditor content={description} onContentChange={text => setDescription(text)}/>
-        {/*  
-         <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
-        */}
+        <RichTextEditor content={description} onContentChange={text => setDescription(text)} />
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -610,7 +670,7 @@ function CreateProblem() {
             setSampleTestCase(code);
           }}
         />
-        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)}/>
+        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)} />
         {isProblemBlock && (
           <>
             <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
@@ -636,26 +696,14 @@ function CreateProblem() {
                 ))}
               </Tabs>
               {blockCodes[selectedLanguage].map((block, index) => (
-                <Box className={classes.blockCodeContainer} key={index}>
+                <Box className={classes.blockCodeContainer} key={block.id}>
                   <Box className={classes.codeEditorWrapper}>
                     <HustCodeEditor
                       sourceCode={block.code || ""}
                       hideProgrammingLanguage={1}
                       blockEditor={1}
                       isStudentBlock={block.forStudent}
-                      onChangeSourceCode={(newCode) => {
-                        try {
-                          setBlockCodes((prev) => ({
-                            ...prev,
-                            [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                              i === index ? { ...b, code: newCode } : b
-                            ),
-                          }));
-                        } catch (error) {
-                          console.error("Error updating code:", error);
-                          errorNoti(t("Failed to update code"), 3000);
-                        }
-                      }}
+                      onChangeSourceCode={(newCode) => handleCodeChange(newCode, index)}
                       language={selectedLanguage}
                       height="300px"
                     />
@@ -680,7 +728,7 @@ function CreateProblem() {
                     />
                     <Box className={classes.controlButtons} sx={{ mt: 1 }}>
                       <IconButton
-                        onClick={() => handleMoveUp(index)}
+                        onClick={() => debouncedMoveUp(index)}
                         disabled={index === 0}
                         title={t("common:moveUp")}
                         size="small"
@@ -688,7 +736,7 @@ function CreateProblem() {
                         <ArrowUpwardIcon fontSize="small" />
                       </IconButton>
                       <IconButton
-                        onClick={() => handleMoveDown(index)}
+                        onClick={() => debouncedMoveDown(index)}
                         disabled={index === blockCodes[selectedLanguage].length - 1}
                         title={t("common:moveDown")}
                         size="small"
@@ -700,7 +748,7 @@ function CreateProblem() {
                         title={t("common:insertAbove")}
                         size="small"
                       >
-                        <KeyboardDoubleArrowUpIcon  fontSize="small" />
+                        <KeyboardDoubleArrowUpIcon fontSize="small" />
                       </IconButton>
                       <IconButton
                         onClick={() => handleInsertBelow(index)}
@@ -756,7 +804,7 @@ function CreateProblem() {
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{margin: "12px 0", textTransform: 'none'}}
+        sx={{ margin: "12px 0", textTransform: 'none' }}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -766,14 +814,15 @@ function CreateProblem() {
         detail={compileMessage}
       />
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isPreloadCode")}
           control={
             <Checkbox
               checked={isPreloadCode}
               onChange={() => setIsPreloadCode(!isPreloadCode)}
-            />}
+            />
+          }
         />
         {isPreloadCode &&
           <HustCodeEditor
@@ -788,14 +837,15 @@ function CreateProblem() {
         }
       </Box>
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
             <Checkbox
               checked={isCustomEvaluated}
               onChange={() => setIsCustomEvaluated(!isCustomEvaluated)}
-            />}
+            />
+          }
         />
         <Typography variant="body2" color="gray">{t("customEvaluationNote1")}</Typography>
 
@@ -815,22 +865,22 @@ function CreateProblem() {
         }
       </Box>
 
-      <Box width="100%" sx={{marginTop: "20px"}}>
+      <Box width="100%" sx={{ marginTop: "20px" }}>
         <LoadingButton
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
-          sx={{textTransform: 'capitalize'}}
+          sx={{ textTransform: 'capitalize' }}
         >
-          {t("save", {ns: "common"})}
+          {t("save", { ns: "common" })}
         </LoadingButton>
       </Box>
 
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", {name: t('tag')}), 3000)
-          getAllTags(handleGetTagsSuccess)
+          successNoti(t("common:addSuccess", { name: t('tag') }), 3000);
+          getAllTags(handleGetTagsSuccess);
         }}
         handleClose={() => setOpenModalAddNewTag(false)}
       />
