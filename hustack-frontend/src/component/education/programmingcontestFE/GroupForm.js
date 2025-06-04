@@ -22,7 +22,7 @@ import { autocompleteClasses } from "@mui/material/Autocomplete";
 import { styled } from "@mui/material/styles";
 import { debounce } from "@mui/material/utils";
 import { LoadingButton } from "@mui/lab";
-import { LinearProgress, makeStyles } from "@material-ui/core";
+import { LinearProgress, makeStyles, Tooltip } from "@material-ui/core";
 import { request } from "api";
 import { errorNoti, successNoti } from "utils/notification";
 import { sleep } from "./lib";
@@ -34,6 +34,7 @@ import withScreenSecurity from "../../withScreenSecurity";
 import { isEmpty, trim } from "lodash";
 import PrimaryButton from "component/button/PrimaryButton";
 import AddIcon from "@material-ui/icons/Add";
+import { textAlign, width } from "@mui/system";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -315,9 +316,9 @@ function GroupForm() {
     {
       title: t("common:member"),
       field: "userId",
-      minWidth: 100,
-      maxWidth: 320,
-      cellStyle: { padding: "0 4px" },
+      // minWidth: 100,
+      // maxWidth: 320,
+      cellStyle: {width: 300},
       render: (rowData) => (
         <Stack direction="row" alignItems="center">
           <ListItemAvatar>
@@ -335,16 +336,24 @@ function GroupForm() {
     },
     {
       title: t("common:action"),
-      width: 60,
-      cellStyle: { padding: "0 4px", width: 60 }, 
+      cellStyle: { 
+        width: 50,
+        textAlign: "center"  
+      }, 
+      headerStyle: {
+        textAlign: "center"  
+      },
       render: (row) => (
-        <IconButton
-          onClick={() => handleRemoveMember(row.userId)}
-          disabled={loading}
-          color="error"
-        >
-          <DeleteIcon />
-        </IconButton>
+        <Tooltip title={t('common:delete')}>
+            <IconButton
+              onClick={() => handleRemoveMember(row.userId)}
+              disabled={loading}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+        </Tooltip>
+        
       ),
     },
   ];
@@ -377,54 +386,39 @@ function GroupForm() {
           <Typography variant="h6">{t("common:generalInfo")}</Typography>
 
           <Grid container spacing={2} mt={0} alignItems="flex-start">
-            <Grid item xs={6}>
-              <Stack spacing={2}>
-                {/* Group Name */}
-                <TextField
-                  fullWidth
-                  size="small"
-                  autoFocus
-                  required
-                  id="groupName"
-                  label={t("groupName")}
-                  value={groupDetail.name}
-                  onChange={(event) => {
-                    setGroupDetail({ ...groupDetail, name: event.target.value });
-                  }}
-                  error={isValidGroupName()}
-                  helperText={
-                    isValidGroupName()
-                      ? "Group Name must not contain special characters including %^/\\|.?\[\];"
-                      : ""
-                  }
-                />
-                
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={6}
-                  value={groupDetail.description}
-                  id="description"
-                  label={t("description")}
-                  onChange={(event) => {
-                    setGroupDetail({ ...groupDetail, description: event.target.value });
-                  }}
-                  sx={{
-                    "& .MuiInputBase-root": {
-                      minHeight: "20px", 
-                      alignItems: "flex-start",
-                    },
-                    "& .MuiInputBase-input": {
-                      minHeight: "20px !important",
-                      resize: "vertical",
-                    },
-                  }}
-                />
-              </Stack>
-            </Grid>
-            <Grid item xs={6}>
-            </Grid>
+          <Grid item xs={3}>
+            <TextField
+              fullWidth
+              size="small"
+              autoFocus
+              required
+              id="groupName"
+              label={t("groupName")}
+              value={groupDetail.name}
+              onChange={(event) => {
+                setGroupDetail({ ...groupDetail, name: event.target.value });
+              }}
+              error={isValidGroupName()}
+              helperText={
+                isValidGroupName()
+                  ? "Group Name must not contain special characters including %^/\\|.?\[\];"
+                  : ""
+              }
+            />
           </Grid>
+          <Grid item xs={9}>
+            <TextField
+              fullWidth
+              size="small"
+              id="description"
+              label={t("description")}
+              value={groupDetail.description}
+              onChange={(event) => {
+                setGroupDetail({ ...groupDetail, description: event.target.value });
+              }}
+            />
+          </Grid>
+        </Grid>
 
           <Box sx={{ marginTop: "20px" }}>
             <Typography variant="h6" sx={{ marginBottom: "8px" }}>

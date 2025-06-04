@@ -137,21 +137,23 @@ function TeacherListGroup() {
     },
     {
       title: t("common:action"),
-      sorting: false,
-      align: "center",
-      width: 60,
+      cellStyle: { 
+        width: 50,
+        textAlign: "center"  
+      }, 
+      headerStyle: {
+        textAlign: "center"  
+      },
       render: (rowData) => (
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <Tooltip title={t("common:delete")} placement="top">
-            <IconButton
-              onClick={() => handleOpenDeleteDialog(rowData)}
-              disabled={isLoading || toggleLoading[rowData.id]}
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Stack>
+        <Tooltip title={t("common:delete")}>
+          <IconButton
+            onClick={() => handleOpenDeleteDialog(rowData)}
+            disabled={isLoading || toggleLoading[rowData.id]}
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       ),
     },
   ];
