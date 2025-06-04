@@ -367,40 +367,33 @@ function CreateProblem() {
   };
 
   const handleMoveUp = useCallback((index) => {
-    // Original guard: prevent moving up if already at the top
     if (index === 0) return;
 
     setBlockCodes((prev) => {
-      const newBlocks = [...prev[selectedLanguage]]; // Create a new array for immutability
-      // Swap elements, preserving all properties (code, forStudent, seq)
+      const newBlocks = [...prev[selectedLanguage]]; 
       [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
-      // Update sequence numbers to reflect new order
       const updatedBlocks = newBlocks.map((block, i) => ({
         ...block,
-        seq: i + 1, // Reassign sequence to match new position
+        seq: i + 1, 
       }));
       return { ...prev, [selectedLanguage]: updatedBlocks };
     });
   }, [selectedLanguage]);
 
   const handleMoveDown = useCallback((index) => {
-    // Original guard: prevent moving down if already at the bottom
     if (index === blockCodes[selectedLanguage].length - 1) return;
 
     setBlockCodes((prev) => {
-      const newBlocks = [...prev[selectedLanguage]]; // Create a new array for immutability
-      // Swap elements, preserving all properties (code, forStudent, seq)
+      const newBlocks = [...prev[selectedLanguage]]; 
       [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
-      // Update sequence numbers to reflect new order
       const updatedBlocks = newBlocks.map((block, i) => ({
         ...block,
-        seq: i + 1, // Reassign sequence to match new position
+        seq: i + 1, 
       }));
       return { ...prev, [selectedLanguage]: updatedBlocks };
     });
   }, [selectedLanguage]);
 
-  // Debounced versions
   const debouncedMoveUp = useCallback(debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
   const debouncedMoveDown = useCallback(debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
 

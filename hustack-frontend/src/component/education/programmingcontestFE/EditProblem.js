@@ -305,8 +305,8 @@ function EditProblem() {
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
-      categoryId: isProblemBlock ? 1 : 0, // Set categoryId based on isProblemBlock
-      blockCodes: isProblemBlock ? formattedBlockCodes : [], // Include blockCodes only if isProblemBlock is true
+      categoryId: isProblemBlock ? 1 : 0, 
+      blockCodes: isProblemBlock ? formattedBlockCodes : [], 
     };
 
     const formData = new FormData();
@@ -375,7 +375,7 @@ function EditProblem() {
       [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
       const updatedBlocks = newBlocks.map((block, i) => ({
         ...block,
-        seq: i + 1, // Reassign sequence to match new position
+        seq: i + 1, 
       }));
       return { ...prev, [selectedLanguage]: updatedBlocks };
     });
@@ -392,13 +392,12 @@ function EditProblem() {
       [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
       const updatedBlocks = newBlocks.map((block, i) => ({
         ...block,
-        seq: i + 1, // Reassign sequence to match new position
+        seq: i + 1, 
       }));
       return { ...prev, [selectedLanguage]: updatedBlocks };
     });
   }, [canEditBlocks, selectedLanguage, blockCodes]);
 
-  // Debounced versions for move operations
   const debouncedMoveUp = useCallback(debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
   const debouncedMoveDown = useCallback(debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
 
