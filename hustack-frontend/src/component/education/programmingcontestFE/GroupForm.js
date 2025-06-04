@@ -341,7 +341,7 @@ function GroupForm() {
         textAlign: "center"  
       }, 
       headerStyle: {
-        textAlign: "center"  
+        textAlign: "center"   
       },
       render: (row) => (
         <Tooltip title={t('common:delete')}>
