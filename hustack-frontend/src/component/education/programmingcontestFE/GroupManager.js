@@ -74,7 +74,7 @@ function detail(key, value, sx, helpText) {
           key
         )}
       </Typography>
-      <Typography>{value || "-"}</Typography>
+      <Typography>{value}</Typography>
       {helpText && (
         <Typography variant="caption" color="error">
           {helpText}
@@ -214,7 +214,7 @@ function GroupManager({ screenAuthorization }) {
           {detail(t("status"), statuses.find(item => item.value === groupDetail.status)?.label)}
         </Grid> */}
         <Grid item xs={12} sm={12} md={6}>
-          {detail(t("description"), groupDetail.description || "-")}
+          {detail(t("description"), groupDetail.description)}
         </Grid>
         <Grid item xs={12} sm={12} md={3} />
       </Grid>

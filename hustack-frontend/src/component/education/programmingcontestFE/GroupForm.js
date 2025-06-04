@@ -293,7 +293,7 @@ function GroupForm() {
       method,
       url,
       () => {
-        successNoti(t(`common:${isEditMode ? "editSuccess" : "addSuccess"}`, { name: t("group") }), 3000);
+        successNoti(t(`common:${isEditMode ? "editSuccess" : "addSuccess"}`, { name: t("common:group2") }), 3000);
         sleep(1000).then(() => {
           history.push(isEditMode ? `/programming-contest/group-manager/${groupId}` : "/programming-contest/teacher-list-group");
         });
@@ -336,6 +336,7 @@ function GroupForm() {
     },
     {
       title: t("common:action"),
+      sorting: false,
       cellStyle: { 
         width: 50,
         textAlign: "center"  
