@@ -38,8 +38,6 @@ function MyExamMonitor(props) {
     }
   }, [isCancel]);
 
-  // ----------------------------------- Giám sát hành vi chuyển tab khi làm bài --------------------------
-  const lastBlurTime = useRef(null);
   const eventQueue = useRef([]);
   const sendMonitorLog = async (logs) => {
     request(
@@ -57,33 +55,56 @@ function MyExamMonitor(props) {
       eventQueue.current = []; // Xóa hàng đợi sau khi gửi
     }, 2000) // Chờ 2 giây trước khi gửi
   ).current;
+
+  // ----------------------------------- Giám sát hành vi chuyển tab khi làm bài --------------------------
+  const lastBlurTime = useRef(null);
+  const isUploadingFile = useRef(false);
   const onFocus = useCallback(() => {
     const currentTime = Date.now();
-    if (lastBlurTime.current !== null) {
-      const timeDiff = Math.round((currentTime - lastBlurTime.current) / 1000);
-      console.log(`Tab is in focus. Time since last blur: ${timeDiff}ms. From ${formatDateTime(lastBlurTime.current)} to ${formatDateTime(currentTime)}`);
+    setTimeout(() => {
+      if (lastBlurTime.current !== null && !isUploadingFile.current) {
+        const timeDiff = Math.round((currentTime - lastBlurTime.current) / 1000);
+        console.log(`Tab is in focus. Time since last blur: ${timeDiff}ms. From ${formatDateTime(lastBlurTime.current)} to ${formatDateTime(currentTime)}`);
 
-      eventQueue.current.push({
-        examResultId: data?.examResultId,
-        platform: 0,
-        type: 0,
-        startTime: formatDateTimeApi(lastBlurTime.current),
-        toTime: formatDateTimeApi(currentTime),
-        note: null,
-      });
-      debouncedSendLog(eventQueue.current);
-    } else {
-      console.log("Tab is in focus");
-    }
-    setOpenBlockScreenDialog(true);
-    setMessageBlockScreen('Thí sinh đã rời khỏi màn hình thi.')
+        eventQueue.current.push({
+          examResultId: data?.examResultId,
+          platform: 0,
+          type: 0,
+          startTime: formatDateTimeApi(lastBlurTime.current),
+          toTime: formatDateTimeApi(currentTime),
+          note: null,
+        });
+        debouncedSendLog(eventQueue.current);
+        setOpenBlockScreenDialog(true);
+        setMessageBlockScreen('Thí sinh đã rời khỏi màn hình thi.');
+      }
+    }, 100);
   }, [data?.examResultId]);
 
   const onBlur = useCallback(() => {
-    lastBlurTime.current = Date.now();
-    console.log("Tab is blurred");
+    if(!isUploadingFile.current){
+      lastBlurTime.current = Date.now();
+    }
   }, []);
+  const handleFileInputInteraction = () => {
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach((fileInput) => {
+      if (!fileInput.dataset.listenerAttached) {
+        fileInput.dataset.listenerAttached = 'true';
+        fileInput.addEventListener('click', () => {
+          isUploadingFile.current = true;
+        });
+        fileInput.addEventListener('change', () => {
+          isUploadingFile.current = false;
+        });
+        fileInput.addEventListener('cancel', () => {
+          isUploadingFile.current = false;
+        });
+      }
+    });
+  };
   const handleCheckingFocusTab = () => {
+    handleFileInputInteraction();
     window.addEventListener("focus", onFocus);
     window.addEventListener("blur", onBlur);
     return () => {
@@ -166,7 +187,7 @@ function MyExamMonitor(props) {
         if(timeDiff > 0){
           if(prevDetectionsLength.current < 1){
             console.log(`Sinh viên rời camera ${timeDiff} giây, rời từ ${formatDateTime(lastViolateTime.current)} đến ${formatDateTime(currentTime)}`)
-            setMessageBlockScreen(`Sinh viên rời camera ${timeDiff} giây.`)
+            setMessageBlockScreen(`Sinh viên rời khỏi camera.`)
             eventQueue.current.push({
               examResultId: data?.examResultId,
               platform: 1,

@@ -35,6 +35,7 @@ import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
 import MyExamMonitor from "./MyExamMonitor";
 import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
+import FileUploader from "../../../common/uploader/FileUploader";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -531,33 +532,38 @@ function MyExamDetails(props) {
                                       handleAnswerTextChange(value, questionOrder)
                                     }
                                   />
-                                  <DropzoneArea
-                                    dropzoneClass={classes.dropZone}
-                                    filesLimit={20}
-                                    maxFileSize={10000000}
-                                    showPreviews={true}
-                                    showPreviewsInDropzone={false}
-                                    useChipsForPreview
-                                    dropzoneText={`Kéo và thả tệp vào đây hoặc nhấn để chọn tệp cho Câu hỏi số ${questionOrder}`}
-                                    previewText="Xem trước:"
-                                    previewChipProps={{
-                                      variant: "outlined",
-                                      color: "primary",
-                                      size: "medium",
-                                    }}
-                                    getFileAddedMessage={(fileName) =>
-                                      `Tệp ${fileName} tải lên thành công`
-                                    }
-                                    getFileRemovedMessage={(fileName) => `Tệp ${fileName} đã loại bỏ`}
-                                    getFileLimitExceedMessage={(filesLimit) =>
-                                      `Vượt quá số lượng tệp tối đa được cho phép. Chỉ được phép tải lên tối đa ${filesLimit} tệp.`
-                                    }
-                                    alertSnackbarProps={{
-                                      anchorOrigin: {vertical: "bottom", horizontal: "right"},
-                                      autoHideDuration: 1800,
-                                    }}
+                                  <FileUploader
                                     onChange={(files) => handleAnswerFileChange(files, questionOrder)}
-                                  ></DropzoneArea>
+                                    multiple
+                                    preview={false}
+                                  />
+                                  {/*<DropzoneArea*/}
+                                  {/*  dropzoneClass={classes.dropZone}*/}
+                                  {/*  filesLimit={20}*/}
+                                  {/*  maxFileSize={10000000}*/}
+                                  {/*  showPreviews={true}*/}
+                                  {/*  showPreviewsInDropzone={false}*/}
+                                  {/*  useChipsForPreview*/}
+                                  {/*  dropzoneText={`Kéo và thả tệp vào đây hoặc nhấn để chọn tệp cho Câu hỏi số ${questionOrder}`}*/}
+                                  {/*  previewText="Xem trước:"*/}
+                                  {/*  previewChipProps={{*/}
+                                  {/*    variant: "outlined",*/}
+                                  {/*    color: "primary",*/}
+                                  {/*    size: "medium",*/}
+                                  {/*  }}*/}
+                                  {/*  getFileAddedMessage={(fileName) =>*/}
+                                  {/*    `Tệp ${fileName} tải lên thành công`*/}
+                                  {/*  }*/}
+                                  {/*  getFileRemovedMessage={(fileName) => `Tệp ${fileName} đã loại bỏ`}*/}
+                                  {/*  getFileLimitExceedMessage={(filesLimit) =>*/}
+                                  {/*    `Vượt quá số lượng tệp tối đa được cho phép. Chỉ được phép tải lên tối đa ${filesLimit} tệp.`*/}
+                                  {/*  }*/}
+                                  {/*  alertSnackbarProps={{*/}
+                                  {/*    anchorOrigin: {vertical: "bottom", horizontal: "right"},*/}
+                                  {/*    autoHideDuration: 1800,*/}
+                                  {/*  }}*/}
+                                  {/*  onChange={(files) => handleAnswerFileChange(files, questionOrder)}*/}
+                                  {/*></DropzoneArea>*/}
                                 </div>
                               )
                             }
