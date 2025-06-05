@@ -39,7 +39,7 @@ public class ExamResultDetailsEntity {
     private boolean pass;
 
     @Column(name = "score")
-    private Integer score;
+    private Float score;
 
     @PrePersist
     protected void onCreate() {

@@ -1,14 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import withScreenSecurity from "../../../withScreenSecurity";
 import {
+  Accordion, AccordionDetails, AccordionSummary,
   Box,
   Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Input
 } from "@material-ui/core";
-import {DialogActions} from "@mui/material";
 import {formatDateTime} from "../ultils/DateUltils";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
@@ -16,13 +12,12 @@ import TestBankDetails from "../testbank/TestBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
 import ExamMarking from "./ExamMarking";
 import {parseHTMLToString} from "../ultils/DataUltils";
-import {AttachFileOutlined} from "@material-ui/icons";
-import {getFilenameFromString} from "../ultils/FileUltils";
-import QuestionFilePreview from "../questionbank/QuestionFilePreview";
+import {ExpandMore} from "@material-ui/icons";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import ExamViolateDialog from "./ExamViolateDialog";
 
 const baseColumn = {
   sortable: false,
@@ -38,13 +33,13 @@ function ExamDetails(props) {
     {
       field: "code",
       headerName: "Mã học viên",
-      minWidth: 170,
+      minWidth: 140,
       ...baseColumn
     },
     {
       field: "name",
       headerName: "Họ và tên",
-      minWidth: 200,
+      minWidth: 160,
       flex: 1,
       ...baseColumn
     },
@@ -53,25 +48,46 @@ function ExamDetails(props) {
       headerName: "Email",
       ...baseColumn,
       flex: 1,
-      minWidth: 200,
+      minWidth: 160,
     },
     {
       field: "phone",
       headerName: "Số điện thoại",
       ...baseColumn,
-      minWidth: 200,
+      minWidth: 120,
     },
     {
       field: "totalScore",
       headerName: "Điểm",
       ...baseColumn,
-      minWidth: 100,
+      minWidth: 60,
+      maxWidth: 80,
     },
     {
       field: "totalTime",
       headerName: "Thời gian làm",
       ...baseColumn,
-      minWidth: 130,
+      minWidth: 120,
+    },
+    {
+      field: "totalViolate",
+      headerName: "Lỗi vi phạm",
+      renderCell: (rowData) => {
+        if(rowData?.value){
+          return (
+            <p
+              style={{fontWeight: 'bolder', cursor: 'pointer', textDecoration: 'underline', color: 'red'}}
+              onClick={() => handleOpenPopupExamViolate(rowData?.row?.examResultId)}
+            >
+              {String(rowData?.value).padStart(2, '0')} lỗi
+            </p>
+          )
+        }
+        return ''
+      },
+      ...baseColumn,
+      minWidth: 100,
+      maxWidth: 120,
     },
     {
       field: "",
@@ -110,11 +126,15 @@ function ExamDetails(props) {
   const classes = useStyles();
   const { open, setOpen, dataExam} = props;
 
+  const [rowData, setRowData] = useState([])
   const [data, setData] = useState(dataExam)
   const [openTestDetailsDialog, setOpenTestDetailsDialog] = useState(false);
   const [testDetails, setTestDetails] = useState(null)
   const [openExamDetailsMarkingDialog, setOpenExamDetailsMarkingDialog] = useState(false);
   const [examDetailsMarking, setExamDetailsMarking] = useState(null)
+  const [expanded, setExpanded] = useState(false)
+  const [openExamViolateDialog, setOpenExamViolateDialog] = useState(false);
+  const [examResultIdViolate, setExamResultIdViolate] = useState(null);
 
   const handleOpenPopupTestDetails = (test) =>{
     request(
@@ -132,6 +152,11 @@ function ExamDetails(props) {
     );
   }
 
+  const handleOpenPopupExamViolate = (examResultId) => {
+    setOpenExamViolateDialog(true)
+    setExamResultIdViolate(examResultId)
+  }
+
   const closeDialog = () => {
     setOpen(false)
   }
@@ -139,17 +164,36 @@ function ExamDetails(props) {
   const handleMarking = (rowData) => {
     request(
       "get",
-      `/exam/teacher/submissions/${rowData?.id}`,
+      `/exam/teacher/submissions/${rowData?.examStudentTestId}`,
       (res) => {
         if(res.data.resultCode === 200){
           setExamDetailsMarking(res.data.data)
           setOpenExamDetailsMarkingDialog(true)
+          setExpanded(false)
         }else{
           toast.error(res.data.resultMsg)
         }
       },
       { onError: (e) => toast.error(e) }
     );
+  }
+
+  const handleChangeAccordion = (test, panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : false);
+    if(isExpanded){
+      request(
+        "get",
+        `exam/examTest/${test.examExamTestId}`,
+        (res) => {
+          if(res.data.resultCode === 200){
+            setRowData(res.data.data)
+          }else{
+            toast.error(res.data.resultMsg)
+          }
+        },
+        { onError: (e) => toast.error(e) },
+      );
+    }
   }
 
   return (
@@ -163,28 +207,49 @@ function ExamDetails(props) {
           <div>
             <div style={{display: "flex", justifyContent: 'space-between'}}>
               <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Bắt đầu từ:</h4>
+                <span>{formatDateTime(data?.startTime)} - {formatDateTime(data?.endTime)}</span>
+              </div>
+            </div>
+
+            <div style={{display: "flex", justifyContent: 'space-between'}}>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Mã kỳ thi:</h4>
                 <span>{data?.code}</span>
               </div>
-              <div style={{display: "flex"}}>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái:</h4>
                 <span>{data?.status === 0 ? 'Chưa kích hoạt' : 'Kích hoạt'}</span>
               </div>
-              <div style={{display: "flex"}}>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái đáp án:</h4>
                 <span>{data?.answerStatus === 'NO_OPEN' ? 'Ẩn' : 'Hiện'}</span>
               </div>
             </div>
 
-            <div>
-              <div style={{display: "flex"}}>
-                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian bắt đầu:</h4>
-                <span>{formatDateTime(data?.startTime)}</span>
+            <div style={{display: "flex", justifyContent: 'space-between'}}>
+              <div style={{display: "flex", width: '30%'}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái điểm:</h4>
+                <span>{data?.scoreStatus === 0 ? 'Ẩn' : 'Công bố'}</span>
               </div>
-              <div style={{display: "flex"}}>
-                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian kết thúc:</h4>
-                <span>{formatDateTime(data?.endTime)}</span>
+              <div style={{display: "flex", width: '30%'}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Hình thức giám sát:</h4>
+                <span>
+                  {{
+                    0: 'Không giám sát',
+                    1: 'Thao tác trình duyệt',
+                    2: 'Thao tác trình duyệt + Camera'
+                  }[data?.monitor] || 'Không giám sát'}
+                </span>
               </div>
+              {
+                (data?.monitor === 1 || data?.monitor === 2) && (
+                  <div style={{display: "flex", width: '30%'}}>
+                    <h4 style={{margin: '0 5px 0 0', padding: 0}}>Khoá màn hình khi vi phạm:</h4>
+                    <span>{data?.blockScreen === 0 ? 'Không khoá' : `${data?.blockScreen} giây`}</span>
+                  </div>
+                )
+              }
             </div>
 
             <div style={{display: "flex", flexDirection: "column"}}>
@@ -194,61 +259,89 @@ function ExamDetails(props) {
 
             <div style={{display: "flex", flexDirection: "column"}}>
               <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Đề thi:</h4>
-              <div style={{
-                border: '2px solid #f5f5f5',
-                display: 'flex',
-                justifyContent: 'space-between',
-                borderRadius: '10px',
-                padding: '10px',
-                marginBottom: '10px',
-                marginTop: '10px'
-              }}>
-                <Box display="flex"
-                     flexDirection='column'
-                     width="calc(100% - 80px)"
-                     style={{
-                       userSelect: "none",
-                       WebkitUserSelect: "none",
-                       MozUserSelect: "none",
-                       msUserSelect: "none"
-                     }}>
-                  <div style={{display: 'flex'}}>
-                    <span style={{fontStyle: 'italic', marginRight: '5px'}}>({data.examTests[0]?.code})</span>
-                    <span style={{display: "block", fontWeight: 'bold'}}>{data.examTests[0]?.name}</span>
-                  </div>
-                  <p>{parseHTMLToString(data.examTests[0]?.description)}</p>
-                </Box>
+              {
+                data?.examTests.map((test, index) => {
+                  return (
+                    <Accordion
+                      expanded={expanded === index}
+                      onChange={handleChangeAccordion(test, index)}
+                      sx={{
+                        border: '1px solid #ddd',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        mb: 2,
+                        '&:before': {display: 'none'},
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={<ExpandMore/>}
+                        aria-controls={`panel${index}-content`}
+                        id={`panel${index}-header`}
+                        style={{flexDirection: 'row-reverse', paddingLeft: 0}}
+                      >
+                        <Box display="flex" alignItems="center" width="100%" justifyContent="space-between">
+                          <Box display="flex" alignItems="center" width="calc(100% - 90px)">
+                            <Box display="flex"
+                                 flexDirection='column'
+                                 width="100%"
+                                 style={{
+                                   userSelect: "none",
+                                   WebkitUserSelect: "none",
+                                   MozUserSelect: "none",
+                                   msUserSelect: "none"
+                                 }}>
+                              <div style={{display: 'flex'}}>
+                                <span style={{fontStyle: 'italic', marginRight: '5px'}}>({test?.code})</span>
+                                <span style={{display: "block", fontWeight: 'bold'}}>{test?.name}</span>
+                              </div>
+                              {
+                                test?.duration && (
+                                  <p style={{margin: '0'}}><strong>Thời gian làm:</strong> {test?.duration} phút</p>
+                                )
+                              }
+                              {
+                                test?.description && test?.description !== '' && (
+                                  <>{parseHTMLToString(test?.description)}</>
+                                )
+                              }
+                            </Box>
+                          </Box>
 
-                <Box display="flex" justifyContent='space-between' width="80px">
-                  <button
-                    style={{
-                      height: 'max-content',
-                      padding: '8px',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                    onClick={(event) => {
-                      handleOpenPopupTestDetails(data?.examTests[0])
-                      event.preventDefault()
-                      event.stopPropagation()
-                    }}>
-                    Chi tiết
-                  </button>
-                </Box>
-              </div>
-            </div>
-
-            <div>
-              <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
-              <DataGrid
-                rows={data?.examStudents}
-                columns={columns}
-                getRowId={(row) => row.code}
-                disableColumnMenu
-                autoHeight
-              />
+                          <button
+                            style={{
+                              height: 'max-content',
+                              width: '80px',
+                              padding: '8px',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: 'bold'
+                            }}
+                            onClick={(event) => {
+                              handleOpenPopupTestDetails(test)
+                              event.preventDefault()
+                              event.stopPropagation()
+                            }}>
+                            Chi tiết
+                          </button>
+                        </Box>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <div style={{width: '100%'}}>
+                          <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
+                          <DataGrid
+                            rows={rowData}
+                            columns={columns}
+                            getRowId={(row) => row.code}
+                            disableColumnMenu
+                            autoHeight
+                          />
+                        </div>
+                      </AccordionDetails>
+                    </Accordion>
+                  )
+                })
+              }
             </div>
           </div>
         }
@@ -277,6 +370,15 @@ function ExamDetails(props) {
             setOpen={setOpenExamDetailsMarkingDialog}
             data={examDetailsMarking}
             setDataDetails={setData}
+          />
+        )
+      }
+      {
+        openExamViolateDialog && (
+          <ExamViolateDialog
+            open={openExamViolateDialog}
+            setOpen={setOpenExamViolateDialog}
+            examResultId={examResultIdViolate}
           />
         )
       }

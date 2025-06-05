@@ -12,11 +12,6 @@ public interface ExamQuestionFilterRes {
     String getContent();
     String getFilePath();
     Integer getNumberAnswer();
-    String getContentAnswer1();
-    String getContentAnswer2();
-    String getContentAnswer3();
-    String getContentAnswer4();
-    String getContentAnswer5();
     boolean getMultichoice();
     String getAnswer();
     String getExplain();
@@ -28,4 +23,6 @@ public interface ExamQuestionFilterRes {
     String getExamSubjectName();
     @JsonRawValue
     String getExamTags();
+    @JsonRawValue
+    String getAnswers();
 }

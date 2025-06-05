@@ -1,8 +1,10 @@
 package com.hust.baseweb.applications.exam.model.request;
 
 import com.hust.baseweb.applications.exam.entity.ExamTagEntity;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
@@ -10,23 +12,21 @@ import java.util.List;
 @Getter
 @Setter
 @FieldNameConstants
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExamQuestionSaveReq {
 
-    private String examSubjectId;
-    private String code;
-    private Integer type;
-    private String level;
-    private String content;
-    private String filePath;
-    private Integer numberAnswer;
-    private String contentAnswer1;
-    private String contentAnswer2;
-    private String contentAnswer3;
-    private String contentAnswer4;
-    private String contentAnswer5;
-    private boolean multichoice;
-    private String answer;
-    private String explain;
-    private List<String> deletePaths;
-    private List<ExamTagEntity> examTags;
+    String examSubjectId;
+    String code;
+    Integer type;
+    String level;
+    String content;
+    String filePath;
+    Integer numberAnswer;
+    List<ExamQuestionAnswerSaveReq> answers;
+    List<ExamQuestionAnswerSaveReq> answersDelete;
+    boolean multichoice;
+    String answer;
+    String explain;
+    List<String> deletePaths;
+    List<ExamTagEntity> examTags;
 }

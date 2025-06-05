@@ -11,7 +11,7 @@ import {
   Radio,
   RadioGroup,
   FormGroup
-} from "@mui/material";
+} from "@material-ui/core";
 import {request} from "../../../../api";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
@@ -20,10 +20,11 @@ import RichTextEditor from "../../../common/editor/RichTextEditor";
 import {makeStyles} from "@material-ui/core/styles";
 import {useHistory} from "react-router-dom";
 import {useLocation} from "react-router";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, formatTimeToMMSS} from "../ultils/DateUltils";
 import {DropzoneArea} from "material-ui-dropzone";
 import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer, CheckCircle, Check} from "@mui/icons-material";
 import {
+  compressImage,
   getFileCommentFromFileAnswerAndExamResultDetailsId,
   getFilenameFromString,
   getFilePathFromString
@@ -32,6 +33,9 @@ import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import MyExamMonitor from "./MyExamMonitor";
+import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
+import FileUploader from "../../../common/uploader/FileUploader";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,6 +59,8 @@ function MyExamDetails(props) {
   const history = useHistory();
   const location = useLocation();
   const data = location.state?.data
+  const { openMenu } = useMenu();
+  const initialSeconds = data?.examTestDuration * 60 || 0;
 
   if(data === undefined){
     window.location.href = '/exam/my-exam';
@@ -67,7 +73,8 @@ function MyExamDetails(props) {
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [startLoadTime, setStartLoadTime] = useState(null);
-  const [startDoing, setStartDoing] = useState(false);
+  const [startDoing, setStartDoing] = useState((data?.examMonitor && data?.examMonitor > 0) ? true : false);
+  const [countdown, setCountdown] = useState(data?.submitedAt ? 0 : initialSeconds);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -85,7 +92,29 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
+    setStartLoadTime(new Date());
   }, []);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // Thực hiện nộp bài
+            handleSubmit()
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [countdown]);
+  const progress = (countdown / initialSeconds) * 100;
+  const strokeDasharray = 283;
+  const strokeDashoffset = (progress / 100) * strokeDasharray;
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
     if(isChecked){
@@ -104,9 +133,11 @@ function MyExamDetails(props) {
   };
 
   const handleAnswerRadioChange = (event, questionOrder) => {
-    dataAnswers[questionOrder-1].answer = event.target.value
-
-    setDataAnswers(dataAnswers)
+    setDataAnswers((prev) => {
+      const newAnswers = [...prev];
+      newAnswers[questionOrder-1].answer = event.target.value
+      return newAnswers;
+    })
   };
 
   const handleAnswerTextChange = (value, questionOrder) => {
@@ -115,8 +146,21 @@ function MyExamDetails(props) {
     setDataAnswers(dataAnswers)
   };
 
-  const handleAnswerFileChange = (files, questionOrder) => {
-    answersFiles[questionOrder-1].files = files
+  const handleAnswerFileChange = async (files, questionOrder) => {
+    let tmpFiles = []
+    for(let file of files){
+      try {
+        if (file.type.startsWith('image/')){
+          tmpFiles.push(await compressImage(file, 1920, 1920, 1))
+        }else{
+          tmpFiles.push(file)
+        }
+      } catch (error) {
+        console.error('Error compressing file:', error);
+        toast.error('Lỗi khi tải ảnh lên');
+      }
+    }
+    answersFiles[questionOrder-1].files = tmpFiles
 
     setAnswersFiles(answersFiles)
   }
@@ -126,8 +170,8 @@ function MyExamDetails(props) {
     const totalTime = Math.round((endLoadTime - startLoadTime) / 60000);
 
     const body = {
-      examId: data?.examId,
-      examStudentId: data?.examStudentId,
+      id: data?.examResultId,
+      examStudentTestId: data?.examStudentTestId,
       totalTime: totalTime,
       examResultDetails: dataAnswers
     }
@@ -175,9 +219,11 @@ function MyExamDetails(props) {
             toast.error(res.data.resultMsg)
             setIsLoading(false)
           }
+          openMenu()
         }else {
           toast.error(res)
           setIsLoading(false)
+          openMenu()
         }
       },
       { onError: (e) => toast.error(e) },
@@ -201,37 +247,17 @@ function MyExamDetails(props) {
   }
 
   const handleStartDoing = () => {
-    setStartLoadTime(new Date());
+    // setStartLoadTime(new Date());
     setStartDoing(true)
   }
 
-  // Checking focus tab
-  useEffect(() => {
-    // handleCheckingFocusTab()
-  }, []);
-  const onFocus = () => {
-    console.log("Tab is in focus");
-  };
-  // const onBlur = () => {
-  //   console.log("Tab is blurred");
-  // };
-  const onVisibilitychange = () => {
-    console.log('document.visibilityState',document.visibilityState)
-    console.log("Ghi lại nội dung tab hiện tại:", document.documentURI, document.title);
-  };
-  const handleCheckingFocusTab = () => {
-    window.addEventListener("focus", onFocus);
-    // window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVisibilitychange);
-    onFocus();
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      // window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibilitychange);
-    };
-  }
   return (
-    <div>
+    <MyExamMonitor
+      monitor={data?.examMonitor}
+      blockScreen={data?.examBlockScreen}
+      data={data}
+      isCancel={isLoading}
+    >
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Card>
           <CardContent>
@@ -239,13 +265,56 @@ function MyExamDetails(props) {
               <h1 style={{margin: 0, padding: 0}}>{data?.examName}</h1>
               <p style={{margin: 0, padding: 0}}>{parseHTMLToString(data?.examDescription)}</p>
               <h2 style={{margin: 0, padding: 0}}>{data?.examTestName}</h2>
-              <div style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Mã đề:</span>{data?.examTestCode}</div>
-              <div style={{display: "flex"}}>
-                <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>
-                <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>
-              </div>
+              {/*<div style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Mã đề:</span>{data?.examTestCode}</div>*/}
+              {/*<div style={{display: "flex"}}>*/}
+              {/*  <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>*/}
+              {/*  <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>*/}
+              {/*</div>*/}
               {
-                data?.examResultId == null && !startDoing && (
+                countdown > 0 && (
+                  <div style={{display: "flex", justifyContent: 'flex-end', width: '100%'}}>
+                    {/*Thời gian còn lại: <strong style={{fontSize: '16px'}}>{formatTimeToMMSS(countdown)}</strong>*/}
+                    <div style={{position: 'relative', width: '100px', height: '100px'}}>
+                      <svg width="100" height="100" viewBox="0 0 100 100">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          fill="none"
+                          stroke="#e6e6e6"
+                          strokeWidth="10"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          fill="none"
+                          stroke="#ff4d4f"
+                          strokeWidth="10"
+                          strokeDasharray={strokeDasharray}
+                          strokeDashoffset={strokeDashoffset}
+                          transform="rotate(-90 50 50)"
+                        />
+                      </svg>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          fontSize: '20px',
+                          fontWeight: 'bold',
+                          color: '#333',
+                        }}
+                      >
+                        {formatTimeToMMSS(countdown)}
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+              {
+                data?.submitedAt == null && !startDoing && (
                   <PrimaryButton
                     variant="contained"
                     color="primary"
@@ -260,7 +329,7 @@ function MyExamDetails(props) {
             </div>
 
             {
-              data?.examResultId != null && (
+              data?.submitedAt != null && (
                 <div>
                   <div style={{
                     display: "flex",
@@ -271,9 +340,21 @@ function MyExamDetails(props) {
                   }}>
                     <div style={{display: "flex", flexDirection: "column", width: '200px'}}>
                       <h3 style={{margin: 0, padding: '10px', borderBottom: '2px solid #000000b8'}}>Điểm</h3>
-                      <p style={{padding: 0, margin: "auto", height: '150px', lineHeight: '150px', fontWeight: "bold", fontSize: '70px'}}>{data?.totalScore}</p>
+                      <p style={{
+                        padding: 0,
+                        margin: "auto",
+                        height: '150px',
+                        lineHeight: '150px',
+                        fontWeight: "bold",
+                        fontSize: '70px'
+                      }}>{data?.totalScore}</p>
                     </div>
-                    <div style={{display: "flex", flexDirection: "column", borderLeft: '2px solid #000000b8', width: 'calc(100% - 200px)'}}>
+                    <div style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      borderLeft: '2px solid #000000b8',
+                      width: 'calc(100% - 200px)'
+                    }}>
                       <h3 style={{margin: 0, padding: '10px', borderBottom: '2px solid #000000b8'}}>Nhận xét</h3>
                       <p style={{padding: '0 10px', margin: 0, height: '150px'}}>{data?.comment ? parseHTMLToString(data?.comment) : ''}</p>
                     </div>
@@ -369,96 +450,32 @@ function MyExamDetails(props) {
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
                             <p style={{margin: 0, padding: 0, fontWeight: "bold"}}>Chọn các đáp án đúng trong các đáp án
                               sau:</p>
-                            <FormControlLabel
-                              label={
-                                <FormGroup row>
-                                  <Box display="flex" alignItems="center">
-                                    <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                    {( data?.totalScore != null && value?.questionAnswer?.includes('1')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                  </Box>
-                                </FormGroup>
-                              }
-                              control={<Checkbox color="primary"
-                                                 checked={value?.answer?.includes('1')}
-                                                 disabled={data?.examResultId != null}
-                                                 onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '1', event.target.checked)
-                                                 }/>}
-                            />
                             {
-                              value?.questionNumberAnswer >= 2 && (
+                              Array.from({ length: value?.questionNumberAnswer }, (_, index) => (
                                 <FormControlLabel
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('2')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
+                                        <div>
+                                          <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                          {value.questionAnswers[index]?.file && (
+                                            <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
+                                        {( data?.totalScore != null && value?.questionAnswer?.includes(`${index+1}`)) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
                                       </Box>
                                     </FormGroup>
                                   }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('2')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '2', event.target.checked)
-                                                     }/>}
-                                />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 3 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('3')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                      </Box>
-                                    </FormGroup>
+                                  control={
+                                    <Checkbox
+                                      color="primary"
+                                      checked={value?.answer?.includes(`${index+1}`)}
+                                      disabled={data?.submitedAt != null}
+                                      onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, `${index+1}`, event.target.checked)}
+                                    />
                                   }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('3')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '3', event.target.checked)
-                                                     }/>}
                                 />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 4 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('4')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('4')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '4', event.target.checked)
-                                                     }/>}
-                                />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 5 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                        {( data?.totalScore != null && value?.questionAnswer?.includes('5')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={<Checkbox color="primary"
-                                                     checked={value?.answer?.includes('5')}
-                                                     disabled={data?.examResultId != null}
-                                                     onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, '5', event.target.checked)
-                                                     }/>}
-                                />
-                              )
+                              ))
                             }
                           </Box>
                         )
@@ -468,76 +485,36 @@ function MyExamDetails(props) {
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
                             <p style={{margin: 0, padding: 0, fontWeight: "bold"}}>Chọn đáp án đúng nhất:</p>
                             <RadioGroup
-                              aria-labelledby="demo-radio-buttons-group-label"
-                              name="radio-buttons-group"
+                              aria-labelledby="answer-radio-buttons-group-label"
+                              name="answer-radio-buttons-group"
                               value={dataAnswers[value?.questionOrder - 1]?.answer}
                               onChange={(event) => handleAnswerRadioChange(event, value?.questionOrder)}
                             >
-                              <FormControlLabel value="1" control={<Radio checked={value?.answer?.includes('1')}
-                                                                          disabled={data?.examResultId != null}/>}
-                                                label={
-                                                  <FormGroup row>
-                                                    <Box display="flex" alignItems="center">
-                                                      <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                                      {( data?.totalScore != null && value?.questionAnswer?.includes('1')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                    </Box>
-                                                  </FormGroup>
-                                                }/>
                               {
-                                value?.questionNumberAnswer >= 2 && (
-                                  <FormControlLabel value="2" control={<Radio checked={value?.answer?.includes('2')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('2')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 3 && (
-                                  <FormControlLabel value="3" control={<Radio checked={value?.answer?.includes('3')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('3')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 4 && (
-                                  <FormControlLabel value="4" control={<Radio checked={value?.answer?.includes('4')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('4')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 5 && (
-                                  <FormControlLabel value="5" control={<Radio checked={value?.answer?.includes('5')}
-                                                                              disabled={data?.examResultId != null}/>}
-                                                    label={
-                                                      <FormGroup row>
-                                                        <Box display="flex" alignItems="center">
-                                                          <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                                          {( data?.totalScore != null && value?.questionAnswer?.includes('5')) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
-                                                        </Box>
-                                                      </FormGroup>
-                                                    }/>
-                                )
+                                Array.from({ length: value?.questionNumberAnswer }, (_, index) => (
+                                  <FormControlLabel
+                                    value={`${index + 1}`}
+                                    control={
+                                      <Radio
+                                        checked={value?.answer?.includes(`${index+1}`)}
+                                        disabled={data?.submitedAt != null}
+                                      />
+                                    }
+                                    label={
+                                      <FormGroup row>
+                                        <Box display="flex" alignItems="center">
+                                          <div>
+                                            <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                            {value.questionAnswers[index]?.file && (
+                                              <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
+                                          {( data?.totalScore != null && value?.questionAnswer?.includes(`${index+1}`)) && (<Check style={{ marginLeft: 8, color: 'green' }} />)}
+                                        </Box>
+                                      </FormGroup>
+                                    }
+                                  />
+                                ))
                               }
                             </RadioGroup>
                           </Box>
@@ -547,7 +524,7 @@ function MyExamDetails(props) {
                         value?.questionType === 1 && (
                           <div key={questionOrder}>
                             {
-                              data?.examResultId == null && startDoing && (
+                              data?.submitedAt == null && startDoing && (
                                 <div>
                                   <RichTextEditor
                                     content={tmpTextAnswer}
@@ -555,44 +532,49 @@ function MyExamDetails(props) {
                                       handleAnswerTextChange(value, questionOrder)
                                     }
                                   />
-                                  <DropzoneArea
-                                    dropzoneClass={classes.dropZone}
-                                    filesLimit={20}
-                                    maxFileSize={10000000}
-                                    showPreviews={true}
-                                    showPreviewsInDropzone={false}
-                                    useChipsForPreview
-                                    dropzoneText={`Kéo và thả tệp vào đây hoặc nhấn để chọn tệp cho Câu hỏi số ${questionOrder}`}
-                                    previewText="Xem trước:"
-                                    previewChipProps={{
-                                      variant: "outlined",
-                                      color: "primary",
-                                      size: "medium",
-                                    }}
-                                    getFileAddedMessage={(fileName) =>
-                                      `Tệp ${fileName} tải lên thành công`
-                                    }
-                                    getFileRemovedMessage={(fileName) => `Tệp ${fileName} đã loại bỏ`}
-                                    getFileLimitExceedMessage={(filesLimit) =>
-                                      `Vượt quá số lượng tệp tối đa được cho phép. Chỉ được phép tải lên tối đa ${filesLimit} tệp.`
-                                    }
-                                    alertSnackbarProps={{
-                                      anchorOrigin: {vertical: "bottom", horizontal: "right"},
-                                      autoHideDuration: 1800,
-                                    }}
+                                  <FileUploader
                                     onChange={(files) => handleAnswerFileChange(files, questionOrder)}
-                                  ></DropzoneArea>
+                                    multiple
+                                    preview={false}
+                                  />
+                                  {/*<DropzoneArea*/}
+                                  {/*  dropzoneClass={classes.dropZone}*/}
+                                  {/*  filesLimit={20}*/}
+                                  {/*  maxFileSize={10000000}*/}
+                                  {/*  showPreviews={true}*/}
+                                  {/*  showPreviewsInDropzone={false}*/}
+                                  {/*  useChipsForPreview*/}
+                                  {/*  dropzoneText={`Kéo và thả tệp vào đây hoặc nhấn để chọn tệp cho Câu hỏi số ${questionOrder}`}*/}
+                                  {/*  previewText="Xem trước:"*/}
+                                  {/*  previewChipProps={{*/}
+                                  {/*    variant: "outlined",*/}
+                                  {/*    color: "primary",*/}
+                                  {/*    size: "medium",*/}
+                                  {/*  }}*/}
+                                  {/*  getFileAddedMessage={(fileName) =>*/}
+                                  {/*    `Tệp ${fileName} tải lên thành công`*/}
+                                  {/*  }*/}
+                                  {/*  getFileRemovedMessage={(fileName) => `Tệp ${fileName} đã loại bỏ`}*/}
+                                  {/*  getFileLimitExceedMessage={(filesLimit) =>*/}
+                                  {/*    `Vượt quá số lượng tệp tối đa được cho phép. Chỉ được phép tải lên tối đa ${filesLimit} tệp.`*/}
+                                  {/*  }*/}
+                                  {/*  alertSnackbarProps={{*/}
+                                  {/*    anchorOrigin: {vertical: "bottom", horizontal: "right"},*/}
+                                  {/*    autoHideDuration: 1800,*/}
+                                  {/*  }}*/}
+                                  {/*  onChange={(files) => handleAnswerFileChange(files, questionOrder)}*/}
+                                  {/*></DropzoneArea>*/}
                                 </div>
                               )
                             }
                             {
-                              data?.examResultId != null && (
+                              data?.submitedAt != null && (
                                 <div><strong style={{marginRight: '10px'}}>Trả
                                   lời:</strong>{parseHTMLToString(value?.answer)}</div>
                               )
                             }
                             {
-                              data?.examResultId != null && value?.filePathAnswer != null && value?.filePathAnswer !== '' && (
+                              data?.submitedAt != null && value?.filePathAnswer != null && value?.filePathAnswer !== '' && (
                                 <div style={{marginTop: '10px'}}>
                                   <strong>File trả lời đính kèm:</strong>
                                   {
@@ -647,7 +629,7 @@ function MyExamDetails(props) {
             }
 
             {/*{*/}
-            {/*  data?.examResultId == null && (*/}
+            {/*  data?.submitedAt == null && (*/}
             {/*    <DropzoneArea*/}
             {/*      dropzoneClass={classes.dropZone}*/}
             {/*      filesLimit={20}*/}
@@ -678,7 +660,7 @@ function MyExamDetails(props) {
             {/*}*/}
 
             {/*{*/}
-            {/*  data?.examResultId != null && (*/}
+            {/*  data?.submitedAt != null && (*/}
             {/*    <div>*/}
             {/*      <h4 style={{marginBottom: 0, fontSize: '18px'}}>File đính kèm:</h4>*/}
             {/*      {*/}
@@ -704,14 +686,21 @@ function MyExamDetails(props) {
 
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
-            <TertiaryButton
-              variant="outlined"
-              onClick={() => history.push("/exam/my-exam")}
-            >
-              Hủy
-            </TertiaryButton>
             {
-              data?.examResultId == null && startDoing && (
+              !(data?.examMonitor && data?.examMonitor > 0 && data?.submitedAt == null) && (
+                <TertiaryButton
+                  variant="outlined"
+                  onClick={() => {
+                    history.push("/exam/my-exam")
+                    openMenu()
+                  }}
+                >
+                  Hủy
+                </TertiaryButton>
+              )
+            }
+            {
+              data?.submitedAt == null && startDoing && (
                 <PrimaryButton
                   disabled={isLoading}
                   variant="contained"
@@ -732,7 +721,7 @@ function MyExamDetails(props) {
           file={filePreview}>
         </QuestionFilePreview>
       </LocalizationProvider>
-    </div>
+    </MyExamMonitor>
   );
 }
 

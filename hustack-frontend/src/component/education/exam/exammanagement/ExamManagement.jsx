@@ -20,6 +20,7 @@ import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
+  headerClassName: 'wrap-header',
 };
 
 const rowsPerPage = [5, 10, 20];
@@ -27,46 +28,29 @@ const rowsPerPage = [5, 10, 20];
 function ExamManagement(props) {
 
   const columns = [
-    {
-      field: "code",
-      headerName: "Mã kỳ thi",
-      minWidth: 170,
-      ...baseColumn
-    },
+    // {
+    //   field: "code",
+    //   headerName: "Mã kỳ thi",
+    //   minWidth: 170,
+    //   ...baseColumn
+    // },
     {
       field: "name",
       headerName: "Tên kỳ thi",
       minWidth: 200,
+      flex: 1,
       ...baseColumn
     },
-    {
-      field: "description",
-      headerName: "Mô tả kỳ thi",
-      ...baseColumn,
-      flex: 1,
-      minWidth: 200,
-      renderCell: (rowData) => {
-        return parseHTMLToString(rowData.value)
-      }
-    },
-    {
-      field: "startTime",
-      headerName: "Thời gian bắt đầu",
-      ...baseColumn,
-      minWidth: 170,
-      renderCell: (rowData) => {
-        return formatDateTime(rowData.value)
-      },
-    },
-    {
-      field: "endTime",
-      headerName: "Thời gian kết thúc",
-      ...baseColumn,
-      minWidth: 170,
-      renderCell: (rowData) => {
-        return formatDateTime(rowData.value)
-      },
-    },
+    // {
+    //   field: "description",
+    //   headerName: "Mô tả kỳ thi",
+    //   ...baseColumn,
+    //   flex: 1,
+    //   minWidth: 200,
+    //   renderCell: (rowData) => {
+    //     return parseHTMLToString(rowData.value)
+    //   }
+    // },
     {
       field: "status",
       headerName: "Trạng thái",
@@ -86,9 +70,9 @@ function ExamManagement(props) {
     },
     {
       field: "answerStatus",
-      headerName: "Trạng thái đáp án",
+      headerName: "Đáp án",
       ...baseColumn,
-      minWidth: 170,
+      minWidth: 80,
       renderCell: (rowData) => {
         if(rowData.value === 'NO_OPEN'){
           return (
@@ -101,6 +85,86 @@ function ExamManagement(props) {
         }else{
           return ''
         }
+      },
+    },
+    {
+      field: "scoreStatus",
+      headerName: "Điểm",
+      ...baseColumn,
+      minWidth: 80,
+      renderCell: (rowData) => {
+        if(rowData.value === 0){
+          return (
+            <strong style={{color: '#f50000c9'}}>Ẩn</strong>
+          )
+        }else if(rowData.value === 1){
+          return (
+            <strong style={{color: '#61bd6d'}}>Công bố</strong>
+          )
+        }else{
+          return ''
+        }
+      },
+    },
+    {
+      field: "monitor",
+      headerName: "Hình thức giám sát",
+      ...baseColumn,
+      minWidth: 160,
+      flex: 1,
+      renderCell: (rowData) => {
+        if(rowData.value === 0){
+          return (
+            <strong style={{color: '#f50000c9'}}>Không giám sát</strong>
+          )
+        }else if(rowData.value === 1){
+          return (
+            <strong style={{color: '#61bd6d'}}>Thao tác trình duyệt</strong>
+          )
+        }else if(rowData.value === 2){
+          return (
+            <div style={{display: 'flex', flexDirection:'column', color: '#61bd6d'}}>
+              <strong style={{lineHeight: "normal"}}>Thao tác trình duyệt</strong>
+              <strong style={{lineHeight: "normal"}}>Camera</strong>
+            </div>
+          )
+        }else{
+          return ''
+        }
+      },
+    },
+    {
+      field: "blockScreen",
+      headerName: "Khoá màn hình khi vi phạm",
+      ...baseColumn,
+      minWidth: 150,
+      flex: 1,
+      renderCell: (rowData) => {
+        if(rowData.value === 0){
+          return 'Không khoá'
+        }else if(rowData.value > 0){
+          return `${rowData.value} giây`
+        }else{
+          return ''
+        }
+      },
+    },
+    {
+      field: "startTime",
+      headerName: "Thời gian bắt đầu",
+      ...baseColumn,
+      minWidth: 170,
+      renderCell: (rowData) => {
+        return formatDateTime(rowData.value)
+      },
+    },
+    {
+      field: "endTime",
+      headerName: "Thời gian kết thúc",
+      ...baseColumn,
+      minWidth: 170,
+      renderCell: (rowData) => {
+        return formatDateTime(rowData.value)
       },
     },
     {
@@ -187,7 +251,11 @@ function ExamManagement(props) {
           name: "",
           description: "",
           status: 1,
+          monitor: 0,
+          blockScreen: 0,
+          timeBlockScreen: null,
           answerStatus: "NO_OPEN",
+          scoreStatus: 0,
           startTime: "",
           endTime: "",
           examStudents: []
@@ -200,7 +268,7 @@ function ExamManagement(props) {
   const handleUpdate = (rowData) => {
     request(
       "get",
-      `/exam/${rowData.id}`,
+      `/exam/preview-update/${rowData.id}`,
       (res) => {
         if(res.data.resultCode === 200){
           history.push({
