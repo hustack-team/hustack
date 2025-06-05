@@ -22,7 +22,6 @@ import { autocompleteClasses } from "@mui/material/Autocomplete";
 import { styled } from "@mui/material/styles";
 import { debounce } from "@mui/material/utils";
 import { LoadingButton } from "@mui/lab";
-import { LinearProgress, makeStyles, Tooltip } from "@material-ui/core";
 import { request } from "api";
 import { errorNoti, successNoti } from "utils/notification";
 import { sleep } from "./lib";
@@ -34,7 +33,12 @@ import withScreenSecurity from "../../withScreenSecurity";
 import { isEmpty, trim } from "lodash";
 import PrimaryButton from "component/button/PrimaryButton";
 import AddIcon from "@material-ui/icons/Add";
+import LinearProgress from '@mui/material/LinearProgress';
+import Tooltip from '@mui/material/Tooltip';
 import { textAlign, width } from "@mui/system";
+import { makeStyles } from "@material-ui/core";
+import { StyledAutocompletePopper } from "./AddMember2Contest";
+import { stringToColor } from "./GroupManager";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -43,42 +47,8 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
-  [`& .${autocompleteClasses.paper}`]: {
-    boxShadow:
-      "0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.5)",
-    margin: 0,
-    padding: 8,
-    borderRadius: 8,
-  },
-  [`& .${autocompleteClasses.listbox}`]: {
-    padding: 0,
-    [`& .${autocompleteClasses.option}`]: {
-      padding: "0px 8px",
-      borderRadius: 8,
-      "&:hover": {
-        backgroundColor: "#eeeeee",
-      },
-    },
-  },
-}));
-
 function PopperComponent(props) {
   return <StyledAutocompletePopper {...props} />;
-}
-
-function stringToColor(string) {
-  if (!string) return "#000";
-  let hash = 0;
-  for (let i = 0; i < string.length; i += 1) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  let color = "#";
-  for (let i = 0; i < 3; i += 1) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-  return color;
 }
 
 function stringAvatar(id, name) {

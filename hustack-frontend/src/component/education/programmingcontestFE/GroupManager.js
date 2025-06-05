@@ -23,7 +23,7 @@ import StandardTable from "component/table/StandardTable";
 import withScreenSecurity from "../../withScreenSecurity";
 import { Divider, Paper } from "@material-ui/core";
 
-function stringToColor(string) {
+export function stringToColor(string) {
   if (!string) return "#000";
   let hash = 0;
   for (let i = 0; i < string.length; i += 1) {

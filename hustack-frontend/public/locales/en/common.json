@@ -15,6 +15,7 @@
   "create": "Create {{name}}",
   "groupMember": "Group members",
   "addMember": "Add member",
+  "addUserSuccess": "Add users successfully",
   "createGroup": "Create Group",
   "group": "Group",
   "group2": "group",

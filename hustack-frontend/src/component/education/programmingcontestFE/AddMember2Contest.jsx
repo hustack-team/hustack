@@ -196,7 +196,7 @@ export default function AddMember2Contest(props) {
       "post",
       `/contests/${contestId}/users`,
       (res) => {
-        successNoti("Users and groups were successfully added", 3000);
+        successNoti(t("common:addUserSuccess"), 3000);
         props.onAddedSuccessfully();
         setValue([]); // Clear selections
       },
@@ -367,3 +367,4 @@ export default function AddMember2Contest(props) {
     </>
   );
 }
+export { StyledAutocompletePopper };

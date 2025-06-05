@@ -22,11 +22,9 @@ import SuggestProblem from "component/education/programmingcontestFE/SuggestProb
 import UserContestProblemRole from "component/education/programmingcontestFE/UserContestProblemRole";
 import {Route, Switch, useRouteMatch} from "react-router";
 import ContestLibrarytList from "component/education/programmingcontestFE/ContestLibraryList"
-import ListGroupManager from "component/education/programmingcontestFE/ListGroupManager";
-import CreateGroup from "component/education/programmingcontestFE/CreateGroup";
 import GroupManager from "component/education/programmingcontestFE/GroupManager";
-import EditGroup from "component/education/programmingcontestFE/EditGroup";
 import GroupForm from "component/education/programmingcontestFE/GroupForm";
+import TeacherListGroup from "component/education/programmingcontestFE/TeacherListGroup";
 
 export default function ProgrammingContestRoutes() {
   let { path } = useRouteMatch();
@@ -90,7 +88,7 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/teacher-list-contest-manager`}
         />
         <Route
-          component={ListGroupManager}
+          component={TeacherListGroup}
           path={`${path}/teacher-list-group`}
         />
         <Route

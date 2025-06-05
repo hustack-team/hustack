@@ -9,7 +9,9 @@ import com.hust.baseweb.applications.programmingcontest.repo.TeacherGroupRelatio
 import com.hust.baseweb.applications.programmingcontest.repo.TeacherGroupService;
 import com.hust.baseweb.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,11 +29,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TeacherGroupServiceImpl implements TeacherGroupService {
 
-    private final TeacherGroupRepository teacherGroupRepository;
-    private final TeacherGroupRelationRepository teacherGroupRelationRepository;
-    private final UserService userService;
+    TeacherGroupRepository teacherGroupRepository;
+    TeacherGroupRelationRepository teacherGroupRelationRepository;
+    UserService userService;
 
     @Override
     @Transactional
@@ -47,6 +50,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AllGroupReponseDTO getGroup(UUID id, String userId) {
         TeacherGroup group = teacherGroupRepository.findById(id)
                                                    .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + id));
@@ -69,46 +73,35 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         return dto;
     }
 
-
     @Override
     public Page<ModelSearchGroupResult> getGroups(GroupFilter filter, String userId) {
-        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
-
-        String keyword = StringUtils.isNotBlank(filter.getKeyword()) ? filter.getKeyword().trim() : null;
-//        String status = StringUtils.isNotBlank(filter.getStatus()) ? filter.getStatus() : null;
-        List<UUID> excludeUuids = filter.getExcludeIds() != null ? filter.getExcludeIds().stream()
-                                                                         .map(UUID::fromString)
-                                                                         .collect(Collectors.toList()) : Collections.emptyList();
-
         filter.normalize();
+        String keyword = StringUtils.isNotBlank(filter.getKeyword()) ? filter.getKeyword().trim() : null;
 
+        int page = filter.getPage() < 0 ? 0 : filter.getPage();
+        int size = filter.getSize() <= 0 ? 10 : filter.getSize();
+        Pageable pageable = PageRequest.of(page, size);
 
         Page<TeacherGroup> teacherGroups;
-        if (keyword == null && excludeUuids.isEmpty()) {
+        if (keyword == null) {
             teacherGroups = teacherGroupRepository.findByCreatedBy(userId, pageable);
         } else {
             teacherGroups = teacherGroupRepository.findByUserIdAndNameContainingAndNotInExcludeIds(
-                userId, keyword != null ? keyword : "", excludeUuids, pageable);
+                userId, keyword != null ? keyword : "", pageable);
         }
 
-        List<UUID> groupIdsByUser = teacherGroupRelationRepository.findGroupIdsByUserId(userId);
+        return teacherGroups.map(this::convertToModelSearchGroupResult);
+    }
 
-        List<ModelSearchGroupResult> results = teacherGroups.getContent().stream()
-                                                            .filter(g -> g.getCreatedBy().equals(userId) || groupIdsByUser.contains(g.getId()))
-                                                            .map(g -> {
-                                                                ModelSearchGroupResult result = new ModelSearchGroupResult();
-                                                                result.setId(g.getId().toString());
-                                                                result.setName(g.getName());
-                                                                result.setMemberCount(teacherGroupRelationRepository.countByGroupId(g.getId()));
-//                                                                result.setStatus(g.getStatus());
-                                                                result.setDescription(g.getDescription());
-                                                                result.setCreatedBy(g.getCreatedBy());
-                                                                result.setLastModifiedDate(g.getLastModifiedDate());
-                                                                return result;
-                                                            })
-                                                            .collect(Collectors.toList());
-
-        return new PageImpl<>(results, pageable, teacherGroups.getTotalElements());
+    private ModelSearchGroupResult convertToModelSearchGroupResult(TeacherGroup group) {
+        ModelSearchGroupResult result = new ModelSearchGroupResult();
+        result.setId(group.getId().toString());
+        result.setName(group.getName());
+        result.setDescription(group.getDescription());
+        result.setCreatedBy(group.getCreatedBy());
+        result.setLastModifiedDate(group.getLastModifiedDate());
+        result.setMemberCount(teacherGroupRelationRepository.countByGroupId(group.getId()));
+        return result;
     }
 
     @Override

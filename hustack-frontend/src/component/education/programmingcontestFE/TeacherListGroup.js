@@ -12,10 +12,8 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 import { ConfirmDeleteDialog } from "component/dialog/ConfirmDeleteDialog";
-import StyledSelect from "../../select/StyledSelect";
 import { IconButton } from "@mui/material";
-import { LockOpen, LockOutlined } from "@material-ui/icons";
-import { width } from "@mui/system";
+import withScreenSecurity from "component/withScreenSecurity";
 
 const INITIAL_FILTER = { keyword: "" };
 
@@ -216,12 +214,7 @@ function TeacherListGroup() {
         hideToolBar
         options={{
           selection: false,
-          pageSize,
-          pageSizeOptions: [5, 10, 20],
-          pagination: true,
-          serverSide: true,
-          totalCount: totalElements,
-          page,
+          pageSize: pageSize,
           search: false,
           sorting: false,
         }}
@@ -245,4 +238,5 @@ function TeacherListGroup() {
   );
 }
 
-export default TeacherListGroup;
+const screenName = "SCR_TEACHER_GROUP_LIST";
+export default withScreenSecurity(TeacherListGroup, screenName, true);
