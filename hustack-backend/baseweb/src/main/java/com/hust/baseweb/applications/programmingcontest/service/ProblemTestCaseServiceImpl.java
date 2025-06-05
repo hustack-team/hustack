@@ -3521,6 +3521,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         for (UserContestProblemRole upr : lst) {
             ModelResponseUserProblemRole e = new ModelResponseUserProblemRole();
             e.setUserLoginId(upr.getUserId());
+            e.setFullname(userService.getUserFullName(upr.getUserId()));
             e.setProblemId(upr.getProblemId());
             e.setRoleId(upr.getRoleId());
             res.add(e);
@@ -3529,7 +3530,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     }
 
     @Override
-    public boolean addUserProblemRole(String userName, ModelUserProblemRole input) throws Exception {
+    public Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception {
         boolean isOwner = this.userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
             input.getProblemId(),
             userName,
@@ -3537,21 +3538,44 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (!isOwner) {
             throw new MiniLeetCodeException("You are not owner of this problem.", 403);
         }
-        List<UserContestProblemRole> L = userContestProblemRoleRepo.findAllByProblemIdAndUserIdAndRoleId(
-            input.getProblemId(),
-            input.getUserId(),
-            input.getRoleId());
-        if (L != null && L.size() > 0) {
-            return false;
-        }
-        UserContestProblemRole e = new UserContestProblemRole();
-        e.setUserId(input.getUserId());
-        e.setProblemId(input.getProblemId());
-        e.setRoleId(input.getRoleId());
-        e.setUpdateByUserId(userName);
-        e = userContestProblemRoleRepo.save(e);
 
-        return true;
+        List<String> userIds = input.getUserIds() != null ? input.getUserIds() : new ArrayList<>();
+        List<String> groupUserIds = new ArrayList<>();
+        if (input.getGroupIds() != null && !input.getGroupIds().isEmpty()) {
+            groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(input.getGroupIds());
+        }
+
+        Set<String> allUserIds = new HashSet<>();
+        allUserIds.addAll(userIds);
+        allUserIds.addAll(groupUserIds);
+
+        boolean success = true;
+        List<String> addedUsers = new ArrayList<>();
+        List<String> skippedUsers = new ArrayList<>();
+        for (String userId : allUserIds) {
+            List<UserContestProblemRole> L = userContestProblemRoleRepo.findAllByProblemIdAndUserIdAndRoleId(
+                input.getProblemId(),
+                userId,
+                input.getRoleId());
+            if (L != null && L.size() > 0) {
+                success = false;
+                skippedUsers.add(userId);
+                continue;
+            }
+            UserContestProblemRole e = new UserContestProblemRole();
+            e.setUserId(userId);
+            e.setProblemId(input.getProblemId());
+            e.setRoleId(input.getRoleId());
+            e.setUpdateByUserId(userName);
+            userContestProblemRoleRepo.save(e);
+            addedUsers.add(userId);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", success);
+        response.put("addedUsers", addedUsers);
+        response.put("skippedUsers", skippedUsers);
+        return response;
     }
 
     @Override
