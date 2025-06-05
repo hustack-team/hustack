@@ -22,35 +22,9 @@ import PrimaryButton from "../../button/PrimaryButton";
 import StandardTable from "component/table/StandardTable";
 import withScreenSecurity from "../../withScreenSecurity";
 import { Divider, Paper } from "@material-ui/core";
+import { stringAvatar, stringToColor } from "./AddMember2Contest";
 
-export function stringToColor(string) {
-  if (!string) return "#000";
-  let hash = 0;
-  for (let i = 0; i < string.length; i += 1) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  let color = "#";
-  for (let i = 0; i < 3; i += 1) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-  return color;
-}
 
-function stringAvatar(id, name) {
-  const text = name
-    ?.split(" ")
-    .filter((word) => word)
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2) || id.slice(0, 2);
-  return {
-    children: text?.toUpperCase(),
-    sx: {
-      bgcolor: stringToColor(id),
-    },
-  };
-}
 
 // const getStatuses = (t) => [
 //   { label: t("common:statusActive"), value: "ACTIVE" },

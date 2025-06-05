@@ -60,8 +60,6 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         return convertToAllGroupResponseDTO(group);
     }
 
-
-
     private AllGroupReponseDTO convertToAllGroupResponseDTO(TeacherGroup group) {
         AllGroupReponseDTO dto = new AllGroupReponseDTO();
         dto.setId(group.getId());
@@ -74,6 +72,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ModelSearchGroupResult> getGroups(GroupFilter filter, String userId) {
         filter.normalize();
         String keyword = StringUtils.isNotBlank(filter.getKeyword()) ? filter.getKeyword().trim() : null;
@@ -86,7 +85,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         if (keyword == null) {
             teacherGroups = teacherGroupRepository.findByCreatedBy(userId, pageable);
         } else {
-            teacherGroups = teacherGroupRepository.findByUserIdAndNameContainingAndNotInExcludeIds(
+            teacherGroups = teacherGroupRepository.findByUserIdAndNameContaining(
                 userId, keyword != null ? keyword : "", pageable);
         }
 
@@ -146,6 +145,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MemberDTO> getGroupMembers(UUID groupId, String userId) {
         TeacherGroup group = findById(groupId)
             .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
@@ -160,6 +160,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MemberDTO getGroupMember(UUID groupId, String userId, String currentUserId) {
         TeacherGroup group = findById(groupId)
             .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
@@ -210,11 +211,13 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<TeacherGroup> findById(UUID id) {
         return teacherGroupRepository.findById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TeacherGroup> findAll() {
         return teacherGroupRepository.findAll();
     }

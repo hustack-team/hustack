@@ -26,7 +26,7 @@ import UploadUserUpdateFullNameContestDialog from "./UploadUserUpdateFullNameCon
 import { t } from "i18next";
 import { Group } from "@mui/icons-material";
 
-function stringToColor(string) {
+export function stringToColor(string) {
   if (!string) return "#000";
   let hash = 0;
   let i;

@@ -37,7 +37,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Tooltip from '@mui/material/Tooltip';
 import { textAlign, width } from "@mui/system";
 import { makeStyles } from "@material-ui/core";
-import { StyledAutocompletePopper } from "./AddMember2Contest";
+import { stringAvatar, StyledAutocompletePopper } from "./AddMember2Contest";
 import { stringToColor } from "./GroupManager";
 
 const useStyles = makeStyles((theme) => ({
@@ -51,20 +51,6 @@ function PopperComponent(props) {
   return <StyledAutocompletePopper {...props} />;
 }
 
-function stringAvatar(id, name) {
-  const text = name
-    ?.split(" ")
-    .filter((word) => word)
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2) || id.slice(0, 2);
-  return {
-    children: text?.toUpperCase(),
-    sx: {
-      bgcolor: stringToColor(id),
-    },
-  };
-}
 
 function GroupForm() {
   const { groupId } = useParams();

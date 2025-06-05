@@ -15,10 +15,9 @@ public interface TeacherGroupRepository extends JpaRepository<TeacherGroup, UUID
 
     @Query("SELECT g FROM TeacherGroup g WHERE g.createdBy = :userId " +
            "AND (:keyword IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) ")
-//           "AND (:excludeIds IS NULL OR g.id NOT IN :excludeIds)")
-    Page<TeacherGroup> findByUserIdAndNameContainingAndNotInExcludeIds(
+    Page<TeacherGroup> findByUserIdAndNameContaining(
         @Param("userId") String userId,
         @Param("keyword") String keyword,
-//        @Param("excludeIds") List<UUID> excludeIds,
         Pageable pageable);
+
 }
