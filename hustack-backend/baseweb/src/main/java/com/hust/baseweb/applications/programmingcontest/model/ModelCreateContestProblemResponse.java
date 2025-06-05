@@ -36,7 +36,7 @@ public class ModelCreateContestProblemResponse {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
@@ -71,5 +71,10 @@ public class ModelCreateContestProblemResponse {
     List<String> roles;
 
     String sampleTestCase;
+
+    List<BlockCode> blockCodes;
+
+    Boolean canEditBlocks;
+
 }
 

@@ -4,6 +4,7 @@ import com.hust.baseweb.applications.programmingcontest.composite.CompositeConte
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,4 +51,7 @@ public class ContestProblem {
 
     @Column(name="forbidden_instructions")
     private String forbiddenInstructions;
+
+    @Column(name = "coefficient_point", precision = 10, scale = 2)
+    private BigDecimal coefficientPoint;
 }

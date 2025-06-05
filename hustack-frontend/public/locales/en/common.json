@@ -47,5 +47,14 @@
   "registered": "Registered",
   "complete": "Complete",
   "reset": "Reset",
-  "codeAuthorship": "Authorship (prediction)"
+  "codeAuthorship": "Authorship (prediction)",
+  "invalidInput": "Invalid request. Please check your input.",
+  "toggleBlockCodes": "Show/Hide Code",
+  "moveDown": "Move code block down",
+  "moveUp": "Move code block up",
+  "insertAbove": "Add code block above",
+  "insertBelow": "Add code block below",
+  "copyAllCode": "Copy all codes",
+  "individualBlocks": "Split all block codes",
+  "combinedBlock":"Combine all block codes"
 }
