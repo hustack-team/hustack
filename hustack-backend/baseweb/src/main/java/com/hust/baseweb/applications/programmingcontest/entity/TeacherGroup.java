@@ -32,13 +32,13 @@ public class TeacherGroup {
     String description;
 
     @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
+    LocalDateTime lastModifiedDate;
 
     @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    LocalDateTime createdDate;
 
     @Column(name = "last_modified_by", length = 60)
-    private String lastModifiedBy;
+    String lastModifiedBy;
 
     @PrePersist
     protected void onCreate() {

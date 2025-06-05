@@ -1,7 +1,10 @@
 package com.hust.baseweb.applications.programmingcontest.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -9,21 +12,22 @@ import java.util.UUID;
 @Table(name = "teacher_group_relation")
 @IdClass(TeacherGroupRelationId.class)
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TeacherGroupRelation {
 
     @Id
     @Column(name = "group_id")
-    private UUID groupId;
+    UUID groupId;
 
     @Id
     @Column(name = "user_id")
-    private String userId;
+    String userId;
 
     @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
+    LocalDateTime lastModifiedDate;
 
     @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    LocalDateTime createdDate;
 
     @PrePersist
     protected void onCreate() {
