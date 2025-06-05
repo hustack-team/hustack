@@ -20,6 +20,7 @@ import PrimaryButton from "../../../button/PrimaryButton";
 
 const baseColumn = {
   sortable: false,
+  headerClassName: 'wrap-header',
 };
 
 const rowsPerPage = [5, 10, 20];
@@ -37,6 +38,7 @@ function ExamManagement(props) {
       field: "name",
       headerName: "Tên kỳ thi",
       minWidth: 200,
+      flex: 1,
       ...baseColumn
     },
     // {
@@ -68,9 +70,9 @@ function ExamManagement(props) {
     },
     {
       field: "answerStatus",
-      headerName: "Trạng thái đáp án",
+      headerName: "Đáp án",
       ...baseColumn,
-      minWidth: 150,
+      minWidth: 80,
       renderCell: (rowData) => {
         if(rowData.value === 'NO_OPEN'){
           return (
@@ -86,10 +88,30 @@ function ExamManagement(props) {
       },
     },
     {
+      field: "scoreStatus",
+      headerName: "Điểm",
+      ...baseColumn,
+      minWidth: 80,
+      renderCell: (rowData) => {
+        if(rowData.value === 0){
+          return (
+            <strong style={{color: '#f50000c9'}}>Ẩn</strong>
+          )
+        }else if(rowData.value === 1){
+          return (
+            <strong style={{color: '#61bd6d'}}>Công bố</strong>
+          )
+        }else{
+          return ''
+        }
+      },
+    },
+    {
       field: "monitor",
       headerName: "Hình thức giám sát",
       ...baseColumn,
       minWidth: 160,
+      flex: 1,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return (
@@ -116,6 +138,7 @@ function ExamManagement(props) {
       headerName: "Khoá màn hình khi vi phạm",
       ...baseColumn,
       minWidth: 150,
+      flex: 1,
       renderCell: (rowData) => {
         if(rowData.value === 0){
           return 'Không khoá'
@@ -232,6 +255,7 @@ function ExamManagement(props) {
           blockScreen: 0,
           timeBlockScreen: null,
           answerStatus: "NO_OPEN",
+          scoreStatus: 0,
           startTime: "",
           endTime: "",
           examStudents: []

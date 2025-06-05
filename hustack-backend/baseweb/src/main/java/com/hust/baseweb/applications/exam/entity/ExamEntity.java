@@ -33,6 +33,9 @@ public class ExamEntity extends BaseEntity {
     @Column(name = "answer_status")
     private String answerStatus;
 
+    @Column(name = "score_status")
+    private Integer scoreStatus;
+
     @Column(name = "monitor")
     private Integer monitor;
 

@@ -207,7 +207,7 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    et.duration as examTestDuration, " +
                    "    et.description as examTestDescription, " +
                    "    er.id as examResultId, " +
-                   "    er.total_score as totalScore, " +
+                   "    case when e.score_status = 1 then er.total_score else null end as totalScore, " +
                    "    er.total_time as totalTime, " +
                    "    count(em.id) as totalViolate " +
                    "from " +
@@ -235,6 +235,7 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    et.duration, " +
                    "    et.description, " +
                    "    er.id, " +
+                   "    e.score_status, " +
                    "    er.total_score, " +
                    "    er.total_time ", nativeQuery = true)
     List<MyExamTestWithResultRes> findAllWithResultByExamId(@Param("userLogin") String userLogin,

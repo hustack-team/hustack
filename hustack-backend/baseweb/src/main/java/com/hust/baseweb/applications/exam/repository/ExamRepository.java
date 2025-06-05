@@ -79,6 +79,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    e.description, " +
                    "    e.status, " +
                    "    e.answer_status as answerStatus, " +
+                   "    e.score_status as scoreStatus, " +
                    "    e.monitor as monitor, " +
                    "    e.block_screen as blockScreen, " +
                    "    e.start_time as startTime, " +
@@ -193,7 +194,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    et.name as examTestName, " +
                    "    et.duration as examTestDuration, " +
                    "    er.id as examResultId, " +
-                   "    er.total_score as totalScore, " +
+                   "    case when e.score_status = 1 then er.total_score else null end as totalScore, " +
                    "    er.total_time as totalTime, " +
                    "    er.submited_at as submitedAt, " +
                    "    er.file_path as answerFiles, " +

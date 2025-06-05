@@ -22,6 +22,7 @@ public class ExamSaveReq {
     String description;
     Integer status;
     String answerStatus;
+    Integer scoreStatus;
     Integer monitor;
     Integer blockScreen;
     String startTime;

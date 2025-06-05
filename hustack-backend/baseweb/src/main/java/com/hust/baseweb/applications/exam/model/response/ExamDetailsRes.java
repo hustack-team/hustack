@@ -9,6 +9,7 @@ public interface ExamDetailsRes {
     String getDescription();
     Integer getStatus();
     String getAnswerStatus();
+    Integer getScoreStatus();
     Integer getMonitor();
     Integer getBlockScreen();
     String getStartTime();

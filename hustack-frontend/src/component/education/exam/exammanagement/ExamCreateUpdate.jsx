@@ -126,6 +126,17 @@ function ExamCreateUpdate(props) {
     }
   ]
 
+  const answerScoreList = [
+    {
+      value: 0,
+      name: 'Ẩn'
+    },
+    {
+      value: 1,
+      name: 'Công bố'
+    }
+  ]
+
   const monitorList = [
     {
       value: 0,
@@ -166,6 +177,7 @@ function ExamCreateUpdate(props) {
   const [name, setName] = useState(data?.name);
   const [status, setStatus] = useState(data?.status);
   const [answerStatus, setAnswerStatus] = useState(data?.answerStatus);
+  const [scoreStatus, setScoreStatus] = useState(data?.scoreStatus);
   const [monitor, setMonitor] = useState(data?.monitor);
   const [blockScreen, setBlockScreen] = useState(data?.blockScreen > 0 ? 1 : 0);
   const [timeBlockScreen, setTimeBlockScreen] = useState(data?.blockScreen);
@@ -196,8 +208,9 @@ function ExamCreateUpdate(props) {
       description: description,
       status: status,
       answerStatus: answerStatus,
+      scoreStatus,
       monitor: monitor,
-      blockScreen: blockScreen === 0 ? 0 : timeBlockScreen,
+      blockScreen: blockScreen === 0 ? 0 : +timeBlockScreen,
       startTime: formatDateTimeApi(startTime),
       endTime: formatDateTimeApi(endTime),
       examExamTests: examExamTests,
@@ -360,7 +373,7 @@ function ExamCreateUpdate(props) {
             </Typography>
             <form className={classes.root} noValidate autoComplete="off">
               <div>
-                <div>
+                <div style={{width: '100%'}}>
                   <TextField
                     autoFocus
                     required
@@ -368,6 +381,7 @@ function ExamCreateUpdate(props) {
                     disabled={!isCreate}
                     id="examCode"
                     label="Mã kỳ thi"
+                    style={{width: '20%'}}
                     placeholder="Nhập mã kỳ thi"
                     value={code}
                     onChange={(event) => {
@@ -385,7 +399,7 @@ function ExamCreateUpdate(props) {
                     label="Tên kỳ thi"
                     placeholder="Nhập tên kỳ thi"
                     value={name}
-                    style={{width: '50%'}}
+                    style={{width: '45%'}}
                     onChange={(event) => {
                       setName(event.target.value);
                     }}
@@ -393,15 +407,13 @@ function ExamCreateUpdate(props) {
                       shrink: true,
                     }}
                   />
-                </div>
-
-                <div>
                   <TextField
                     required
                     autoFocus
                     id="Examstatus"
                     select
                     label="Trạng thái"
+                    style={{width: '20%'}}
                     value={status}
                     onChange={(event) => {
                       setStatus(event.target.value);
@@ -415,12 +427,16 @@ function ExamCreateUpdate(props) {
                       })
                     }
                   </TextField>
+                </div>
+
+                <div>
                   <TextField
                     required
                     autoFocus
                     id="ExamAnswerstatus"
                     select
                     label="Trạng thái đáp án"
+                    style={{width: '20%'}}
                     value={answerStatus}
                     onChange={(event) => {
                       setAnswerStatus(event.target.value);
@@ -428,6 +444,26 @@ function ExamCreateUpdate(props) {
                   >
                     {
                       answerStatusList.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+                  <TextField
+                    required
+                    autoFocus
+                    id="ExamScorestatus"
+                    select
+                    label="Trạng thái điểm"
+                    value={scoreStatus}
+                    style={{width: '20%'}}
+                    onChange={(event) => {
+                      setScoreStatus(event.target.value);
+                    }}
+                  >
+                    {
+                      answerScoreList.map(item => {
                         return (
                           <MenuItem value={item.value}>{item.name}</MenuItem>
                         )

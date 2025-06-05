@@ -207,18 +207,32 @@ function ExamDetails(props) {
           <div>
             <div style={{display: "flex", justifyContent: 'space-between'}}>
               <div style={{display: "flex"}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Bắt đầu từ:</h4>
+                <span>{formatDateTime(data?.startTime)} - {formatDateTime(data?.endTime)}</span>
+              </div>
+            </div>
+
+            <div style={{display: "flex", justifyContent: 'space-between'}}>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Mã kỳ thi:</h4>
                 <span>{data?.code}</span>
               </div>
-              <div style={{display: "flex"}}>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái:</h4>
                 <span>{data?.status === 0 ? 'Chưa kích hoạt' : 'Kích hoạt'}</span>
               </div>
-              <div style={{display: "flex"}}>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái đáp án:</h4>
                 <span>{data?.answerStatus === 'NO_OPEN' ? 'Ẩn' : 'Hiện'}</span>
               </div>
-              <div style={{display: "flex"}}>
+            </div>
+
+            <div style={{display: "flex", justifyContent: 'space-between'}}>
+              <div style={{display: "flex", width: '30%'}}>
+                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Trạng thái điểm:</h4>
+                <span>{data?.scoreStatus === 0 ? 'Ẩn' : 'Công bố'}</span>
+              </div>
+              <div style={{display: "flex", width: '30%'}}>
                 <h4 style={{margin: '0 5px 0 0', padding: 0}}>Hình thức giám sát:</h4>
                 <span>
                   {{
@@ -230,23 +244,12 @@ function ExamDetails(props) {
               </div>
               {
                 (data?.monitor === 1 || data?.monitor === 2) && (
-                  <div style={{display: "flex"}}>
+                  <div style={{display: "flex", width: '30%'}}>
                     <h4 style={{margin: '0 5px 0 0', padding: 0}}>Khoá màn hình khi vi phạm:</h4>
                     <span>{data?.blockScreen === 0 ? 'Không khoá' : `${data?.blockScreen} giây`}</span>
                   </div>
                 )
               }
-            </div>
-
-            <div>
-              <div style={{display: "flex"}}>
-                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian bắt đầu:</h4>
-                <span>{formatDateTime(data?.startTime)}</span>
-              </div>
-              <div style={{display: "flex"}}>
-                <h4 style={{margin: '0 5px 0 0', padding: 0}}>Thời gian kết thúc:</h4>
-                <span>{formatDateTime(data?.endTime)}</span>
-              </div>
             </div>
 
             <div style={{display: "flex", flexDirection: "column"}}>
@@ -267,14 +270,14 @@ function ExamDetails(props) {
                         borderRadius: 2,
                         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
                         mb: 2,
-                        '&:before': { display: 'none' },
+                        '&:before': {display: 'none'},
                       }}
                     >
                       <AccordionSummary
-                        expandIcon={<ExpandMore />}
+                        expandIcon={<ExpandMore/>}
                         aria-controls={`panel${index}-content`}
                         id={`panel${index}-header`}
-                        style={{ flexDirection: 'row-reverse' , paddingLeft: 0}}
+                        style={{flexDirection: 'row-reverse', paddingLeft: 0}}
                       >
                         <Box display="flex" alignItems="center" width="100%" justifyContent="space-between">
                           <Box display="flex" alignItems="center" width="calc(100% - 90px)">
