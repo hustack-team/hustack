@@ -1,5 +1,5 @@
 import SearchIcon from "@mui/icons-material/Search";
-import { Button, InputBase } from "@mui/material";
+import { Button, InputBase, Tooltip } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -20,8 +20,9 @@ import {
   Popper,
   Stack,
   TextField,
-  Tooltip,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { autocompleteClasses } from "@mui/material/Autocomplete";
 import { styled } from "@mui/material/styles";
 import { debounce } from "@mui/material/utils";
@@ -30,36 +31,44 @@ import PrimaryButton from "component/button/PrimaryButton";
 import StyledSelect from "component/select/StyledSelect";
 import { Group } from "@mui/icons-material";
 import { isEmpty, trim } from "lodash";
-import { t } from "i18next";
 import { stringAvatar, StyledAutocompletePopper } from "./AddMember2Contest";
+import { useTranslation } from "react-i18next";
 
 function PopperComponent(props) {
   return <StyledAutocompletePopper {...props} />;
 }
 
+
 const useStyles = makeStyles((theme) => ({
   btn: { margin: "4px 8px" },
 }));
 
-const roles = [
-  {
-    label: "EDITOR",
-    value: PROBLEM_ROLE.EDITOR,
-  },
-  {
-    label: "VIEWER",
-    value: PROBLEM_ROLE.VIEWER,
-  },
-];
+
 
 function UserContestProblemRole() {
+  const { t } = useTranslation(["common", "validation"]);
+  const roles = [
+    {
+    label: t("common:owner"),
+    value: PROBLEM_ROLE.OWNER,
+    },
+    {
+      label: t("common:editor"),
+      value: PROBLEM_ROLE.EDITOR,
+    },
+    {
+      label: t("common:viewer"),
+      value: PROBLEM_ROLE.VIEWER,
+    },
+  ];
+
   const { problemId } = useParams();
   const classes = useStyles();
   const [userRoles, setUserRoles] = useState([]);
   const [value, setValue] = useState([]);
   const [options, setOptions] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [selectedRole, setSelectedRole] = useState(roles[0].value);
+  const [selectedRole, setSelectedRole] = useState(roles[1].value);
 
   const delayedSearch = useMemo(
     () =>
@@ -75,42 +84,73 @@ function UserContestProblemRole() {
   );
 
   const columnUserRoles = [
-    { title: "ID", field: "userLoginId" },
-    { title: t("common:fullName"), field: "fullname" },
-    { title: t("common:role"), field: "roleId" },
+    {
+      title: t("common:member"),
+      field: "userLoginId",
+      cellStyle: { width: 300 },
+      render: (rowData) => (
+        <Stack direction="row" alignItems="center">
+          <ListItemAvatar>
+            <Avatar
+              alt="account avatar"
+              {...stringAvatar(rowData.userLoginId, rowData.fullname)}
+            />
+          </ListItemAvatar>
+          <ListItemText
+            primary={rowData.fullname}
+            secondary={rowData.userLoginId}
+          />
+        </Stack>
+      ),
+    },
+    {
+      title: t("common:role"),
+      field: "roleId",
+      render: (rowData) => 
+        roles.find((role) => role.value === rowData.roleId)?.label || rowData.roleId,
+    },
     {
       title: t("common:action"),
+      sorting: false,
+      cellStyle: { 
+        width: 50,
+        textAlign: "center"  
+      }, 
+      headerStyle: {
+        textAlign: "center"   
+      },
       render: (row) => (
-        <Button onClick={() => handleRemove(row["userLoginId"], row["roleId"])}>
-          Remove
-        </Button>
+        <Tooltip title={t('common:delete')}>
+          <IconButton
+            onClick={() => handleRemove(row.userLoginId, row.roleId)}
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       ),
     },
   ];
 
   function handleRemove(userId, roleId) {
-    console.log("remove " + userId + "," + roleId);
     let body = {
       problemId: problemId,
       userId: userId,
       roleId: roleId,
     };
+    const roleLabel = roles.find((role) => role.value === roleId)?.label || roleId;
     request(
       "delete",
       "/problems/users/role",
       (res) => {
         if (res.data)
-          successNoti("Remove role of user to problem successfully", 3000);
+          successNoti(t("common:removeRoleUser"), 3000);
         else
           errorNoti(
-            "Cannot remove user " +
-              userId +
-              " with role " +
-              roleId +
-              " from the problem",
+            `Cannot remove user ${userId} with role ${roleLabel} from the problem`,
             3000
           );
-          getUserRoles();
+        getUserRoles();
       },
       {
         500: () => {
@@ -121,26 +161,26 @@ function UserContestProblemRole() {
     ).then();
   }
 
-function onAddMembers() {
-  const userIds = value
-    .filter((item) => item.type === "user")
-    .map((user) => user.id);
-  const groupIds = value
-    .filter((item) => item.type === "group")
-    .map((group) => group.id);
+  function onAddMembers() {
+    const userIds = value
+      .filter((item) => item.type === "user")
+      .map((user) => user.id);
+    const groupIds = value
+      .filter((item) => item.type === "group")
+      .map((group) => group.id);
 
-  let body = {
-    problemId: problemId,
-    userIds: userIds,
-    groupIds: groupIds,
-    roleId: selectedRole,
-  };
+    let body = {
+      problemId: problemId,
+      userIds: userIds,
+      groupIds: groupIds,
+      roleId: selectedRole,
+    };
 
-  request(
+    request(
       "post",
       "/problems/users/role",
       (res) => {
-        successNoti("Add user(s)/group(s) to problem successfully", 3000);
+        successNoti(t("common:addRoleUser"), 3000);
         getUserRoles();
         setValue([]);
       },
@@ -155,7 +195,6 @@ function onAddMembers() {
       body
     ).then();
   } 
-
 
   function getUserRoles() {
     request("get", "/problems/" + problemId + "/users/role", (res) => {
@@ -328,7 +367,7 @@ function onAddMembers() {
           required
           key={"Role"}
           label={t("common:role")}
-          options={roles}
+          options={roles.filter(role => role.value !== PROBLEM_ROLE.OWNER)}
           value={selectedRole}
           onChange={(e) => {
             setSelectedRole(e.target.value);
@@ -340,7 +379,7 @@ function onAddMembers() {
             className={classes.btn}
             onClick={onAddMembers}
           >
-            {t("common:addMember")}
+            {t("common:share")}
           </PrimaryButton>
         </Stack>
       </Stack>
