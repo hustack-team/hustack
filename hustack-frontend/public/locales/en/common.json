@@ -17,6 +17,8 @@
   "groupMember": "Group members",
   "addMember": "Add member",
   "addUserSuccess": "Add users successfully",
+  "addUserFail": "Failed to add users to the group",
+  "removeUserFail": "Failed to remove meber",
   "createGroup": "Create Group",
   "group": "Group",
   "group2": "group",

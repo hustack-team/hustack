@@ -20,4 +20,24 @@ public interface TeacherGroupRepository extends JpaRepository<TeacherGroup, UUID
         @Param("keyword") String keyword,
         Pageable pageable);
 
+    @Query("SELECT g, COUNT(tgr) as memberCount " +
+           "FROM TeacherGroup g " +
+           "LEFT JOIN TeacherGroupRelation tgr ON tgr.groupId = g.id " +
+           "WHERE g.createdBy = :userId " +
+           "GROUP BY g")
+    Page<Object[]> findByCreatedByWithMemberCount(
+        @Param("userId") String userId,
+        Pageable pageable);
+
+    @Query("SELECT g, COUNT(tgr) as memberCount " +
+           "FROM TeacherGroup g " +
+           "LEFT JOIN TeacherGroupRelation tgr ON tgr.groupId = g.id " +
+           "WHERE g.createdBy = :userId " +
+           "AND (:keyword IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "GROUP BY g")
+    Page<Object[]> findByUserIdAndNameContainingWithMemberCount(
+        @Param("userId") String userId,
+        @Param("keyword") String keyword,
+        Pageable pageable);
+
 }

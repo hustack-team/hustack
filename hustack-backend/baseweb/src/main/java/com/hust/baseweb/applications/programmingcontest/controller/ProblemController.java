@@ -187,6 +187,7 @@ public class ProblemController {
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/problems/users/role")
     public ResponseEntity<?> addContestProblemRole(Principal principal, @RequestBody ModelUserProblemRoleInput input) {
         try {

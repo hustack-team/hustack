@@ -23,40 +23,7 @@ import StandardTable from "component/table/StandardTable";
 import withScreenSecurity from "../../withScreenSecurity";
 import { Divider, Paper } from "@material-ui/core";
 import { stringAvatar, stringToColor } from "./AddMember2Contest";
-
-
-
-// const getStatuses = (t) => [
-//   { label: t("common:statusActive"), value: "ACTIVE" },
-//   { label: t("common:statusInactive"), value: "INACTIVE" },
-// ];
-
-function detail(key, value, sx, helpText) {
-  return (
-    <Stack>
-      <Typography variant="subtitle2" sx={{ fontWeight: 600, ...sx?.key }}>
-        {helpText ? (
-          <>
-            {key}
-            <Tooltip arrow title={helpText}>
-              <IconButton sx={{ p: 0.5, pt: 0 }}>
-                <HelpOutlineIcon sx={{ fontSize: 16, color: "#000000de" }} />
-              </IconButton>
-            </Tooltip>
-          </>
-        ) : (
-          key
-        )}
-      </Typography>
-      <Typography>{value}</Typography>
-      {helpText && (
-        <Typography variant="caption" color="error">
-          {helpText}
-        </Typography>
-      )}
-    </Stack>
-  );
-}
+import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
 
 function GroupManager({ screenAuthorization }) {
   const { groupId } = useParams();

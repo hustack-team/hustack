@@ -41,7 +41,6 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     public GroupMemberDTO createGroup(GroupMemberDTO groupDTO, String userId) throws IllegalArgumentException {
         TeacherGroup group = new TeacherGroup();
         group.setName(groupDTO.getName());
-//        group.setStatus(groupDTO.getStatus());
         group.setDescription(groupDTO.getDescription());
         group.setCreatedBy(userId);
 
@@ -52,11 +51,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Override
     @Transactional(readOnly = true)
     public AllGroupReponseDTO getGroup(UUID id, String userId) {
-        TeacherGroup group = teacherGroupRepository.findById(id)
-                                                   .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + id));
-        if (!group.getCreatedBy().equals(userId)) {
-            throw new SecurityException("User does not have permission to access this group");
-        }
+        TeacherGroup group = verifyGroupAccess(id, userId);
         return convertToAllGroupResponseDTO(group);
     }
 
@@ -64,7 +59,6 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         AllGroupReponseDTO dto = new AllGroupReponseDTO();
         dto.setId(group.getId());
         dto.setName(group.getName());
-//        dto.setStatus(group.getStatus());
         dto.setCreatedBy(group.getCreatedBy());
         dto.setDescription(group.getDescription());
         dto.setLastModifiedDate(group.getLastModifiedDate());
@@ -81,63 +75,56 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         int size = filter.getSize() <= 0 ? 10 : filter.getSize();
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<TeacherGroup> teacherGroups;
+        Page<Object[]> resultPage;
         if (keyword == null) {
-            teacherGroups = teacherGroupRepository.findByCreatedBy(userId, pageable);
+            resultPage = teacherGroupRepository.findByCreatedByWithMemberCount(userId, pageable);
         } else {
-            teacherGroups = teacherGroupRepository.findByUserIdAndNameContaining(
-                userId, keyword != null ? keyword : "", pageable);
+            resultPage = teacherGroupRepository.findByUserIdAndNameContainingWithMemberCount(userId, keyword, pageable);
         }
 
-        return teacherGroups.map(this::convertToModelSearchGroupResult);
+        return resultPage.map(this::convertToModelSearchGroupResult);
     }
 
-    private ModelSearchGroupResult convertToModelSearchGroupResult(TeacherGroup group) {
-        ModelSearchGroupResult result = new ModelSearchGroupResult();
-        result.setId(group.getId().toString());
-        result.setName(group.getName());
-        result.setDescription(group.getDescription());
-        result.setCreatedBy(group.getCreatedBy());
-        result.setLastModifiedDate(group.getLastModifiedDate());
-        result.setMemberCount(teacherGroupRelationRepository.countByGroupId(group.getId()));
-        return result;
+    private ModelSearchGroupResult convertToModelSearchGroupResult(Object[] result) {
+        TeacherGroup group = (TeacherGroup) result[0];
+        Long memberCount = (Long) result[1];
+
+        ModelSearchGroupResult model = new ModelSearchGroupResult();
+        model.setId(group.getId().toString());
+        model.setName(group.getName());
+        model.setDescription(group.getDescription());
+        model.setCreatedBy(group.getCreatedBy());
+        model.setLastModifiedDate(group.getLastModifiedDate());
+        model.setMemberCount(memberCount.intValue());
+        return model;
     }
 
     @Override
     @Transactional
     public GroupMemberDTO updateGroup(UUID id, GroupMemberDTO groupDTO, String userId) {
-        TeacherGroup group = findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + id));
-        if (!group.getCreatedBy().equals(userId)) {
-            throw new SecurityException("User does not have permission to update this group");
-        }
+        TeacherGroup group = verifyGroupAccess(id, userId);
+
         group.setName(groupDTO.getName());
-//        group.setStatus(groupDTO.getStatus());
         group.setDescription(groupDTO.getDescription());
 
-        TeacherGroup updatedGroup = update(id, group);
+        TeacherGroup updatedGroup = teacherGroupRepository.save(group);
+
         return convertToGroupDTO(updatedGroup);
     }
+
+
 
     @Override
     @Transactional
     public void deleteGroup(UUID id, String userId) {
-        TeacherGroup group = findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + id));
-        if (!group.getCreatedBy().equals(userId)) {
-            throw new SecurityException("User does not have permission to delete this group");
-        }
+        verifyGroupAccess(id, userId);
         deleteById(id);
     }
 
     @Override
     @Transactional
     public List<MemberDTO> addGroupMembers(UUID groupId, List<String> userIds, String userId) {
-        TeacherGroup group = findById(groupId)
-            .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
-        if (!group.getCreatedBy().equals(userId)) {
-            throw new SecurityException("User does not have permission to modify this group");
-        }
+        verifyGroupAccess(groupId, userId);
         List<TeacherGroupRelation> relations = addMembers(groupId, userIds);
         return relations.stream()
                         .map(this::convertToMemberDTO)
@@ -147,11 +134,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Override
     @Transactional(readOnly = true)
     public List<MemberDTO> getGroupMembers(UUID groupId, String userId) {
-        TeacherGroup group = findById(groupId)
-            .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
-        if (!group.getCreatedBy().equals(userId)) {
-            throw new SecurityException("User does not have permission to access this group");
-        }
+        verifyGroupAccess(groupId, userId);
         return teacherGroupRelationRepository.findAll()
                                              .stream()
                                              .filter(relation -> relation.getGroupId().equals(groupId))
@@ -162,11 +145,7 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Override
     @Transactional(readOnly = true)
     public MemberDTO getGroupMember(UUID groupId, String userId, String currentUserId) {
-        TeacherGroup group = findById(groupId)
-            .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
-        if (!group.getCreatedBy().equals(currentUserId)) {
-            throw new SecurityException("User does not have permission to access this group");
-        }
+        verifyGroupAccess(groupId, currentUserId);
         TeacherGroupRelationId id = new TeacherGroupRelationId();
         id.setGroupId(groupId);
         id.setUserId(userId);
@@ -178,12 +157,17 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Override
     @Transactional
     public void removeGroupMember(UUID groupId, String userId, String currentUserId) {
-        TeacherGroup group = findById(groupId)
-            .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
-        if (!group.getCreatedBy().equals(currentUserId)) {
-            throw new SecurityException("User does not have permission to modify this group");
-        }
+        verifyGroupAccess(groupId, currentUserId);
         removeMember(groupId, userId);
+    }
+
+    private TeacherGroup verifyGroupAccess(UUID groupId, String currentUserId) {
+        TeacherGroup group = teacherGroupRepository.findById(groupId)
+                                                   .orElseThrow(() -> new EntityNotFoundException("TeacherGroup not found with id: " + groupId));
+        if (!group.getCreatedBy().equals(currentUserId)) {
+            throw new SecurityException("User does not have permission to access this group");
+        }
+        return group;
     }
 
     @Override
@@ -220,21 +204,6 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Transactional(readOnly = true)
     public List<TeacherGroup> findAll() {
         return teacherGroupRepository.findAll();
-    }
-
-    @Override
-    @Transactional
-    public TeacherGroup update(UUID id, TeacherGroup updatedGroup) {
-        Optional<TeacherGroup> existingGroup = teacherGroupRepository.findById(id);
-        if (existingGroup.isPresent()) {
-            TeacherGroup group = existingGroup.get();
-            group.setName(updatedGroup.getName());
-//            group.setStatus(updatedGroup.getStatus());
-            group.setDescription(updatedGroup.getDescription());
-            return teacherGroupRepository.save(group);
-        } else {
-            throw new RuntimeException("TeacherGroup not found with id: " + id);
-        }
     }
 
     @Override
@@ -278,13 +247,11 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         GroupMemberDTO dto = new GroupMemberDTO();
         dto.setId(group.getId());
         dto.setName(group.getName());
-//        dto.setStatus(group.getStatus());
         dto.setDescription(group.getDescription());
         dto.setCreatedBy(group.getCreatedBy());
         dto.setLastModifiedDate(group.getLastModifiedDate());
         return dto;
     }
-
 
     private MemberDTO convertToMemberDTO(TeacherGroupRelation relation) {
         MemberDTO dto = new MemberDTO();

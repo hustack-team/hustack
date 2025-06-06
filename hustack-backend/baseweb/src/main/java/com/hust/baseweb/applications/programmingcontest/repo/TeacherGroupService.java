@@ -14,7 +14,6 @@ public interface TeacherGroupService {
     TeacherGroup create(TeacherGroup teacherGroup, String creatorUserId, List<String> userIds);
     Optional<TeacherGroup> findById(UUID id);
     List<TeacherGroup> findAll();
-    TeacherGroup update(UUID id, TeacherGroup updatedGroup);
     void deleteById(UUID id);
     List<TeacherGroupRelation> addMembers(UUID groupId, List<String> userIds);
     void removeMember(UUID groupId, String userId);

@@ -26,6 +26,8 @@
   "groupMember": "Thành viên nhóm",
   "addMember": "Thêm thành viên",
   "addUserSuccess": "Thêm người dùng thành công",
+  "addUserFail": "Xảy ra lỗi khi thêm người dùng vào nhóm",
+  "removeUserFail": "Xảy ra lỗi khi xóa người dùng khỏi nhóm",
   "searchMemberGroup": "Tìm kiếm bằng tên hoặc ID của người dùng, nhóm",
   "searchMemberGroupTitle": "Tìm kiếm người dùng hoặc nhóm",
   "searchMember": "Tìm kiếm bằng tên hoặc ID của người dùng",

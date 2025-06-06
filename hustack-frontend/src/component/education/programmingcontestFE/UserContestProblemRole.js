@@ -34,11 +34,6 @@ import { isEmpty, trim } from "lodash";
 import { stringAvatar, StyledAutocompletePopper } from "./AddMember2Contest";
 import { useTranslation } from "react-i18next";
 
-function PopperComponent(props) {
-  return <StyledAutocompletePopper {...props} />;
-}
-
-
 const useStyles = makeStyles((theme) => ({
   btn: { margin: "4px 8px" },
 }));
@@ -303,7 +298,7 @@ function UserContestProblemRole() {
           multiple
           fullWidth
           size="small"
-          PopperComponent={PopperComponent}
+          PopperComponent={StyledAutocompletePopper}
           getOptionLabel={(option) =>
             option.type === "group" ? getGroupDisplayName(option) : option.name
           }

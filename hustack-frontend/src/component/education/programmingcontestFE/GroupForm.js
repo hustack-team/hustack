@@ -47,10 +47,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function PopperComponent(props) {
-  return <StyledAutocompletePopper {...props} />;
-}
-
 
 function GroupForm() {
   const { groupId } = useParams();
@@ -136,7 +132,7 @@ function GroupForm() {
         },
         {
           onError: (error) => {
-            errorNoti("Failed to add users to the group", 3000);
+            errorNoti(t("common:addUserFail"), 3000);
             console.error("Error adding members:", error);
             setLoading(false);
           },
@@ -166,7 +162,7 @@ function GroupForm() {
         },
         {
           onError: (err) => {
-            errorNoti(err?.response?.data?.message || "Failed to remove member", 3000);
+            errorNoti(t("common:removeUserFail"), 3000);
             setLoading(false);
           },
         }
@@ -192,7 +188,6 @@ function GroupForm() {
       },
       {
         onError: (err) => {
-          errorNoti("Failed to fetch group details", 3000);
           console.error("Error fetching group details:", err);
           setFetching(false);
         },
@@ -214,13 +209,6 @@ function GroupForm() {
       },
       {
         onError: (err) => {
-          if (err.response?.status === 404) {
-            errorNoti("Group not found", 3000);
-          } else if (err.response?.status === 403) {
-            errorNoti("You are not authorized to view group members", 3000);
-          } else {
-            errorNoti("Failed to fetch members", 3000);
-          }
           console.error("Error fetching members:", err);
         },
       }
@@ -387,7 +375,7 @@ function GroupForm() {
                 multiple
                 fullWidth
                 size="small"
-                PopperComponent={PopperComponent}
+                PopperComponent={StyledAutocompletePopper}
                 getOptionLabel={(option) => option.fullName || ""}
                 filterOptions={(x) => x}
                 options={searchOptions}

@@ -3516,17 +3516,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Override
     public List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId) {
-        List<UserContestProblemRole> lst = userContestProblemRoleRepo.findAllByProblemId(problemId);
-        List<ModelResponseUserProblemRole> res = new ArrayList();
-        for (UserContestProblemRole upr : lst) {
-            ModelResponseUserProblemRole e = new ModelResponseUserProblemRole();
-            e.setUserLoginId(upr.getUserId());
-            e.setFullname(userService.getUserFullName(upr.getUserId()));
-            e.setProblemId(upr.getProblemId());
-            e.setRoleId(upr.getRoleId());
-            res.add(e);
-        }
-        return res;
+        return userContestProblemRoleRepo.findAllByProblemIdWithFullName(problemId);
     }
 
     @Override
