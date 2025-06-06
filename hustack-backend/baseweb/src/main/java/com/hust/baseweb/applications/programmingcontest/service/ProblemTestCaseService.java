@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ProblemTestCaseService {
@@ -241,7 +242,7 @@ public interface ProblemTestCaseService {
 
     List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId);
 
-    boolean addUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
+    Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception;
 
     boolean removeUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
 

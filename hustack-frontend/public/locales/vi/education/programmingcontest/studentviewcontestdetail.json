@@ -2,6 +2,7 @@
   "ID": "ID",
   "problem": "Bài tập",
   "problemId": "Mã bài tập",
+  "problemCode": "Mã bài tập",
   "level": "Mức độ",
   "submitted": "Đã nộp",
   "accepted": "Đã hoàn thành",

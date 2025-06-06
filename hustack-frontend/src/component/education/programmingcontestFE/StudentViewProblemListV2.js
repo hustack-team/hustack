@@ -46,6 +46,17 @@ export default function StudentViewProblemList() {
       ),
     },
     {
+      title: t("problemCode"),
+      field: "problemCode",
+      align: "center",
+      cellStyle: { minWidth: 120 },
+      render: (rowData) => (
+        <Typography component="span" variant="body2" fontFamily="monospace">
+          {rowData.problemCode}
+        </Typography>
+      )
+    },
+    {
       title: t("level"),
       field: "levelId",
       align: 'center',

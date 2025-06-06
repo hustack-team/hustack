@@ -23,26 +23,23 @@ import {useEffect, useMemo, useState} from "react";
 import {successNoti} from "utils/notification";
 import UploadUserToContestDialog from "./UploadUserToContestDialog";
 import UploadUserUpdateFullNameContestDialog from "./UploadUserUpdateFullNameContestDialog";
+import { t } from "i18next";
+import { Group } from "@mui/icons-material";
 
-
-// https://mui.com/material-ui/react-avatar/#letter-avatars
-function stringToColor(string) {
+export function stringToColor(string) {
   if (!string) return "#000";
   let hash = 0;
   let i;
 
-  /* eslint-disable no-bitwise */
   for (i = 0; i < string.length; i += 1) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
 
   let color = "#";
-
   for (i = 0; i < 3; i += 1) {
     const value = (hash >> (i * 8)) & 0xff;
     color += `00${value.toString(16)}`.slice(-2);
   }
-  /* eslint-enable no-bitwise */
 
   return color;
 }
@@ -63,15 +60,12 @@ const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
     margin: 0,
     padding: 8,
     borderRadius: 8,
-    // backgroundColor: "black",
   },
   [`& .${autocompleteClasses.listbox}`]: {
     padding: 0,
-    // backgroundColor: "orange",
     [`& .${autocompleteClasses.option}`]: {
       padding: "0px 8px",
       borderRadius: 8,
-      // backgroundColor: "red",
       "&:hover": {
         backgroundColor: "#eeeeee",
       },
@@ -80,8 +74,6 @@ const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
 }));
 
 export function PopperComponent(props) {
-  // console.log(props);
-  // const { disablePortal, anchorEl, open, ...other } = props;
   return <StyledAutocompletePopper {...props} />;
 }
 
@@ -121,53 +113,82 @@ export default function AddMember2Contest(props) {
   const [openUploadToUpdateUserFullnameDialog, setOpenUploadToUpdateUserFullnameDialog] = useState(false);
 
   //
-  const [value, setValue] = useState(undefined);
+  const [value, setValue] = useState([]);
   const [options, setOptions] = useState([]);
-  // const [roles, setRoles] = useState([]);
   const [keyword, setKeyword] = useState("");
 
   const delayedSearch = useMemo(
     () =>
-      debounce(({ keyword, exclude }, callback) => {
-        search(
-          { keyword, exclude, pageSize: defaultPageSize, page: 1 },
-          callback
-        );
+      debounce(({ keyword, excludeUsers, excludeGroups }, callback) => {
+        Promise.all([
+          searchUsers({ keyword, excludeUsers, pageSize: defaultPageSize, page: 1 }),
+          searchGroups({ keyword, excludeGroups, pageSize: defaultPageSize, page: 1 }),
+        ]).then(([userResults, groupResults]) => {
+          callback([...userResults, ...groupResults]);
+        });
       }, 400),
     []
   );
 
-  function search({ keyword, exclude, pageSize, page }, callback) {
-    request(
-      "get",
-      // "/contests/" + contestId + "/users" +
-      `/users?size=${pageSize}&page=${page - 1}&keyword=${keyword}${
-        exclude
-          ? exclude.map((user) => "&exclude=" + user.userName).join("")
-          : ""
-      }`,
-      (res) => {
-        const data = res.data.content.map((e) => {
-          const user = {
-            userName: e.userLoginId,
-            fullName: `${e.firstName || ""} ${e.lastName || ""}`,
-          };
+  function searchUsers({ keyword, excludeUsers, pageSize, page }) {
+    return new Promise((resolve) => {
+      request(
+        "get",
+        `/users?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${
+          excludeUsers
+            ? excludeUsers.map((id) => "&exclude=" + id).join("")
+            : ""
+        }`,
+        (res) => {
+          const data = res.data.content.map((e) => {
+            const user = {
+              id: e.userLoginId,
+              name: `${e.firstName || ""} ${e.lastName || ""}`,
+              type: "user",
+            };
+            if (isEmpty(trim(user.name))) {
+              user.name = "Anonymous";
+            }
+            return user;
+          });
+          resolve(data);
+        }
+      );
+    });
+  }
 
-          if (isEmpty(trim(user.fullName))) {
-            user.fullName = "Anonymous";
-          }
-
-          return user;
-        });
-
-        callback(data);
-      }
-    );
+  function searchGroups({ keyword, excludeGroups, pageSize, page }) {
+    return new Promise((resolve) => {
+      request(
+        "get",
+        `/groups?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${
+          excludeGroups
+            ? excludeGroups.map((id) => "&exclude=" + id).join("")
+            : ""
+        }`,
+        (res) => {
+          const data = res.data.content
+            .filter((e) => e.memberCount > 0)
+            .map((e) => ({
+              id: e.id,
+              name: e.name,
+              memberCount: e.memberCount,
+              description: e.description,
+              type: "group",
+            }));
+          resolve(data);
+        }
+      );
+    });
   }
 
   function onAddMembers() {
+    const userIds = value.filter((item) => item.type === "user").map((user) => user.id);
+    const groupIds = value.filter((item) => item.type === "group").map((group) => group.id);
+
     let body = {
-      userIds: value.map((user) => user.userName),
+      userIds,
+      groupIds,
       role: selectedRole,
     };
 
@@ -175,8 +196,9 @@ export default function AddMember2Contest(props) {
       "post",
       `/contests/${contestId}/users`,
       (res) => {
-        successNoti("Users were successfully added", 3000);
+        successNoti(t("common:addUserSuccess"), 3000);
         props.onAddedSuccessfully();
+        setValue([]); // Clear selections
       },
       {},
       body
@@ -186,29 +208,12 @@ export default function AddMember2Contest(props) {
   useEffect(() => {
     let active = true;
 
-    // if (keyword === "" && value) {
-    //   setOptions(value ? [value] : []);
-    //   return undefined;
-    // }
+    const excludeUsers = value.filter((item) => item.type === "user").map((item) => item.id);
+    const excludeGroups = value.filter((item) => item.type === "group").map((item) => item.id);
 
-    // console.log(value);
-    const excludeIds = value;
-    delayedSearch({ keyword, exclude: excludeIds }, (results) => {
+    delayedSearch({ keyword, excludeUsers, excludeGroups }, (results) => {
       if (active) {
-        let newOptions = [];
-
-        // console.log("before combine, value", value);
-        // combine exist option with new options
-        // if (value) {
-        //   newOptions = value;
-        // }
-
-        if (results) {
-          newOptions = [...newOptions, ...results];
-        }
-
-        // console.log("NEWOPS", newOptions);
-        setOptions(newOptions);
+        setOptions(results);
       }
     });
 
@@ -216,6 +221,16 @@ export default function AddMember2Contest(props) {
       active = false;
     };
   }, [value, keyword, delayedSearch]);
+
+  const getGroupDisplayName = (group) => {
+    const memberText = group.memberCount === 1 ? t("common:countMember") : t("common:countMembers");
+    return `${group.name} (${group.memberCount} ${memberText})`;
+  };
+
+  const formatDescription = (description) => {
+    if (!description) return "";
+    return description.replace(/\n/g, " ").trim();
+  };
 
   return (
     <>
@@ -236,57 +251,64 @@ export default function AddMember2Contest(props) {
           fullWidth
           size="small"
           PopperComponent={PopperComponent}
-          getOptionLabel={(option) => {
-            // console.log("getOptionLabel with option", option);
-            return option.fullName || "";
-          }}
+          getOptionLabel={(option) =>
+            option.type === "group" ? getGroupDisplayName(option) : option.name
+          }
           filterOptions={(x) => x} // disable filtering on client
           options={options}
-          // autoComplete
-          // includeInputInList
-          // filterSelectedOptions
-          // value={value}
+          value={value}
           noOptionsText="No matches found"
           onChange={(event, newValue) => {
-            // console.log("onChange with new value:", newValue);
-            setOptions(newValue ? [newValue, ...options] : options);
             setValue(newValue);
+            setOptions(newValue.concat(options.filter((opt) => !newValue.some((v) => v.id === opt.id))));
           }}
-          onInputChange={(event, newInputValue, reason) => {
+          onInputChange={(event, newInputValue) => {
             setKeyword(newInputValue);
           }}
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Users"
-              placeholder="Search by id or name"
+              label={t("common:searchMemberGroupTitle")}
+              placeholder={t("common:searchMemberGroup")}
               inputProps={{
                 ...params.inputProps,
-                autoComplete: "new-password", // disable autocomplete and autofill
+                autoComplete: "new-password",
               }}
             />
           )}
-          renderOption={(props, option) => {
-            // console.log(props);
-            // console.log(option);
-            if (Array.isArray(option) && option.length === 0) return null;
-            else
-              return (
-                // props include key with value = option.fullName so must override
-                <ListItem {...props} key={option.userName} sx={{ p: 0 }}>
-                  <ListItemAvatar>
-                    <Avatar
-                      alt="account avatar"
-                      {...stringAvatar(option.userName, option.fullName)}
-                    />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={option.fullName}
-                    secondary={`${option.userName}`}
+          renderOption={(props, option, { selected }) => (
+            <ListItem
+              {...props}
+              key={option.id}
+              sx={{ p: 0, color: selected && option.type === "group" ? "#1976d2" : "inherit" }}
+            >
+              {option.type === "user" ? (
+                <ListItemAvatar>
+                  <Avatar
+                    alt="account avatar"
+                    {...stringAvatar(option.id, option.name)}
                   />
-                </ListItem>
-              );
-          }}
+                </ListItemAvatar>
+              ) : (
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: "#1976d2" }}>
+                    <Group/>
+                  </Avatar>
+                </ListItemAvatar>
+              )}
+              <ListItemText
+                primary={option.type === "group" ? getGroupDisplayName(option) : option.name}
+                secondary={option.type === "group" ? formatDescription(option.description) : option.id}
+                secondaryTypographyProps={{
+                  sx: {
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }
+                }}
+              />
+            </ListItem>
+          )}
         />
         <StyledSelect
           required
@@ -300,7 +322,7 @@ export default function AddMember2Contest(props) {
         />
         <Stack direction={"row"} spacing={2}>
           <PrimaryButton
-            disabled={!value?.length > 0}
+            disabled={value.length === 0}
             className={classes.btn}
             onClick={onAddMembers}
           >
@@ -345,3 +367,4 @@ export default function AddMember2Contest(props) {
     </>
   );
 }
+export { StyledAutocompletePopper };
