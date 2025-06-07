@@ -1,6 +1,6 @@
 // import HustModal from "component/common/HustModal";
 import {HustModal} from "erp-hust/lib/HustModal";
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {MenuItem, TextField} from "@mui/material";
 import {useTranslation} from "react-i18next";
 import {saveProblemToContest} from "./service/ContestProblemService";
@@ -10,6 +10,8 @@ import {
   SUBMISSION_MODE_SOLUTION_OUTPUT,
   SUBMISSION_MODE_SOURCE_CODE
 } from "./Constant";
+import { request } from "api"; 
+import { errorNoti } from "utils/notification"; 
 
 const ModalAddProblemToContest = (props) => {
   const {contestId, chosenProblem, isOpen, handleSuccess, handleClose} = props;
@@ -22,8 +24,34 @@ const ModalAddProblemToContest = (props) => {
   const [problemRecode, setProblemRecode] = useState("");
   const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE)
   const [loading, setLoading] = useState(false);
+  const [coefficientPoint, setCoefficientPoint] = useState(1);
   const [forbiddenInstructions, setForbiddenInstructions] = useState("");
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(1); 
 
+  useEffect(() => {
+    if (isOpen && contestId) {
+      setLoading(true);
+      request(
+        "get",
+        `/contests/${contestId}`,
+        (res) => {
+          setLoading(false);
+          const data = res.data;
+          const canEdit = data.canEditCoefficientPoint ?? 0;
+          setCanEditCoefficientPoint(canEdit);
+          if (canEdit === 0) {
+            setCoefficientPoint(1); 
+          }
+        },
+        {
+          onError: () => {
+            errorNoti(t("error", { ns: "common" }), 3000);
+            setLoading(false);
+          },
+        }
+      );
+    }
+  }, [isOpen, contestId, t]);
 
   const handleAddProblemToContest = () => {
     let body = {
@@ -34,6 +62,7 @@ const ModalAddProblemToContest = (props) => {
       problemRecode: problemRecode,
       submissionMode: submissionMode,
       forbiddenInstructions: forbiddenInstructions,
+      coefficientPoint: canEditCoefficientPoint === 0 ? 1 : coefficientPoint, 
     };
 
     setLoading(true);
@@ -52,7 +81,9 @@ const ModalAddProblemToContest = (props) => {
   const resetField= () => {
     setProblemRename("");
     setProblemRecode("");
+    setCoefficientPoint(canEditCoefficientPoint === 0 ? 1 : 1); 
     setSubmissionMode(SUBMISSION_MODE_SOURCE_CODE);
+    setForbiddenInstructions("");
   }
 
   return (
@@ -62,7 +93,7 @@ const ModalAddProblemToContest = (props) => {
       textOk={t("common:save")}
       onClose={handleClose}
       isLoading={loading}
-      title={t("common:create")}
+      title={t("common:create", { name: "problem" })}
     >
       <TextField
         fullWidth
@@ -113,6 +144,25 @@ const ModalAddProblemToContest = (props) => {
           {getSubmissionModeFromConstant(SUBMISSION_MODE_NOT_ALLOWED)}
         </MenuItem>
       </TextField>
+      <TextField
+        fullWidth
+        required
+        type="number"
+        label={t("common:scoreCoefficientTitle")}
+        placeholder={t("common:scoreCoefficientInput")}
+        value={coefficientPoint}
+        onChange={(event) => {
+          if (canEditCoefficientPoint === 1) {
+            const value = parseInt(event.target.value);
+            if ((value >= 1 && value <= 100) || isNaN(value)) {
+              setCoefficientPoint(value || 1);
+            }
+          }
+        }}
+        inputProps={{ min: 1, max: 100 }}
+        disabled={canEditCoefficientPoint === 0}
+        sx={{ marginTop: "16px" }}
+      />
     </HustModal>
   );
 }
