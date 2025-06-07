@@ -25,6 +25,8 @@ import ModalAddProblemToContest from "./ModalAddProblemToContest";
 import ModalImportProblemsFromContest from "./ModalImportProblemsFromContest";
 import ModalUpdateProblemInfoInContest from "./ModalUpdateProblemInfoInContest";
 import { getColorLevel } from "./lib";
+import { useTranslation } from "react-i18next";
+
 
 const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
   [`& .${autocompleteClasses.paper}`]: {
@@ -82,7 +84,9 @@ export function ContestManagerManageProblem(props) {
   const [openModalAddProblem, setOpenModalAddProblem] = useState(false);
   const [openModalUpdateProblem, setOpenModalUpdateProblem] = useState(false);
   const [openModalImportProblem, setOpenModalImportProblem] = useState(false);
-
+  const {t} = useTranslation(
+    ["common"]
+  );
   //
   const columns = [
     {
@@ -127,9 +131,9 @@ export function ContestManagerManageProblem(props) {
         getSubmissionModeFromConstant(problem?.submissionMode),
     },
     {
-      title: "Coefficient Point",
+      title: t("common:scoreCoefficient"),
       field: "coefficientPoint",
-      minWidth: 150,
+      minWidth: 180,
       render: (problem) => problem?.coefficientPoint || 1, 
     },
     {

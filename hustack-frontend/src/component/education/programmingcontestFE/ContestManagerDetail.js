@@ -14,11 +14,13 @@ import { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { localeOption } from "utils/NumberFormat";
 import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
-import { t } from "i18next";
+import {useTranslation} from "react-i18next";
 
 export function ContestManagerDetail(props) {
   const contestId = props.contestId;
   const history = useHistory();
+
+  const {t} = useTranslation(["common"]);
 
   const [contestDetail, setContestDetail] = useState({
     name: "",
@@ -200,7 +202,7 @@ export function ContestManagerDetail(props) {
             "Allow or disallow participant to view their own submissions",
           ],
           [
-            t ("common:canEditCoefficientPoint"),
+            t("common:canEditCoefficientPoint"),
             contestDetail.canEditCoefficientPoint === 0 ? t("common:no") : t("common:yes"),
             undefined,
             t("common:canEditCoefficientPointToolTip")

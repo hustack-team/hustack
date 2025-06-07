@@ -169,7 +169,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
         required
         type="number"
         label={t("common:scoreCoefficientTitle")}
-        placeholder={"Enter a positive integer from 1 to 100 (default is 1)"}
+        placeholder={t("common:scoreCoefficientInput")}
         value={coefficientPoint}
         onChange={(event) => {
           if (canEditCoefficientPoint === 1) {
