@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { localeOption } from "utils/NumberFormat";
 import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import { t } from "i18next";
 
 export function ContestManagerDetail(props) {
   const contestId = props.contestId;
@@ -199,10 +200,10 @@ export function ContestManagerDetail(props) {
             "Allow or disallow participant to view their own submissions",
           ],
           [
-            "Edit coefficient point",
-            contestDetail.canEditCoefficientPoint === 0 ? "N" : "Y",
+            t ("common:canEditCoefficientPoint"),
+            contestDetail.canEditCoefficientPoint === 0 ? t("common:no") : t("common:yes"),
             undefined,
-            "Allow or disallow editing of problem coefficient points",
+            t("common:canEditCoefficientPointToolTip")
           ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={4}>

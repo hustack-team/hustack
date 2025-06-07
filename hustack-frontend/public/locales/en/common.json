@@ -48,6 +48,8 @@
   "complete": "Complete",
   "reset": "Reset",
   "codeAuthorship": "Authorship (prediction)",
+  "scoreCoefficient": "Score Coefficient",
+  "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)",
   "canEditCoefficientPoint": "Edit Coefficient Points",
-  "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)"
+  "canEditCoefficientPointToolTip": "If Yes, allows setting a score weight for each problem. If No, all problems have the same score weight of 1.0"
 }

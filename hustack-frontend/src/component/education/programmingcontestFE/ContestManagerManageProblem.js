@@ -130,7 +130,7 @@ export function ContestManagerManageProblem(props) {
       title: "Coefficient Point",
       field: "coefficientPoint",
       minWidth: 150,
-      render: (problem) => problem?.coefficientPoint, 
+      render: (problem) => problem?.coefficientPoint || 1, 
     },
     {
       title: "Created By",

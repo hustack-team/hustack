@@ -48,6 +48,8 @@
   "complete": "Hoàn thành",
   "reset": "Đặt lại",
   "codeAuthorship": "Nguồn gốc (dự đoán)",
+  "scoreCoefficient": "Điểm hệ số",
   "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
-  "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số"
+  "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số",
+  "canEditCoefficientPointToolTip": "Nếu là Có, cho phép thiết lập trọng số điểm của từng bài tập. Nếu là Không, tất cả bài tập có cùng trọng số điểm 1.0"
 }
