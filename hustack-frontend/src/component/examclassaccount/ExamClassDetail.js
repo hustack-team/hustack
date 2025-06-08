@@ -3,30 +3,59 @@ import React, {useEffect, useRef, useState} from "react";
 import {request, saveFile} from "../../api";
 import {errorNoti, successNoti} from "../../utils/notification";
 import {LoadingButton} from "@mui/lab";
-import {Button, Chip, MenuItem, Select, TextField,} from "@mui/material";
-import PublishIcon from "@mui/icons-material/Publish";
-import SendIcon from "@mui/icons-material/Send";
+import {Chip, Divider, Grid, Paper, Stack, Typography,} from "@mui/material";
 import StandardTable from "../table/StandardTable";
 import XLSX from "xlsx";
-import {config} from "../../config/config";
-import {KC_REALM} from "../../config/keycloak";
+import TertiaryButton from "../button/TertiaryButton";
+import CustomizedDialogs from "../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+import withScreenSecurity from "../withScreenSecurity";
+import {ConfirmDeleteDialog} from "../dialog/ConfirmDeleteDialog";
+import {detail} from "../education/programmingcontestFE/ContestProblemSubmissionDetailViewedByManager";
+import {useTranslation} from "react-i18next";
+import ProgrammingContestLayout from "../education/programmingcontestFE/ProgrammingContestLayout";
+import {useHistory} from "react-router-dom";
+import {toFormattedDateTime} from "../../utils/dateutils";
+import {InputFileUpload} from "../education/programmingcontestFE/StudentViewProgrammingContestProblemDetailV2";
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+
+const useStyles = makeStyles((theme) => ({
+  btn: {width: 100},
+  dialogContent: {minWidth: 440, minHeight: 96},
+  actions: {paddingRight: theme.spacing(2)},
+}));
 
 function ExamClassDetail() {
+  const classes = useStyles();
+  const {t} = useTranslation([
+    "education/programmingcontest/problem",
+    "common",
+    "validation",
+  ]);
+  const history = useHistory();
   const params = useParams();
   const examClassId = params.id;
   const [name, setName] = useState();
   const [description, setDescription] = useState();
   const [executeDate, setExecuteDate] = useState();
-  const [statusList, setStatusList] = useState([]);
-  const [status, setStatus] = useState();
   const [importedExcelFile, setImportedExcelFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mapUserLogins, setMapUserLogins] = useState([]);
-  const intervalIdRef = useRef(null);
-  const [continueOnError, setContinueOnError] = useState(true);
   const [loadingState, setLoadingState] = useState({
     exportingPDF: false,
   });
+  const [openDialog, setOpen] = useState(false);
+  const [resetPasswordResult, setResetPasswordResult] = useState();
+  const [openModalConfirmDelete, setOpenModalConfirmDelete] = useState(false);
+  const inputRef = useRef();
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleCloseConfirmDeleteModal = () => {
+    setOpenModalConfirmDelete(false)
+  }
 
   const handleLoadingStateChange = (key, value) => {
     setLoadingState(prev => ({...prev, [key]: value}));
@@ -46,15 +75,14 @@ function ExamClassDetail() {
 
     setIsProcessing(true);
     let formData = new FormData();
-    formData.append("inputJson", JSON.stringify({examClassId}));
+    formData.append("dto", new Blob([JSON.stringify({examClassId})], {type: 'application/json'}));
     formData.append("file", importedExcelFile);
 
     let successHandler = (res) => {
-      setIsProcessing(false);
-      setImportedExcelFile(undefined);
       successNoti("Import sinh viên thành công", true);
-      console.log(res.data);
-      setMapUserLogins(res.data);
+      setIsProcessing(false);
+      handleDeleteSelectedFile()
+      getExamClassDetail()
     };
     let errorHandlers = {
       onError: (error) => {
@@ -62,12 +90,20 @@ function ExamClassDetail() {
         errorNoti("Đã xảy ra lỗi khi import sinh viên", true);
       },
     };
+
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
+
     request(
       "POST",
       "/create-exam-accounts-map",
       successHandler,
       errorHandlers,
-      formData
+      formData,
+      config
     );
   }
 
@@ -77,8 +113,6 @@ function ExamClassDetail() {
       setName(res.data.name);
       setDescription(res.data.description);
       setExecuteDate(res.data.executeDate);
-      setStatusList(res.data.statusList);
-      setStatus(res.data.status);
       setMapUserLogins(res.data.accounts);
     });
   }
@@ -144,423 +178,241 @@ function ExamClassDetail() {
     );
   }
 
-  function handleUpdateStatus() {
-    let body = {
-      examClassId: examClassId,
-      status: status,
-    };
-
-    request(
-      "post",
-      "/update-status-exam-class",
-      (res) => {
-        console.log("Update Status Exam Class = ", res.data);
-        history.push("/exam-class/list");
-      },
-      {},
-      body
-    );
+  function onFileChange(event) {
+    setImportedExcelFile(event.target.files[0]);
   }
 
-  const handleChangeStatus = (event) => {
-    setStatus(event.target.value);
-  };
+  const handleDeleteSelectedFile = () => {
+    setImportedExcelFile(null)
+    inputRef.current.value = null;
+  }
 
-  function clearAccount() {
-    let body = {
-      examClassId: examClassId
-
-    };
+  function deleteAccounts() {
+    handleCloseConfirmDeleteModal()
 
     request(
-      "post",
-      "/clear-account-exam-class",
+      "DELETE",
+      `/exam-classes/${examClassId}/accounts`,
       (res) => {
-        console.log("Clear accounts of Exam Class = ", res.data);
+        const data = res.data
+
+        data.title = "Xoá tài khoản"
+        setResetPasswordResult(data)
+        setOpen(true)
         getExamClassDetail();
-        //history.push("/exam-class/list");
-      },
-      {},
-      body
-    );
-  }
-
-  const randomNumberInRange = (min, max) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-
-  function genPass(L) {
-    let r = randomNumberInRange(10000, 1000000);
-    let s = r.toString();
-    while (len(s) < L) s = '0' + s;
-    return s;
-  }
-
-  function updateFullnameOfAUserId(userId, fullname) {
-    // PUT
-    // {{keycloak_url}}/admin/realms/{{realm}}/users/{{userId}}
-
-    // {
-    // “id”: “56f6c53f-5150-4b42-9757-4c3dd4e7d947”,
-    // “enabled”: false,
-    // “firstName”: “Clark”,
-    // “lastName”: “Kent”
-    // }
-    let data = {
-      id: userId,
-      enabled: true,
-      firstName: fullname,
-      lastName: ""
-    };
-    const headerConfig = {
-      headers: {
-        "content-Type": "application/json",
-      },
-    };
-
-    //  API: /auth/admin/realms/{realm}/users/{id}/reset-password
-    request(
-      "PUT",
-      //`${config.url.KEYCLOAK_BASE_URL}/auth/admin/realms/${KC_REALM}/users/${userId}/reset-password`,
-      `${config.url.KEYCLOAK_BASE_URL}/admin/realms/${KC_REALM}/users/${userId}`,
-      (res) => {
-        //data.status = "SUCCESS";
-        //data.message = "";
-        //data.password = password;
-        //data.doneAt = defaultDatetimeFormat(new Date());
-        //setResult(result => [...result, data]);
       },
       {
-        409: (err) => {
-          //data.status = "FAIL";
-          //data.message = err?.response.data.errorMessage || "";
-          //data.password = password;
-          //data.doneAt = defaultDatetimeFormat(new Date());
-          //setResult(result => [...result, data]);
-
-          if (!continueOnError) {
-            clearInterval(intervalIdRef.current);
-            //setLoading(false);
-          }
-        },
-      },
-      data,
-      headerConfig
-    );
-
-  }
-
-  function updateFullnameOfAUserName(userName, fullname) {
-    const headerConfig = {
-      headers: {
-        "content-Type": "application/json",
-      },
-    };
-
-    // get user_id (based on userName)
-    let userId = "";
-    request(
-      "GET",
-      //`${config.url.KEYCLOAK_BASE_URL}/auth/admin/realms/${KC_REALM}/users/${userId}/reset-password`,
-      `${config.url.KEYCLOAK_BASE_URL}/admin/realms/${KC_REALM}/ui-ext/brute-force-user?briefRepresentation=true&first=0&max=11&q=&search=${userName}`,
-      (res) => {
-        console.log("res = ", res);
-        console.log("GOT userId = ", res.data[0].id);
-        //return res.data[0].id;
-        updateFullnameOfAUserId(res.data[0].id, fullname);
-      },
-      {
-        409: (err) => {
-          //data.status = "FAIL";
-          if (!continueOnError) {
-            clearInterval(intervalIdRef.current);
-            //setLoading(false);
-          }
-        },
-      },
-      headerConfig
-    );
-
-  }
-
-  function synRandomUserInfo() {
-    //alert('syn, REST API below');
-    // PUT
-    // {{keycloak_url}}/admin/realms/{{realm}}/users/{{userId}}
-
-    // {
-    // “id”: “56f6c53f-5150-4b42-9757-4c3dd4e7d947”,
-    // “enabled”: false,
-    // “firstName”: “Clark”,
-    // “lastName”: “Kent”
-    // }
-
-    let idx = 0;
-    intervalIdRef.current = setInterval(() => {
-      if (idx < mapUserLogins.length) {
-        //if (idx < 3) {
-        var userName = mapUserLogins[idx].randomUserLoginId;
-        //let userId = getUserId(userName);
-        //console.log('found id = ',userId,' of username ',userName);
-        //resetPasswordOfUser(mapUserLogins[idx].randomUserLoginId,mapUserLogins[idx].password);
-
-        updateFullnameOfAUserName(
-          mapUserLogins[idx].randomUserLoginId,
-          mapUserLogins[idx].fullname
-        );
-        console.log('synchronize fullname -> done ', idx, '/', mapUserLogins.length, ' : ', mapUserLogins[idx].randomUserLoginId, ':', mapUserLogins[idx].password);
-        idx++;
+        onError: (e) => {
+          errorNoti(t("common:error", 3000))
+        }
       }
-    }, 500);
-
-  }
-
-  function resetPassword() {
-    //for(i = 0; i < mapUserLogins.length; i++){
-    // resetPasswordOfUser(mapUserLogins[i].randomUserLoginId,mapUserLogins[i].password);
-    //}
-
-    let idx = 0;
-    intervalIdRef.current = setInterval(() => {
-      if (idx < mapUserLogins.length) {
-        //if (idx < 3) {
-        var userName = mapUserLogins[idx].randomUserLoginId;
-        //let userId = getUserId(userName);
-        //console.log('found id = ',userId,' of username ',userName);
-        //resetPasswordOfUser(mapUserLogins[idx].randomUserLoginId,mapUserLogins[idx].password);
-
-        resetPasswordOfUserName(
-          mapUserLogins[idx].randomUserLoginId,
-          mapUserLogins[idx].password
-        );
-        console.log('reset password done ', idx, '/', mapUserLogins.length, ': ', mapUserLogins[idx].randomUserLoginId, ':', mapUserLogins[idx].password);
-        idx++;
-      }
-    }, 500);
-  }
-
-  function resetPasswordOfUserName(userName, password) {
-    const headerConfig = {
-      headers: {
-        "content-Type": "application/json",
-      },
-    };
-
-    // get user_id (based on userName)
-    let userId = "";
-    request(
-      "GET",
-      //`${config.url.KEYCLOAK_BASE_URL}/auth/admin/realms/${KC_REALM}/users/${userId}/reset-password`,
-      `${config.url.KEYCLOAK_BASE_URL}/admin/realms/${KC_REALM}/ui-ext/brute-force-user?briefRepresentation=true&first=0&max=11&q=&search=${userName}`,
-      (res) => {
-        console.log("res = ", res);
-        console.log("GOT userId = ", res.data[0].id);
-        //return res.data[0].id;
-        resetPasswordOfUser(res.data[0].id, password);
-      },
-      {
-        409: (err) => {
-          //data.status = "FAIL";
-          if (!continueOnError) {
-            clearInterval(intervalIdRef.current);
-            //setLoading(false);
-          }
-        },
-      },
-      headerConfig
     );
   }
 
-  function resetPasswordOfUser(userId, password) {
-    let data = {
-      type: "password",
-      temporary: false,
-      value: password,
-    };
-    const headerConfig = {
-      headers: {
-        "content-Type": "application/json",
-      },
-    };
-
-    //  API: /auth/admin/realms/{realm}/users/{id}/reset-password
+  const generateAccounts = () => {
     request(
-      "PUT",
-      //`${config.url.KEYCLOAK_BASE_URL}/auth/admin/realms/${KC_REALM}/users/${userId}/reset-password`,
-      `${config.url.KEYCLOAK_BASE_URL}/admin/realms/${KC_REALM}/users/${userId}/reset-password`,
+      "POST",
+      `/exam-classes/${examClassId}/accounts`,
       (res) => {
-        //data.status = "SUCCESS";
-        //data.message = "";
-        //data.password = password;
-        //data.doneAt = defaultDatetimeFormat(new Date());
-        //setResult(result => [...result, data]);
+        const data = res.data
+
+        data.title = "Sinh tài khoản"
+        setResetPasswordResult(data)
+        setOpen(true)
+        getExamClassDetail()
       },
       {
-        409: (err) => {
-          //data.status = "FAIL";
-          //data.message = err?.response.data.errorMessage || "";
-          //data.password = password;
-          //data.doneAt = defaultDatetimeFormat(new Date());
-          //setResult(result => [...result, data]);
-
-          if (!continueOnError) {
-            clearInterval(intervalIdRef.current);
-            //setLoading(false);
-          }
+        onError: (e) => {
+          errorNoti(t("common:error", 3000))
         },
       },
-      data,
-      headerConfig
     );
+  }
+
+  const handleResetPassword = () => {
+    request(
+      "PATCH",
+      `/exam-classes/${examClassId}/accounts/reset-password`,
+      (res) => {
+        const data = res.data
+
+        data.title = "Sinh lại mật khẩu"
+        setResetPasswordResult(data)
+        setOpen(true)
+        getExamClassDetail()
+      },
+      {
+        onError: (e) => {
+          errorNoti(t("common:error", 3000))
+        },
+      },
+    );
+  }
+
+  const updateStatus = (enabled) => {
+    request(
+      "PATCH",
+      `/exam-classes/${examClassId}/accounts`,
+      (res) => {
+        const data = res.data
+
+        if (enabled) {
+          data.title = "Kích hoạt tài khoản"
+        } else {
+          data.title = "Vô hiệu hoá tài khoản"
+        }
+
+        setResetPasswordResult(data)
+        setOpen(true)
+        getExamClassDetail()
+      },
+      {
+        onError: (e) => {
+          errorNoti(t("common:error", 3000))
+        },
+      },
+      {enabled: enabled}
+    );
+  }
+
+  const handleExit = () => {
+    history.push(`/exam-class/list`);
   }
 
   useEffect(() => {
     getExamClassDetail();
   }, []);
+
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          columnGap: "10px",
-          marginBottom: "10px",
-          marginTop: "10px",
-        }}
-      >
-        <TextField
-          required
-          id="name"
-          label="Exam Class Name"
-          placeholder="Exam Class Name"
-          value={name}
-          onChange={(event) => {
-            setName(event.target.value);
-          }}
-        />
-        <TextField
-          required
-          id="description"
-          label="Description"
-          placeholder="Description"
-          value={description}
-          onChange={(event) => {
-            setDescription(event.target.value);
-          }}
-        />
-        <TextField
-          required
-          id="execute_date"
-          label="Date"
-          placeholder="Date"
-          value={executeDate}
-          onChange={(event) => {
-            setExecuteDate(event.target.value);
-          }}
-        />
-      </div>
+    <ProgrammingContestLayout title={t("")} onBack={handleExit}>
+      <Stack direction="row" spacing={2} mb={1.5} justifyContent="space-between">
+        <Typography variant="h6" component='span'>
+          {t("generalInfo")}
+        </Typography>
+      </Stack>
 
-      <div>
-        <Select
-          labelId="status-select-label"
-          id="status-select"
-          value={status}
-          label="status"
-          onChange={handleChangeStatus}
-        >
-          {statusList.map((option) => (
-            <MenuItem value={option} key={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </Select>
+      <Grid container spacing={2}>
+        {[
+          [t("Name"), name],
+          [t("common:description"), description],
+          [t("Date"), toFormattedDateTime(executeDate)],
+        ].map(([key, value, sx, helpText]) => (
+          <Grid item xs={12} sm={12} md={3}>
+            {detail(key, value, sx, helpText)}
+          </Grid>
+        ))}
+      </Grid>
 
-        <Button
-          variant="contained"
+      <Stack direction={"row"} spacing={1} mt={2}>
+        <InputFileUpload
+          id="exam-class-selected-upload-file"
+          label={t("common:selectFile")}
+          onChange={onFileChange}
+          ref={inputRef}
+        />
+        {/*{importedExcelFile && <Typography variant="body1">{importedExcelFile.name}</Typography>}*/}
+        {importedExcelFile && (
+          <Chip
+            color="success"
+            variant="outlined"
+            label={importedExcelFile.name}
+            onDelete={handleDeleteSelectedFile}
+          />
+        )}
+        <LoadingButton
+          loading={isProcessing}
+          startIcon={<FileUploadIcon/>}
+          disabled={!importedExcelFile}
           color="primary"
-          style={{marginLeft: "45px"}}
-          onClick={handleUpdateStatus}
+          variant="contained"
+          onClick={importStudentsFromExcel}
+          sx={{textTransform: 'none'}}
         >
-          Update Status
-        </Button>
-      </div>
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            columnGap: "10px",
-            marginBottom: "10px",
-            marginTop: "10px",
-          }}
+          Tải lên
+        </LoadingButton>
+      </Stack>
+      <Stack direction={"row"} spacing={2} mt={2}>
+        <LoadingButton
+          sx={{textTransform: 'none'}}
+          loading={loadingState.exportingPDF}
+          loadingPosition="center"
+          variant="outlined"
+          onClick={exportPdf}
         >
-          <LoadingButton
-            sx={{textTransform: 'none'}}
-            loading={loadingState.exportingPDF}
-            loadingPosition="center"
-            variant="contained"
-            onClick={exportPdf}
-          >
-            EXPORT PDF
-          </LoadingButton>
-          <Button variant="contained" color="primary" onClick={downloadHandler}>
-            EXPORT EXCEL
-          </Button>
-          <Button variant="contained" color="primary" onClick={resetPassword}>
-            RESET PASSWORD KEY CLOAK
-          </Button>
-          <Button variant="contained" color="primary" onClick={synRandomUserInfo}>
-            Synchronize random user info
-          </Button>
+          Xuất PDF
+        </LoadingButton>
+        <TertiaryButton variant="outlined" onClick={downloadHandler}>
+          Xuất Excel
+        </TertiaryButton>
+        <TertiaryButton variant="outlined" onClick={generateAccounts}>
+          Sinh tài khoản
+        </TertiaryButton>
+        <TertiaryButton variant="outlined" onClick={handleResetPassword}>
+          Sinh lại mật khẩu
+        </TertiaryButton>
+        <TertiaryButton onClick={() => updateStatus(true)}
+                        variant="outlined">
+          Kích hoạt tài khoản
+        </TertiaryButton>
+        <TertiaryButton onClick={() => updateStatus(false)}
+                        variant="outlined">
+          Vô hiệu hoá tài khoản
+        </TertiaryButton>
+        <TertiaryButton variant="outlined" color="error" onClick={() => setOpenModalConfirmDelete(true)}>
+          Xoá tài khoản
+        </TertiaryButton>
+      </Stack>
 
+      <Divider sx={{mt: 2, mb: 2}}/>
 
-          <Button variant="contained" color="primary" onClick={clearAccount}>
-            CLEAR
-          </Button>
+      <Stack direction="row" justifyContent='space-between' mb={1.5}>
+        <Typography variant="h6">Mapped UserLogin</Typography>
+      </Stack>
+      <StandardTable
+        columns={columns}
+        data={mapUserLogins}
+        hideCommandBar
+        options={{
+          selection: false,
+          pageSize: 10,
+          search: true,
+          sorting: true,
+        }}
+        components={{
+          Container: (props) => <Paper {...props} elevation={0}/>,
+        }}
+      />
 
-          <Button color="primary" variant="contained" component="label">
-            <PublishIcon/> Select excel file to import
-            <input
-              type="file"
-              hidden
-              onChange={(event) => setImportedExcelFile(event.target.files[0])}
-            />
-          </Button>
-          {importedExcelFile && (
-            <Chip
-              color="success"
-              variant="outlined"
-              label={importedExcelFile.name}
-              onDelete={() => setImportedExcelFile(undefined)}
-            />
-          )}
-          <LoadingButton
-            loading={isProcessing}
-            endIcon={<SendIcon/>}
-            disabled={!importedExcelFile}
-            color="primary"
-            variant="contained"
-            onClick={importStudentsFromExcel}
-          >
-            Upload
-          </LoadingButton>
-        </div>
-      </div>
-      <div>
-        <StandardTable
-          title="Mapped UserLogin"
-          columns={columns}
-          data={mapUserLogins}
-          hideCommandBar
-          options={{
-            selection: false,
-            search: true,
-            sorting: true,
-          }}
-        />
-      </div>
-    </>
+      <CustomizedDialogs
+        open={openDialog}
+        title={resetPasswordResult?.title}
+        handleClose={handleClose}
+        contentTopDivider
+        content={
+          typeof (resetPasswordResult?.success) === 'number' && !isNaN(resetPasswordResult.success) ?
+            <>
+              <Typography>
+                Thành công: {resetPasswordResult?.success}
+              </Typography>
+              <Typography>
+                Thất bại: {resetPasswordResult?.fail}
+              </Typography>
+            </>
+            : <Typography>
+              Không tìm thấy tài khoản nào thoả mãn điều kiện
+            </Typography>
+        }
+        classNames={{content: classes.dialogContent, actions: classes.actions}}
+      />
+
+      <ConfirmDeleteDialog open={openModalConfirmDelete}
+                           handleClose={handleCloseConfirmDeleteModal}
+                           handleDelete={deleteAccounts}
+                           entity='tất cả tài khoản'
+      />
+    </ProgrammingContestLayout>
   );
 }
 
-export default ExamClassDetail;
+const screenName = "SCR_EXAM_CLASS_DETAIL";
+export default withScreenSecurity(ExamClassDetail, screenName, true);

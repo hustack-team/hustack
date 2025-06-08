@@ -1,9 +1,9 @@
+import {Button, TextField,} from "@mui/material/";
 
-import {Card, CardActions, CardContent, Button, TextField, Typography,} from "@mui/material/";
-
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {useHistory} from "react-router-dom";
 import {request} from "../../api";
+import withScreenSecurity from "../withScreenSecurity";
 
 function ExamClassCreate(){
     const [name, setName] = useState();
@@ -75,5 +75,5 @@ function ExamClassCreate(){
         </>
     );
 }
-
-export default ExamClassCreate;
+const screenName = "SCR_EXAM_CLASS_CREATE";
+export default withScreenSecurity(ExamClassCreate, screenName, true);

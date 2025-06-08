@@ -1,6 +1,5 @@
 package com.hust.baseweb.applications.examclassandaccount.controller;
 
-import com.google.gson.Gson;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClass;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClassUserloginMap;
 import com.hust.baseweb.applications.examclassandaccount.entity.RandomGeneratedUserLogin;
@@ -12,8 +11,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -25,6 +26,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -57,12 +59,6 @@ public class ExamClassAccountController {
         return ResponseEntity.ok().body(ec);
     }
 
-    @GetMapping("/get-exam-class-userlogin-map/{examClassId}")
-    public ResponseEntity<?> getExamClassUserLoginMap(Principal principal, @PathVariable UUID examClassId) {
-        List<ExamClassUserloginMap> res = examClassUserloginMapService.getExamClassUserloginMap(examClassId);
-        return ResponseEntity.ok().body(res);
-    }
-
     @Secured("ROLE_ADMIN")
     @PostMapping("/create-a-generated-userlogin")
     public ResponseEntity<?> createAGeneratedUserLogin(
@@ -79,83 +75,73 @@ public class ExamClassAccountController {
     }
 
     @Secured("ROLE_ADMIN")
-    @PostMapping("/create-exam-accounts-map")
+    @PostMapping(value = "/create-exam-accounts-map",
+                 produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createExamAccountsMap(
-        Principal principal,
-        @RequestParam("inputJson") String inputJson,
-        @RequestParam("file") MultipartFile file
-    ) {
-        log.info("createExamAccountsMap, start...");
-        Gson gson = new Gson();
-        ModelCreateExamAccountMap modelUpload = gson.fromJson(
-            inputJson,
-            ModelCreateExamAccountMap.class);
-        UUID examClassId = modelUpload.getExamClassId();
-        log.info("createExamAccountsMap, testId = " + examClassId);
+        @RequestPart("dto") ModelCreateExamAccountMap dto,
+        @RequestPart("file") MultipartFile file
+    ) throws IOException {
+        UUID examClassId = dto.getExamClassId();
+
         try (InputStream is = file.getInputStream()) {
             XSSFWorkbook wb = new XSSFWorkbook(is);
             XSSFSheet sheet = wb.getSheetAt(0);
             int lastRowNum = sheet.getLastRowNum();
-            log.info("createExamAccountsMap, lastRowNum = " + lastRowNum);
-            List<UserLoginModel> users = new ArrayList<UserLoginModel>();
+
+            List<ExamClassAccountDTO> users = new ArrayList<>();
             for (int i = 1; i <= lastRowNum; i++) {
                 Row row = sheet.getRow(i);
+                if (row == null) {
+                    continue;
+                }
                 int columns = row.getLastCellNum();
-                log.info("row " + i + " has columns = " + columns);
-                String userLoginId = "";
-                String studentCode = "";
+
+                String email = null;
+                String studentCode = null;
+                DataFormatter formatter = new DataFormatter();
                 if (columns > 0) {
                     Cell c = row.getCell(0);
-                    userLoginId = c.getStringCellValue();
-                    log.info("userId = " + c.getStringCellValue());
+                    if (c != null) {
+                        email = formatter.formatCellValue(c).trim();
+                    }
                 }
                 if (columns > 1) {
                     Cell c = row.getCell(1);
                     if (c != null) {
-                        if (c.getCellType() != null && c.getCellType().equals(CellType.NUMERIC)) {
-                            studentCode = c.getNumericCellValue() + "";
+                        if (c.getCellType() == CellType.NUMERIC) {
+                            studentCode = String.valueOf((long) c.getNumericCellValue());  // không có phần thập phân
                         } else {
-                            studentCode = c.getStringCellValue();
+                            studentCode = formatter.formatCellValue(c).trim();
                         }
                     }
-                    log.info("Student Code = " + studentCode);
                 }
-                String fullName = "";
+
+                if (StringUtils.isAllBlank(email, studentCode)) {
+                    continue;
+                }
+
+                String fullName = null;
                 if (columns > 2) {
                     Cell c = row.getCell(2);
                     if (c != null) {
-                        if (c.getCellType() != null && c.getCellType().equals(CellType.NUMERIC)) {
-                            fullName = c.getNumericCellValue() + "";
-                        } else {
-                            fullName = c.getStringCellValue();
-                        }
+                        fullName = formatter.formatCellValue(c).trim();
                     }
                 }
-                log.info("fullName = " + fullName);
-                UserLoginModel u = new UserLoginModel(userLoginId, studentCode, fullName);
+
+                ExamClassAccountDTO u = new ExamClassAccountDTO(email, studentCode, fullName);
                 users.add(u);
 
             }
+
             List<ExamClassUserloginMap> res = examClassUserloginMapService.createExamClassAccount(examClassId, users);
             return ResponseEntity.ok().body(res);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return ResponseEntity.ok().body("null");
     }
 
     @Secured("ROLE_ADMIN")
-    @PostMapping("/update-status-exam-class")
-    public ResponseEntity<?> updateStatusExamClass(Principal principal, @RequestBody ModelUpdateStatusExamClass m) {
-        boolean res = examClassService.updateStatusExamClass(m.getExamClassId(), m.getStatus());
-        return ResponseEntity.ok().body(res);
-    }
-
-    @Secured("ROLE_ADMIN")
-    @PostMapping("/clear-account-exam-class")
-    public ResponseEntity<?> clearAccountExamClass(Principal principal, @RequestBody ModelClearAccountInput m) {
-        boolean res = examClassService.clearAccountExamClass(m.getExamClassId());
-        return ResponseEntity.ok().body(res);
+    @DeleteMapping("/exam-classes/{examClassId}/accounts")
+    public ResponseEntity<?> clearAccountExamClass(@PathVariable UUID examClassId) {
+        return ResponseEntity.ok().body(examClassService.deleteAccounts(examClassId));
     }
 
     @Secured("ROLE_ADMIN")
@@ -173,5 +159,26 @@ public class ExamClassAccountController {
                              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + examClassId + ".pdf")
                              .contentType(MediaType.APPLICATION_PDF)
                              .body(pdfBytes);
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PatchMapping("/exam-classes/{examClassId}/accounts/reset-password")
+    public ResponseEntity<?> resetPassword(@PathVariable UUID examClassId) {
+        return ResponseEntity.ok().body(examClassService.resetPassword(examClassId));
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/exam-classes/{examClassId}/accounts")
+    public ResponseEntity<?> generateAccounts(@PathVariable UUID examClassId) {
+        return ResponseEntity.ok().body(examClassService.generateAccounts(examClassId));
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PatchMapping("/exam-classes/{examClassId}/accounts")
+    public ResponseEntity<?> updateStatus(
+        @PathVariable UUID examClassId,
+        @RequestBody ExamClassAccountStatusUpdateRequestDTO dto
+    ) {
+        return ResponseEntity.ok().body(examClassService.updateStatus(examClassId, dto.isEnabled()));
     }
 }

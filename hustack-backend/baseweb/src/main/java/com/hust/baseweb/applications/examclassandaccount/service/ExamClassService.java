@@ -13,11 +13,15 @@ public interface ExamClassService {
 
     ExamClass createExamClass(String userLoginId, ModelCreateExamClass m);
 
-    boolean updateStatusExamClass(UUID examClassId, String status);
-
-    boolean clearAccountExamClass(UUID examClassId);
+    Object deleteAccounts(UUID examClassId);
 
     ModelRepsonseExamClassDetail getExamClassDetail(UUID examClassId);
 
     byte[] exportExamClass(UUID examClassId);
+
+    Object resetPassword(UUID examClassId);
+
+    Object generateAccounts(UUID examClassId);
+
+    Object updateStatus(UUID examClassId, boolean enabled);
 }
