@@ -14,10 +14,13 @@ import { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { localeOption } from "utils/NumberFormat";
 import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import {useTranslation} from "react-i18next";
 
 export function ContestManagerDetail(props) {
   const contestId = props.contestId;
   const history = useHistory();
+
+  const {t} = useTranslation(["common"]);
 
   const [contestDetail, setContestDetail] = useState({
     name: "",
@@ -30,7 +33,8 @@ export function ContestManagerDetail(props) {
     maxSourceCodeLength: 50000,
     minTimeBetweenTwoSubmissions: 0,
     participantViewSubmissionMode: "",
-    contestType:""
+    contestType:"",
+    canEditCoefficientPoint: 0, // Added to store canEditCoefficientPoint
   });
 
   const [loading, setLoading] = useState(true);
@@ -58,7 +62,8 @@ export function ContestManagerDetail(props) {
           maxSourceCodeLength: data.maxSourceCodeLength,
           participantViewSubmissionMode: data.participantViewSubmissionMode,
           languagesAllowed: data.languagesAllowed,
-          contestType: data.contestType
+          contestType: data.contestType,
+          canEditCoefficientPoint: data.canEditCoefficientPoint, // Added to set canEditCoefficientPoint
         }));
       });
     };
@@ -195,6 +200,12 @@ export function ContestManagerDetail(props) {
             contestDetail.participantViewSubmissionMode,
             undefined,
             "Allow or disallow participant to view their own submissions",
+          ],
+          [
+            t("common:canEditCoefficientPoint"),
+            contestDetail.canEditCoefficientPoint === 0 ? t("common:no") : t("common:yes"),
+            undefined,
+            t("common:canEditCoefficientPointToolTip")
           ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={4}>

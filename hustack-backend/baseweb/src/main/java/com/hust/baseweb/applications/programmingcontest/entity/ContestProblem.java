@@ -52,6 +52,6 @@ public class ContestProblem {
     @Column(name="forbidden_instructions")
     private String forbiddenInstructions;
 
-    @Column(name = "coefficient_point", precision = 10, scale = 2)
-    private BigDecimal coefficientPoint;
+    @Column(name="coefficient_point")
+    private Double coefficientPoint;
 }

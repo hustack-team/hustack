@@ -1,5 +1,5 @@
 import HustModal from "component/common/HustModal";
-import React, {useEffect, useState} from "react";
+import React, {useState, useEffect} from "react";
 import {MenuItem, TextField} from "@mui/material";
 import {useTranslation} from "react-i18next";
 import {saveProblemToContest} from "./service/ContestProblemService";
@@ -10,6 +10,8 @@ import {
   SUBMISSION_MODE_SOURCE_CODE,
   SUBMISSION_MODE_HIDDEN
 } from "./Constant";
+import { request } from "api";
+import { errorNoti } from "utils/notification";
 
 const ModalUpdateProblemInfoInContest = (props) => {
   const {contestId, editingProblem, isOpen, handleSuccess, handleClose} = props;
@@ -23,13 +25,38 @@ const ModalUpdateProblemInfoInContest = (props) => {
   const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE)
   const [loading, setLoading] = useState(false);
   const [forbiddenInstructions, setForbiddenInstructions] = useState("");
+  const [coefficientPoint, setCoefficientPoint] = useState(1);
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(1);
+
+  useEffect(() => {
+    if (isOpen && contestId) {
+      setLoading(true);
+      request(
+        "get",
+        `/contests/${contestId}`,
+        (res) => {
+          setLoading(false);
+          const data = res.data;
+          const canEdit = data.canEditCoefficientPoint ?? 0;
+          setCanEditCoefficientPoint(canEdit);
+        },
+        {
+          onError: () => {
+            errorNoti(t("error", { ns: "common" }), 3000);
+            setLoading(false);
+          },
+        }
+      );
+    }
+  }, [isOpen, contestId, t]);
 
   useEffect(() =>  {
     setProblemRename(editingProblem?.problemRename || "");
     setProblemRecode(editingProblem?.problemRecode || "");
     setForbiddenInstructions(editingProblem?.forbiddenInstructions||"");
     setSubmissionMode(editingProblem?.submissionMode || SUBMISSION_MODE_SOURCE_CODE);
-  }, [isOpen])
+    setCoefficientPoint(editingProblem?.coefficientPoint ?? 1);
+  }, [isOpen, editingProblem]);
 
   const handleAddProblemToContest = () => {
     let body = {
@@ -40,6 +67,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
       problemRecode: problemRecode,
       submissionMode: submissionMode,
       forbiddenInstructions: forbiddenInstructions,
+      coefficientPoint: canEditCoefficientPoint === 0 ? (editingProblem?.coefficientPoint ?? 1) : coefficientPoint,
     };
 
     setLoading(true);
@@ -58,7 +86,9 @@ const ModalUpdateProblemInfoInContest = (props) => {
   const resetField= () => {
     setProblemRename("");
     setProblemRecode("");
+    setForbiddenInstructions("");
     setSubmissionMode(SUBMISSION_MODE_SOURCE_CODE);
+    setCoefficientPoint(canEditCoefficientPoint === 0 ? (editingProblem?.coefficientPoint ?? 1) : 1);
   }
 
   return (
@@ -68,7 +98,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
       textOk={t("common:save")}
       onClose={handleClose}
       isLoading={loading}
-      title={t("common:edit")}
+      title={t("common:edit", { name: "problem" })}
     >
       <TextField
         fullWidth
@@ -107,7 +137,7 @@ const ModalUpdateProblemInfoInContest = (props) => {
         }}
         sx={{marginTop: "16px"}}
       />
-      
+
       <TextField
         fullWidth
         autoFocus
@@ -133,8 +163,26 @@ const ModalUpdateProblemInfoInContest = (props) => {
           {getSubmissionModeFromConstant(SUBMISSION_MODE_HIDDEN)}
         </MenuItem>
 
-        
       </TextField>
+      <TextField
+        fullWidth
+        required
+        type="number"
+        label={t("common:scoreCoefficientTitle")}
+        placeholder={t("common:scoreCoefficientInput")}
+        value={coefficientPoint}
+        onChange={(event) => {
+          if (canEditCoefficientPoint === 1) {
+            const value = parseInt(event.target.value);
+            if ((value >= 1 && value <= 100) || isNaN(value)) {
+              setCoefficientPoint(value || 1);
+            }
+          }
+        }}
+        inputProps={{ min: 1, max: 100 }}
+        disabled={canEditCoefficientPoint === 0}
+        sx={{ marginTop: "16px" }}
+      />
     </HustModal>
   );
 }

@@ -7,6 +7,7 @@ import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmission
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.service.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -104,10 +106,13 @@ public class SubmissionController {
     @GetMapping("/student/submissions/{submissionId}/general-info")
     public ResponseEntity<?> getContestSubmissionDetailViewedByParticipant(
         Principal principal,
-        @PathVariable("submissionId")
-        UUID submissionId
+        @PathVariable("submissionId") UUID submissionId
     ) {
-        return ResponseEntity.ok().body(submissionService.findById(principal.getName(), submissionId));
+        try {
+            return ResponseEntity.ok().body(submissionService.findById(principal.getName(), submissionId));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @Async

@@ -8,13 +8,16 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ExamClassService {
-    public List<ExamClass> getAllExamClass();
 
-    public ExamClass createExamClass(String userLoginId, ModelCreateExamClass m);
+    List<ExamClass> getAllExamClass();
 
-    public boolean updateStatusExamClass(UUID examClassId, String status);
+    ExamClass createExamClass(String userLoginId, ModelCreateExamClass m);
 
-    public boolean clearAccountExamClass(UUID examClassId);
+    boolean updateStatusExamClass(UUID examClassId, String status);
 
-    public ModelRepsonseExamClassDetail getExamClassDetail(UUID examClassId);
+    boolean clearAccountExamClass(UUID examClassId);
+
+    ModelRepsonseExamClassDetail getExamClassDetail(UUID examClassId);
+
+    byte[] exportExamClass(UUID examClassId);
 }
