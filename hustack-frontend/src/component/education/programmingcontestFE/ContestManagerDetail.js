@@ -14,10 +14,13 @@ import { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { localeOption } from "utils/NumberFormat";
 import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import {useTranslation} from "react-i18next";
 
 export function ContestManagerDetail(props) {
   const contestId = props.contestId;
   const history = useHistory();
+
+  const {t} = useTranslation(["common"]);
 
   const [contestDetail, setContestDetail] = useState({
     name: "",
@@ -32,6 +35,7 @@ export function ContestManagerDetail(props) {
     participantViewSubmissionMode: "",
     contestType:"",
     allowParticipantPinSubmission: 0,
+    canEditCoefficientPoint: 0, // Added to store canEditCoefficientPoint
   });
 
   const [loading, setLoading] = useState(true);
@@ -62,6 +66,8 @@ export function ContestManagerDetail(props) {
           languagesAllowed: data.languagesAllowed || "",
           contestType: data.contestType || "",
           allowParticipantPinSubmission: data.allowParticipantPinSubmission || 0,
+          canEditCoefficientPoint: data.canEditCoefficientPoint, 
+          
         }));
       });
     };
@@ -142,73 +148,77 @@ export function ContestManagerDetail(props) {
       }      
     >
       {loading && <LinearProgress />}
-      {!loading && (
-        <Grid container spacing={2}>
-          {[
-            ["Name", contestDetail.name],
-            ["Status", contestDetail.statusId],
-            ["Type", contestDetail.contestType],
-            [
-              "View problem description",
-              contestDetail.problemDescriptionViewType,
-            ],
-            [
-              "Max submissions",
-              `${contestDetail.maxNumberSubmission} (per problem)`,
-            ],
-            [
-              "Source length limit",
-              `${contestDetail.maxSourceCodeLength.toLocaleString(
-                "fr-FR",
-                localeOption
-              )} (chars)`,
-            ],
-            [
-              "Submission interval",
-              `${contestDetail.minTimeBetweenTwoSubmissions.toLocaleString(
-                "fr-FR",
-                localeOption
-              )} (s)`,
-              undefined,
-              "Minimum time between two consecutive submissions by a participant",
-            ],
-            [
-              "Languages allowed",
-              !contestDetail.languagesAllowed ||
-              _.isEmpty((contestDetail.languagesAllowed || "").trim())
-                ? "All supported languages"
-                : contestDetail.languagesAllowed,
-            ],
-            ["Action on submission", contestDetail.submissionActionType],
-            [
-              "Evaluate both public and private testcases",
-              contestDetail.evaluateBothPublicPrivateTestcase,
-            ],
-            [
-              "View testcase detail",
-              contestDetail.participantViewResultMode,
-              undefined,
-              "Allow or disallow participant to view the input and output of each testcase",
-            ],
-            [
-              "Participant view submission",
-              contestDetail.participantViewSubmissionMode || "N/A",
-              undefined,
-              "Allow or disallow participant to view their own submissions",
-            ],
-            [
-              "Allow participant pin submission",
-              contestDetail.allowParticipantPinSubmission === 0 ? "N" : "Y",
-              undefined,
-              "Allow or disallow participants to pin their submissions",
-            ],
-          ].map(([key, value, sx, helpText]) => (
-            <Grid item xs={12} sm={12} md={4} key={key}>
-              {detail(key, value, sx, helpText)}
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <Grid container spacing={2} display={loading ? "none" : ""}>
+        {[
+          ["Name", contestDetail.name],
+          ["Status", contestDetail.statusId],
+          ["Type", contestDetail.contestType],
+          [
+            "View problem description",
+            contestDetail.problemDescriptionViewType,
+          ],
+          [
+            "Max submissions",
+            `${contestDetail.maxNumberSubmission} (per problem)`,
+          ],
+          [
+            "Source length limit",
+            `${contestDetail.maxSourceCodeLength.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (chars)`,
+          ],
+          [
+            "Submission interval",
+            `${contestDetail.minTimeBetweenTwoSubmissions.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (s)`,
+            undefined,
+            "Minimum time between two consecutive submissions by a participant",
+          ],
+          [
+            "Languages allowed",
+            !contestDetail.languagesAllowed ||
+            _.isEmpty(contestDetail.languagesAllowed.trim())
+              ? "All supported languages"
+              : contestDetail.languagesAllowed,
+          ],
+          ["Action on submission", contestDetail.submissionActionType],
+          [
+            "Evaluate both public and private testcases",
+            contestDetail.evaluateBothPublicPrivateTestcase,
+          ],
+          [
+            "View testcase detail",
+            contestDetail.participantViewResultMode,
+            undefined,
+            "Allow or disallow participant to view the input and output of each testcase",
+          ],
+          [
+            "Participant view submission",
+            contestDetail.participantViewSubmissionMode,
+            undefined,
+            "Allow or disallow participant to view their own submissions",
+          ],
+          [
+            t("common:canEditCoefficientPoint"),
+            contestDetail.canEditCoefficientPoint === 0 ? t("common:no") : t("common:yes"),
+            undefined,
+            t("common:canEditCoefficientPointToolTip")
+          ],
+          [
+            "Allow participant pin submission",
+            contestDetail.allowParticipantPinSubmission === 0 ? "N" : "Y",
+            undefined,
+            "Allow or disallow participants to pin their submissions",
+         ],
+        ].map(([key, value, sx, helpText]) => (
+          <Grid item xs={12} sm={12} md={4}>
+            {detail(key, value, sx, helpText)}
+          </Grid>
+        ))}
+      </Grid>
       <PrimaryButton onClick={handleCloneDialogOpen}>
         Clone
       </PrimaryButton>

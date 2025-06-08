@@ -32,4 +32,5 @@ public class  ModelUpdateContest {
     private String contestShowComment;
     private Boolean contestPublic;
     private Integer allowParticipantPinSubmission;
+    private Integer canEditCoefficientPoint;
 }

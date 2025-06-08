@@ -25,6 +25,8 @@ import ModalAddProblemToContest from "./ModalAddProblemToContest";
 import ModalImportProblemsFromContest from "./ModalImportProblemsFromContest";
 import ModalUpdateProblemInfoInContest from "./ModalUpdateProblemInfoInContest";
 import { getColorLevel } from "./lib";
+import { useTranslation } from "react-i18next";
+
 
 const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
   [`& .${autocompleteClasses.paper}`]: {
@@ -72,6 +74,7 @@ export function ContestManagerManageProblem(props) {
 
   const [problems, setProblems] = useState([]);
   const [contestProblems, setContestProblems] = useState([]);
+  const [contestData, setContestData] = useState({});
   const [loading, setLoading] = useState(true);
 
   const [searchProblemValue, setSearchProblemValue] = useState("");
@@ -81,7 +84,9 @@ export function ContestManagerManageProblem(props) {
   const [openModalAddProblem, setOpenModalAddProblem] = useState(false);
   const [openModalUpdateProblem, setOpenModalUpdateProblem] = useState(false);
   const [openModalImportProblem, setOpenModalImportProblem] = useState(false);
-
+  const {t} = useTranslation(
+    ["common"]
+  );
   //
   const columns = [
     {
@@ -124,6 +129,12 @@ export function ContestManagerManageProblem(props) {
       minWidth: 180,
       render: (problem) =>
         getSubmissionModeFromConstant(problem?.submissionMode),
+    },
+    {
+      title: t("common:scoreCoefficient"),
+      field: "coefficientPoint",
+      minWidth: 180,
+      render: (problem) => problem?.coefficientPoint || 1, 
     },
     {
       title: "Created By",
@@ -178,7 +189,12 @@ export function ContestManagerManageProblem(props) {
   const getProblemsInContest = () => {
     request("get", "/contests/" + contestId, (res) => {
       setLoading(false);
-      setContestProblems(res.data.list);
+      const updatedProblems = res.data.list.map(problem => ({
+        ...problem,
+        coefficientPoint: res.data.canEditCoefficientPoint === 0 ? 1 : problem.coefficientPoint
+      }));
+      setContestProblems(updatedProblems);
+      setContestData(res.data);
     });
   };
 
@@ -350,6 +366,7 @@ export function ContestManagerManageProblem(props) {
         isOpen={openModalAddProblem}
         handleSuccess={handleAddProblemToContestSuccess}
         handleClose={handleCloseModal}
+        canEditCoefficientPoint={contestData?.canEditCoefficientPoint}
       />
 
       <ModalUpdateProblemInfoInContest
@@ -358,6 +375,7 @@ export function ContestManagerManageProblem(props) {
         isOpen={openModalUpdateProblem}
         handleSuccess={handleAddProblemToContestSuccess}
         handleClose={handleCloseModal}
+        canEditCoefficientPoint={contestData?.canEditCoefficientPoint}
       />
 
       <ModalImportProblemsFromContest

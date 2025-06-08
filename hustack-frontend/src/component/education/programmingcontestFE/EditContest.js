@@ -69,6 +69,7 @@ function EditContest() {
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
   const [allowParticipantPinSubmission, setAllowParticipantPinSubmission] = useState(0); 
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(0); 
 
   const [options, setOptions] = useState({
     // status: [],
@@ -85,6 +86,9 @@ function EditContest() {
     allowParticipantPinSubmission: [ 
       { label: t("common:no"), value: "0" },
       { label: t("common:yes"), value: "1" },
+    canEditCoefficientPoint: [ 
+      { label: t("common:no"), value: 0 },
+      { label: t("common:yes"), value: 1 },
     ],
   });
 
@@ -125,6 +129,7 @@ function EditContest() {
       contestShowComment: participantViewComment,
       contestPublic: contestPublic,
       allowParticipantPinSubmission: allowParticipantPinSubmission,
+      canEditCoefficientPoint: canEditCoefficientPoint, 
     };
 
     request(
@@ -200,6 +205,9 @@ function EditContest() {
         allowParticipantPinSubmission: [
           {label: t("common:no"), value: "0"},
           {label: t("common:yes"), value: "1"},
+        canEditCoefficientPoint: [
+          { label: t("common:no"), value: 0 },
+          { label: t("common:yes"), value: 1 },
         ],
       });
 
@@ -228,6 +236,7 @@ function EditContest() {
       setParticipantViewComment(data.contestShowComment);
       setContestPublic(data.contestPublic);
       setAllowParticipantPinSubmission(data.allowParticipantPinSubmission || 0);
+      setCanEditCoefficientPoint(data.canEditCoefficientPoint); 
     });
   }
 
@@ -447,6 +456,17 @@ function EditContest() {
                     options={options.allowParticipantPinSubmission}
                     onChange={(event) => {
                       setAllowParticipantPinSubmission(event.target.value);
+                    }}
+                  />,
+                  <StyledSelect
+                    fullWidth
+                    id="canEditCoefficientPoint"
+                    label={t("common:canEditCoefficientPoint")}
+                    key={"canEditCoefficientPoint"}
+                    value={canEditCoefficientPoint}
+                    options={options.canEditCoefficientPoint}
+                    onChange={(event) => {
+                      setCanEditCoefficientPoint(event.target.value);
                     }}
                   />,
                 ].map((input, index) => (

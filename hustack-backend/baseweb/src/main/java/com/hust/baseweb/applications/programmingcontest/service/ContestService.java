@@ -83,6 +83,7 @@ public class ContestService {
                 String problemRename = "";
                 String problemRecode = "";
                 String forbiddenInstructions = "";
+                Double coefficientPoint = 1.0;
 
                 // If contest problem exists in the repository, update values
                 if (cp != null) {
@@ -90,6 +91,7 @@ public class ContestService {
                     problemRename = cp.getProblemRename();
                     problemRecode = cp.getProblemRecode();
                     forbiddenInstructions = cp.getForbiddenInstructions();
+                    coefficientPoint = cp.getCoefficientPoint();
                 }
 
                 ModelGetProblemDetailResponse p = ModelGetProblemDetailResponse.builder()
@@ -99,6 +101,7 @@ public class ContestService {
                                                                                .problemRename(problemRename)
                                                                                .problemRecode(problemRecode)
                                                                                .forbiddenInstructions(forbiddenInstructions)
+                                                                               .coefficientPoint(coefficientPoint)
                                                                                .levelOrder(contestProblem.getLevelOrder())
                                                                                .problemDescription(contestProblem.getProblemDescription())
                                                                                .createdByUserId(contestProblem.getCreatedBy())
@@ -145,6 +148,8 @@ public class ContestService {
             .contestPublic(contestEntity.getContestPublic())
             .listContestPublic(contestEntity.getListContestPublic())
             .allowParticipantPinSubmission(contestEntity.getAllowParticipantPinSubmission())
+            .canEditCoefficientPoint(contestEntity.getCanEditCoefficientPoint())
+
             .build();
     }
 

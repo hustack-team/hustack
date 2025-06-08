@@ -17,7 +17,6 @@ import org.apache.tika.Tika;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -315,10 +314,15 @@ public class SubmissionServiceImpl implements SubmissionService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public SubmissionDTO findById(String userId, UUID submissionId) {
-        ContestSubmissionEntity submission = getContestSubmissionDetailForParticipant(
-            userId,
-            submissionId);
+        ContestSubmissionEntity submission = contestSubmissionRepo
+            .findById(submissionId)
+            .orElseThrow(() -> new EntityNotFoundException("Submission with ID " + submissionId + " not found"));
+
+        if (!userId.equals(submission.getUserId())) {
+            throw new EntityNotFoundException("Submission with ID " + submissionId + " not found");
+        }
 
         ContestEntity contest = contestRepo.findContestByContestId(submission.getContestId());
         if (ContestEntity.PARTICIPANT_VIEW_SUBMISSION_MODE_DISABLED.equals(contest.getParticipantViewSubmissionMode())) {
@@ -374,17 +378,6 @@ public class SubmissionServiceImpl implements SubmissionService {
                         .bodyToMono(CodeClassificationResponse.class)
                         .doOnError(error -> log.error(error.getMessage()))
                         .block();
-    }
-
-    private ContestSubmissionEntity getContestSubmissionDetailForParticipant(String userId, UUID submissionId) {
-        ContestSubmissionEntity submission = contestSubmissionRepo.findContestSubmissionEntityByContestSubmissionId(
-            submissionId);
-
-        if (submission != null && userId.equals(submission.getUserId())) {
-            return submission;
-        }
-
-        throw new AccessDeniedException("No permission");
     }
 
     private ModelContestSubmissionResponse submitContestProblemTestCaseByTestCaseWithFile(
