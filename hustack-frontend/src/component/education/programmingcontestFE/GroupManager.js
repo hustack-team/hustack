@@ -65,7 +65,7 @@ function GroupManager({ screenAuthorization }) {
       },
       {
         onError: (err) => {
-          errorNoti("Failed to fetch group details", 3000);
+          errorNoti(t("common:fetchGroupError"), 3000);
           console.error("Error fetching group details:", err);
           setLoading(false);
         },
@@ -88,11 +88,11 @@ function GroupManager({ screenAuthorization }) {
       {
         onError: (err) => {
           if (err.response?.status === 404) {
-            errorNoti("Group not found", 3000);
+            errorNoti(t("common:groupNotFound"), 3000);
           } else if (err.response?.status === 403) {
-            errorNoti("You are not authorized to view group members", 3000);
+            errorNoti(t("common:unauthorizedMembers"), 3000);
           } else {
-            errorNoti("Failed to fetch members", 3000);
+            errorNoti(t("common:fetchMembersError"), 3000);
           }
           console.error("Error fetching members:", err);
         },

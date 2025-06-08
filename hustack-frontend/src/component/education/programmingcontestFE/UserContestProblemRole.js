@@ -38,14 +38,12 @@ const useStyles = makeStyles((theme) => ({
   btn: { margin: "4px 8px" },
 }));
 
-
-
 function UserContestProblemRole() {
   const { t } = useTranslation(["common", "validation"]);
   const roles = [
     {
-    label: t("common:owner"),
-    value: PROBLEM_ROLE.OWNER,
+      label: t("common:owner"),
+      value: PROBLEM_ROLE.OWNER,
     },
     {
       label: t("common:editor"),
@@ -175,16 +173,24 @@ function UserContestProblemRole() {
       "post",
       "/problems/users/role",
       (res) => {
-        successNoti(t("common:addRoleUser"), 3000);
+        if (groupIds.length > 0) {
+          successNoti(t("common:addGroupRoleSuccess"), 3000);
+        } else {
+          successNoti(t("common:addRoleUser"), 3000);
+        }
         getUserRoles();
         setValue([]);
       },
       {
         400: (err) => {
-          errorNoti("Bad request: " + (err?.response?.data?.message || "Unknown error"), 3000);
+          if (groupIds.length > 0) {
+            errorNoti(t("common:addGroupRoleError", { message: err?.response?.data?.message || t("common:unknownError") }), 3000);
+          } else {
+            errorNoti("Bad request: " + (err?.response?.data?.message || "Unknown error"), 3000);
+          }
         },
         500: () => {
-          errorNoti("Server error", 3000);
+          errorNoti(t("common:serverError"), 3000);
         },
       },
       body

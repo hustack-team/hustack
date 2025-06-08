@@ -21,4 +21,6 @@ public interface TeacherGroupRelationRepository extends JpaRepository<TeacherGro
            "WHERE r.userId = :userId")
     List<UUID> findGroupIdsByUserId(@Param("userId") String userId);
     int countByGroupId(UUID groupId);
+
+    void deleteByGroupId(UUID groupId);
 }

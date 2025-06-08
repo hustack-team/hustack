@@ -47,7 +47,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-
 function GroupForm() {
   const { groupId } = useParams();
   const { t } = useTranslation(["common", "validation"]);
@@ -80,7 +79,7 @@ function GroupForm() {
       return false;
     }
     if (hasSpecialCharacterGroupName()) {
-      errorNoti("Group Name must only contain alphanumeric characters and spaces.", 3000);
+      errorNoti(t("common:invalidGroupName"), 3000);
       return false;
     }
     return true;
@@ -106,7 +105,7 @@ function GroupForm() {
             callback(data);
           },
           (error) => {
-            errorNoti("Failed to fetch users", 3000);
+            errorNoti(t("common:fetchUsersError"), 3000);
             console.error("Error fetching users:", error);
           }
         );
@@ -244,7 +243,7 @@ function GroupForm() {
       },
       {
         onError: (err) => {
-          errorNoti(err?.response?.data?.message || t("common:error"), 5000);
+          errorNoti(err?.response?.data?.message || t("common:groupOperationError"), 5000);
           setLoading(false);
         },
       },
@@ -260,8 +259,6 @@ function GroupForm() {
     {
       title: t("common:member"),
       field: "userId",
-      // minWidth: 100,
-      // maxWidth: 320,
       cellStyle: {width: 300},
       render: (rowData) => (
         <Stack direction="row" alignItems="center">
@@ -390,7 +387,6 @@ function GroupForm() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    // label={t("common:searchMemberTitle")}
                     placeholder={t("common:searchMember")}
                     inputProps={{
                       ...params.inputProps,
@@ -439,11 +435,7 @@ function GroupForm() {
               hideToolBar
               options={{
                 selection: false,
-                pagination: false, 
-                serverSide: false,
                 pageSize: 5,
-                pageSizeOptions: [5, 10, 20],
-                totalCount: selectedMembers.length,
                 search: false,
                 sorting: true,
                 elevation: 0,

@@ -48,7 +48,7 @@ export default function StudentViewProblemList() {
     {
       title: t("problemCode"),
       field: "problemCode",
-      align: "center",
+      align: "left",
       cellStyle: { minWidth: 120 },
       render: (rowData) => (
         <Typography component="span" variant="body2" fontFamily="monospace">

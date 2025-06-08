@@ -19,8 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @AllArgsConstructor(onConstructor_ = @Autowired)
@@ -53,6 +52,21 @@ public class UserServiceImpl implements UserService {
     public String getUserFullName(String userId) {
         ModelSearchUserResult user = userLoginRepo.getUserGeneralInfo(userId);
         return getUserFullName(user);
+    }
+
+    @Override
+    public Map<String, String> getUserFullNames(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<UserLogin> users = userLoginRepo.findAllById(userIds);
+        Map<String, String> fullNames = new LinkedHashMap<>();
+        for (UserLogin user : users) {
+            String fullName = (user.getFirstName() != null ? user.getFirstName() : "") +
+                              (user.getLastName() != null ? " " + user.getLastName() : "");
+            fullNames.put(user.getUserLoginId(), fullName.trim());
+        }
+        return fullNames;
     }
 
     public List<UserLogin> getAllUserLogins() {

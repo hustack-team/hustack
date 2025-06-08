@@ -50,7 +50,7 @@ function TeacherListGroup() {
       () => {
         setGroups((prevGroups) => prevGroups.filter((g) => g.id !== selectedGroup.id));
         setTotalElements((prev) => prev - 1);
-        successNoti(t("common:deleteSuccess"), 3000);
+        successNoti(t("common:deleteSuccess", { name: t("common:group2") }), 3000);
       },
       {
         403: () => errorNoti(t("common:noPermission"), 3000),

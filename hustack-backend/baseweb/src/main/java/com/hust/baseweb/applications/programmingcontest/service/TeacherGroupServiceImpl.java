@@ -20,11 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,8 +108,6 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         return convertToGroupDTO(updatedGroup);
     }
 
-
-
     @Override
     @Transactional
     public void deleteGroup(UUID id, String userId) {
@@ -126,8 +120,10 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     public List<MemberDTO> addGroupMembers(UUID groupId, List<String> userIds, String userId) {
         verifyGroupAccess(groupId, userId);
         List<TeacherGroupRelation> relations = addMembers(groupId, userIds);
+        List<String> relationUserIds = relations.stream().map(TeacherGroupRelation::getUserId).collect(Collectors.toList());
+        Map<String, String> userFullNames = userService.getUserFullNames(relationUserIds);
         return relations.stream()
-                        .map(this::convertToMemberDTO)
+                        .map(relation -> convertToMemberDTO(relation, userFullNames))
                         .collect(Collectors.toList());
     }
 
@@ -135,11 +131,12 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Transactional(readOnly = true)
     public List<MemberDTO> getGroupMembers(UUID groupId, String userId) {
         verifyGroupAccess(groupId, userId);
-        return teacherGroupRelationRepository.findAll()
-                                             .stream()
-                                             .filter(relation -> relation.getGroupId().equals(groupId))
-                                             .map(this::convertToMemberDTO)
-                                             .collect(Collectors.toList());
+        List<TeacherGroupRelation> relations = teacherGroupRelationRepository.findByGroupId(groupId);
+        List<String> relationUserIds = relations.stream().map(TeacherGroupRelation::getUserId).collect(Collectors.toList());
+        Map<String, String> userFullNames = userService.getUserFullNames(relationUserIds);
+        return relations.stream()
+                        .map(relation -> convertToMemberDTO(relation, userFullNames))
+                        .collect(Collectors.toList());
     }
 
     @Override
@@ -151,7 +148,8 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         id.setUserId(userId);
         TeacherGroupRelation relation = teacherGroupRelationRepository.findById(id)
                                                                       .orElseThrow(() -> new EntityNotFoundException("Member not found in group"));
-        return convertToMemberDTO(relation);
+        Map<String, String> userFullNames = userService.getUserFullNames(Collections.singletonList(userId));
+        return convertToMemberDTO(relation, userFullNames);
     }
 
     @Override
@@ -175,10 +173,11 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     public TeacherGroup create(TeacherGroup teacherGroup, String creatorUserId, List<String> userIds) {
         TeacherGroup savedGroup = teacherGroupRepository.save(teacherGroup);
 
+        List<TeacherGroupRelation> relations = new ArrayList<>();
         TeacherGroupRelation creatorRelation = new TeacherGroupRelation();
         creatorRelation.setGroupId(savedGroup.getId());
         creatorRelation.setUserId(creatorUserId);
-        teacherGroupRelationRepository.save(creatorRelation);
+        relations.add(creatorRelation);
 
         if (userIds != null) {
             for (String userId : userIds) {
@@ -186,11 +185,12 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
                     TeacherGroupRelation relation = new TeacherGroupRelation();
                     relation.setGroupId(savedGroup.getId());
                     relation.setUserId(userId);
-                    teacherGroupRelationRepository.save(relation);
+                    relations.add(relation);
                 }
             }
         }
 
+        teacherGroupRelationRepository.saveAll(relations);
         return savedGroup;
     }
 
@@ -209,29 +209,21 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
     @Override
     @Transactional
     public void deleteById(UUID id) {
-        List<TeacherGroupRelation> relations = teacherGroupRelationRepository.findAll()
-                                                                             .stream()
-                                                                             .filter(relation -> relation.getGroupId().equals(id))
-                                                                             .collect(Collectors.toList());
-        teacherGroupRelationRepository.deleteAll(relations);
+        teacherGroupRelationRepository.deleteByGroupId(id);
         teacherGroupRepository.deleteById(id);
     }
 
     @Override
     @Transactional
     public List<TeacherGroupRelation> addMembers(UUID groupId, List<String> userIds) {
-        if (!teacherGroupRepository.existsById(groupId)) {
-            throw new RuntimeException("TeacherGroup not found with id: " + groupId);
-        }
-
         List<TeacherGroupRelation> relations = new ArrayList<>();
         for (String userId : userIds) {
             TeacherGroupRelation relation = new TeacherGroupRelation();
             relation.setGroupId(groupId);
             relation.setUserId(userId);
-            relations.add(teacherGroupRelationRepository.save(relation));
+            relations.add(relation);
         }
-        return relations;
+        return teacherGroupRelationRepository.saveAll(relations);
     }
 
     @Override
@@ -253,12 +245,11 @@ public class TeacherGroupServiceImpl implements TeacherGroupService {
         return dto;
     }
 
-    private MemberDTO convertToMemberDTO(TeacherGroupRelation relation) {
+    private MemberDTO convertToMemberDTO(TeacherGroupRelation relation, Map<String, String> userFullNames) {
         MemberDTO dto = new MemberDTO();
         dto.setGroupId(relation.getGroupId());
         dto.setUserId(relation.getUserId());
-        String fullName = userService.getUserFullName(relation.getUserId());
-        dto.setFullName(fullName);
+        dto.setFullName(userFullNames.getOrDefault(relation.getUserId(), "Anonymous"));
         dto.setAddedTime(relation.getCreatedDate());
         return dto;
     }
