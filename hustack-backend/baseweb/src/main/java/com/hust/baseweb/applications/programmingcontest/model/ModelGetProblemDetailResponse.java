@@ -20,4 +20,5 @@ public class ModelGetProblemDetailResponse implements Serializable {
     private String problemRename;
     private String problemRecode;
     private String forbiddenInstructions;
+    private Double coefficientPoint;
 }
