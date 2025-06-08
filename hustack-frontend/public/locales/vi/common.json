@@ -52,7 +52,7 @@
   "maxPoint": "Điểm tối đa",
   "maxSubmittedPoint": "Điểm đạt được",
   "selectSubmissionWarning": " Bài nộp này không có điểm cao nhất. Bạn có chắc chắn muốn chọn bài nộp này là bài nộp cuối cùng không?",
-  "confirmChangeFinalSubmission": "Thay đổi bài nộp cuối cùng" 
+  "confirmChangeFinalSubmission": "Thay đổi bài nộp cuối cùng",
   "scoreCoefficient": "Điểm hệ số",
   "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
   "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số",

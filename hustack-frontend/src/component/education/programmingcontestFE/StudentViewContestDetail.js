@@ -1,10 +1,10 @@
 import * as React from "react";
 import {useTranslation} from "react-i18next";
 import {a11yProps, AntTab, AntTabs, TabPanel} from "component/tab";
-import StudentViewProblemList from "./StudentViewProblemList";
 import StudentViewSubmission from "./StudentViewSubmission";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import {useHistory} from "react-router-dom";
+import StudentViewProblemList from "./StudentViewProblemListV2";
 
 export default function StudentViewContestDetail() {
   const {t} = useTranslation(

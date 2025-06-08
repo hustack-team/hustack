@@ -127,14 +127,14 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
     void updateContestSubmissionStatus(UUID contestSubmissionId, String status);
 
     @Query(value = "SELECT problem_id AS problemId, MAX(point) AS maxPoint FROM contest_submission_new " +
-                   "WHERE user_submission_id = :user_id " +
-                   "AND contest_id = :contest_id " +
+                   "WHERE user_submission_id = :userId " +
+                   "AND contest_id = :contestId " +
                    "AND final_selected_submission = 1 " +
                    "GROUP BY problem_id",
            nativeQuery = true)
     List<ModelProblemMaxSubmissionPoint> findFinalSelectedSubmittedProblemsOfUser(
-        @Param("user_id") String user_id,
-        @Param("contest_id") String contest_id
+        @Param("userId") String userId,
+        @Param("contestId") String contestId
     );
 
     @Query(value =

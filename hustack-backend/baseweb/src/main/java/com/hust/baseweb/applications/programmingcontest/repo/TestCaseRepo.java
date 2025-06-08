@@ -59,4 +59,7 @@ public interface TestCaseRepo extends JpaRepository<TestCaseEntity, UUID> {
         @Param("id") UUID testCaseId,
         @Param("threshold") int threshold
     );
+
+    @Query("SELECT tc FROM TestCaseEntity tc WHERE tc.problemId IN :problemIds AND (tc.statusId IS NULL OR tc.statusId <> 'DISABLED')")
+    List<TestCaseEntity> findAllByProblemIdIn(@Param("problemIds") List<String> problemIds);
 }

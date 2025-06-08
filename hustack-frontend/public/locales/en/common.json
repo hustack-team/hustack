@@ -52,7 +52,7 @@
   "maxPoint": "Max points",
   "maxSubmittedPoint": "Points earned",
   "selectSubmissionWarning": "This submission does not have the highest score. Are you sure you want to mark this submission as final? ",
-  "confirmChangeFinalSubmission": "Change Final Submission" 
+  "confirmChangeFinalSubmission": "Change Final Submission",
   "scoreCoefficient": "Coefficient Points",
   "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)",
   "canEditCoefficientPoint": "Edit Coefficient Points",

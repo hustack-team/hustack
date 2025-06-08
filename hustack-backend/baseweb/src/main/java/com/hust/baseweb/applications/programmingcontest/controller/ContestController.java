@@ -328,98 +328,10 @@ public class ContestController {
         Principal principal
     ) {
         String userId = principal.getName();
-
         logStudentGetDetailContest(userId, contestId);
 
-        ContestEntity contest = contestService.findContest(contestId);
-
-
-        List<ProblemEntity> problems = contest.getProblems();
-        List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
-
-        List<ModelProblemMaxSubmissionPoint> submittedProblems;
-        if (Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission())) {
-            submittedProblems = contestSubmissionRepo.findFinalSelectedSubmittedProblemsOfUser(userId, contestId);
-        } else {
-            submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(userId, contestId);
-        }
-
-        Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
-        for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
-            mapProblemToMaxSubmissionPoint.put(problem.getProblemId(), problem.getMaxPoint());
-        }
-
-        Map<String, Long> mProblem2MaxPoint = new HashMap<>();
-        List<ContestProblem> listContestProblem = contestProblemRepo.findAllByContestId(contestId);
-        List<String> listProblemId = listContestProblem.stream()
-                                                 .filter(cp -> !ContestProblem.SUBMISSION_MODE_HIDDEN.equals(cp.getSubmissionMode()))
-                                                 .map(ContestProblem::getProblemId)
-                                                 .collect(Collectors.toList());
-
-        for (String problemId : listProblemId) {
-            long totalPoint = 0;
-            List<TestCaseEntity> testCases = testCaseRepo.findAllByProblemId(problemId);
-            for (TestCaseEntity tc : testCases) {
-                if ("Y".equals(contest.getEvaluateBothPublicPrivateTestcase())) {
-                    totalPoint += tc.getTestCasePoint();
-                } else {
-                    if (tc.getIsPublic().equals("N")) {
-                        totalPoint += tc.getTestCasePoint();
-                    }
-                }
-            }
-            mProblem2MaxPoint.put(problemId, totalPoint);
-        }
-
-        List<ModelStudentOverviewProblem> responses = new ArrayList<>();
-
-        if (contest.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
-            Set<String> problemIds = problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet());
-            List<ContestProblem> contestProblems = contestProblemRepo.findByContestIdAndProblemIdIn(
-                contestId,
-                problemIds);
-
-            Map<String, ContestProblem> problemId2ContestProblem = new HashMap<>();
-            contestProblems.forEach(p -> problemId2ContestProblem.put(p.getProblemId(), p));
-
-            for (ProblemEntity problem : problems) {
-                String problemId = problem.getProblemId();
-
-                ContestProblem contestProblem = problemId2ContestProblem.get(problemId);
-                if (contestProblem.getSubmissionMode() != null) {
-                    if (contestProblem.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
-                        continue;
-                    }
-                }
-
-                ModelStudentOverviewProblem response = new ModelStudentOverviewProblem();
-                response.setProblemId(problemId);
-                response.setProblemName(contestProblem.getProblemRename());
-                response.setProblemCode(contestProblem.getProblemRecode());
-                response.setLevelId(problem.getLevelId());
-                response.setMaxPoint(mProblem2MaxPoint.getOrDefault(problemId, 0L)); // Gán maxPoint
-
-                if (contest.getContestShowTag() != null && contest.getContestShowTag().equals("N")) {
-                    response.setTags(new ArrayList<>());
-                } else {
-                    List<String> tags = problem.getTags().stream().map(TagEntity::getName).collect(Collectors.toList());
-                    response.setTags(tags);
-                }
-
-                if (mapProblemToMaxSubmissionPoint.containsKey(problemId)) {
-                    response.setSubmitted(true);
-                    response.setMaxSubmittedPoint(mapProblemToMaxSubmissionPoint.get(problemId));
-                }
-
-                if (acceptedProblems.contains(problemId)) {
-                    response.setAccepted(true);
-                }
-
-                responses.add(response);
-            }
-        }
-
-        return ResponseEntity.ok().body(responses);
+        List<ModelStudentOverviewProblem> responses = problemTestCaseService.getStudentContestProblems(userId, contestId);
+        return ResponseEntity.ok(responses);
     }
 
     @Secured("ROLE_TEACHER")

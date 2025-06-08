@@ -86,6 +86,7 @@ function EditContest() {
     allowParticipantPinSubmission: [ 
       { label: t("common:no"), value: "0" },
       { label: t("common:yes"), value: "1" },
+    ],
     canEditCoefficientPoint: [ 
       { label: t("common:no"), value: 0 },
       { label: t("common:yes"), value: 1 },
@@ -205,6 +206,7 @@ function EditContest() {
         allowParticipantPinSubmission: [
           {label: t("common:no"), value: "0"},
           {label: t("common:yes"), value: "1"},
+        ],
         canEditCoefficientPoint: [
           { label: t("common:no"), value: 0 },
           { label: t("common:yes"), value: 1 },

@@ -29,6 +29,8 @@ public interface ProblemTestCaseService {
         MultipartFile[] files
     ) throws Exception;
 
+    List<ModelStudentOverviewProblem> getStudentContestProblems(String userId, String contestId);
+
     List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo();
 
     ModelCreateContestProblemResponse getContestProblem(String problemId) throws Exception;

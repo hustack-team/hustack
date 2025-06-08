@@ -47,7 +47,6 @@ export function ContestManagerDetail(props) {
   useEffect(() => {
     const getContestDetail = () => {
       request("get", "/contests/" + contestId, (res) => {
-        console.log("API Response:", res.data); // Debug
         setLoading(false);
 
         const data = res.data || {};
