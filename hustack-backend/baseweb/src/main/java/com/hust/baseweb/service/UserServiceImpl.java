@@ -5,6 +5,7 @@ import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.entity.UserRegister;
 import com.hust.baseweb.model.ModelPageUserSearchResponse;
 import com.hust.baseweb.model.PersonModel;
+import com.hust.baseweb.model.UserFullNameProjection;
 import com.hust.baseweb.model.UserLoginWithPersonModel;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.repo.UserRegisterRepo;
@@ -59,15 +60,19 @@ public class UserServiceImpl implements UserService {
         if (userIds == null || userIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        List<UserLogin> users = userLoginRepo.findAllById(userIds);
+
+        List<UserFullNameProjection> users = userLoginRepo.findFullNamesByIds(userIds);
         Map<String, String> fullNames = new LinkedHashMap<>();
-        for (UserLogin user : users) {
+
+        for (UserFullNameProjection user : users) {
             String fullName = (user.getFirstName() != null ? user.getFirstName() : "") +
                               (user.getLastName() != null ? " " + user.getLastName() : "");
             fullNames.put(user.getUserLoginId(), fullName.trim());
         }
+
         return fullNames;
     }
+
 
     public List<UserLogin> getAllUserLogins() {
         return userLoginRepo.findAll();
