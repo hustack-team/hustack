@@ -10,12 +10,15 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
 
     UserLogin findById(String userLoginId);
 
     String getUserFullName(String userId);
+
+    Map<String, String> getUserFullNames(List<String> userIds);
 
     Page<ModelSearchUserResult> search(String keyword, List<String> excludeIds, Pageable page);
 

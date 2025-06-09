@@ -1,17 +1,17 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelResponseUserProblemRole {
 
-    private String userLoginId;
-    private String problemId;
-    private String roleId;
+    String userLoginId;
+    String problemId;
+    String fullname;
+    String roleId;
 }
