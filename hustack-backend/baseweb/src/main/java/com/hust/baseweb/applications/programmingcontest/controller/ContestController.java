@@ -268,7 +268,7 @@ public class ContestController {
             if (cp == null) {
                 return ResponseEntity.ok().body("NOTFOUND");
             }
-            if (!contestEntity.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
+            if (!ContestEntity.CONTEST_STATUS_RUNNING.equals(contestEntity.getStatusId())) {
                 return ResponseEntity.ok().body(null);
             }
             ModelCreateContestProblemResponse problemEntity = problemTestCaseService.getContestProblem(problemId);

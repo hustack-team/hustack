@@ -53,9 +53,14 @@
   "maxSubmittedPoint": "Điểm đạt được",
   "selectSubmissionWarning": " Bài nộp này không có điểm cao nhất. Bạn có chắc chắn muốn chọn bài nộp này là bài nộp cuối cùng không?",
   "confirmChangeFinalSubmission": "Thay đổi bài nộp cuối cùng",
+  "allowParticipantPinSubmission": "Cho phép người tham gia ghim bài nộp",
+  "allowParticipantPinSubmissionToolTip": "Cho phép hoặc không cho phép người tham gia ghim bài nộp của họ",
+  "switchSubmissionSuccess": "Chuyển bài nộp thành công",
+  "switchSubmissionFailed": "Chuyển bài nộp thất bại",
   "scoreCoefficient": "Điểm hệ số",
   "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
   "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số",
   "canEditCoefficientPointToolTip": "Nếu là Có, cho phép thiết lập trọng số điểm của từng bài tập. Nếu là Không, tất cả bài tập có cùng trọng số điểm 1.0",
   "scoreCoefficientInput": "Nhập một số nguyên dương từ 1 đến 100 (mặc định là 1)"
+ 
 }

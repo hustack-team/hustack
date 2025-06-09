@@ -262,22 +262,14 @@ public class SubmissionServiceImpl implements SubmissionService {
         UUID newSubmissionId,
         UUID oldSubmissionId
     ) {
-        ContestSubmissionEntity newSubmission = contestSubmissionRepo.findById(newSubmissionId)
-                                                                     .orElseThrow(() -> new EntityNotFoundException("Submission not found: " + newSubmissionId));
-
-        if (!userId.equals(newSubmission.getUserId()) ||
-            !contestId.equals(newSubmission.getContestId()) ||
-            !problemId.equals(newSubmission.getProblemId())) {
-            throw new EntityNotFoundException("Submission does not match the specified user, contest, or problem");
-        }
+        ContestSubmissionEntity newSubmission = validateSubmissionOwnership(
+            newSubmissionId, userId, contestId, problemId, true
+        );
 
         if (oldSubmissionId != null) {
-            ContestSubmissionEntity oldSubmission = contestSubmissionRepo.findById(oldSubmissionId)
-                                                                         .orElse(null);
+            ContestSubmissionEntity oldSubmission = contestSubmissionRepo.findById(oldSubmissionId).orElse(null);
             if (oldSubmission != null) {
-                if (!contestId.equals(oldSubmission.getContestId()) || !problemId.equals(oldSubmission.getProblemId())) {
-                    throw new IllegalArgumentException("Old submission does not belong to the specified contest or problem");
-                }
+                validateSubmissionOwnership(oldSubmissionId, userId, contestId, problemId, false);
                 oldSubmission.setFinalSelectedSubmission(0);
                 contestSubmissionRepo.save(oldSubmission);
             }
@@ -285,6 +277,25 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         newSubmission.setFinalSelectedSubmission(1);
         contestSubmissionRepo.save(newSubmission);
+    }
+
+    private ContestSubmissionEntity validateSubmissionOwnership(
+        UUID submissionId,
+        String expectedUserId,
+        String expectedContestId,
+        String expectedProblemId,
+        boolean checkUser
+    ) {
+        ContestSubmissionEntity submission = contestSubmissionRepo.findById(submissionId)
+                                                                  .orElseThrow(() -> new EntityNotFoundException("Submission not found: " + submissionId));
+
+        if ((checkUser && !expectedUserId.equals(submission.getUserId())) ||
+            !expectedContestId.equals(submission.getContestId()) ||
+            !expectedProblemId.equals(submission.getProblemId())) {
+            throw new EntityNotFoundException("Submission does not match the specified user, contest, or problem");
+        }
+
+        return submission;
     }
 
 

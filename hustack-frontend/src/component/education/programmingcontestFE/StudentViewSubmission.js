@@ -99,13 +99,13 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       "post",
       `/contests/users/submissions/lock?contestId=${contestId}&problemId=${problemId}`,
       (res) => {
-        successNoti("Submission switched successfully", 3000);
+        successNoti(t("common:switchSubmissionSuccess"), 3000);
         setCurrentLockedSubmissionId(newSubmissionId);
         getSubmissions();
       },
       {
         onError: (e) => {
-          errorNoti("Failed to switch submission", 3000);
+          errorNoti(t("common:switchSubmissionFailed"), 3000);
           setLoading(false);
         },
       },

@@ -207,10 +207,10 @@ export function ContestManagerDetail(props) {
             t("common:canEditCoefficientPointToolTip")
           ],
           [
-            "Allow participant pin submission",
-            contestDetail.allowParticipantPinSubmission === 0 ? "N" : "Y",
+            t("common:allowParticipantPinSubmission"),
+            contestDetail.allowParticipantPinSubmission === 0 ? t("common:no") : t("common:yes"),
             undefined,
-            "Allow or disallow participants to pin their submissions",
+            t("common:allowParticipantPinSubmissionToolTip")
          ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={4}>

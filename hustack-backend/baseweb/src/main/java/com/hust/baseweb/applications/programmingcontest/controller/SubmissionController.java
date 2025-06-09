@@ -104,6 +104,7 @@ public class SubmissionController {
     }
 
     @PostMapping("/contests/users/submissions/lock")
+    @Secured("ROLE_STUDENT")
     public ResponseEntity<?> updateFinalSelectedSubmission(
         Principal principal,
         @RequestParam("contestId") String contestId,

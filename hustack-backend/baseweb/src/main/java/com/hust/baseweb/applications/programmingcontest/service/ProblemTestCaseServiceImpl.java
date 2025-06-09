@@ -4128,6 +4128,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return newProblem;
     }
 
+    @Transactional
+    @Override
     public List<ModelStudentOverviewProblem> getStudentContestProblems(String userId, String contestId) {
         ContestEntity contest = contestService.findContest(contestId);
         List<ProblemEntity> problems = contest.getProblems();
@@ -4146,7 +4148,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         Map<String, Long> mProblem2MaxPoint = calculateMaxPointForProblems(contest, contestId);
 
-        if (!contest.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
+        if (!ContestEntity.CONTEST_STATUS_RUNNING.equals(contest.getStatusId())) {
             return Collections.emptyList();
         }
 
