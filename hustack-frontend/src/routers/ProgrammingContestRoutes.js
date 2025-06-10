@@ -74,10 +74,10 @@ export default function ProgrammingContestRoutes() {
           component={ContestStudentList}
           path={`${path}/student-list-contest-registered`}
         />        
-        <Route
+        {/* <Route
         component={ContestLibrarytList}
         path={`${path}/student-list-library`}
-        />
+        /> */}
         <Route
           component={ListContestManager}
           path={`${path}/teacher-list-contest-manager`}
