@@ -56,7 +56,7 @@
   "insertBelow": "Thêm khối mã phía dưới",
   "copyAllCode": "Sao chép tất cả mã",
   "individualBlocks": "Tách tất cả các khối mã",
-  "combinedBlock":"Ghép tất cả các khối mã"
+  "combinedBlock":"Ghép tất cả các khối mã",
   "scoreCoefficient": "Điểm hệ số",
   "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
   "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số",
