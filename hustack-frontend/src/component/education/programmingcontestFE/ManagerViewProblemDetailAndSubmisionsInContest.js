@@ -25,6 +25,7 @@ export default function ManagerViewProblemDetailAndSubmisionsInContest(props) {
   const [submissions, setSubmissions] = useState([]);
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const history = useHistory();
   const { contestId, problemId} = useParams();
   const [problemDescription, setProblemDescription] = useState("");
   const [solutionCode, setSolutionCode] = useState("");
@@ -225,6 +226,18 @@ const handleRejudge = () => {
       <PrimaryButton onClick={handleRejudge}>
         Rejudge
       </PrimaryButton>
+        <Link
+        to={`/programming-contest/manager-view-problem-detail/${problemId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ textDecoration: 'none' }}
+      >
+        <PrimaryButton>
+          View as Manager
+        </PrimaryButton>
+      </Link>
+
+
       
       
       <div>

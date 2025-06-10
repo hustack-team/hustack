@@ -61,5 +61,7 @@
   "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)",
   "canEditCoefficientPoint": "Edit Coefficient Points",
   "canEditCoefficientPointToolTip": "If Yes, allows setting a score weight for each problem. If No, all problems have the same score weight of 1.0",
-  "scoreCoefficientInput": "Enter a positive integer from 1 to 100 (default is 1)"
+  "scoreCoefficientInput": "Enter a positive integer from 1 to 100 (default is 1)",
+  "testCaseCount": "Test Cases",
+  "totalTestCasePoint": "Total Test Cases Points"
 }
