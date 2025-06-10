@@ -226,7 +226,7 @@ const handleRejudge = () => {
       <PrimaryButton onClick={handleRejudge}>
         Rejudge
       </PrimaryButton>
-        <Link
+      <Link
         to={`/programming-contest/manager-view-problem-detail/${problemId}`}
         target="_blank"
         rel="noopener noreferrer"
