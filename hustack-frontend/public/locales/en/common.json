@@ -99,7 +99,7 @@
   "insertBelow": "Add code block below",
   "copyAllCode": "Copy all codes",
   "individualBlocks": "Split all block codes",
-  "combinedBlock":"Combine all block codes"
+  "combinedBlock":"Combine all block codes",
   "scoreCoefficient": "Coefficient Points",
   "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)",
   "canEditCoefficientPoint": "Edit Coefficient Points",
