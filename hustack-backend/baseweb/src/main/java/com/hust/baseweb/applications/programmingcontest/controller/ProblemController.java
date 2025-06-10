@@ -35,6 +35,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -186,10 +187,11 @@ public class ProblemController {
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/problems/users/role")
-    public ResponseEntity<?> addContestProblemRole(Principal principal, @RequestBody ModelUserProblemRole input) {
+    public ResponseEntity<?> addContestProblemRole(Principal principal, @RequestBody ModelUserProblemRoleInput input) {
         try {
-            boolean ok = problemTestCaseService.addUserProblemRole(principal.getName(), input);
+            Map<String, Object> ok = problemTestCaseService.addUserProblemRole(principal.getName(), input);
             return ResponseEntity.ok().body(ok);
         } catch (Exception e) {
             if (e instanceof MiniLeetCodeException) {

@@ -28,7 +28,9 @@ import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
@@ -69,69 +71,72 @@ import static com.hust.baseweb.utils.PdfUtils.exportPdf;
 @Slf4j
 @Service
 @AllArgsConstructor(onConstructor_ = {@Autowired})
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
-    private final ProblemRepo problemRepo;
+    ProblemRepo problemRepo;
+    TeacherGroupRelationRepository teacherGroupRelationRepository;
+    ProblemTestCaseServiceCache problemTestCaseServiceCache;
 
-    private TestCaseRepo testCaseRepo;
+    TestCaseRepo testCaseRepo;
 
-    private UserLoginRepo userLoginRepo;
+    UserLoginRepo userLoginRepo;
 
-    private ContestRepo contestRepo;
+    ContestRepo contestRepo;
 
-    private Constants constants;
+    Constants constants;
 
-    private ContestPagingAndSortingRepo contestPagingAndSortingRepo;
+    ContestPagingAndSortingRepo contestPagingAndSortingRepo;
 
-    private ContestSubmissionRepo contestSubmissionRepo;
+    ContestSubmissionRepo contestSubmissionRepo;
 
-    private UserRegistrationContestRepo userRegistrationContestRepo;
+    UserRegistrationContestRepo userRegistrationContestRepo;
 
-    private NotificationsService notificationsService;
+    NotificationsService notificationsService;
 
-    private UserRegistrationContestPagingAndSortingRepo userRegistrationContestPagingAndSortingRepo;
+    UserRegistrationContestPagingAndSortingRepo userRegistrationContestPagingAndSortingRepo;
 
-    private ContestSubmissionPagingAndSortingRepo contestSubmissionPagingAndSortingRepo;
+    ContestSubmissionPagingAndSortingRepo contestSubmissionPagingAndSortingRepo;
 
-    private ContestSubmissionTestCaseEntityRepo contestSubmissionTestCaseEntityRepo;
+    ContestSubmissionTestCaseEntityRepo contestSubmissionTestCaseEntityRepo;
 
-    private UserService userService;
+    UserService userService;
 
-    private ContestRoleRepo contestRoleRepo;
+    ContestRoleRepo contestRoleRepo;
 
-    private CodePlagiarismRepo codePlagiarismRepo;
+    CodePlagiarismRepo codePlagiarismRepo;
 
-    private ContestSubmissionHistoryRepo contestSubmissionHistoryRepo;
+    ContestSubmissionHistoryRepo contestSubmissionHistoryRepo;
 
-    private ContestProblemRepo contestProblemRepo;
+    ContestProblemRepo contestProblemRepo;
 
-    private UserContestProblemRoleRepo userContestProblemRoleRepo;
+    UserContestProblemRoleRepo userContestProblemRoleRepo;
 
-    private TagRepo tagRepo;
+    TagRepo tagRepo;
 
-    private MongoContentService mongoContentService;
+    MongoContentService mongoContentService;
 
-    private ProblemService problemService;
+    ProblemService problemService;
 
-    private ContestService contestService;
+    ContestService contestService;
 
-    private TestCaseService testCaseService;
+    TestCaseService testCaseService;
 
-    private RabbitTemplate rabbitTemplate;
+    RabbitTemplate rabbitTemplate;
 
-    private ProblemTestCaseServiceCache cacheService;
+    ProblemTestCaseServiceCache cacheService;
 
-    private ContestProblemExportService exporter;
+    ContestProblemExportService exporter;
 
-    private ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
+    ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
 
-    private UserRegistrationContestService userRegistrationContestService;
+    UserRegistrationContestService userRegistrationContestService;
 
-    private Judge0Service judge0Service;
+    Judge0Service judge0Service;
 
-    private ProblemTagRepo problemTagRepo;
+    ProblemTagRepo problemTagRepo;
 
     ObjectMapper objectMapper;
 
@@ -706,10 +711,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             urc.setStatus(UserRegistrationContestEntity.STATUS_SUCCESSFUL);
             userRegistrationContestRepo.save(urc);
 
-            // add account admin to the contest
             String admin = "admin";
             UserLogin u = userLoginRepo.findByUserLoginId(admin);
-            if (u != null) {
+            if (u != null && !"admin".equals(u.getUserLoginId())) {
                 urc = new UserRegistrationContestEntity();
                 urc.setContestId(modelCreateContest.getContestId());
                 urc.setRoleId(UserRegistrationContestEntity.ROLE_OWNER);
@@ -2061,14 +2065,30 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     @Transactional
     @Override
     public void addUsers2ToContest(String contestId, AddUsers2Contest addUsers2Contest) {
-        addUsers2Contest
-            .getUserIds()
-            .stream()
-            .forEach(userId -> addUserToContest(new ModelAddUserToContest(
+        List<String> userIds = addUsers2Contest.getUserIds() != null
+            ? addUsers2Contest.getUserIds()
+            : new ArrayList<>();
+
+        List<String> groupUserIds = new ArrayList<>();
+        if (addUsers2Contest.getGroupIds() != null && !addUsers2Contest.getGroupIds().isEmpty()) {
+            groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(addUsers2Contest.getGroupIds());
+        }
+
+        Set<String> allUserIds = new HashSet<>();
+        allUserIds.addAll(userIds);
+        allUserIds.addAll(groupUserIds);
+
+        for (String userId : allUserIds) {
+            ModelAddUserToContest model = new ModelAddUserToContest(
                 contestId,
                 userId,
-                addUsers2Contest.getRole(), "")));
+                addUsers2Contest.getRole(),
+                ""
+            );
+            addUserToContest(model);
+        }
     }
+
 
     @Override
     public ModelAddUserToContestGroupResponse addUserToContestGroup(ModelAddUserToContestGroup modelAddUserToContestGroup) {
@@ -3535,20 +3555,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Override
     public List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId) {
-        List<UserContestProblemRole> lst = userContestProblemRoleRepo.findAllByProblemId(problemId);
-        List<ModelResponseUserProblemRole> res = new ArrayList();
-        for (UserContestProblemRole upr : lst) {
-            ModelResponseUserProblemRole e = new ModelResponseUserProblemRole();
-            e.setUserLoginId(upr.getUserId());
-            e.setProblemId(upr.getProblemId());
-            e.setRoleId(upr.getRoleId());
-            res.add(e);
-        }
-        return res;
+        return userContestProblemRoleRepo.findAllByProblemIdWithFullName(problemId);
     }
 
     @Override
-    public boolean addUserProblemRole(String userName, ModelUserProblemRole input) throws Exception {
+    public Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception {
         boolean isOwner = this.userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
             input.getProblemId(),
             userName,
@@ -3556,21 +3567,44 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (!isOwner) {
             throw new MiniLeetCodeException("You are not owner of this problem.", 403);
         }
-        List<UserContestProblemRole> L = userContestProblemRoleRepo.findAllByProblemIdAndUserIdAndRoleId(
-            input.getProblemId(),
-            input.getUserId(),
-            input.getRoleId());
-        if (L != null && L.size() > 0) {
-            return false;
-        }
-        UserContestProblemRole e = new UserContestProblemRole();
-        e.setUserId(input.getUserId());
-        e.setProblemId(input.getProblemId());
-        e.setRoleId(input.getRoleId());
-        e.setUpdateByUserId(userName);
-        e = userContestProblemRoleRepo.save(e);
 
-        return true;
+        List<String> userIds = input.getUserIds() != null ? input.getUserIds() : new ArrayList<>();
+        List<String> groupUserIds = new ArrayList<>();
+        if (input.getGroupIds() != null && !input.getGroupIds().isEmpty()) {
+            groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(input.getGroupIds());
+        }
+
+        Set<String> allUserIds = new HashSet<>();
+        allUserIds.addAll(userIds);
+        allUserIds.addAll(groupUserIds);
+
+        boolean success = true;
+        List<String> addedUsers = new ArrayList<>();
+        List<String> skippedUsers = new ArrayList<>();
+        for (String userId : allUserIds) {
+            List<UserContestProblemRole> L = userContestProblemRoleRepo.findAllByProblemIdAndUserIdAndRoleId(
+                input.getProblemId(),
+                userId,
+                input.getRoleId());
+            if (L != null && L.size() > 0) {
+                success = false;
+                skippedUsers.add(userId);
+                continue;
+            }
+            UserContestProblemRole e = new UserContestProblemRole();
+            e.setUserId(userId);
+            e.setProblemId(input.getProblemId());
+            e.setRoleId(input.getRoleId());
+            e.setUpdateByUserId(userName);
+            userContestProblemRoleRepo.save(e);
+            addedUsers.add(userId);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", success);
+        response.put("addedUsers", addedUsers);
+        response.put("skippedUsers", skippedUsers);
+        return response;
     }
 
     @Override

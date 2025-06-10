@@ -5,6 +5,7 @@ import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.entity.UserRegister;
 import com.hust.baseweb.model.ModelPageUserSearchResponse;
 import com.hust.baseweb.model.PersonModel;
+import com.hust.baseweb.model.UserFullNameProjection;
 import com.hust.baseweb.model.UserLoginWithPersonModel;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.repo.UserRegisterRepo;
@@ -19,8 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @AllArgsConstructor(onConstructor_ = @Autowired)
@@ -54,6 +54,25 @@ public class UserServiceImpl implements UserService {
         ModelSearchUserResult user = userLoginRepo.getUserGeneralInfo(userId);
         return getUserFullName(user);
     }
+
+    @Override
+    public Map<String, String> getUserFullNames(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<UserFullNameProjection> users = userLoginRepo.findFullNamesByIds(userIds);
+        Map<String, String> fullNames = new LinkedHashMap<>();
+
+        for (UserFullNameProjection user : users) {
+            String fullName = (user.getFirstName() != null ? user.getFirstName() : "") +
+                              (user.getLastName() != null ? " " + user.getLastName() : "");
+            fullNames.put(user.getUserLoginId(), fullName.trim());
+        }
+
+        return fullNames;
+    }
+
 
     public List<UserLogin> getAllUserLogins() {
         return userLoginRepo.findAll();
