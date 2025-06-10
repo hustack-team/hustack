@@ -4128,7 +4128,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return newProblem;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public List<ModelStudentOverviewProblem> getStudentContestProblems(String userId, String contestId) {
         ContestEntity contest = contestService.findContest(contestId);
