@@ -12,7 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableAsync
 @EnableScheduling
 @EnableCaching
-@EnableMethodSecurity
+@EnableMethodSecurity(securedEnabled = true)
 @SpringBootApplication(scanBasePackages = {"com.hust.baseweb", "vn.edu.hust.soict.judge0client", "ai.soict.hustack.authzresourceserver"})
 public class HustackApplication {
 

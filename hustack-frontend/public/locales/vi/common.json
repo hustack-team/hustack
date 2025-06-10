@@ -57,4 +57,9 @@
   "copyAllCode": "Sao chép tất cả mã",
   "individualBlocks": "Tách tất cả các khối mã",
   "combinedBlock":"Ghép tất cả các khối mã"
+  "scoreCoefficient": "Điểm hệ số",
+  "scoreCoefficientTitle": "Điểm hệ số (Từ 1 đến 100)",
+  "canEditCoefficientPoint": "Chỉnh sửa điểm hệ số",
+  "canEditCoefficientPointToolTip": "Nếu là Có, cho phép thiết lập trọng số điểm của từng bài tập. Nếu là Không, tất cả bài tập có cùng trọng số điểm 1.0",
+  "scoreCoefficientInput": "Nhập một số nguyên dương từ 1 đến 100 (mặc định là 1)"
 }

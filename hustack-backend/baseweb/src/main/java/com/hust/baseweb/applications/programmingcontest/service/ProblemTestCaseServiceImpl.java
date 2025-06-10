@@ -33,19 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.util.JRLoader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -73,6 +66,7 @@ import static com.hust.baseweb.applications.programmingcontest.entity.ContestEnt
 import static com.hust.baseweb.config.rabbitmq.RabbitConfig.EXCHANGE;
 import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.JUDGE_PROBLEM;
 import static com.hust.baseweb.config.rabbitmq.RabbitRoutingKey.MULTI_THREADED_PROGRAM;
+import static com.hust.baseweb.utils.PdfUtils.exportPdf;
 
 @Slf4j
 @Service
@@ -856,6 +850,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                    .contestShowTag(modelUpdateContest.getContestShowTag())
                                                    .contestShowComment(modelUpdateContest.getContestShowComment())
                                                    .contestPublic(modelUpdateContest.getContestPublic())
+                                                   .canEditCoefficientPoint(modelUpdateContest.getCanEditCoefficientPoint())
                                                    .build();
         return contestService.updateContestWithCache(contestEntity);
 
@@ -904,6 +899,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         contestProblem.setSubmissionMode(modelProblemInfoInContest.getSubmissionMode());
         contestProblem.setForbiddenInstructions(modelProblemInfoInContest.getForbiddenInstructions());
+        contestProblem.setCoefficientPoint(modelProblemInfoInContest.getCoefficientPoint());
 
         return contestProblemRepo.save(contestProblem);
     }
@@ -1800,11 +1796,19 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         List<String> problemIds = new ArrayList<>();
 
         List<ContestProblem> contestProblems = contestProblemRepo.findAllByContestId(contestId);
+        LinkedHashMap<String, Double> mapProblemIdToCoefficient = new LinkedHashMap<>();
         if (contestProblems != null) {
             for (ContestProblem cp : contestProblems) {
                 if (cp.getSubmissionMode() != null) {
                     if (!cp.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
                         problemIds.add(cp.getProblemId());
+
+                        double coefficient = 1.0;
+                        if (contest.getCanEditCoefficientPoint() != null && Integer.valueOf(1).equals(contest.getCanEditCoefficientPoint())) {
+                            coefficient = cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1.0;
+                        }
+
+                        mapProblemIdToCoefficient.put(cp.getProblemId(), coefficient);
                     }
                 }
             }
@@ -1820,7 +1824,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             .collect(Collectors.toList());
         */
         LinkedHashMap<String, String> mapProblemIdToProblemName = new LinkedHashMap<>();
-        for (ContestProblem contestProblem : contestProblemRepo.findAllByContestId(contestId)) {
+        for (ContestProblem contestProblem : contestProblems) {
             mapProblemIdToProblemName.put(contestProblem.getProblemId(), contestProblem.getProblemRename());
         }
 
@@ -1860,7 +1864,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 case HIGHEST:
                     submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
                     break;
-
                 case LATEST:
                     submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
                     break;
@@ -1890,43 +1893,50 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 mapProblem2PointPercentage.put(problemId, percentage);
             }
 
-            long totalPoint = 0;
-            double totalPercentage = 0;
+            double totalWeightedPoint = 0;
+            double totalWeightedPercent = 0;
+            double totalCoefficient = 0;
 
             List<ModelSubmissionInfoRanking> mapProblemsToPoints = new ArrayList<>();
             for (Map.Entry entry : mapProblemToPoint.entrySet()) {
                 ModelSubmissionInfoRanking tmp = new ModelSubmissionInfoRanking();
                 String problemId = entry.getKey().toString();
                 tmp.setProblemId(mapProblemIdToProblemName.get(problemId));
-                tmp.setPoint((Long) entry.getValue());
-                mapProblemsToPoints.add(tmp);
-                totalPoint += tmp.getPoint();
+                long point = (Long) entry.getValue();
+                tmp.setPoint(point);
 
+                double coefficient = mapProblemIdToCoefficient.getOrDefault(problemId, 1.0);
+                long maxPoint = mProblem2MaxPoint.getOrDefault(problemId, 0L);
                 double percent = 0;
-                if (mapProblem2PointPercentage.get(problemId) != null) {
-                    percent = mapProblem2PointPercentage.get(problemId);
+                if (maxPoint > 0) {
+                    percent = (double) point / maxPoint;
                 }
-                totalPercentage = totalPercentage + percent;
-                System.out.println("RANKING, problem " +
-                                   problemId +
-                                   " percent = " +
-                                   percent +
-                                   " total percent = " +
-                                   totalPercentage);
+
+                totalWeightedPoint += point * coefficient;
+                totalWeightedPercent += percent * coefficient;
+                totalCoefficient += coefficient;
+
                 tmp.setPointPercentage(percent);
+                mapProblemsToPoints.add(tmp);
             }
-            if (nbProblems > 0) {
-                totalPercentage = totalPercentage * 100 / nbProblems;
-                System.out.println("RANKING, nbProblem = " + nbProblems + " total percent = " + totalPercentage);
+
+            double totalPoint = 0;
+            double totalPercentage = 0;
+
+            if (totalCoefficient > 0) {
+                totalPoint = totalWeightedPoint / totalCoefficient;
+                totalPercentage = totalWeightedPercent / totalCoefficient;
             }
 
             //contestSubmission.setFullname(userService.getUserFullName(userId));
             contestSubmission.setFullname(getUserFullNameOfContest(contestId, userId));
             contestSubmission.setMapProblemsToPoints(mapProblemsToPoints);
-            contestSubmission.setTotalPoint(totalPoint);
+            contestSubmission.setTotalPoint(Double.parseDouble(String.format("%.2f", totalPoint)));
             contestSubmission.setTotalPercentagePoint(totalPercentage);
-            contestSubmission.setStringTotalPercentagePoint(String.format("%,.2f", totalPercentage));
+            contestSubmission.setStringTotalPercentagePoint(String.format("%,.2f", totalPercentage * 100) + "%");
+
             listContestSubmissionsByUser.add(contestSubmission);
+
         }
 
         return listContestSubmissionsByUser;
@@ -1938,6 +1948,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         String contestId,
         Constants.GetPointForRankingType getPointForRankingType
     ) {
+
         List<ContestSubmissionsByUser> listContestSubmissionsByUser = getRankingByContestIdNew(
             contestId,
             getPointForRankingType);
@@ -3452,19 +3463,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
 
         return exportPdf(dtos, "reports/submission_report.jasper", new HashMap<>());
-    }
-
-    private byte[] exportPdf(Collection<?> collection, String reportPath, Map<String, Object> parameters) {
-        try {
-            InputStream is = new ClassPathResource(reportPath).getInputStream();
-            JasperReport jasperReport = (JasperReport) JRLoader.loadObject(is);
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(collection);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-
-            return JasperExportManager.exportReportToPdf(jasperPrint);
-        } catch (Exception e) {
-            throw new RuntimeException("Error generating PDF", e);
-        }
     }
 
     @Override
