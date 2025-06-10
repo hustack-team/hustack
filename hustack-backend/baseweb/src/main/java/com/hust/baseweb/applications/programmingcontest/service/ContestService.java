@@ -20,10 +20,10 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestService {
 
-    private final TestCaseRepo testCaseRepo;
+    TestCaseRepo testCaseRepo;
     ContestRepo contestRepo;
 
     UserRegistrationContestRepo userRegistrationContestRepo;
