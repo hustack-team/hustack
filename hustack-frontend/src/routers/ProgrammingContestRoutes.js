@@ -21,7 +21,7 @@ import StudentViewProgrammingContestProblemDetailV2
 import SuggestProblem from "component/education/programmingcontestFE/SuggestProblem";
 import UserContestProblemRole from "component/education/programmingcontestFE/UserContestProblemRole";
 import {Route, Switch, useRouteMatch} from "react-router";
-import ContestLibrarytList from "component/education/programmingcontestFE/ContestLibraryList"
+// import ContestLibrarytList from "component/education/programmingcontestFE/ContestLibraryList"
 
 export default function ProgrammingContestRoutes() {
   let { path } = useRouteMatch();

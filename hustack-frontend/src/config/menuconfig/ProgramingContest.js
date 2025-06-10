@@ -50,13 +50,14 @@ export const ProgrammingContestMenuStudent = {
       icon: null,
       text: "Contest",
       child: [],
-    },    {
-      id: "MENU_PROGRAMMING_CONTEST_PARTICIPANT.MENU_PROGRAMMING_CONTEST_PARTICIPANT_LIST_REGISTERED_CONTEST",
-      path: "/programming-contest/student-list-library",
-      isPublic: false,  
-      icon: null,
-      text: "Library",
-      child: [],
-    },
+    }, 
+    // {
+    //   id: "MENU_PROGRAMMING_CONTEST_PARTICIPANT.MENU_PROGRAMMING_CONTEST_PARTICIPANT_LIST_REGISTERED_CONTEST",
+    //   path: "/programming-contest/student-list-library",
+    //   isPublic: false,  
+    //   icon: null,
+    //   text: "Library",
+    //   child: [],
+    // },
   ],
 };
