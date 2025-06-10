@@ -49,7 +49,7 @@
   "reset": "Đặt lại",
   "codeAuthorship": "Nguồn gốc (dự đoán)",
   "invalidInput": "Vui lòng kiểm tra lại dữ liệu.",
-  "toggleBlockCodes": "Hiện/Ẩn Code",
+  "toggleBlockCodes": "Hiện/Ẩn mã",
   "moveDown": "Di chuyển khối mã xuống dưới",
   "moveUp": "Di chuyển khối mã lên trên",
   "insertAbove": "Thêm khối mã phía trên",
