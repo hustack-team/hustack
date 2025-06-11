@@ -6,7 +6,6 @@ import {
 } from "@material-ui/core";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
-import {toast} from "react-toastify";
 import {formatDateTime} from "../ultils/DateUltils";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import {useLocation} from "react-router";
@@ -53,27 +52,27 @@ function MyExamPreview(props) {
                       },
                     });
                   }else{
-                    toast.error(res.data.resultMsg)
+                    errorNoti(res.data.resultMsg, 3000)
                   }
                 }else {
-                  toast.error(res)
+                  errorNoti(res, 3000)
                   setIsLoading(false)
                 }
               },
-              { onError: (e) => toast.error(e) },
+              { onError: (e) => errorNoti(e, 3000) },
             );
           }else{
-            toast.error(res1.data.resultMsg)
+            errorNoti(res1.data.resultMsg, 3000)
             setIsLoading(false)
           }
           closeMenu()
         }else {
-          toast.error(res1)
+          errorNoti(res1, 3000)
           setIsLoading(false)
           closeMenu()
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
     );
   };
 
@@ -86,7 +85,7 @@ function MyExamPreview(props) {
         resolve();
       } else {
         videoElement.onloadedmetadata = () => resolve();
-        videoElement.onerror = () => reject(errorNoti("Không thể tải video từ webcam", true));
+        videoElement.onerror = () => reject(errorNoti("Không thể tải video từ webcam", 3000));
       }
     });
   };
@@ -110,9 +109,9 @@ function MyExamPreview(props) {
       setIsCameraOn(true);
     } catch (err) {
       if (err.name === 'NotAllowedError') {
-        errorNoti("Quyền truy cập webcam bị từ chối. Vui lòng cấp quyền để bắt đầu giám sát.", true)
+        errorNoti("Quyền truy cập webcam bị từ chối. Vui lòng cấp quyền để bắt đầu giám sát.", 3000)
       } else {
-        errorNoti("Không thể truy cập webcam. Vui lòng kiểm tra quyền truy cập hoặc thiết bị.", true)
+        errorNoti("Không thể truy cập webcam. Vui lòng kiểm tra quyền truy cập hoặc thiết bị.", 3000)
       }
       return
     }
@@ -188,6 +187,7 @@ function MyExamPreview(props) {
             variant="outlined"
             onClick={() => {
               history.push("/exam/my-exam")
+              stopCamera()
               openMenu()
             }}
           >

@@ -406,23 +406,28 @@ public class ExamServiceImpl implements ExamService {
     @Override
     public ResponseData<ExamResultEntity> startDoingMyExam(String examStudentTestId) {
         ResponseData<ExamResultEntity> responseData = new ResponseData<>();
-
-        List<ExamResultEntity> examResultExist = examResultRepository.findAllByExamStudentTestId(examStudentTestId);
-        if(!examResultExist.isEmpty()){
-            responseData.setHttpStatus(HttpStatus.NOT_FOUND);
-            responseData.setResultCode(HttpStatus.NOT_FOUND.value());
-            responseData.setResultMsg("Thí sinh đã làm bài thi hoặc đã vào bài thi!");
-            return responseData;
-        }
-
         ExamResultEntity examResultEntity = new ExamResultEntity();
-        examResultEntity.setExamStudentTestId(examStudentTestId);
-        examResultEntity = examResultRepository.save(examResultEntity);
+
+        Optional<ExamResultEntity> examResultExist = examResultRepository.findByExamStudentTestId(examStudentTestId);
+        if(examResultExist.isPresent()){
+            if(Boolean.FALSE.equals(examResultExist.get().getSubmitAgain())){
+                responseData.setHttpStatus(HttpStatus.NOT_FOUND);
+                responseData.setResultCode(HttpStatus.NOT_FOUND.value());
+                responseData.setResultMsg("Thí sinh đã làm bài thi hoặc đã vào bài thi. Cần liên hệ Giảng viên coi thi để tiếp tục làm bài!");
+                return responseData;
+            }else{
+                examResultEntity = examResultExist.get();
+            }
+        }else{
+            examResultEntity.setExamStudentTestId(examStudentTestId);
+            examResultEntity.setSubmitAgain(false);
+            examResultEntity = examResultRepository.save(examResultEntity);
+        }
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
         responseData.setData(examResultEntity);
-        responseData.setResultMsg("Nộp bài thành công");
+        responseData.setResultMsg("Success");
         return responseData;
     }
 

@@ -9,6 +9,7 @@ public interface ExamStudentResultDetailsRes {
     String getEmail();
     String getPhone();
     String getExamResultId();
+    Boolean getSubmitAgain();
     Float getTotalScore();
     Integer getTotalTime();
     Integer getTotalViolate();

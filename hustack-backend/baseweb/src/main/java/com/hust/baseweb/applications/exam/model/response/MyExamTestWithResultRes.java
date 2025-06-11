@@ -10,5 +10,6 @@ public interface MyExamTestWithResultRes {
     String getExamResultId();
     Float getTotalScore();
     Integer getTotalTime();
+    Boolean getSubmitAgain();
     Integer getTotalViolate();
 }

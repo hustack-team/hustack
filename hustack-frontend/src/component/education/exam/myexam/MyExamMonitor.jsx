@@ -3,7 +3,6 @@ import withScreenSecurity from "../../../withScreenSecurity";
 import {formatDateTime, formatDateTimeApi} from "../ultils/DateUltils";
 import MyExamBlockScreenDialog from "./MyExamBlockScreenDialog";
 import {request} from "../../../../api";
-import {toast} from "react-toastify";
 import * as faceapi from "face-api.js";
 import {errorNoti} from "../../../../utils/notification";
 
@@ -44,7 +43,7 @@ function MyExamMonitor(props) {
       "post",
       '/exam-monitor',
       (res) => {},
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
       logs,
     );
   };

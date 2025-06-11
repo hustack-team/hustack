@@ -207,6 +207,7 @@ public interface ExamTestRepository extends JpaRepository<ExamTestEntity, String
                    "    et.duration as examTestDuration, " +
                    "    et.description as examTestDescription, " +
                    "    er.id as examResultId, " +
+                   "    er.submit_again as submitAgain, " +
                    "    case when e.score_status = 1 then er.total_score else null end as totalScore, " +
                    "    er.total_time as totalTime, " +
                    "    count(em.id) as totalViolate " +

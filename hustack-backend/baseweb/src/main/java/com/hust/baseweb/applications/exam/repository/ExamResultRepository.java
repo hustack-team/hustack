@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ExamResultRepository extends JpaRepository<ExamResultEntity, String> {
@@ -22,5 +23,5 @@ public interface ExamResultRepository extends JpaRepository<ExamResultEntity, St
                    "    eet.exam_id = :examId", nativeQuery = true)
     List<ExamResultEntity> findAllByExamId(String examId);
 
-    List<ExamResultEntity> findAllByExamStudentTestId(String examStudentTestId);
+    Optional<ExamResultEntity> findByExamStudentTestId(String examStudentTestId);
 }

@@ -5,18 +5,16 @@ import {
   Card,
   CardContent,
   CardHeader,
-  MenuItem,
   TextField
 } from "@material-ui/core";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
 import useDebounceValue from "../hooks/use-debounce";
-import {toast} from "react-toastify";
 import {DataGrid} from "@mui/x-data-grid";
 import {formatDateTime} from "../ultils/DateUltils";
-import { BorderColor } from "@mui/icons-material";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import PrimaryButton from "../../../button/PrimaryButton";
+import {errorNoti} from "../../../../utils/notification";
 
 const baseColumn = {
   sortable: false,
@@ -154,10 +152,10 @@ function MyExam(props) {
           setDataList(res.data.content);
           setTotalCount(res.data.totalElements);
         }else {
-          toast.error(res)
+          errorNoti(res, 3000)
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
     );
   }
 
@@ -176,13 +174,13 @@ function MyExam(props) {
               },
             });
           }else{
-            toast.error(res.data.resultMsg)
+            errorNoti(res.data.resultMsg, 3000)
           }
         }else {
-          toast.error(res)
+          errorNoti(res, 3000)
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
     );
   };
 
@@ -200,13 +198,13 @@ function MyExam(props) {
               },
             });
           }else{
-            toast.error(res.data.resultMsg)
+            errorNoti(res.data.resultMsg, 3000)
           }
         }else {
-          toast.error(res)
+          errorNoti(res, 3000)
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
     );
   };
 

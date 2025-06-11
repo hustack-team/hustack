@@ -15,7 +15,6 @@ import {
 import {request} from "../../../../api";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
-import {toast} from "react-toastify";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
 import {makeStyles} from "@material-ui/core/styles";
 import {useHistory} from "react-router-dom";
@@ -36,6 +35,7 @@ import TertiaryButton from "../../../button/TertiaryButton";
 import MyExamMonitor from "./MyExamMonitor";
 import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
 import FileUploader from "../../../common/uploader/FileUploader";
+import {errorNoti, successNoti} from "../../../../utils/notification";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -93,6 +93,9 @@ function MyExamDetails(props) {
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
     setStartLoadTime(new Date());
+    if(data?.examMonitor){
+      handleUpdateExamResult();
+    }
   }, []);
 
   useEffect(() => {
@@ -115,6 +118,24 @@ function MyExamDetails(props) {
   const progress = (countdown / initialSeconds) * 100;
   const strokeDasharray = 283;
   const strokeDashoffset = (progress / 100) * strokeDasharray;
+
+  const handleUpdateExamResult = () =>{
+    const body = {
+      examStudentTestId: data?.examStudentTestId,
+      submitAgain: false,
+    }
+    request(
+      "put",
+      `/exam-result`,
+      (res) => {
+        if(res.data.resultCode !== 200){
+          errorNoti(res.data.resultMsg, 3000)
+        }
+      },
+      { onError: (e) => errorNoti(e, 3000) },
+      body,
+    );
+  }
 
   const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
     if(isChecked){
@@ -157,7 +178,7 @@ function MyExamDetails(props) {
         }
       } catch (error) {
         console.error('Error compressing file:', error);
-        toast.error('Lỗi khi tải ảnh lên');
+        errorNoti('Lỗi khi tải ảnh lên', 3000);
       }
     }
     answersFiles[questionOrder-1].files = tmpFiles
@@ -212,21 +233,21 @@ function MyExamDetails(props) {
       (res) => {
         if(res.status === 200){
           if(res.data.resultCode === 200){
-            toast.success(res.data.resultMsg)
+            successNoti(res.data.resultMsg, 3000)
             setIsLoading(false)
             history.push("/exam/my-exam")
           }else{
-            toast.error(res.data.resultMsg)
+            errorNoti(res.data.resultMsg, 3000)
             setIsLoading(false)
           }
           openMenu()
         }else {
-          toast.error(res)
+          errorNoti(res, 3000)
           setIsLoading(false)
           openMenu()
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
       formData,
       config,
     );

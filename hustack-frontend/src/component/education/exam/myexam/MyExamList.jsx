@@ -7,7 +7,7 @@ import {
 } from "@material-ui/core";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
-import {toast} from "react-toastify";
+import {errorNoti} from "../../../../utils/notification";
 import {DataGrid} from "@mui/x-data-grid";
 import {formatDateTime} from "../ultils/DateUltils";
 import {parseHTMLToString} from "../ultils/DataUltils";
@@ -99,7 +99,7 @@ function MyExamList(props) {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
             {
-              rowData?.row?.totalScore == null && rowData?.row?.totalTime == null ? (
+              ((rowData?.row?.totalScore == null && rowData?.row?.totalTime == null) || rowData?.row?.submitAgain) ? (
                 <PrimaryButton
                   variant="contained"
                   color="primary"
@@ -159,13 +159,13 @@ function MyExamList(props) {
                 },
               });
             }else{
-              toast.error(res.data.resultMsg)
+              errorNoti(res.data.resultMsg, 3000)
             }
           }else {
-            toast.error(res)
+            errorNoti(res, 3000)
           }
         },
-        { onError: (e) => toast.error(e) },
+        { onError: (e) => errorNoti(e, 3000) },
       );
     }
   };

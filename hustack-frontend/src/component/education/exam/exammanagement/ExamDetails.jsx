@@ -7,7 +7,6 @@ import {
 } from "@material-ui/core";
 import {formatDateTime} from "../ultils/DateUltils";
 import {request} from "../../../../api";
-import {toast} from "react-toastify";
 import TestBankDetails from "../testbank/TestBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
 import ExamMarking from "./ExamMarking";
@@ -18,6 +17,8 @@ import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
 import ExamViolateDialog from "./ExamViolateDialog";
+import SecondaryButton from "../ultils/component/SecondaryButton";
+import {errorNoti, successNoti} from "../../../../utils/notification";
 
 const baseColumn = {
   sortable: false,
@@ -93,20 +94,31 @@ function ExamDetails(props) {
       field: "",
       headerName: "",
       sortable: false,
-      minWidth: 120,
-      maxWidth: 120,
+      minWidth: 240,
       renderCell: (rowData) => {
         return (
-          <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
+          <Box display="flex" justifyContent="end" alignItems='center' width="100%">
             {
               rowData?.row?.examResultId ? (
-                <PrimaryButton
-                  variant="contained"
-                  color="primary"
-                  onClick={(data) => handleMarking(rowData?.row)}
-                >
-                  Chấm điểm
-                </PrimaryButton>
+                <div style={{display: "flex", gap: 12}}>
+                  {
+                    !rowData?.row?.submitAgain && (
+                      <SecondaryButton
+                        variant="outlined"
+                        onClick={(data) => handleUpdateExamResult(rowData?.row)}
+                      >
+                        Mở làm tiếp
+                      </SecondaryButton>
+                    )
+                  }
+                  <PrimaryButton
+                    variant="contained"
+                    color="primary"
+                    onClick={(data) => handleMarking(rowData?.row)}
+                  >
+                    Chấm điểm
+                  </PrimaryButton>
+                </div>
               ) : (
                 <Button
                   variant="outlined"
@@ -127,6 +139,7 @@ function ExamDetails(props) {
   const { open, setOpen, dataExam} = props;
 
   const [rowData, setRowData] = useState([])
+  const [examExamTestIdFocus, setExamExamTestIdFocus] = useState(null)
   const [data, setData] = useState(dataExam)
   const [openTestDetailsDialog, setOpenTestDetailsDialog] = useState(false);
   const [testDetails, setTestDetails] = useState(null)
@@ -145,10 +158,10 @@ function ExamDetails(props) {
           setTestDetails(res.data.data)
           setOpenTestDetailsDialog(true)
         }else{
-          toast.error(res.data.resultMsg)
+          errorNoti(res.data.resultMsg, 3000)
         }
       },
-      { onError: (e) => toast.error(e) },
+      { onError: (e) => errorNoti(e, 3000) },
     );
   }
 
@@ -161,6 +174,27 @@ function ExamDetails(props) {
     setOpen(false)
   }
 
+  const handleUpdateExamResult = (rowData) =>{
+    const body = {
+      examStudentTestId: rowData?.examStudentTestId,
+      submitAgain: true,
+    }
+    request(
+      "put",
+      `/exam-result`,
+      (res) => {
+        if(res.data.resultCode === 200){
+          successNoti(res.data.resultMsg, 3000)
+          handleFetchListStudentExam(examExamTestIdFocus)
+        }else{
+          errorNoti(res.data.resultMsg, 3000)
+        }
+      },
+      { onError: (e) => errorNoti(e, 3000) },
+      body,
+    );
+  }
+
   const handleMarking = (rowData) => {
     request(
       "get",
@@ -171,29 +205,34 @@ function ExamDetails(props) {
           setOpenExamDetailsMarkingDialog(true)
           setExpanded(false)
         }else{
-          toast.error(res.data.resultMsg)
+          errorNoti(res.data.resultMsg, 3000)
         }
       },
-      { onError: (e) => toast.error(e) }
+      { onError: (e) => errorNoti(e, 3000) }
     );
   }
 
   const handleChangeAccordion = (test, panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
     if(isExpanded){
-      request(
-        "get",
-        `exam/examTest/${test.examExamTestId}`,
-        (res) => {
-          if(res.data.resultCode === 200){
-            setRowData(res.data.data)
-          }else{
-            toast.error(res.data.resultMsg)
-          }
-        },
-        { onError: (e) => toast.error(e) },
-      );
+      setExamExamTestIdFocus(test.examExamTestId)
+      handleFetchListStudentExam(test.examExamTestId)
     }
+  }
+
+  const handleFetchListStudentExam = (examExamTestId) => {
+    request(
+      "get",
+      `exam/examTest/${examExamTestId}`,
+      (res) => {
+        if(res.data.resultCode === 200){
+          setRowData(res.data.data)
+        }else{
+          errorNoti(res.data.resultMsg, 3000)
+        }
+      },
+      { onError: (e) => errorNoti(e, 3000) },
+    );
   }
 
   return (

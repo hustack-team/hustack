@@ -42,6 +42,9 @@ public class ExamResultEntity{
     @Column(name = "submited_at")
     private LocalDateTime submitedAt;
 
+    @Column(name = "submit_again")
+    private Boolean submitAgain;
+
     @PrePersist
     protected void onCreate() {
         id = UUID.randomUUID().toString();
