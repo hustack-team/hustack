@@ -1,7 +1,9 @@
 package com.hust.baseweb.applications.exam.model.response;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.LocalDateTime;
@@ -10,13 +12,14 @@ import java.util.List;
 @Getter
 @Setter
 @FieldNameConstants
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExamTestFilterRes {
 
-    private String id;
-    private String code;
-    private String name;
-    private String description;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private List<ExamTestQuestionFilterRes> examTestQuestionFilterResList;
+    String id;
+    String code;
+    String name;
+    String description;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+    List<ExamTestQuestionFilterRes> examTestQuestionFilterResList;
 }

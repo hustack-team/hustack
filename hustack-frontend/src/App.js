@@ -18,6 +18,7 @@ import { ReactComponent as HustProgrammingLogo } from "./assets/icons/hust-progr
 import { PLATFORM_NAME } from "./config/config";
 import history from "./history.js";
 import i18n from "./translation/i18n";
+import {MenuProvider} from "./layout/sidebar/context/MenuContext";
 
 const theme = createTheme({
   typography: {
@@ -137,23 +138,25 @@ function App() {
       <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
           <MuiThemeProvider theme={theme}>
-            <CssBaseline />
-            <Router history={history}>
-              <Routes />
-              <ToastContainer
-                position="bottom-center"
-                transition={Slide}
-                autoClose={3000}
-                limit={3}
-                hideProgressBar={true}
-                newestOnTop
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
-            </Router>
+            <MenuProvider>
+              <CssBaseline />
+              <Router history={history}>
+                <Routes />
+                <ToastContainer
+                  position="bottom-center"
+                  transition={Slide}
+                  autoClose={3000}
+                  limit={3}
+                  hideProgressBar={true}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                />
+              </Router>
+            </MenuProvider>
           </MuiThemeProvider>
         </QueryClientProvider>
       </I18nextProvider>

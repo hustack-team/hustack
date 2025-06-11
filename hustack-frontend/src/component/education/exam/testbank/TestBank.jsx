@@ -170,18 +170,13 @@ function TestBank(props) {
               content: question.questionContent,
               filePath: question.questionFile,
               numberAnswer: question.questionNumberAnswer,
-              contentAnswer1: question.questionContentAnswer1,
-              contentAnswer2: question.questionContentAnswer2,
-              contentAnswer3: question.questionContentAnswer3,
-              contentAnswer4: question.questionContentAnswer4,
-              contentAnswer5: question.questionContentAnswer5,
+              answers: question.questionAnswers,
               multichoice: question.questionMultichoice,
               answer: question.questionAnswer,
               explain: question.questionExplain,
               order: question.questionOrder,
               examSubjectName: question.examSubjectName,
-              examTagIdStr: question.examTagIdStr,
-              examTagNameStr: question.examTagNameStr,
+              examTags: question.questionExamTags,
             })
           }
           history.push({
@@ -190,6 +185,7 @@ function TestBank(props) {
               data: {
                 code: res.data.data.code,
                 name: res.data.data.name,
+                duration: res.data.data.duration,
                 description: res.data.data.description,
                 questions: tmpQuestions
               },

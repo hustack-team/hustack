@@ -13,6 +13,7 @@ import AccountButton from "./account/AccountButton";
 import LanguageSwitch from "./languageswitcher/LanguageSwitch";
 import NotificationButton from "./notification/NotificationButton";
 import SideBar, { drawerWidth } from "./sidebar/v1/SideBar";
+import {useMenu} from "./sidebar/context/MenuContext";
 
 /**
  * https://mui.com/material-ui/react-app-bar/#fixed-placement
@@ -77,7 +78,7 @@ function Layout({ children }) {
   const classes = useStyles();
 
   const { keycloak } = useKeycloak();
-  const [open, setOpen] = useState(true);
+  const { open, toggleMenu } = useMenu();
   const [image] = useState(bgImage);
   const [color] = useState("blue");
 
@@ -90,7 +91,7 @@ function Layout({ children }) {
             aria-label="open drawer"
             edge="start"
             sx={{ mr: 3 }}
-            onClick={() => setOpen(!open)}
+            onClick={toggleMenu}
           >
             <MenuIcon />
           </IconButton>
