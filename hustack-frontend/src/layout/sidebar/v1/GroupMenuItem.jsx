@@ -146,7 +146,7 @@ function GroupMenuItem(props) {
     }
   }
 
-  if (group.child.length === 1 && group.child[0].id === "MENU_GENERAL_DASHBOARD") {
+  if (group.child.length === 1) {
     const childMenuItem = group.child[0];
 
     if (!childMenuItem.icon) {

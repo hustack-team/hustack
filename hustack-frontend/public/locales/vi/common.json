@@ -97,7 +97,7 @@
   "selectSubmissionWarning": " Bài nộp này không có điểm cao nhất. Bạn có chắc chắn muốn chọn bài nộp này là bài nộp cuối cùng không?",
   "confirmChangeFinalSubmission": "Thay đổi bài nộp cuối cùng",
   "allowParticipantPinSubmission": "Ghim bài nộp",
-  "allowParticipantPinSubmissionToolTip": "Người tham gia có thể ghim một Bài nộp cho mỗi Bài tập",
+  "allowParticipantPinSubmissionToolTip": "Người tham gia có thể ghim một bài nộp cho mỗi bài tập",
   "switchSubmissionSuccess": "Ghim bài nộp thành công",
   "switchSubmissionFailed": "Ghim bài nộp thất bại",
   "scoreCoefficient": "Điểm hệ số",
