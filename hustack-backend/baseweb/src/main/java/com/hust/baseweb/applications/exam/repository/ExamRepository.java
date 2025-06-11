@@ -194,9 +194,9 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    et.name as examTestName, " +
                    "    et.duration as examTestDuration, " +
                    "    er.id as examResultId, " +
+                   "    er.started_at as startedAt, " +
                    "    er.submit_again as submitAgain, " +
                    "    case when e.score_status = 1 then er.total_score else null end as totalScore, " +
-                   "    er.total_time as totalTime, " +
                    "    er.submited_at as submitedAt, " +
                    "    er.file_path as answerFiles, " +
                    "    er.comment as comment, " +
@@ -234,7 +234,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    es.phone as examStudentPhone, " +
                    "    er.id as examResultId, " +
                    "    er.total_score as totalScore, " +
-                   "    er.total_time as totalTime, " +
+                   "    er.started_at as startedAt, " +
                    "    er.submited_at as submitedAt, " +
                    "    er.file_path as answerFiles, " +
                    "    er.comment as comment " +

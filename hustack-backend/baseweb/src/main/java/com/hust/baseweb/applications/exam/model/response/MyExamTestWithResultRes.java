@@ -9,7 +9,8 @@ public interface MyExamTestWithResultRes {
     String getExamTestDescription();
     String getExamResultId();
     Float getTotalScore();
-    Integer getTotalTime();
+    String getStartedAt();
+    String getSubmitedAt();
     Boolean getSubmitAgain();
     Integer getTotalViolate();
 }

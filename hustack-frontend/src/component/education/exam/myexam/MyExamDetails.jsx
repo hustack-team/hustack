@@ -19,7 +19,11 @@ import RichTextEditor from "../../../common/editor/RichTextEditor";
 import {makeStyles} from "@material-ui/core/styles";
 import {useHistory} from "react-router-dom";
 import {useLocation} from "react-router";
-import {formatDateTime, formatTimeToMMSS} from "../ultils/DateUltils";
+import {
+  formatDateTime,
+  formatTimeToMMSS, getDiffMinutes,
+  getDiffSeconds
+} from "../ultils/DateUltils";
 import {DropzoneArea} from "material-ui-dropzone";
 import {AccessTime, AttachFileOutlined, Cancel, Comment, Timer, CheckCircle, Check} from "@mui/icons-material";
 import {
@@ -60,7 +64,7 @@ function MyExamDetails(props) {
   const location = useLocation();
   const data = location.state?.data
   const { openMenu } = useMenu();
-  const initialSeconds = data?.examTestDuration * 60 || 0;
+  const initialSeconds = data?.startedAt ? (data?.examTestDuration * 60 - getDiffSeconds(data?.startedAt, new Date())) : data?.examTestDuration * 60 || 0;
 
   if(data === undefined){
     window.location.href = '/exam/my-exam';
@@ -72,7 +76,6 @@ function MyExamDetails(props) {
   const [answersFiles, setAnswersFiles] = useState([]);
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
-  const [startLoadTime, setStartLoadTime] = useState(null);
   const [startDoing, setStartDoing] = useState((data?.examMonitor && data?.examMonitor > 0) ? true : false);
   const [countdown, setCountdown] = useState(data?.submitedAt ? 0 : initialSeconds);
 
@@ -92,7 +95,6 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
-    setStartLoadTime(new Date());
     if(data?.examMonitor){
       handleUpdateExamResult();
     }
@@ -187,13 +189,9 @@ function MyExamDetails(props) {
   }
 
   const handleSubmit = () => {
-    const endLoadTime = new Date();
-    const totalTime = Math.round((endLoadTime - startLoadTime) / 60000);
-
     const body = {
       id: data?.examResultId,
       examStudentTestId: data?.examStudentTestId,
-      totalTime: totalTime,
       examResultDetails: dataAnswers
     }
 
@@ -382,7 +380,7 @@ function MyExamDetails(props) {
                   </div>
                   <div style={{display: "flex", alignItems:"center", marginBottom: '10px', justifyContent: "flex-end"}}>
                     <Timer/>
-                    <p style={{padding: 0, margin: 0}}><strong>Tổng thời gian làm: </strong> {data?.totalTime} (phút)</p>
+                    <p style={{padding: 0, margin: 0}}><strong>Tổng thời gian làm: </strong> {getDiffMinutes(data?.startedAt, data?.submitedAt)} (phút)</p>
                   </div>
                   <div style={{display: "flex", alignItems:"center", marginBottom: '10px', justifyContent: "flex-end"}}>
                     <AccessTime/>

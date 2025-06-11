@@ -5,7 +5,7 @@ import {
   Box,
   Button,
 } from "@material-ui/core";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, getDiffMinutes} from "../ultils/DateUltils";
 import {request} from "../../../../api";
 import TestBankDetails from "../testbank/TestBankDetails";
 import {DataGrid} from "@material-ui/data-grid";
@@ -67,6 +67,12 @@ function ExamDetails(props) {
     {
       field: "totalTime",
       headerName: "Thời gian làm",
+      renderCell: (rowData) => {
+        if(rowData?.row?.submitedAt){
+          return `${getDiffMinutes(rowData?.row?.startedAt, rowData?.row?.submitedAt)} Phút`
+        }
+        return ''
+      },
       ...baseColumn,
       minWidth: 120,
     },

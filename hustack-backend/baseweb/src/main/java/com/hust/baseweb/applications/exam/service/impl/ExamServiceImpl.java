@@ -445,7 +445,6 @@ public class ExamServiceImpl implements ExamService {
         }
         ExamResultEntity examResultEntity = modelMapper.map(examResultExist.get(), ExamResultEntity.class);
         examResultEntity.setSubmitedAt(LocalDateTime.now());
-        examResultEntity.setTotalTime(myExamResultSaveReq.getTotalTime());
         examResultEntity = examResultRepository.save(examResultEntity);
 
         if(files != null){

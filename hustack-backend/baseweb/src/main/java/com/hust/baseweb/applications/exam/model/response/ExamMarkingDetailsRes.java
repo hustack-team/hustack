@@ -22,7 +22,7 @@ public class ExamMarkingDetailsRes {
     String examStudentPhone;
     String examResultId;
     Float totalScore;
-    Integer totalTime;
+    String startedAt;
     String submitedAt;
     String answerFiles;
     String comment;

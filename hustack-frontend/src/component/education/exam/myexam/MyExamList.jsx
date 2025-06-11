@@ -9,7 +9,7 @@ import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
 import {errorNoti} from "../../../../utils/notification";
 import {DataGrid} from "@mui/x-data-grid";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, getDiffMinutes} from "../ultils/DateUltils";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import PrimaryButton from "../../../button/PrimaryButton";
 import SecondaryButton from "../ultils/component/SecondaryButton";
@@ -65,6 +65,12 @@ function MyExamList(props) {
     {
       field: "totalTime",
       headerName: "Tổng thời gian làm",
+      renderCell: (rowData) => {
+        if(rowData?.row?.submitedAt){
+          return `${getDiffMinutes(rowData?.row?.startedAt, rowData?.row?.submitedAt)} Phút`
+        }
+        return ''
+      },
       ...baseColumn,
       minWidth: 140,
       maxWidth: 160,
@@ -99,7 +105,7 @@ function MyExamList(props) {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
             {
-              ((rowData?.row?.totalScore == null && rowData?.row?.totalTime == null) || rowData?.row?.submitAgain) ? (
+              ((rowData?.row?.totalScore == null && rowData?.row?.submitedAt == null) || rowData?.row?.submitAgain) ? (
                 <PrimaryButton
                   variant="contained"
                   color="primary"
@@ -137,7 +143,7 @@ function MyExamList(props) {
 
   const handleDoingExam = (rowData) => {
     closeMenu()
-    if(exam?.examMonitor && exam?.examMonitor > 0 && rowData?.totalScore == null && rowData?.totalTime == null){
+    if(exam?.examMonitor && exam?.examMonitor > 0 && rowData?.totalScore == null && rowData?.submitedAt == null){
       history.push({
         pathname: `/exam/my-exam-preview`,
         state: {

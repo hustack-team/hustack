@@ -6,7 +6,7 @@ import {
 } from "@material-ui/core";
 import {request} from "../../../../api";
 import {useHistory} from "react-router-dom";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, getDiffSeconds} from "../ultils/DateUltils";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import {useLocation} from "react-router";
 import TertiaryButton from "../../../button/TertiaryButton";
@@ -44,13 +44,17 @@ function MyExamPreview(props) {
                 if(res.status === 200){
                   setIsLoading(false)
                   if(res.data.resultCode === 200){
-                    stopCamera()
-                    history.push({
-                      pathname: `/exam/doing`,
-                      state: {
-                        data: res.data.data,
-                      },
-                    });
+                    if(res.data.data?.startedAt && (res.data.data?.examTestDuration * 60 - getDiffSeconds(res.data.data?.startedAt, new Date()) <= 0)){
+                      errorNoti('Đã hết thời gian thi', 3000)
+                    }else{
+                      stopCamera()
+                      history.push({
+                        pathname: `/exam/doing`,
+                        state: {
+                          data: res.data.data,
+                        },
+                      });
+                    }
                   }else{
                     errorNoti(res.data.resultMsg, 3000)
                   }

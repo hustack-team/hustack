@@ -28,9 +28,9 @@ public class MyExamDetailsRes {
     String examTestName;
     Integer examTestDuration;
     String examResultId;
+    String startedAt;
     Boolean submitAgain;
     Float totalScore;
-    Integer totalTime;
     String submitedAt;
     String answerFiles;
     String comment;

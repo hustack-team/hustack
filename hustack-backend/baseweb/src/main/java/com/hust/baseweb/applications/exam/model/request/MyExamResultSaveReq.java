@@ -15,6 +15,5 @@ import java.util.List;
 public class MyExamResultSaveReq {
     String id;
     String examStudentTestId;
-    Integer totalTime;
     List<MyExamResultDetailsSaveReq> examResultDetails;
 }

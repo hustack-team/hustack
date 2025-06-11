@@ -16,9 +16,9 @@ public interface MyExamDetailsResDB {
     String getExamTestName();
     String getExamTestDuration();
     String getExamResultId();
+    String getStartedAt();
     Boolean getSubmitAgain();
     Float getTotalScore();
-    Integer getTotalTime();
     String getSubmitedAt();
     String getAnswerFiles();
     String getComment();

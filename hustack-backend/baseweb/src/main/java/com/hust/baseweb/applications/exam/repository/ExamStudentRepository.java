@@ -51,7 +51,7 @@ public interface ExamStudentRepository extends JpaRepository<ExamStudentEntity, 
                    "    es.phone as phone, " +
                    "    er.id as examResultId, " +
                    "    er.total_score as totalScore, " +
-                   "    er.total_time as totalTime, " +
+                   "    er.started_at as startedAt, " +
                    "    count(em.id) as totalViolate, " +
                    "    er.submit_again as submitAgain, " +
                    "    er.submited_at as submitedAt " +

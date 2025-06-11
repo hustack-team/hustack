@@ -27,9 +27,6 @@ public class ExamResultEntity{
     @Column(name = "total_score")
     private Float totalScore;
 
-    @Column(name = "total_time")
-    private Integer totalTime;
-
     @Column(name = "file_path")
     private String filePath;
 

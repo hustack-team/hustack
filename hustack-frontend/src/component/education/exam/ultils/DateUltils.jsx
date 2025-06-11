@@ -73,3 +73,24 @@ export function formatDateTimeApi(value){
   }
   return null
 }
+
+export function getDiffMinutes(date1, date2){
+  if(date1 != null && date1 !== '' && date2 != null && date2 !== ''){
+    const valueDate1 = new Date(date1);
+    const valueDate2 = new Date(date2);
+    const diffMs = valueDate2.getTime() - valueDate1.getTime();
+    return Math.floor(diffMs / 60000)
+  }
+  return null;
+}
+
+
+export function getDiffSeconds(date1, date2){
+  if(date1 != null && date1 !== '' && date2 != null && date2 !== ''){
+    const valueDate1 = new Date(date1);
+    const valueDate2 = new Date(date2);
+    const diffMs = valueDate2.getTime() - valueDate1.getTime();
+    return Math.floor(diffMs / 1000)
+  }
+  return null;
+}

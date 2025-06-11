@@ -9,7 +9,7 @@ import {
   Radio,
   RadioGroup
 } from "@mui/material";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, getDiffMinutes} from "../ultils/DateUltils";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {Scoreboard} from "@mui/icons-material";
@@ -255,7 +255,7 @@ function ExamMarking(props) {
                 </div>
                 <div style={{display: "flex", alignItems: "center", marginBottom: '10px'}}>
                   <Timer/>
-                  <p style={{padding: 0, margin: 0}}><strong>Tổng thời gian làm: </strong> {data?.totalTime} (phút)</p>
+                  <p style={{padding: 0, margin: 0}}><strong>Tổng thời gian làm: </strong> {getDiffMinutes(data?.startedAt, data?.submitedAt)} (phút)</p>
                 </div>
                 <div style={{display: "flex", alignItems: "center", marginBottom: '10px'}}>
                   <AccessTime/>
