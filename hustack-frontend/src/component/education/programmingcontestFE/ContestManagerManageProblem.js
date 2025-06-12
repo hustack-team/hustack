@@ -137,6 +137,18 @@ export function ContestManagerManageProblem(props) {
       render: (problem) => problem?.coefficientPoint || 1, 
     },
     {
+      title: t("common:testCaseCount") || "Test cases",
+      field: "testCasesCount",
+      minWidth: 180,
+      render: (problem) => problem.testCasesCount ?? 0,
+    },
+    {
+      title: t("common:totalTestCasePoint") || "Total points",
+      field: "totalPointTestCase",
+      minWidth: 280,
+      render: (problem) => problem.totalPointTestCase ?? 0,
+    },
+    {
       title: "Created By",
       field: "createdByUserId",
       minWidth: 130,
@@ -191,7 +203,9 @@ export function ContestManagerManageProblem(props) {
       setLoading(false);
       const updatedProblems = res.data.list.map(problem => ({
         ...problem,
-        coefficientPoint: res.data.canEditCoefficientPoint === 0 ? 1 : problem.coefficientPoint
+        coefficientPoint: res.data.canEditCoefficientPoint === 0 ? 1 : problem.coefficientPoint,
+        testCasesCount: problem.testCasesCount ? problem.testCasesCount : 0, 
+        totalPointTestCase: problem.totalPointTestCase ? problem.totalPointTestCase : 0,   
       }));
       setContestProblems(updatedProblems);
       setContestData(res.data);

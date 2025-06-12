@@ -2,10 +2,12 @@
   "ID": "ID",
   "problem": "Bài tập",
   "problemId": "Mã bài tập",
+  "problemCode": "Mã bài tập",
   "level": "Mức độ",
   "submitted": "Đã nộp",
   "accepted": "Đã hoàn thành",
-  "maxPoint": "Điểm đạt được",
+  "point": "Điểm đạt được",
+  "maxPoint": "Điểm tối đa",
   "tags": "Nhãn",
   "problemList": {
     "title": "Bài tập"

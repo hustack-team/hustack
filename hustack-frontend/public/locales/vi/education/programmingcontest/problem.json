@@ -3,6 +3,7 @@
   "problemList": "Danh sách bài tập",
   "problemId": "ID",
   "problemName": "Tên bài tập",
+  "problemCode": "Mã bài tập",
   "level": "Mức độ",
   "timeLimit": "Giới hạn thời gian",
   "memoryLimit": "Giới hạn bộ nhớ",

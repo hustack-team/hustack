@@ -38,6 +38,10 @@ export function ListContestManagerByRegistration() {
       title: "Role",
       field: "roleId"
     },
+      {
+      title: t("common:createdBy"),
+      field: "userId"
+    },
     // {
     //   title: t('common:manager'),
     //   field: "userId"

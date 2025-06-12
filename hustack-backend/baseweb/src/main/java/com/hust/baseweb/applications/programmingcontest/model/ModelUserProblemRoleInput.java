@@ -1,21 +1,17 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 import java.util.UUID;
 
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AddUsers2Contest {
-
+public class ModelUserProblemRoleInput {
     List<String> userIds;
-
     List<UUID> groupIds;
-
-    String role;
+    String problemId;
+    String roleId;
 }

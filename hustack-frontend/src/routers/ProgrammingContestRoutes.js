@@ -21,7 +21,10 @@ import StudentViewProgrammingContestProblemDetailV2
 import SuggestProblem from "component/education/programmingcontestFE/SuggestProblem";
 import UserContestProblemRole from "component/education/programmingcontestFE/UserContestProblemRole";
 import {Route, Switch, useRouteMatch} from "react-router";
-import ContestLibrarytList from "component/education/programmingcontestFE/ContestLibraryList"
+// import ContestLibrarytList from "component/education/programmingcontestFE/ContestLibraryList"
+import GroupManager from "component/education/programmingcontestFE/GroupManager";
+import GroupForm from "component/education/programmingcontestFE/GroupForm";
+import TeacherListGroup from "component/education/programmingcontestFE/TeacherListGroup";
 
 export default function ProgrammingContestRoutes() {
   let { path } = useRouteMatch();
@@ -44,6 +47,8 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/user-contest-problem-role-management/:problemId`}
         />
         <Route component={CreateContest} path={`${path}/create-contest`} />
+        {/* <Route component={CreateGroup} path={`${path}/create-group`} /> */}
+
         <Route
           component={StudentViewContestDetail}
           path={`${path}/student-view-contest-detail/:contestId`}
@@ -74,13 +79,17 @@ export default function ProgrammingContestRoutes() {
           component={ContestStudentList}
           path={`${path}/student-list-contest-registered`}
         />        
-        <Route
+        {/* <Route
         component={ContestLibrarytList}
         path={`${path}/student-list-library`}
-        />
+        /> */}
         <Route
           component={ListContestManager}
           path={`${path}/teacher-list-contest-manager`}
+        />
+        <Route
+          component={TeacherListGroup}
+          path={`${path}/teacher-list-group`}
         />
         <Route
           component={AllContestsManager}
@@ -92,6 +101,10 @@ export default function ProgrammingContestRoutes() {
           path={`${path}/contest-manager/:contestId`}
         />
         <Route
+          component={GroupManager}
+          path={`${path}/group-manager/:groupId`}
+        />
+        <Route
           component={ManagerViewProblemDetailAndSubmisionsInContest}
           path={`${path}/contest-manager-view-problem/:contestId/:problemId`}
         />
@@ -100,6 +113,12 @@ export default function ProgrammingContestRoutes() {
           component={EditContest}
           path={`${path}/contest-edit/:contestId`}
         />
+
+        {/* <Route
+          component={EditGroup}
+          path={`${path}/edit-group/:groupId`}
+        /> */}
+        <Route component={GroupForm} path={`${path}/group-form/:groupId?`} />
         <Route
           component={EditTestCase}
           path={`${path}/edit-testcase/:problemId/:testCaseId`}
