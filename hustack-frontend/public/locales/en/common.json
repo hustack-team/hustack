@@ -91,10 +91,20 @@
   "complete": "Complete",
   "reset": "Reset",
   "codeAuthorship": "Authorship (prediction)",
+  "finalSubmission": "Final Submission",
+  "maxPoint": "Max points",
+  "maxSubmittedPoint": "Points earned",
+  "selectSubmissionWarning": "This submission does not have the highest score. Are you sure you want to mark this submission as final? ",
+  "confirmChangeFinalSubmission": "Change Final Submission",
+  "allowParticipantPinSubmission": "Pin submission",
+  "allowParticipantPinSubmissionToolTip": "Participants can pin one submission per problem",
+  "switchSubmissionSuccess": "Submission switched successfully",
+  "switchSubmissionFailed": "Failed to switch submission",
   "scoreCoefficient": "Coefficient Points",
   "scoreCoefficientTitle": "Coefficient Points (From 1 to 100)",
   "canEditCoefficientPoint": "Edit Coefficient Points",
   "canEditCoefficientPointToolTip": "If Yes, allows setting a score weight for each problem. If No, all problems have the same score weight of 1.0",
-  "scoreCoefficientInput": "Enter a positive integer from 1 to 100 (default is 1)"
-
+  "scoreCoefficientInput": "Enter a positive integer from 1 to 100 (default is 1)",
+  "testCaseCount": "Test Cases",
+  "totalTestCasePoint": "Total Test Cases Points"
 }

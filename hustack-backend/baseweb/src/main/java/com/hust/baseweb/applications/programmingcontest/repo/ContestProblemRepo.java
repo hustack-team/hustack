@@ -18,4 +18,6 @@ public interface ContestProblemRepo extends JpaRepository<ContestProblem, Compos
     ContestProblem findByContestIdAndProblemRecode(String contestId, String problemRecode);
 
     List<ContestProblem> findByContestIdAndProblemIdIn(String contestId, Set<String> problemIds);
+
+    List<ContestProblem> findAllByContestIdAndSubmissionModeNot(String contestId, String submissionMode);
 }

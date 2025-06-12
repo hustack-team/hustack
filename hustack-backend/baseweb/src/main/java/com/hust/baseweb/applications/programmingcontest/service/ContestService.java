@@ -1,14 +1,8 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
-import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
-import com.hust.baseweb.applications.programmingcontest.entity.ContestProblem;
-import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
-import com.hust.baseweb.applications.programmingcontest.entity.UserRegistrationContestEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.UserRegistrationContestRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,9 +20,10 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestService {
 
+    TestCaseRepo testCaseRepo;
     ContestRepo contestRepo;
 
     UserRegistrationContestRepo userRegistrationContestRepo;
@@ -93,6 +88,10 @@ public class ContestService {
                     forbiddenInstructions = cp.getForbiddenInstructions();
                     coefficientPoint = cp.getCoefficientPoint();
                 }
+                TestCaseStatsDTO stats = testCaseRepo.getStatsByProblemId(contestProblem.getProblemId());
+                int testCasesCount = stats != null ? stats.getTestCasesCount() : 0;
+                int totalPointTestCase = stats != null ? stats.getTotalPointTestCase() : 0;
+
 
                 ModelGetProblemDetailResponse p = ModelGetProblemDetailResponse.builder()
                                                                                .levelId(contestProblem.getLevelId())
@@ -105,6 +104,8 @@ public class ContestService {
                                                                                .levelOrder(contestProblem.getLevelOrder())
                                                                                .problemDescription(contestProblem.getProblemDescription())
                                                                                .createdByUserId(contestProblem.getCreatedBy())
+                                                                               .testCasesCount(testCasesCount)
+                                                                               .totalPointTestCase(totalPointTestCase)
                                                                                .submissionMode(submissionMode)
                                                                                .build();
 
@@ -147,7 +148,9 @@ public class ContestService {
             .listContestShowComments(contestEntity.getListContestShowComment())
             .contestPublic(contestEntity.getContestPublic())
             .listContestPublic(contestEntity.getListContestPublic())
+            .allowParticipantPinSubmission(contestEntity.getAllowParticipantPinSubmission())
             .canEditCoefficientPoint(contestEntity.getCanEditCoefficientPoint())
+
             .build();
     }
 
