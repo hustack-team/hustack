@@ -64,7 +64,7 @@ public class StudentProblemViewService {
                                                                                     .map(pb -> {
                                                                                         BlockCode blockCode = new BlockCode();
                                                                                         blockCode.setId(pb.getId().toString());
-                                                                                        blockCode.setCode(Integer.valueOf(1).equals(pb.getCompletedBy())? "" : pb.getSourceCode());
+                                                                                        blockCode.setCode(pb.getSourceCode());
                                                                                         blockCode.setForStudent(pb.getCompletedBy());
                                                                                         blockCode.setLanguage(pb.getProgrammingLanguage());
                                                                                         blockCode.setSeq(pb.getSeq());

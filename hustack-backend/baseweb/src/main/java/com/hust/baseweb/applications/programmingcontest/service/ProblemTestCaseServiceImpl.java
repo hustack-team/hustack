@@ -3904,7 +3904,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         for (ContestProblem cp : contestProblems) {
             ContestEntity contest = contestRepo.findContestByContestId(cp.getContestId());
-            if (contest != null && !ContestEntity.CONTEST_STATUS_CREATED.equals(contest.getStatusId())) {
+            if (contest != null &&
+                !ContestEntity.CONTEST_STATUS_COMPLETED.equals(contest.getStatusId()) &&
+                !ContestEntity.CONTEST_STATUS_CLOSED.equals(contest.getStatusId()) &&
+                !ContestEntity.CONTEST_STATUS_DISABLED.equals(contest.getStatusId())) {
                 return false;
             }
         }
