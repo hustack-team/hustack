@@ -783,14 +783,14 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                    .contestSolvingTime(modelUpdateContest.getContestSolvingTime())
                                                    .problems(contestEntityExist.getProblems())
                                                    .userId(contestEntityExist.getUserId())
-                                                   .countDown(modelUpdateContest.getCountDownTime())
-                                                   .startedAt(modelUpdateContest.getStartedAt())
-                                                   .startedCountDownTime(DateTimeUtils.minusMinutesDate(
-                                                       modelUpdateContest.getStartedAt(),
-                                                       modelUpdateContest.getCountDownTime()))
-                                                   .endTime(DateTimeUtils.addMinutesDate(
-                                                       modelUpdateContest.getStartedAt(),
-                                                       modelUpdateContest.getContestSolvingTime()))
+//                                                   .countDown(modelUpdateContest.getCountDownTime())
+//                                                   .startedAt(modelUpdateContest.getStartedAt())
+//                                                   .startedCountDownTime(DateTimeUtils.minusMinutesDate(
+//                                                       modelUpdateContest.getStartedAt(),
+//                                                       modelUpdateContest.getCountDownTime()))
+//                                                   .endTime(DateTimeUtils.addMinutesDate(
+//                                                       modelUpdateContest.getStartedAt(),
+//                                                       modelUpdateContest.getContestSolvingTime()))
                                                    .statusId(modelUpdateContest.getStatusId())
                                                    .submissionActionType(modelUpdateContest.getSubmissionActionType())
                                                    .maxNumberSubmissions(modelUpdateContest.getMaxNumberSubmission())
