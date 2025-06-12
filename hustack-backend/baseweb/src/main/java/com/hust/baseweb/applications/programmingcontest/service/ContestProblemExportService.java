@@ -42,6 +42,44 @@ public class ContestProblemExportService {
         return file;
     }
 
+    public File exportProblemInfoAsTextToFile(ModelCreateContestProblemResponse problem) throws IOException {
+        File file = new File("ProblemGeneralInformation.txt");
+
+        try (FileWriter fileWriter = new FileWriter(file);
+             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Id: ").append(problem.getProblemId()).append("\n");
+            sb.append("Problem: ").append(problem.getProblemName()).append("\n");
+            sb.append("Created at: ").append(problem.getCreatedAt())
+              .append(" by ").append(problem.getUserId()).append("\n");
+            sb.append("Public: ").append(problem.isPublicProblem()).append("\n");
+            sb.append("Time limit: ").append(problem.getTimeLimit()).append(" s\n");
+            sb.append("Memory limit: ").append(problem.getMemoryLimit()).append(" MB\n");
+            sb.append("Level: ").append(problem.getLevelId()).append("\n");
+            sb.append("Tags: ").append(problem.getTags().stream()
+                                              .map(TagEntity::getName)
+                                              .collect(Collectors.joining(", "))).append("\n");
+            sb.append("Score evaluation type: ").append(problem.getScoreEvaluationType()).append("\n\n");
+
+            sb.append("==== Problem Description ====\n");
+            String plainTextDescription = problem.getProblemDescription()
+                                                 .replaceAll("\\<.*?\\>", "")
+                                                 .replaceAll("&nbsp;", " ")
+                                                 .replaceAll("&lt;", "<")
+                                                 .replaceAll("&gt;", ">")
+                                                 .replaceAll("&amp;", "&");
+
+            sb.append(plainTextDescription).append("\n");
+
+            bufferedWriter.write(sb.toString());
+        }
+
+        return file;
+    }
+
+
+
     public File exportProblemInfoToFile(ModelCreateContestProblemResponse problem) throws IOException {
         File file = new File("ProblemGeneralInformation.html");
 
@@ -148,34 +186,30 @@ public class ContestProblemExportService {
 
     public List<File> exportProblemTestCasesToFile(ModelCreateContestProblemResponse problem) throws IOException {
         String problemId = problem.getProblemId();
-
         List<TestCaseEntity> listTestCase = testCaseRepo.findAllByProblemId(problemId);
         List<File> listTestCaseFile = new ArrayList<>();
 
         for (int i = 0; i < listTestCase.size(); i++) {
             TestCaseEntity testCase = listTestCase.get(i);
-            File file = new File(problemId + "_testcase_" + (i + 1) + ".txt");
 
-            FileWriter fileWriter = new FileWriter(file);
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            File inputFile = new File(problemId + "_testcase_" + (i + 1) + "_input.txt");
+            try (FileWriter inputWriter = new FileWriter(inputFile);
+                 BufferedWriter inputBufferedWriter = new BufferedWriter(inputWriter)) {
+                inputBufferedWriter.write(testCase.getTestCase());
+            }
 
-            String s = "- Problem: " + problem.getProblemName() + "\n" +
-                       "- Testcase point: " + testCase.getTestCasePoint() + "\n" +
-                       "- Public: " + testCase.getIsPublic() + "\n" +
-                       "- Status: " + testCase.getStatusId() + "\n" +
-                       "- Description: " + testCase.getDescription() + "\n\n" +
-                       "- Input: \n" + testCase.getTestCase() + "\n\n" +
-                       "- Output: \n" + testCase.getCorrectAnswer() + "\n";
+            File outputFile = new File(problemId + "_testcase_" + (i + 1) + "_output.txt");
+            try (FileWriter outputWriter = new FileWriter(outputFile);
+                 BufferedWriter outputBufferedWriter = new BufferedWriter(outputWriter)) {
+                outputBufferedWriter.write(testCase.getCorrectAnswer());
+            }
 
-            bufferedWriter.write(s);
-
-            bufferedWriter.close();
-            fileWriter.close();
-
-            listTestCaseFile.add(file);
+            listTestCaseFile.add(inputFile);
+            listTestCaseFile.add(outputFile);
         }
 
         return listTestCaseFile;
     }
+
 
 }

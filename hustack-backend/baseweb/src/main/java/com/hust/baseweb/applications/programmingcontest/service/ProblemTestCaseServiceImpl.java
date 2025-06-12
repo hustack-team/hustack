@@ -3683,6 +3683,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         try {
             File problemGeneralInfoFile = exporter.exportProblemInfoToFile(problem);
             File problemDescriptionFile = exporter.exportProblemDescriptionToFile(problem);
+            File exportProblemInfoAsTextToFile = exporter.exportProblemInfoAsTextToFile(problem);
+            files.add(exportProblemInfoAsTextToFile);
+
             File problemCorrectSolutionFile = exporter.exportProblemCorrectSolutionToFile(problem);
 
             files.add(problemGeneralInfoFile);
