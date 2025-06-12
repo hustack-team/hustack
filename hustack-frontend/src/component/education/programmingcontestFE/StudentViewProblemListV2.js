@@ -12,7 +12,7 @@ import {errorNoti} from "../../../utils/notification";
 import { MTableToolbar } from "material-table";
 
 export default function StudentViewProblemList() {
-  const {t} = useTranslation(["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
+  const {t} = useTranslation([ "education/programmingcontest/studentviewcontestdetail","education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
   const levels = getLevels(t);
 
   const {contestId} = useParams();
@@ -162,6 +162,29 @@ export default function StudentViewProblemList() {
   return (
     <>
       {loading && <LinearProgress />}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "2px 7px",
+          marginBottom: "-8px",
+          // backgroundColor: "#f5f5f5",
+          // borderBottom: "1px solid rgb(224, 224, 224)",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: getPointsColor(),
+          }}
+        >
+          {t("common:maxSubmittedPoint")}:{" "}
+          {totalSubmittedPoints?.toFixed(2) || 0} /{" "}
+          {t("common:maxPoint")}:{" "}
+          {totalMaxPoints?.toFixed(2) || 0}
+        </Typography>
+      </Box>
       <StandardTable
         columns={columns}
         data={problems}
@@ -180,21 +203,9 @@ export default function StudentViewProblemList() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "8px 16px",
+                  padding: "8px 8px",
                 }}
               >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: getPointsColor(),
-                    marginRight: "16px",
-                  }}
-                >
-                  {t("common:maxSubmittedPoint")}:{" "}
-                  {totalSubmittedPoints?.toFixed(2) || 0} /{" "}
-                  {t("common:maxPoint")}:{" "}
-                  {totalMaxPoints?.toFixed(2) || 0}
-                </Typography>
                 <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "flex-end" }}>
                   <MTableToolbar
                     {...toolBarProps}
