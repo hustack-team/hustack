@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import static com.hust.baseweb.utils.CharGroupPolicy.ONLY_LOWER;
 import static com.hust.baseweb.utils.RandomGenerator.generateAlphaNumericRandomString;
 import static com.hust.baseweb.utils.RandomGenerator.generateRandomStringWithSpecialChars;
 
@@ -65,7 +66,7 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
             int attempt = 0;
             while (attempt < maxRetries) {
                 try {
-                    username = "exam-" + generateAlphaNumericRandomString(6);
+                    username = "exam-" + generateAlphaNumericRandomString(6, ONLY_LOWER);
                     password = generateRandomStringWithSpecialChars(12);
                     user.setUsername(username);
 
