@@ -448,7 +448,7 @@ function ManagerViewProblemDetailV2() {
               onChange={handleTabChange}
               sx={{ marginBottom: "12px" }}
             >
-              {PROGRAMMING_LANGUAGES.map((lang) => (
+              {PROGRAMMING_LANGUAGES.filter((lang) => blockCodes[lang.value]?.length > 0).map((lang) => (
                 <Tab key={lang.value} label={lang.label} value={lang.value} />
               ))}
             </StyledTabs>

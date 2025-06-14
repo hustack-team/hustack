@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface ProblemBlockRepo extends JpaRepository<ProblemBlock, UUID> {
     List<ProblemBlock> findByProblemId(String problemId);
     void deleteByProblemId(String problemId);
+    List<ProblemBlock> findAllByProblemId(String problemId);
+
 }
