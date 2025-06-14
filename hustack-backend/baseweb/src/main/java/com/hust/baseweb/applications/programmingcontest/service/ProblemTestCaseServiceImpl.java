@@ -47,6 +47,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,8 +59,14 @@ import vn.edu.hust.soict.judge0client.service.Judge0Service;
 import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_JAVA;
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_PYTHON3;
@@ -404,6 +411,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemResponse.setPublicProblem(problemEntity.isPublicProblem());
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
+//            problemResponse.setCategoryId(problemEntity.getCategoryId());
+            problemResponse.setStatus(problemEntity.getStatusId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {
@@ -713,7 +722,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             String admin = "admin";
             UserLogin u = userLoginRepo.findByUserLoginId(admin);
-            if (u != null && !"admin".equals(u.getUserLoginId())) {
+            if (u != null && !"admin".equals(userName)) {
                 urc = new UserRegistrationContestEntity();
                 urc.setContestId(modelCreateContest.getContestId());
                 urc.setRoleId(UserRegistrationContestEntity.ROLE_OWNER);
@@ -3674,6 +3683,320 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public void exportProblemJson(String problemId, OutputStream outputStream) {
+        try {
+            ModelCreateContestProblemResponse problem = getContestProblem(problemId);
+
+            if (problem != null) {
+                handleExportProblemJson(problem, outputStream);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleExportProblemJson(
+        ModelCreateContestProblemResponse problem,
+        OutputStream outputStream
+    ) throws IOException {
+        List<File> files = new ArrayList<>();
+
+        try {
+            File problemJsonFile = exporter.exportProblemToJsonFile(problem);
+            files.add(problemJsonFile);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (!problem.getAttachmentNames().isEmpty()) {
+            files.addAll(exporter.exportProblemAttachmentToFile(problem));
+        }
+        ZipOutputStreamUtils.zip(
+            outputStream,
+            files,
+            CompressionMethod.DEFLATE,
+            null,
+            EncryptionMethod.AES,
+            AesKeyStrength.KEY_STRENGTH_256);
+
+        for (File file : files) {
+            file.delete();
+        }
+    }
+
+
+    @Transactional
+    public void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId) {
+        try {
+            if (problemRepo.existsByProblemId(model.getProblemId())) {
+                throw new IllegalArgumentException("Problem ID '" + model.getProblemId() + "' already exists");
+            }
+            if (problemRepo.existsByProblemName(model.getProblemName())) {
+                throw new IllegalArgumentException("Problem name '" + model.getProblemName() + "' already exists");
+            }
+
+            Path tempDir = Files.createTempDirectory("problem-import");
+            List<File> extractedFiles = new ArrayList<>();
+
+            try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    File file = new File(tempDir.toFile(), entry.getName());
+                    if (entry.isDirectory()) {
+                        if (!file.mkdirs()) {
+                            throw new RuntimeException("Cannot create temporary directory: " + file.getAbsolutePath());
+                        }
+                        continue;
+                    }
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        IOUtils.copy(zis, fos);
+                    }
+                    extractedFiles.add(file);
+                    zis.closeEntry();
+                }
+            }
+
+            File jsonFile = extractedFiles.stream()
+                                          .filter(f -> f.getName().equals("ProblemData.json"))
+                                          .findFirst()
+                                          .orElseThrow(() -> new IllegalArgumentException("ProblemData.json not found in ZIP file"));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> problemData = objectMapper.readValue(jsonFile, Map.class);
+
+            ProblemEntity problemEntity = new ProblemEntity();
+            problemEntity.setProblemId(model.getProblemId());
+            problemEntity.setProblemName(model.getProblemName());
+            problemEntity.setCreatedBy(userId);
+            problemEntity.setCreatedAt(java.util.Date.from(LocalDateTime.now()
+                                                                        .atZone(ZoneId.systemDefault()).toInstant()));
+
+            if (problemData.containsKey("isPublic")) {
+                problemEntity.setPublicProblem((Boolean) problemData.get("isPublic"));
+            }
+            if (problemData.containsKey("timeLimitCPP")) {
+                problemEntity.setTimeLimitCPP(((Number) problemData.get("timeLimitCPP")).floatValue());
+            }
+            if (problemData.containsKey("timeLimitJAVA")) {
+                problemEntity.setTimeLimitJAVA(((Number) problemData.get("timeLimitJAVA")).floatValue());
+            }
+            if (problemData.containsKey("timeLimitPYTHON")) {
+                problemEntity.setTimeLimitPYTHON(((Number) problemData.get("timeLimitPYTHON")).floatValue());
+            }
+            if (problemData.containsKey("memoryLimit")) {
+                problemEntity.setMemoryLimit(((Number) problemData.get("memoryLimit")).floatValue());
+            }
+            if (problemData.containsKey("levelId")) {
+                problemEntity.setLevelId((String) problemData.get("levelId"));
+            }
+//            if (problemData.containsKey("categoryId")) {
+//                problemEntity.setCategoryId((Integer) problemData.get("categoryId"));
+//            }
+            if (problemData.containsKey("levelOrder")) {
+                problemEntity.setLevelOrder(((Number) problemData.get("levelOrder")).intValue());
+            }
+            if (problemData.containsKey("status")) {
+                problemEntity.setStatusId((String) problemData.get("status"));
+            }
+            if (problemData.containsKey("problemDescription")) {
+                problemEntity.setProblemDescription((String) problemData.get("problemDescription"));
+            }
+            if (problemData.containsKey("correctSolutionLanguage")) {
+                problemEntity.setCorrectSolutionLanguage((String) problemData.get("correctSolutionLanguage"));
+            }
+            if (problemData.containsKey("correctSolutionSourceCode")) {
+                problemEntity.setCorrectSolutionSourceCode((String) problemData.get("correctSolutionSourceCode"));
+            }
+            if (problemData.containsKey("scoreEvaluationType")) {
+                problemEntity.setScoreEvaluationType((String) problemData.get("scoreEvaluationType"));
+            }
+            if (problemData.containsKey("solution")) {
+                problemEntity.setSolution((String) problemData.get("solution"));
+            }
+            if (problemData.containsKey("isPreloadCode")) {
+                problemEntity.setIsPreloadCode((Boolean) problemData.get("isPreloadCode"));
+            }
+            if (problemData.containsKey("preloadCode")) {
+                problemEntity.setPreloadCode((String) problemData.get("preloadCode"));
+            }
+            if (problemData.containsKey("sampleTestCase")) {
+                problemEntity.setSampleTestcase((String) problemData.get("sampleTestCase"));
+            }
+
+            if (problemData.containsKey("tags")) {
+                List<String> tagNames = (List<String>) problemData.get("tags");
+                List<TagEntity> tags = new ArrayList<>();
+                for (String name : tagNames) {
+                    TagEntity tag = tagRepo.findByName(name);
+                    if (tag == null) {
+                        tag = new TagEntity();
+                        tag.setName(name);
+                        tag = tagRepo.save(tag);
+                    }
+                    tags.add(tag);
+                }
+                problemEntity.setTags(tags);
+            }
+
+            if ("CUSTOM_EVALUATION".equals(problemData.get("scoreEvaluationType"))) {
+                if (problemData.containsKey("solutionCheckerSourceLanguage")) {
+                    problemEntity.setSolutionCheckerSourceLanguage((String) problemData.get("solutionCheckerSourceLanguage"));
+                }
+                if (problemData.containsKey("solutionCheckerSourceCode")) {
+                    problemEntity.setSolutionCheckerSourceCode((String) problemData.get("solutionCheckerSourceCode"));
+                }
+            }
+
+            List<String> attachmentId = new ArrayList<>();
+            String[] fileId = extractedFiles.stream()
+                                            .filter(f -> !f.getName().equals("ProblemData.json"))
+                                            .map(File::getName)
+                                            .toArray(String[]::new);
+            List<MultipartFile> fileArray = extractedFiles.stream()
+                                                          .filter(f -> !f.getName().equals("ProblemData.json"))
+                                                          .map(f -> {
+                                                              try {
+                                                                  return new MockMultipartFile(
+                                                                      f.getName(),
+                                                                      f.getName(),
+                                                                      Files.probeContentType(f.toPath()),
+                                                                      Files.readAllBytes(f.toPath())
+                                                                  );
+                                                              } catch (IOException e) {
+                                                                  throw new RuntimeException("Failed to convert file: " + f.getName(), e);
+                                                              }
+                                                          })
+                                                          .collect(Collectors.toList());
+
+            fileArray.forEach(file -> {
+                ContentModel contentModel = new ContentModel(fileId[fileArray.indexOf(file)], file);
+
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(contentModel);
+                } catch (IOException e) {
+                }
+
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
+
+            problemEntity.setAttachment(String.join(";", attachmentId));
+            problemEntity = problemRepo.save(problemEntity);
+
+            for (String role : Arrays.asList(
+                UserContestProblemRole.ROLE_OWNER,
+                UserContestProblemRole.ROLE_EDITOR,
+                UserContestProblemRole.ROLE_VIEWER)) {
+                UserContestProblemRole upr = new UserContestProblemRole();
+                upr.setProblemId(problemEntity.getProblemId());
+                upr.setUserId(userId);
+                upr.setRoleId(role);
+                upr.setUpdateByUserId(userId);
+                upr.setCreatedStamp(new Date());
+                upr.setLastUpdated(new Date());
+                userContestProblemRoleRepo.save(upr);
+            }
+
+            UserLogin admin = userLoginRepo.findByUserLoginId("admin");
+            if (admin != null && !userId.equals("admin")) {
+                for (String role : Arrays.asList(
+                    UserContestProblemRole.ROLE_OWNER,
+                    UserContestProblemRole.ROLE_EDITOR,
+                    UserContestProblemRole.ROLE_VIEWER)) {
+                    UserContestProblemRole upr = new UserContestProblemRole();
+                    upr.setProblemId(problemEntity.getProblemId());
+                    upr.setUserId(admin.getUserLoginId());
+                    upr.setRoleId(role);
+                    upr.setUpdateByUserId(userId);
+                    upr.setCreatedStamp(new Date());
+                    upr.setLastUpdated(new Date());
+                    userContestProblemRoleRepo.save(upr);
+                }
+
+                notificationsService.create(
+                    userId,
+                    admin.getUserLoginId(),
+                    userId + " has imported a contest problem with ID " + problemEntity.getProblemId(),
+                    ""
+                );
+            }
+
+            if (problemData.containsKey("testCases")) {
+                List<Map<String, Object>> testCases = (List<Map<String, Object>>) problemData.get("testCases");
+                for (Map<String, Object> tc : testCases) {
+                    TestCaseEntity testCase = new TestCaseEntity();
+                    testCase.setProblemId(model.getProblemId());
+                    if (tc.containsKey("testCasePoint")) {
+                        testCase.setTestCasePoint(((Number) tc.get("testCasePoint")).intValue());
+                    }
+                    if (tc.containsKey("isPublic")) {
+                        testCase.setIsPublic((String) tc.get("isPublic"));
+                    }
+                    if (tc.containsKey("statusId")) {
+                        testCase.setStatusId((String) tc.get("statusId"));
+                    }
+                    if (tc.containsKey("description")) {
+                        testCase.setDescription((String) tc.get("description"));
+                    }
+                    if (tc.containsKey("testCase")) {
+                        testCase.setTestCase((String) tc.get("testCase"));
+                    }
+                    if (tc.containsKey("correctAnswer")) {
+                        testCase.setCorrectAnswer((String) tc.get("correctAnswer"));
+                    }
+                    testCaseRepo.save(testCase);
+                }
+            }
+
+//            if (problemData.containsKey("blockCodes")) {
+//                List<Map<String, Object>> blockCodes = (List<Map<String, Object>>) problemData.get("blockCodes");
+//                for (Map<String, Object> bc : blockCodes) {
+//                    Integer seq = bc.containsKey("seq") ? ((Number) bc.get("seq")).intValue() : null;
+//                    String programmingLanguage = bc.containsKey("programmingLanguage") ? (String) bc.get("programmingLanguage") : null;
+//
+//                    if (seq == null) {
+//                        throw new IllegalArgumentException("Missing 'seq' field in blockCodes");
+//                    }
+//                    if (programmingLanguage == null) {
+//                        throw new IllegalArgumentException("Missing 'programmingLanguage' field in blockCodes");
+//                    }
+//
+//                    ProblemBlock block = new ProblemBlock();
+//                    block.setProblemId(model.getProblemId());
+//                    block.setSeq(seq);
+//                    if (bc.containsKey("completedBy")) {
+//                        block.setCompletedBy("teacher".equals(bc.get("completedBy")) ? 0 : 1);
+//                    }
+//                    if (bc.containsKey("sourceCode")) {
+//                        block.setSourceCode((String) bc.get("sourceCode"));
+//                    }
+//                    block.setProgrammingLanguage(programmingLanguage);
+//                    problemBlockRepo.save(block);
+//                }
+//            }
+
+            for (File file : extractedFiles) {
+                try {
+                    file.delete();
+                } catch (SecurityException e) {
+                    throw new RuntimeException("Cannot remove extracted file " + file.getName(), e);
+                }
+            }
+            Files.delete(tempDir);
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to import problem: " + e.getMessage(), e);
+        }
+
+    }
+
     private void handleExportProblem(
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream
@@ -4047,7 +4370,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         newProblem.setCreatedBy(userId);
 //        newProblem.setTimeLimit(originalProblem.getTimeLimit());
         newProblem.setLevelId(originalProblem.getLevelId());
-        newProblem.setCategoryId(originalProblem.getCategoryId());
+//        newProblem.setCategoryId(originalProblem.getCategoryId());
         newProblem.setSolutionCheckerSourceCode(originalProblem.getSolutionCheckerSourceCode());
         newProblem.setSolutionCheckerSourceLanguage(originalProblem.getSolutionCheckerSourceLanguage());
         newProblem.setSolution(originalProblem.getSolution());
@@ -4061,6 +4384,22 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         newProblem = problemRepo.save(newProblem);
 
+//        final String clonedProblemId = newProblem.getProblemId();
+//        if (Integer.valueOf(1).equals(originalProblem.getCategoryId())) {
+//            List<ProblemBlock> originalBlocks = problemBlockRepo.findAllByProblemId(originalProblem.getProblemId());
+//
+//            List<ProblemBlock> clonedBlocks = originalBlocks.stream()
+//                                                            .map(block -> ProblemBlock.builder()
+//                                                                                      .problemId(clonedProblemId)
+//                                                                                      .seq(block.getSeq())
+//                                                                                      .completedBy(block.getCompletedBy())
+//                                                                                      .sourceCode(block.getSourceCode())
+//                                                                                      .programmingLanguage(block.getProgrammingLanguage())
+//                                                                                      .build())
+//                                                            .collect(Collectors.toList());
+//
+//            problemBlockRepo.saveAll(clonedBlocks);
+//        }
         List<TestCaseEntity> originalTestCases = testCaseRepo.findAllByProblemId(cloneRequest.getOldProblemId());
         for (TestCaseEntity originalTestCase : originalTestCases) {
             TestCaseEntity newTestCase = new TestCaseEntity();

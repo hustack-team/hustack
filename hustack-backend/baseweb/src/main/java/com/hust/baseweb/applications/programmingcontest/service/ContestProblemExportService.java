@@ -1,5 +1,7 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
@@ -17,7 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -158,6 +162,124 @@ public class ContestProblemExportService {
 
         return file;
     }
+
+
+    public File exportProblemToJsonFile(ModelCreateContestProblemResponse problem) throws IOException {
+        File file = new File("ProblemData.json");
+        FileWriter fileWriter = new FileWriter(file);
+        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        Map<String, Object> problemData = new HashMap<>();
+        problemData.put("problemName", problem.getProblemName());
+        problemData.put("createdAt", problem.getCreatedAt());
+        problemData.put("userId", problem.getUserId());
+        problemData.put("isPublic", problem.isPublicProblem());
+        problemData.put("timeLimitCPP", problem.getTimeLimitCPP());
+        problemData.put("timeLimitJAVA", problem.getTimeLimitJAVA());
+        problemData.put("timeLimitPYTHON", problem.getTimeLimitPYTHON());
+        problemData.put("memoryLimit", problem.getMemoryLimit());
+        problemData.put("levelId", problem.getLevelId());
+        problemData.put("categoryId", problem.getCategoryId());
+        problemData.put("levelOrder", problem.getLevelOrder());
+        problemData.put("status", problem.getStatus());
+        problemData.put("sampleTestCase", problem.getSampleTestCase());
+
+        problemData.put("problemDescription", problem.getProblemDescription());
+        problemData.put("correctSolutionLanguage", problem.getCorrectSolutionLanguage());
+        problemData.put("correctSolutionSourceCode", problem.getCorrectSolutionSourceCode());
+
+        problemData.put("scoreEvaluationType", problem.getScoreEvaluationType());
+        problemData.put("solution", problem.getSolution());
+        problemData.put("isPreloadCode", problem.getIsPreloadCode());
+        problemData.put("preloadCode", problem.getPreloadCode());
+
+        if (problem.getTags() != null) {
+            List<String> tagNames = problem.getTags().stream()
+                                           .map(TagEntity::getName)
+                                           .collect(Collectors.toList());
+            problemData.put("tags", tagNames);
+        } else {
+            problemData.put("tags", new ArrayList<>());
+        }
+
+        if ("CUSTOM_EVALUATION".equals(problem.getScoreEvaluationType())) {
+            problemData.put("solutionCheckerSourceLanguage", problem.getSolutionCheckerSourceLanguage());
+            problemData.put("solutionCheckerSourceCode", problem.getSolutionCheckerSourceCode());
+        }
+
+        List<TestCaseEntity> testCases = testCaseRepo.findAllByProblemId(problem.getProblemId());
+        List<Map<String, Object>> testCaseData = new ArrayList<>();
+        for (TestCaseEntity testCase : testCases) {
+            Map<String, Object> tc = new HashMap<>();
+            tc.put("testCasePoint", testCase.getTestCasePoint());
+            tc.put("isPublic", testCase.getIsPublic());
+            tc.put("statusId", testCase.getStatusId());
+            tc.put("description", testCase.getDescription());
+            tc.put("testCase", testCase.getTestCase());
+            tc.put("correctAnswer", testCase.getCorrectAnswer());
+            testCaseData.add(tc);
+        }
+        problemData.put("testCases", testCaseData);
+
+//        if (problem.getCategoryId() != null && problem.getCategoryId() == 1) {
+//            List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problem.getProblemId());
+//            List<Map<String, Object>> blockCodeData = new ArrayList<>();
+//            for (ProblemBlock block : problemBlocks) {
+//                Map<String, Object> blockData = new HashMap<>();
+//                blockData.put("seq", block.getSeq());
+//                blockData.put("completedBy", block.getCompletedBy() == 0 ? "teacher" : "student");
+//                blockData.put("sourceCode", block.getSourceCode());
+//                blockData.put("programmingLanguage", block.getProgrammingLanguage());
+//                blockCodeData.add(blockData);
+//            }
+//            problemData.put("blockCodes", blockCodeData);
+//        }
+
+        String jsonString = objectMapper.writeValueAsString(problemData);
+        bufferedWriter.write(jsonString);
+        bufferedWriter.close();
+        fileWriter.close();
+
+        return file;
+    }
+
+//    public List<File> exportProblemBlockToFile(ModelCreateContestProblemResponse problem) throws IOException {
+//        String problemId = problem.getProblemId();
+//        String problemName = problem.getProblemName();
+//        List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
+//        Map<String, List<ProblemBlock>> blocksByLanguage = new HashMap<>();
+//
+//        for (ProblemBlock block : problemBlocks) {
+//            String language = block.getProgrammingLanguage();
+//            blocksByLanguage.computeIfAbsent(language, k -> new ArrayList<>()).add(block);
+//        }
+//
+//        List<File> files = new ArrayList<>();
+//        for (Map.Entry<String, List<ProblemBlock>> entry : blocksByLanguage.entrySet()) {
+//            String language = entry.getKey();
+//            List<ProblemBlock> blocks = entry.getValue();
+//
+//            String fileName = problemName + "_" + language + "_BlockCode";
+//            File file = new File(fileName);
+//
+//            try (FileWriter fileWriter = new FileWriter(file);
+//                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
+//                for (ProblemBlock block : blocks) {
+//                    String target = block.getCompletedBy() == 0 ? "-----forTeacher-----" : "-----forStudent-----";
+//                    bufferedWriter.write(target);
+//                    bufferedWriter.newLine();
+//                    bufferedWriter.write(block.getSourceCode());
+//                    bufferedWriter.newLine();
+//                    bufferedWriter.newLine();
+//                }
+//            }
+//            files.add(file);
+//        }
+//
+//        return files;
+//    }
 
     public List<File> exportProblemAttachmentToFile(ModelCreateContestProblemResponse problem) throws IOException {
         ProblemEntity problemEntity = problemRepo.findByProblemId(problem.getProblemId());

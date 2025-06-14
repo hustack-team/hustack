@@ -49,5 +49,16 @@
   },
   "generalInfo": "General information",
   "manageRole": "Manage Role",
-  "clone": "Clone"
+  "clone": "Clone",
+  "importProblem": "Import Problem",
+  "import": "Import",
+  "importing": "Importing...",
+  "importSuccess": "Problem imported successfully",
+  "onlyZipFilesAllowed": "Only ZIP files are allowed",
+  "problemIdRequired": "Problem ID is required",
+  "problemIdInvalid": "Problem ID can only contain letters, numbers, underscores, and hyphens",
+  "problemNameRequired": "Problem Name is required",
+  "problemNameInvalid": "Problem Name can only contain letters and numbers",
+  "fileRequired": "Please select a ZIP file to import",
+  "exportJson": "Export Json"
 }

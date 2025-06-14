@@ -47,5 +47,16 @@
   },
   "generalInfo": "Thông tin chung",
   "manageRole": "Phân quyền",
-  "clone": "Sao chép"
+  "clone": "Sao chép",
+  "importProblem": "Nhập bài tập",
+  "import": "Nhập",
+  "importing": "Đang nhập...",
+  "importSuccess": "Bài tập đã được nhập thành công",
+  "onlyZipFilesAllowed": "Chỉ cho phép tệp ZIP",
+  "problemIdRequired": "Mã Bài tập là bắt buộc",
+  "problemIdInvalid": "Mã Bài tập chỉ được chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang",
+  "problemNameRequired": "Tên Bài tập là bắt buộc",
+  "problemNameInvalid": "Tên Bài tập chỉ được chứa chữ cái và số",
+  "fileRequired": "Vui lòng chọn tệp ZIP để nhập",
+  "exportJson": "Xuất dưới dạng json"
 }

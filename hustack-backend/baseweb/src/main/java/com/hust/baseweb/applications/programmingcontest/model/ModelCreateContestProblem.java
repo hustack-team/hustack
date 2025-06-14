@@ -29,7 +29,7 @@ public class ModelCreateContestProblem {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 

@@ -258,6 +258,10 @@ public interface ProblemTestCaseService {
 
     void exportProblem(String id, OutputStream outputStream);
 
+    void exportProblemJson(String problemId, OutputStream outputStream);
+
+    void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId);
+
     Page<ProblemDTO> getProblems(String ownerId, ProblemFilter filter, Boolean isPublic);
 
     Page<ProblemDTO> getSharedProblems(String userId, ProblemFilter filter);
