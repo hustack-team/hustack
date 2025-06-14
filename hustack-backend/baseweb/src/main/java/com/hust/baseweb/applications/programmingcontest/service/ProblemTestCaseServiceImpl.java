@@ -839,14 +839,14 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                    .contestSolvingTime(modelUpdateContest.getContestSolvingTime())
                                                    .problems(contestEntityExist.getProblems())
                                                    .userId(contestEntityExist.getUserId())
-                                                   .countDown(modelUpdateContest.getCountDownTime())
-                                                   .startedAt(modelUpdateContest.getStartedAt())
-                                                   .startedCountDownTime(DateTimeUtils.minusMinutesDate(
-                                                       modelUpdateContest.getStartedAt(),
-                                                       modelUpdateContest.getCountDownTime()))
-                                                   .endTime(DateTimeUtils.addMinutesDate(
-                                                       modelUpdateContest.getStartedAt(),
-                                                       modelUpdateContest.getContestSolvingTime()))
+//                                                   .countDown(modelUpdateContest.getCountDownTime())
+//                                                   .startedAt(modelUpdateContest.getStartedAt())
+//                                                   .startedCountDownTime(DateTimeUtils.minusMinutesDate(
+//                                                       modelUpdateContest.getStartedAt(),
+//                                                       modelUpdateContest.getCountDownTime()))
+//                                                   .endTime(DateTimeUtils.addMinutesDate(
+//                                                       modelUpdateContest.getStartedAt(),
+//                                                       modelUpdateContest.getContestSolvingTime()))
                                                    .statusId(modelUpdateContest.getStatusId())
                                                    .submissionActionType(modelUpdateContest.getSubmissionActionType())
                                                    .maxNumberSubmissions(modelUpdateContest.getMaxNumberSubmission())
@@ -865,6 +865,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                                    .contestShowTag(modelUpdateContest.getContestShowTag())
                                                    .contestShowComment(modelUpdateContest.getContestShowComment())
                                                    .contestPublic(modelUpdateContest.getContestPublic())
+                                                   .allowParticipantPinSubmission(modelUpdateContest.getAllowParticipantPinSubmission())
                                                    .canEditCoefficientPoint(modelUpdateContest.getCanEditCoefficientPoint())
                                                    .build();
         return contestService.updateContestWithCache(contestEntity);
@@ -1850,7 +1851,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             long totalPoint = 0;
             List<TestCaseEntity> TC = testCaseRepo.findAllByProblemId(problemId);
             for (TestCaseEntity tc : TC) {
-                if (contest.getEvaluateBothPublicPrivateTestcase().equals("Y")) {
+                if ("Y".equals(contest.getEvaluateBothPublicPrivateTestcase())) {
                     totalPoint += tc.getTestCasePoint();
                 } else {
                     if (tc.getIsPublic().equals("N")) {
@@ -1875,12 +1876,28 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             List<ModelSubmissionInfoRanking> submissionsByUser = new ArrayList<>();
 
+            boolean allowPinSubmission = contest != null && Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission());
+
             switch (getPointForRankingType) {
                 case HIGHEST:
-                    submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+                    if (allowPinSubmission) {
+                        submissionsByUser = contestSubmissionRepo.getHighestPinnedSubmissions(userId, contestId);
+                        if (submissionsByUser.isEmpty()) {
+                            submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+                        }
+                    } else {
+                        submissionsByUser = contestSubmissionRepo.getHighestSubmissions(userId, contestId);
+                    }
                     break;
                 case LATEST:
-                    submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
+                    if (allowPinSubmission) {
+                        submissionsByUser = contestSubmissionRepo.getLatestPinnedSubmissions(userId, contestId);
+                        if (submissionsByUser.isEmpty()) {
+                            submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
+                        }
+                    } else {
+                        submissionsByUser = contestSubmissionRepo.getLatestSubmissions(userId, contestId);
+                    }
                     break;
             }
             //log.info("getRankingByContestIdNew, submisionByUser.sz = " + submissionsByUser.size());
@@ -2239,6 +2256,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         String problemId
     ) {
         //log.info("findContestSubmissionByUserLoginIdAndContestIdPaging, user = " + userLoginId + " contestId = " + contestId);
+        ContestEntity contest = contestRepo.findContestByContestId(contestId);
+        Integer allowParticipantPinSubmission = contest != null ? contest.getAllowParticipantPinSubmission() : 0;
         return contestSubmissionPagingAndSortingRepo
             .findAllByUserIdAndContestIdAndProblemId(pageable, userLoginId, contestId, problemId)
             .map(contestSubmissionEntity -> ContestSubmission
@@ -2257,6 +2276,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 .status(contestSubmissionEntity.getStatus())
                 .message(contestSubmissionEntity.getMessage())
                 .userId(contestSubmissionEntity.getUserId())
+                .finalSelectedSubmission(contestSubmissionEntity.getFinalSelectedSubmission())
+                .allowParticipantPinSubmission(allowParticipantPinSubmission)
                 .build()
             );
     }
@@ -2353,6 +2374,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 .fullname(getUserFullNameOfContest(contestId, submission.getUserId()))
                 .createdByIp(submission.getCreatedByIp())
                 .codeAuthorship(submission.getCodeAuthorship())
+                .finalSelectedSubmission(submission.getFinalSelectedSubmission())
                 .build());
     }
 
@@ -4569,4 +4591,95 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return newProblem;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<ModelStudentOverviewProblem> getStudentContestProblems(String userId, String contestId) {
+        ContestEntity contest = contestService.findContest(contestId);
+        List<ProblemEntity> problems = contest.getProblems();
+
+        List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
+
+        List<ModelProblemMaxSubmissionPoint> submittedProblems;
+        if (Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission())) {
+            submittedProblems = contestSubmissionRepo.findFinalSelectedSubmittedProblemsOfUser(userId, contestId);
+        } else {
+            submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(userId, contestId);
+        }
+
+        Map<String, Long> mapProblemToMaxSubmissionPoint = submittedProblems.stream()
+                                                                            .collect(Collectors.toMap(ModelProblemMaxSubmissionPoint::getProblemId, ModelProblemMaxSubmissionPoint::getMaxPoint));
+
+        Map<String, Long> mProblem2MaxPoint = calculateMaxPointForProblems(contest, contestId);
+
+        if (!ContestEntity.CONTEST_STATUS_RUNNING.equals(contest.getStatusId())) {
+            return Collections.emptyList();
+        }
+
+        Map<String, ContestProblem> problemId2ContestProblem = contestProblemRepo
+            .findByContestIdAndProblemIdIn(contestId, problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet()))
+            .stream()
+            .collect(Collectors.toMap(ContestProblem::getProblemId, cp -> cp));
+
+        List<ModelStudentOverviewProblem> responses = new ArrayList<>();
+
+        for (ProblemEntity problem : problems) {
+            String problemId = problem.getProblemId();
+            ContestProblem contestProblem = problemId2ContestProblem.get(problemId);
+
+            if (contestProblem == null || ContestProblem.SUBMISSION_MODE_HIDDEN.equals(contestProblem.getSubmissionMode())) {
+                continue;
+            }
+
+            ModelStudentOverviewProblem response = new ModelStudentOverviewProblem();
+            response.setProblemId(problemId);
+            response.setProblemName(contestProblem.getProblemRename());
+            response.setProblemCode(contestProblem.getProblemRecode());
+            response.setLevelId(problem.getLevelId());
+            response.setMaxPoint(mProblem2MaxPoint.getOrDefault(problemId, 0L));
+
+            if ("N".equals(contest.getContestShowTag())) {
+                response.setTags(new ArrayList<>());
+            } else {
+                List<String> tags = problem.getTags().stream().map(TagEntity::getName).collect(Collectors.toList());
+                response.setTags(tags);
+            }
+
+            if (mapProblemToMaxSubmissionPoint.containsKey(problemId)) {
+                response.setSubmitted(true);
+                response.setMaxSubmittedPoint(mapProblemToMaxSubmissionPoint.get(problemId));
+            }
+
+            if (acceptedProblems.contains(problemId)) {
+                response.setAccepted(true);
+            }
+
+            responses.add(response);
+        }
+
+        return responses;
+    }
+
+    private Map<String, Long> calculateMaxPointForProblems(ContestEntity contest, String contestId) {
+        List<ContestProblem> listContestProblem = contestProblemRepo.findAllByContestIdAndSubmissionModeNot(
+            contestId, ContestProblem.SUBMISSION_MODE_HIDDEN);
+        List<String> listProblemId = listContestProblem.stream()
+                                                       .map(ContestProblem::getProblemId)
+                                                       .collect(Collectors.toList());
+
+        List<TestCaseEntity> testCases = testCaseRepo.findAllByProblemIdIn(listProblemId);
+        Map<String, List<TestCaseEntity>> testCasesByProblemId = testCases.stream()
+                                                                          .collect(Collectors.groupingBy(TestCaseEntity::getProblemId));
+
+        Map<String, Long> result = new HashMap<>();
+        for (String problemId : listProblemId) {
+            long totalPoint = testCasesByProblemId.getOrDefault(problemId, Collections.emptyList())
+                                                  .stream()
+                                                  .filter(tc -> "Y".equals(contest.getEvaluateBothPublicPrivateTestcase()) || "N".equals(tc.getIsPublic()))
+                                                  .mapToLong(TestCaseEntity::getTestCasePoint)
+                                                  .sum();
+
+            result.put(problemId, totalPoint);
+        }
+        return result;
+    }
 }

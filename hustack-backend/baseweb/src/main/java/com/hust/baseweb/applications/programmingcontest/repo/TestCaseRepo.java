@@ -3,6 +3,7 @@ package com.hust.baseweb.applications.programmingcontest.repo;
 import com.hust.baseweb.applications.programmingcontest.entity.TestCaseEntity;
 import com.hust.baseweb.applications.programmingcontest.model.ModelGetTestCaseDetail;
 import com.hust.baseweb.applications.programmingcontest.model.TestCaseDetailProjection;
+import com.hust.baseweb.applications.programmingcontest.model.TestCaseStatsDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,4 +60,14 @@ public interface TestCaseRepo extends JpaRepository<TestCaseEntity, UUID> {
         @Param("id") UUID testCaseId,
         @Param("threshold") int threshold
     );
+
+    @Query("SELECT tc FROM TestCaseEntity tc WHERE tc.problemId IN :problemIds AND (tc.statusId IS NULL OR tc.statusId <> 'DISABLED')")
+    List<TestCaseEntity> findAllByProblemIdIn(@Param("problemIds") List<String> problemIds);
+
+    List<TestCaseEntity> findByProblemId(String problemId);
+
+    @Query("SELECT COUNT(tc) AS testCasesCount, COALESCE(SUM(tc.testCasePoint), 0) AS totalPointTestCase " +
+           "FROM TestCaseEntity tc WHERE tc.problemId = :problemId")
+    TestCaseStatsDTO getStatsByProblemId(@Param("problemId") String problemId);
+
 }

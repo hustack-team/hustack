@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 public class ContestController {
 
     StudentProblemViewService studentProblemViewService;
+    TestCaseRepo testCaseRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
@@ -656,7 +657,8 @@ public class ContestController {
                 problemId);
         return ResponseEntity.ok().body(page);
     }
-
+    
+    
     @Async
     protected void logGetSubmissionsOfContest(String userId, String contestId) {
         if (true) {

@@ -3,6 +3,7 @@
   "problemList": "Problems",
   "problemId": "ID",
   "problemName": "Problem name",
+  "problemCode": "Problem Code",
   "level": "Level",
   "timeLimit": "Time limit",
   "memoryLimit": "Memory limit",

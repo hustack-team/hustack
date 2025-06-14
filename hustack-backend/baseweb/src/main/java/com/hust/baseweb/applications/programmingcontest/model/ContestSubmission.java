@@ -47,4 +47,8 @@ public class ContestSubmission {
     String createdByIp;
     
     String codeAuthorship;
+
+    Integer finalSelectedSubmission;
+
+    Integer allowParticipantPinSubmission;
 }

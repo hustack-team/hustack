@@ -34,6 +34,7 @@ export function ContestManagerDetail(props) {
     minTimeBetweenTwoSubmissions: 0,
     participantViewSubmissionMode: "",
     contestType:"",
+    allowParticipantPinSubmission: 0,
     canEditCoefficientPoint: 0, // Added to store canEditCoefficientPoint
   });
 
@@ -42,34 +43,36 @@ export function ContestManagerDetail(props) {
   const [newContestId, setNewContestId] = useState("");
   const [newContestName, setNewContestName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     const getContestDetail = () => {
       request("get", "/contests/" + contestId, (res) => {
         setLoading(false);
 
-        const data = res.data;
+        const data = res.data || {};
         setContestDetail((prev) => ({
           ...prev,
-          name: data.contestName,
-          statusId: data.statusId,
-          submissionActionType: data.submissionActionType,
-          participantViewResultMode: data.participantViewResultMode,
-          maxNumberSubmission: data.maxNumberSubmission,
-          problemDescriptionViewType: data.problemDescriptionViewType,
-          minTimeBetweenTwoSubmissions: data.minTimeBetweenTwoSubmissions,
-          evaluateBothPublicPrivateTestcase:
-            data.evaluateBothPublicPrivateTestcase,
-          maxSourceCodeLength: data.maxSourceCodeLength,
-          participantViewSubmissionMode: data.participantViewSubmissionMode,
-          languagesAllowed: data.languagesAllowed,
-          contestType: data.contestType,
-          canEditCoefficientPoint: data.canEditCoefficientPoint, // Added to set canEditCoefficientPoint
+          name: data.contestName || "",
+          statusId: data.statusId || "",
+          submissionActionType: data.submissionActionType || "",
+          participantViewResultMode: data.participantViewResultMode || "",
+          maxNumberSubmission: data.maxNumberSubmission || 10,
+          problemDescriptionViewType: data.problemDescriptionViewType || "",
+          minTimeBetweenTwoSubmissions: data.minTimeBetweenTwoSubmissions || 0,
+          evaluateBothPublicPrivateTestcase: data.evaluateBothPublicPrivateTestcase || "",
+          maxSourceCodeLength: data.maxSourceCodeLength || 50000,
+          participantViewSubmissionMode: data.participantViewSubmissionMode || "",
+          languagesAllowed: data.languagesAllowed || "",
+          contestType: data.contestType || "",
+          allowParticipantPinSubmission: data.allowParticipantPinSubmission || 0,
+          canEditCoefficientPoint: data.canEditCoefficientPoint, 
+          
         }));
       });
     };
 
     getContestDetail();
-  }, []);
+  }, [contestId]);
 
   const handleEdit = () => {
     history.push("/programming-contest/contest-edit/" + contestId);
@@ -78,8 +81,6 @@ export function ContestManagerDetail(props) {
   const hasSpecialCharacterContestId = () => {
     return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(newContestId); 
   };
-
-
 
   const handleCloneDialogOpen = () => {
     setOpenCloneDialog(true);
@@ -99,7 +100,6 @@ export function ContestManagerDetail(props) {
         return;
     }
 
-
     const cloneRequest = {
         fromContestId: contestId,
         toContestId: newContestId,
@@ -115,17 +115,17 @@ export function ContestManagerDetail(props) {
         },
         {
             onError: (error) => {
-                setErrorMessage("Failed to clone the problem. Please try again.");
-                console.error("Error cloning problem:", error);
+                setErrorMessage("Failed to clone the contest. Please try again.");
+                console.error("Error cloning contest:", error);
             },
             400: (error) => {
                 setErrorMessage("Invalid request. Please check your input.");
             },
             404: (error) => {
-                setErrorMessage("Original problem not found.");
+                setErrorMessage("Original contest not found.");
             },
             500: (error) => {
-              setErrorMessage("Original problem already exists.");
+              setErrorMessage("Contest already exists.");
           },
         },
         cloneRequest 
@@ -146,7 +146,6 @@ export function ContestManagerDetail(props) {
         </PrimaryButton>        
       }      
     >
-
       {loading && <LinearProgress />}
       <Grid container spacing={2} display={loading ? "none" : ""}>
         {[
@@ -207,6 +206,12 @@ export function ContestManagerDetail(props) {
             undefined,
             t("common:canEditCoefficientPointToolTip")
           ],
+          [
+            t("common:allowParticipantPinSubmission"),
+            contestDetail.allowParticipantPinSubmission === 0 ? t("common:no") : t("common:yes"),
+            undefined,
+            t("common:allowParticipantPinSubmissionToolTip")
+         ],
         ].map(([key, value, sx, helpText]) => (
           <Grid item xs={12} sm={12} md={4}>
             {detail(key, value, sx, helpText)}
@@ -255,7 +260,6 @@ export function ContestManagerDetail(props) {
           </Button>
         </DialogActions>
       </Dialog>
-
     </>
   );
 }
