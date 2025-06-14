@@ -1,12 +1,29 @@
 import {GetApp} from "@material-ui/icons";
 import AddIcon from "@material-ui/icons/Add";
-import {Box, Chip, Divider, Grid, IconButton, Paper, Stack, TextField, Tooltip, Typography,} from "@mui/material";
+import GetAppIcon from "@material-ui/icons/GetApp";
+import {
+  Box, 
+  Chip, 
+  Divider, 
+  Grid, 
+  IconButton, 
+  Paper, 
+  Stack, 
+  TextField, 
+  Tooltip, 
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button
+} from "@mui/material";
 import {request, saveFile} from "api";
 import React, {useEffect, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {Link} from "react-router-dom";
 import {toFormattedDateTime} from "utils/dateutils";
-import {errorNoti} from "utils/notification";
+import {errorNoti, successNoti} from "utils/notification";
 import StandardTable from "component/table/StandardTable";
 import {getColorLevel, getColorStatus} from "./lib";
 import FilterByTag from "component/table/FilterByTag";
@@ -19,6 +36,7 @@ import {useKeycloak} from "@react-keycloak/web";
 import {getLevels, getStatuses} from "./CreateProblem";
 
 const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []}
+
 export const selectProps = (options) => ({
   multiple: true,
   renderValue: (selected) => (
@@ -50,6 +68,15 @@ function ListProblemContent({type}) {
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState(filterInitValue);
 
+  // Import dialog state
+  const [openImportDialog, setOpenImportDialog] = useState(false);
+  const [importForm, setImportForm] = useState({
+    problemId: "",
+    problemName: "",
+    file: null
+  });
+  const [importErrors, setImportErrors] = useState({});
+
   const handleChangePage = (newPage) => {
     setPage(newPage);
   };
@@ -78,6 +105,99 @@ function ListProblemContent({type}) {
   const resetFilter = () => {
     setFilter(filterInitValue)
   }
+
+  const hasSpecialCharacterProblemId = (value) => {
+    return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(value);
+  };
+
+  const hasSpecialCharacterProblemName = (value) => {
+    return !new RegExp(/^[0-9a-zA-Z ]*$/).test(value);
+  };
+
+  const handleOpenImportDialog = () => {
+    setOpenImportDialog(true);
+  };
+
+  const handleCloseImportDialog = () => {
+    setOpenImportDialog(false);
+    setImportForm({
+      problemId: "",
+      problemName: "",
+      file: null
+    });
+    setImportErrors({});
+  };
+
+  const handleImportFormChange = (field, value) => {
+    setImportForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    if (importErrors[field]) {
+      setImportErrors(prev => ({
+        ...prev,
+        [field]: ""
+      }));
+    }
+  };
+
+  const validateImportForm = () => {
+    const errors = {};
+
+    if (!importForm.problemId.trim()) {
+      errors.problemId = t("problemIdRequired");
+    } else if (hasSpecialCharacterProblemId(importForm.problemId)) {
+      errors.problemId = t("problemIdInvalid");
+    }
+
+    if (!importForm.problemName.trim()) {
+      errors.problemName = t("problemNameRequired");
+    } else if (hasSpecialCharacterProblemName(importForm.problemName)) {
+      errors.problemName = t("problemNameInvalid");
+    }
+
+    if (!importForm.file) {
+      errors.file = t("fileRequired");
+    }
+
+    setImportErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleImportSubmit = () => {
+    if (!validateImportForm()) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", importForm.file);
+    formData.append("problem", new Blob([JSON.stringify({
+      problemId: importForm.problemId,
+      problemName: importForm.problemName,
+    })], { type: "application/json" }));
+
+    setLoading(true);
+    request(
+      "post",
+      "/problems/import",
+      (res) => {
+        setLoading(false);
+        successNoti(t("importSuccess"), 3000);
+        handleCloseImportDialog();
+        handleSearch();
+      },
+      {
+        onError: (e) => {
+          setLoading(false);
+          const message = e.response?.data?.message || t("common:error");
+          errorNoti(message, 3000);
+        },
+        headers: {
+        }
+      },
+      formData,
+    );
+  };
 
   const handleSearch = () => {
     setLoading(true);
@@ -143,6 +263,21 @@ function ListProblemContent({type}) {
       {responseType: "blob"});
   };
 
+  const onJsonExport = async (problem) => {
+    request("GET",
+      `/problems/${problem.problemId}/export2`,
+      (res) => {
+        saveFile(`${problem.problemId}.zip`, res.data);
+      },
+      {
+        onError: (e) => {
+          errorNoti(t("common:error", 3000))
+        }
+      },
+      {},
+      {responseType: "blob"});
+  };
+
   const COLUMNS = [
     {
       title: "ID",
@@ -160,7 +295,6 @@ function ListProblemContent({type}) {
             color: "blue",
             cursor: "",
           }}
-
         >
           {rowData["problemId"]}
         </Link>
@@ -231,18 +365,29 @@ function ListProblemContent({type}) {
     },
     {
       title: t("common:action"),
-      cellStyle: {minWidth: 120},
+      cellStyle: {minWidth: 160},
       render: (rowData) => {
         return (
-          <Tooltip title={t('export')}>
-            <IconButton
-              variant="contained"
-              color="primary"
-              onClick={() => onSingleDownload(rowData)}
-            >
-              <GetApp/>
-            </IconButton>
-          </Tooltip>
+          <Stack direction="row" spacing={1}>
+            <Tooltip title={t('export')}>
+              <IconButton
+                variant="contained"
+                color="primary"
+                onClick={() => onSingleDownload(rowData)}
+              >
+                <GetApp/>
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("exportJson")}>
+              <IconButton
+                variant="contained"
+                color="primary"
+                onClick={() => onJsonExport(rowData)}
+              >
+                <GetAppIcon/>
+              </IconButton>
+            </Tooltip>
+          </Stack>
         );
       },
     },
@@ -318,14 +463,99 @@ function ListProblemContent({type}) {
 
       <Stack direction="row" justifyContent='space-between' mb={1.5}>
         <Typography variant="h6">{t("problemList")}</Typography>
-        <PrimaryButton
-          startIcon={<AddIcon/>}
-          onClick={() => {
-            window.open("/programming-contest/create-problem");
-          }}>
-          {t("common:create", {name: ''})}
-        </PrimaryButton>
+        <Stack direction="row" spacing={2}>
+          <TertiaryButton
+            variant="outlined"
+            onClick={handleOpenImportDialog}
+          >
+            {t("import")}
+          </TertiaryButton>
+          <PrimaryButton
+            startIcon={<AddIcon/>}
+            onClick={() => {
+              window.open("/programming-contest/create-problem");
+            }}>
+            {t("common:create", {name: ''})}
+          </PrimaryButton>
+        </Stack>
       </Stack>
+
+      {/* Import Dialog */}
+      <Dialog open={openImportDialog} onClose={handleCloseImportDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{t("importProblem")}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t("problemId")}
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={importForm.problemId}
+            onChange={(e) => handleImportFormChange('problemId', e.target.value)}
+            error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
+            helperText={
+              importErrors.problemId || 
+              (hasSpecialCharacterProblemId(importForm.problemId) 
+                ? t("problemIdInvalid") 
+                : "")
+            }
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label={t("problemName")}
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={importForm.problemName}
+            onChange={(e) => handleImportFormChange('problemName', e.target.value)}
+            error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
+            helperText={
+              importErrors.problemName || 
+              (hasSpecialCharacterProblemName(importForm.problemName) 
+                ? t("problemNameInvalid") 
+                : "")
+            }
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            type="file"
+            fullWidth
+            variant="outlined"
+            inputProps={{ accept: ".zip,application/zip" }}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
+                  setImportErrors(prev => ({
+                    ...prev,
+                    file: t("fileRequired")
+                  }));
+                  return;
+                }
+                handleImportFormChange('file', file);
+              }
+            }}
+            error={!!importErrors.file}
+            helperText={importErrors.file || t("onlyZipFilesAllowed")}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseImportDialog} color="primary">
+            {t("common:cancel")}
+          </Button>
+          <Button 
+            onClick={handleImportSubmit} 
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? t("importing") : t("import")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <StandardTable
         columns={COLUMNS.filter(item => {
           if (type === 0) {
