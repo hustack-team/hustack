@@ -27,4 +27,6 @@ public class ModelStudentViewProblemDetail {
     private String preloadCode;
     private List<String> listLanguagesAllowed;
     private String sampleTestCase;
+    private List<BlockCode> blockCodes;
+
 }
