@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -54,6 +55,7 @@ public class ApiController {
      * @param keyword  the keyword to search for
      * @return
      */
+    @Secured("ROLE_TEACHER")
     @GetMapping("/search-user")
     public ResponseEntity<?> searchUser(
         Pageable pageable,

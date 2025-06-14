@@ -2,19 +2,26 @@ package com.hust.baseweb.applications.exam.controller;
 
 import com.hust.baseweb.applications.exam.entity.ExamTagEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
-import com.hust.baseweb.applications.exam.model.request.*;
+import com.hust.baseweb.applications.exam.model.request.ExamTagSaveReq;
 import com.hust.baseweb.applications.exam.service.ExamTagService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @Slf4j
 @RestController
 @RequestMapping("/exam-tag")
