@@ -7,9 +7,12 @@ import com.hust.baseweb.applications.education.quiztest.model.quiztestgroupparti
 import com.hust.baseweb.applications.education.quiztest.model.quiztestgroupparticipant.RemoveParticipantToQuizTestGroupInputModel;
 import com.hust.baseweb.applications.education.quiztest.repo.EduQuizTestGroupRepo;
 import com.hust.baseweb.applications.education.quiztest.service.EduTestQuizGroupParticipationAssignmentService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,14 +22,22 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Principal;
 import java.util.List;
 
-@Log4j2
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
 @RestController
 @Validated
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EduTestQuizGroupParticipationAssignmentController {
 
-    private EduTestQuizGroupParticipationAssignmentService eduTestQuizGroupParticipationAssignmentService;
-    private EduQuizTestGroupRepo eduQuizTestGroupRepo;
+    EduTestQuizGroupParticipationAssignmentService eduTestQuizGroupParticipationAssignmentService;
+
+    EduQuizTestGroupRepo eduQuizTestGroupRepo;
 
     @PostMapping("/add-participant-to-quiz-test-group")
     public ResponseEntity<?> addParticipantToQuizTestGroup(

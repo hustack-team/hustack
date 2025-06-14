@@ -32,14 +32,17 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +50,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,34 +59,55 @@ import java.io.InputStream;
 import java.security.Principal;
 import java.util.*;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
 @RequestMapping("/edu/class")
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ClassController {
 
-    private ClassServiceImpl classService;
-    private CourseService courseService;
-    private SemesterService semesterService;
-    private UserService userService;
-    private EduDepartmentService eduDepartmentService;
-    private EduCourseChapterService eduCourseChapterService;
-    private EduCourseChapterMaterialService eduCourseChapterMaterialService;
-    private EduClassMaterialService eduClassMaterialService;
-    private LogUserLoginCourseChapterMaterialService logUserLoginCourseChapterMaterialService;
-    private LogUserLoginQuizQuestionService logUserLoginQuizQuestionService;
-    private VideoService videoService;
-    private NotificationsService notificationsService;
-    private ClassRepo classRepo;
-    private FileSystemStorageProperties properties;
-    private ClassRegistrationRepo classRegistrationRepo;
-    private EduClassSessionService eduClassSessionService;
+    ClassServiceImpl classService;
+
+    CourseService courseService;
+
+    SemesterService semesterService;
+
+    UserService userService;
+
+    EduDepartmentService eduDepartmentService;
+
+    EduCourseChapterService eduCourseChapterService;
+
+    EduCourseChapterMaterialService eduCourseChapterMaterialService;
+
+    EduClassMaterialService eduClassMaterialService;
+
+    LogUserLoginCourseChapterMaterialService logUserLoginCourseChapterMaterialService;
+
+    LogUserLoginQuizQuestionService logUserLoginQuizQuestionService;
+
+    VideoService videoService;
+
+    NotificationsService notificationsService;
+
+    ClassRepo classRepo;
+
+    FileSystemStorageProperties properties;
+
+    ClassRegistrationRepo classRegistrationRepo;
+
+    EduClassSessionService eduClassSessionService;
 
     ApiService apiService;
 
-    @Autowired
-    private MongoContentService mongoContentService;
+    MongoContentService mongoContentService;
 
     @PostMapping
     public ResponseEntity<?> getClassesOfCurrSemester(
@@ -594,7 +617,6 @@ public class ClassController {
         @PathVariable UUID chapterMarialId,
         @RequestBody EduCourseChapterMaterial eduCourseChapterMaterial
     ) {
-        log.info(eduCourseChapterMaterial);
         try {
             eduCourseChapterMaterial = eduCourseChapterMaterialService.findById(chapterMarialId);
             log.info("find successs");

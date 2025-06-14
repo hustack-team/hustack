@@ -9,47 +9,48 @@ import com.hust.baseweb.applications.education.thesisdefensejury.repo.ThesisRepo
 import com.hust.baseweb.applications.education.thesisdefensejury.service.DefenseJuryService;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DefenseJuryController {
 
-    private final DefenseJuryService juryService;
-    private final DefenseJuryTeacherRepo defenseJuryTeacherRepo;
-    private final ThesisRepo thesisRepo;
-    private UserService userService;
-    private static Logger logger = LogManager.getLogger(DefenseJuryController.class);
+    DefenseJuryService juryService;
+
+    DefenseJuryTeacherRepo defenseJuryTeacherRepo;
+
+    ThesisRepo thesisRepo;
+
+    UserService userService;
 
     @PostMapping("/defense_jury")
     public ResponseEntity<?> createDefenseJury(
         Principal principal,
         @RequestBody DefenseJuryIM request
     ) {
-        logger.debug(request);
-        log.info("Session Login , sessionName = " + principal.getName());
         UserLogin u = userService.findById(principal.getName());
         if (u == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid session login");
@@ -142,7 +143,6 @@ public class DefenseJuryController {
         @RequestBody AddTeacherToDefenseJuryIM request,
         @PathVariable("defenseJuryId") UUID juryID
     ) {
-        logger.debug(request);
         // TODO: check valid request
         if (request == null || juryID == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid body request");
@@ -164,7 +164,7 @@ public class DefenseJuryController {
         @RequestBody AddTeacherToDefenseJuryIM request,
         @PathVariable("defenseJuryId") UUID juryID
     ) {
-        logger.debug("Inout Delete Teacher", request);
+        log.debug("Inout Delete Teacher", request);
         // TODO: check valid request
         if (request.getTeacherId() == "" || juryID == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid body request");
@@ -186,7 +186,6 @@ public class DefenseJuryController {
         @RequestBody ThesisWithDefenseJuryIM request,
         @PathVariable("defenseJuryId") UUID juryID
     ) {
-        logger.debug(request);
         // TODO: check valid request
         if (request == null || juryID == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid body request");
@@ -202,7 +201,6 @@ public class DefenseJuryController {
         @RequestBody ThesisWithDefenseJuryIM request,
         @PathVariable("defenseJuryId") UUID juryID
     ) {
-        logger.debug(request);
         // TODO: check valid request
         if (request == null || juryID == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid body request");
@@ -218,7 +216,7 @@ public class DefenseJuryController {
         @PathVariable("planId") String planId
     ) {
         // check input
-        if (planId == "") {
+        if (Objects.equals(planId, "")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid plan id");
         }
         // TODO handler

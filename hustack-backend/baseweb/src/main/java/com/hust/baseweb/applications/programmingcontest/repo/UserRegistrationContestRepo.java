@@ -42,7 +42,7 @@ public interface UserRegistrationContestRepo extends JpaRepository<UserRegistrat
 
     List<UserRegistrationContestEntity> findAllByUserIdAndRoleId(String userId, String roleId);
 
-    List<UserRegistrationContestEntity> findAllByUserIdAndRoleIdAndStatus(String userId, String roleId, String status);
+    List<UserRegistrationContestEntity> findByUserIdAndRoleIdAndStatus(String userId, String roleId, String status);
 
     List<UserRegistrationContestEntity> findAllByUserId(String userId);
 

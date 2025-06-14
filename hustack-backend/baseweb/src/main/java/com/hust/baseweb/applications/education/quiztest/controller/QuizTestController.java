@@ -6,25 +6,11 @@ import com.hust.baseweb.applications.education.cache.QuizQuestionServiceCache;
 import com.hust.baseweb.applications.education.classmanagement.entity.EduClassSession;
 import com.hust.baseweb.applications.education.classmanagement.repo.EduClassSessionRepo;
 import com.hust.baseweb.applications.education.classmanagement.service.ClassService;
-import com.hust.baseweb.applications.education.classmanagement.service.EduClassSessionService;
-import com.hust.baseweb.applications.education.entity.EduClass;
-import com.hust.baseweb.applications.education.entity.EduCourseSession;
-import com.hust.baseweb.applications.education.entity.EduCourseSessionInteractiveQuiz;
-import com.hust.baseweb.applications.education.entity.EduCourseSessionInteractiveQuizQuestion;
-import com.hust.baseweb.applications.education.entity.QuizQuestion;
-import com.hust.baseweb.applications.education.entity.QuizTag;
+import com.hust.baseweb.applications.education.entity.*;
 import com.hust.baseweb.applications.education.entity.compositeid.CompositeCourseSessionInteractiveQuizQuestionId;
 import com.hust.baseweb.applications.education.model.quiz.QuizQuestionDetailModel;
-import com.hust.baseweb.applications.education.model.quiz.QuizTagCreateModel;
 import com.hust.baseweb.applications.education.quiztest.UserQuestionQuizExecutionOM;
-import com.hust.baseweb.applications.education.quiztest.entity.EduQuizTest;
-import com.hust.baseweb.applications.education.quiztest.entity.EduQuizTestQuizQuestion;
-import com.hust.baseweb.applications.education.quiztest.entity.EduTestQuizGroup;
-import com.hust.baseweb.applications.education.quiztest.entity.EduTestQuizParticipant;
-import com.hust.baseweb.applications.education.quiztest.entity.EduTestQuizRole;
-import com.hust.baseweb.applications.education.quiztest.entity.InteractiveQuiz;
-import com.hust.baseweb.applications.education.quiztest.entity.InteractiveQuizAnswer;
-import com.hust.baseweb.applications.education.quiztest.entity.InteractiveQuizQuestion;
+import com.hust.baseweb.applications.education.quiztest.entity.*;
 import com.hust.baseweb.applications.education.quiztest.model.*;
 import com.hust.baseweb.applications.education.quiztest.model.edutestquizparticipation.GetQuizTestParticipationExecutionResultInputModel;
 import com.hust.baseweb.applications.education.quiztest.model.edutestquizparticipation.ModelResponseImportExcelUsersToQuizTest;
@@ -32,12 +18,7 @@ import com.hust.baseweb.applications.education.quiztest.model.edutestquizpartici
 import com.hust.baseweb.applications.education.quiztest.model.quitestgroupquestion.AutoAssignQuestion2QuizTestGroupInputModel;
 import com.hust.baseweb.applications.education.quiztest.model.quiztestgroup.AutoAssignParticipants2QuizTestGroupInputModel;
 import com.hust.baseweb.applications.education.quiztest.model.quiztestquestion.CopyQuestionFromQuizTest2QuizTestInputModel;
-import com.hust.baseweb.applications.education.quiztest.model.quiztestquestion.CreateQuizTestQuestionInputModel;
-import com.hust.baseweb.applications.education.quiztest.repo.EduTestQuizParticipantRepo;
-import com.hust.baseweb.applications.education.quiztest.repo.EduTestQuizRoleRepo;
-import com.hust.baseweb.applications.education.quiztest.repo.InteractiveQuizQuestionRepo;
-import com.hust.baseweb.applications.education.quiztest.repo.InteractiveQuizRepo;
-import com.hust.baseweb.applications.education.quiztest.repo.QuizGroupQuestionAssignmentRepo;
+import com.hust.baseweb.applications.education.quiztest.repo.*;
 import com.hust.baseweb.applications.education.quiztest.repo.InteractiveQuizRepo.StudentResult;
 import com.hust.baseweb.applications.education.quiztest.repo.InteractiveQuizRepo.StudentSubmission;
 import com.hust.baseweb.applications.education.quiztest.service.*;
@@ -46,21 +27,22 @@ import com.hust.baseweb.applications.education.repo.EduCourseSessionInteractiveQ
 import com.hust.baseweb.applications.education.repo.EduCourseSessionRepo;
 import com.hust.baseweb.applications.education.service.EduCourseSessionInteractiveQuizQuestionService;
 import com.hust.baseweb.applications.education.service.QuizQuestionService;
-import com.hust.baseweb.applications.education.service.QuizTagService;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,35 +52,62 @@ import java.security.Principal;
 import java.util.*;
 
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor = @__(@Autowired))
-@CrossOrigin
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuizTestController {
 
-    private QuizTestService quizTestService;
-    private UserService userService;
-    private EduTestQuizParticipantRepo eduTestQuizParticipationRepo;
-    private QuizQuestionService quizQuestionService;
-    private ClassService classService;
-    private EduQuizTestQuizQuestionService eduQuizTestQuizQuestionService;
-    private EduQuizTestGroupService eduQuizTestGroupService;
-    private EduTestQuizRoleRepo eduTestQuizRoleRepo;
-    private EduQuizTestParticipantRoleService eduQuizTestParticipantRoleService;
-    private EduTestQuizParticipantService eduTestQuizParticipantService;
-    private QuizGroupQuestionAssignmentRepo quizGroupQuestionAssignmentRepo;
-    private InteractiveQuizService interactiveQuizService;
-    private InteractiveQuizQuestionService interactiveQuizQuestionService;
-    private InteractiveQuizAnswerService interactiveQuizAnswerService;
-    private InteractiveQuizRepo interactiveQuizRepo;
-    private InteractiveQuizQuestionRepo interactiveQuizQuestionRepo;
-    private EduClassSessionRepo eduClassSessionRepo;
-    private EduCourseSessionRepo eduCourseSessionRepo;
-    private EduCourseSessionInteractiveQuizRepo eduCourseSessionInteractiveQuizRepo;
-    private EduCourseSessionInteractiveQuizQuestionRepo eduCourseSessionInteractiveQuizQuestionRepo;
-    private EduCourseSessionInteractiveQuizQuestionService eduCourseSessionInteractiveQuizQuestionService;
-    private QuizQuestionServiceCache cacheService;
+    QuizTestService quizTestService;
+
+    UserService userService;
+
+    EduTestQuizParticipantRepo eduTestQuizParticipationRepo;
+
+    QuizQuestionService quizQuestionService;
+
+    ClassService classService;
+
+    EduQuizTestQuizQuestionService eduQuizTestQuizQuestionService;
+
+    EduQuizTestGroupService eduQuizTestGroupService;
+
+    EduTestQuizRoleRepo eduTestQuizRoleRepo;
+
+    EduQuizTestParticipantRoleService eduQuizTestParticipantRoleService;
+
+    EduTestQuizParticipantService eduTestQuizParticipantService;
+
+    QuizGroupQuestionAssignmentRepo quizGroupQuestionAssignmentRepo;
+
+    InteractiveQuizService interactiveQuizService;
+
+    InteractiveQuizQuestionService interactiveQuizQuestionService;
+
+    InteractiveQuizAnswerService interactiveQuizAnswerService;
+
+    InteractiveQuizRepo interactiveQuizRepo;
+
+    InteractiveQuizQuestionRepo interactiveQuizQuestionRepo;
+
+    EduClassSessionRepo eduClassSessionRepo;
+
+    EduCourseSessionRepo eduCourseSessionRepo;
+
+    EduCourseSessionInteractiveQuizRepo eduCourseSessionInteractiveQuizRepo;
+
+    EduCourseSessionInteractiveQuizQuestionRepo eduCourseSessionInteractiveQuizQuestionRepo;
+
+    EduCourseSessionInteractiveQuizQuestionService eduCourseSessionInteractiveQuizQuestionService;
+
+    QuizQuestionServiceCache cacheService;
 
     @Secured({"ROLE_TEACHER"})
     @PostMapping("/create-quiz-test")

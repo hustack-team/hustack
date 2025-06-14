@@ -16,13 +16,15 @@ import com.hust.baseweb.applications.education.quiztest.service.QuizTestService;
 import com.hust.baseweb.applications.education.service.CourseService;
 import com.hust.baseweb.service.UserService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,22 +36,35 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor = @__(@Autowired))
-@CrossOrigin
-
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuizGroupQuestionParticipationExecutionChoiceController {
 
     QuizTestExecutionSubmissionRepo quizTestExecutionSubmissionRepo;
+
     QuizGroupQuestionParticipationExecutionChoiceRepo quizGroupQuestionParticipationExecutionChoiceRepo;
+
     QuizTestService quizTestService;
+
     EduQuizTestRepo eduQuizTestRepo;
+
     HistoryLogQuizGroupQuestionParticipationExecutionChoiceRepo historyLogQuizGroupQuestionParticipationExecutionChoiceRepo;
+
     UserService userService;
+
     ClassService classService;
+
     CourseService courseService;
+
     private RabbitTemplate rabbitTemplate;
 
     @GetMapping("/summarize-quiz-test-execution-choice/{testId}")

@@ -12,13 +12,15 @@ import com.hust.baseweb.applications.education.service.*;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,31 +28,42 @@ import org.springframework.web.multipart.MultipartFile;
 import java.security.Principal;
 import java.util.*;
 
-@Log4j2
-@Controller
+
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
 //@RequestMapping("/edu/class")
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuizController {
 
-    private QuizQuestionService quizQuestionService;
+    QuizQuestionService quizQuestionService;
 
-    private QuizChoiceAnswerService quizChoiceAnswerService;
+    QuizChoiceAnswerService quizChoiceAnswerService;
 
-    private QuizCourseTopicService quizCourseTopicService;
+    QuizCourseTopicService quizCourseTopicService;
 
-    private UserService userService;
+    UserService userService;
 
-    private ClassService classService;
+    ClassService classService;
 
-    private CommentOnQuizQuestionService commentOnQuizQuestionService;
+    CommentOnQuizQuestionService commentOnQuizQuestionService;
 
-    private QuizQuestionUserRoleRepo quizQuestionUserRoleRepo;
+    QuizQuestionUserRoleRepo quizQuestionUserRoleRepo;
 
-    private QuizTagRepo quizTagRepo;
-    private QuizTagService quizTagService;
-    private QuizQuestionTagRepo quizQuestionTagRepo;
-    private QuizQuestionTagService quizQuestionTagService;
+    QuizTagRepo quizTagRepo;
+
+    QuizTagService quizTagService;
+
+    QuizQuestionTagRepo quizQuestionTagRepo;
+
+    QuizQuestionTagService quizQuestionTagService;
 
     @PostMapping("/post-comment-on-quiz")
     public ResponseEntity<?> postCommentOnQuizQuestion(

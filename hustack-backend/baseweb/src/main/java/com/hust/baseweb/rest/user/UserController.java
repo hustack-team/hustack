@@ -9,16 +9,13 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +27,7 @@ public class UserController {
 
     UserService userService;
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/users")
     public ResponseEntity<?> search(
         Pageable pageable,
@@ -54,10 +52,10 @@ public class UserController {
      * @param userLoginId The user login id of the user whose details are to be fetched.
      * @return A ResponseEntity object is being returned.
      */
-    @GetMapping("/users/{userLoginId}/detail")
-    public ResponseEntity<?> getUserDetailByLoginId(@PathVariable String userLoginId) {
-        return ResponseEntity.ok(userService.findPersonByUserLoginId(userLoginId));
-    }
+//    @GetMapping("/users/{userLoginId}/detail")
+//    public ResponseEntity<?> getUserDetailByLoginId(@PathVariable String userLoginId) {
+//        return ResponseEntity.ok(userService.findPersonByUserLoginId(userLoginId));
+//    }
 
     /**
      * It returns a list of users, with pagination, and the ability to search by name
@@ -86,19 +84,19 @@ public class UserController {
      * @param size             The number of items to return per page.
      * @return A list of users with their person model and security groups.
      */
-    @GetMapping(
-        value = "users",
-        params = {"securityGroups", "search", "page", "size"}
-    )
-    public ResponseEntity<?> getUserLoginWithPersonModelBySecurityGroup(
-        @RequestParam("securityGroups") Collection<String> securityGroupIds,
-        @RequestParam String search, @RequestParam int page, @RequestParam int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-            userService.findAllUserLoginWithPersonModelBySecurityGroupId(securityGroupIds, search, pageable)
-        );
-    }
+//    @GetMapping(
+//        value = "users",
+//        params = {"securityGroups", "search", "page", "size"}
+//    )
+//    public ResponseEntity<?> getUserLoginWithPersonModelBySecurityGroup(
+//        @RequestParam("securityGroups") Collection<String> securityGroupIds,
+//        @RequestParam String search, @RequestParam int page, @RequestParam int size
+//    ) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        return ResponseEntity.ok(
+//            userService.findAllUserLoginWithPersonModelBySecurityGroupId(securityGroupIds, search, pageable)
+//        );
+//    }
 
     /**
      * > This function returns a list of all enabled user login ids that contain the given string
@@ -107,6 +105,7 @@ public class UserController {
      * @param limit         The maximum number of results to return.
      * @return A list of all enabled user login ids that contain the search string.
      */
+    @Secured("ROLE_TEACHER")
     @GetMapping("/user-login-ids")
     public ResponseEntity<?> getEnabledUserLoginIds(
         @RequestParam(name = "search", required = false, defaultValue = "") String partOfLoginId,
