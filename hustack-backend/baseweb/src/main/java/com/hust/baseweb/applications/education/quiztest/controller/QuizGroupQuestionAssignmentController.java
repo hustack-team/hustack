@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ import java.util.List;
 
 @ConditionalOnProperty(
     prefix = "feature",
-    name = "enable-non-programming-contest-modules",
+    name = "enable-module-quiz-test",
     havingValue = "true",
     matchIfMissing = true
 )
@@ -29,6 +30,7 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Secured("ROLE_TEACHER")
 public class QuizGroupQuestionAssignmentController {
 
     QuizGroupQuestionAssignmentService quizGroupQuestionAssignmentService;

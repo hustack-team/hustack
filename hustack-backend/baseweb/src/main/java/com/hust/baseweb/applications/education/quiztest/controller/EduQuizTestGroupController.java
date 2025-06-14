@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +33,7 @@ import java.util.List;
 
 @ConditionalOnProperty(
     prefix = "feature",
-    name = "enable-non-programming-contest-modules",
+    name = "enable-module-quiz-test",
     havingValue = "true",
     matchIfMissing = true
 )
@@ -53,6 +54,7 @@ public class EduQuizTestGroupController {
 
     QuizTestService quizTestService;
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/generate-quiz-test-group")
     public ResponseEntity<?> generateQuizTestGroup(
         Principal principal, @RequestBody
@@ -64,6 +66,7 @@ public class EduQuizTestGroupController {
         return ResponseEntity.ok().body(eduTestQuizGroups);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-quiz-test-participation-group-question/{testID}")
     public ResponseEntity<?> getAllTestGroupQuestionByUser(Principal principal, @PathVariable String testID) {
         List<QuizTestGroupParticipantAssignmentOutputModel> quizTestGroupParticipantAssignmentOutputModels
@@ -82,12 +85,14 @@ public class EduQuizTestGroupController {
         return ResponseEntity.ok().body(retList);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-quiz-test-group-with-questions-detail/{testID}")
     public ResponseEntity<?> getAllTestGroupWithQuestionsDetail(Principal principal, @PathVariable String testID) {
         List<QuizGroupTestDetailModel> res = eduQuizTestGroupService.getQuizTestGroupWithQuestionsDetail(testID);
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-quiz-questions-assigned-to-participant/{testID}/{participantId}")
     public ResponseEntity<?> getQuizQuestionsAssignedToParticipant(
         Principal principal,
@@ -271,6 +276,7 @@ public class EduQuizTestGroupController {
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-quiz-test-group-participants/{testId}")
     public ResponseEntity<?> getQuizTestGroupParticipants(Principal principal, @PathVariable String testId) {
         log.info("getQuizTestGroupParticipants, testId = " + testId);
