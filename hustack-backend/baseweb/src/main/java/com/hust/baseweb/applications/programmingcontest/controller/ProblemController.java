@@ -17,7 +17,6 @@ import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseS
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.service.UserService;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -240,45 +239,6 @@ public class ProblemController {
 
         return ResponseEntity.ok().headers(headers).body(stream);
     }
-
-    @PostMapping(value = "/problems/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> importProblem(
-        @RequestPart("file") MultipartFile file,
-        @RequestPart("problem") @Valid ModelImportProblem problem,
-        Principal principal
-    ) {
-        try {
-            if (!file.getOriginalFilename().endsWith(".zip")) {
-                return ResponseEntity.badRequest().body("File must be a ZIP file");
-            }
-
-            problemTestCaseService.importProblem(problem, file, principal.getName());
-
-            return ResponseEntity.ok("Problem imported successfully");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to import problem: " + e.getMessage());
-        }
-    }
-
-    @GetMapping(value = "/problems/{id}/export2")
-    public ResponseEntity<StreamingResponseBody> exportProblem2(
-        @PathVariable @NotBlank String id
-    ) {
-        StreamingResponseBody stream = outputStream -> problemTestCaseService.exportProblemJson(
-            id,
-            outputStream);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + id + "_json.zip");
-
-        return ResponseEntity.ok().headers(headers).body(stream);
-    }
-
-    // Phương thức exportProblemJson
 
     @PostMapping(value = "/teachers/problems/clone")
     public ResponseEntity<?> cloneProblem(Principal principal, @RequestBody ModelCloneProblem cloneRequest) throws MiniLeetCodeException {

@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -260,10 +259,6 @@ public interface ProblemTestCaseService {
     void switchAllContestJudgeMode(String judgeMode);
 
     void exportProblem(String id, OutputStream outputStream);
-
-    void exportProblemJson(String problemId, OutputStream outputStream);
-
-    void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId);
 
     Page<ProblemDTO> getProblems(String ownerId, ProblemFilter filter, Boolean isPublic);
 
