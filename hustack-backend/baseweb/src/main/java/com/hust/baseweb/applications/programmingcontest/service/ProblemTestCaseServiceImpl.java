@@ -3903,7 +3903,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
 
             UserLogin admin = userLoginRepo.findByUserLoginId("admin");
-            if (admin != null && !userId.equals("admin")) {
+            if (userId != null && !userId.equals("admin")) {
                 for (String role : Arrays.asList(
                     UserContestProblemRole.ROLE_OWNER,
                     UserContestProblemRole.ROLE_EDITOR,
