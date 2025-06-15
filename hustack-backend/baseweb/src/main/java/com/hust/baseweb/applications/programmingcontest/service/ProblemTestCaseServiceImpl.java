@@ -3684,10 +3684,20 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     }
 
     @Transactional(readOnly = true)
-    public void exportProblemJson(String problemId, OutputStream outputStream) {
+    public void exportProblemJson(String problemId, OutputStream outputStream, String userId) {
         try {
             ModelCreateContestProblemResponse problem = getContestProblem(problemId);
 
+            List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problem.getProblemId(), userId);
+            boolean hasPermission = roles.stream().anyMatch(role ->
+                                                                role.equals(UserContestProblemRole.ROLE_OWNER) ||
+                                                                role.equals(UserContestProblemRole.ROLE_EDITOR) ||
+                                                                role.equals(UserContestProblemRole.ROLE_VIEWER)
+            );
+
+            if (!hasPermission) {
+                throw new AccessDeniedException("You do not have permission to export this problem.");
+            }
             if (problem != null) {
                 handleExportProblemJson(problem, outputStream);
             }
@@ -3701,40 +3711,60 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream
     ) throws IOException {
+        Path exportDir = Files.createTempDirectory("problem-export-json-");
         List<File> files = new ArrayList<>();
 
         try {
-            File problemJsonFile = exporter.exportProblemToJsonFile(problem);
+            File problemJsonFile = exporter.exportProblemToJsonFile(problem, exportDir);
             files.add(problemJsonFile);
+
+            if (!problem.getAttachmentNames().isEmpty()) {
+                files.addAll(exporter.exportProblemAttachmentToFile(problem, exportDir));
+            }
+
+            ZipOutputStreamUtils.zip(
+                outputStream,
+                files,
+                CompressionMethod.DEFLATE,
+                null,
+                EncryptionMethod.AES,
+                AesKeyStrength.KEY_STRENGTH_256
+            );
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        if (!problem.getAttachmentNames().isEmpty()) {
-            files.addAll(exporter.exportProblemAttachmentToFile(problem));
-        }
-        ZipOutputStreamUtils.zip(
-            outputStream,
-            files,
-            CompressionMethod.DEFLATE,
-            null,
-            EncryptionMethod.AES,
-            AesKeyStrength.KEY_STRENGTH_256);
+            throw e;
+        } finally {
+            for (File file : files) {
+                if (file != null && file.exists()) {
+                    if (!file.delete()) {
+                        System.err.println("Can't delete file: " + file.getAbsolutePath());
+                    }
+                }
+            }
 
-        for (File file : files) {
-            file.delete();
+            try {
+                Files.walk(exportDir)
+                     .sorted(Comparator.reverseOrder())
+                     .map(Path::toFile)
+                     .forEach(file -> {
+                         if (!file.delete()) {
+                             System.err.println("Failed to delete: " + file.getAbsolutePath());
+                         }
+                     });
+            } catch (IOException e) {
+                System.err.println("Failed to clean up temp export directory: " + exportDir);
+            }
         }
     }
+
 
 
     @Transactional
     public void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId) {
         try {
-            if (problemRepo.existsByProblemId(model.getProblemId())) {
-                throw new IllegalArgumentException("Problem ID '" + model.getProblemId() + "' already exists");
-            }
-            if (problemRepo.existsByProblemName(model.getProblemName())) {
-                throw new IllegalArgumentException("Problem name '" + model.getProblemName() + "' already exists");
+            if (problemRepo.existsByProblemId(model.getProblemId()) || problemRepo.existsByProblemName(model.getProblemName())) {
+                throw new IllegalArgumentException("Problem ID or name already exists");
             }
 
             Path tempDir = Files.createTempDirectory("problem-import");
@@ -3769,9 +3799,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             ProblemEntity problemEntity = new ProblemEntity();
             problemEntity.setProblemId(model.getProblemId());
             problemEntity.setProblemName(model.getProblemName());
-            problemEntity.setCreatedBy(userId);
-            problemEntity.setCreatedAt(java.util.Date.from(LocalDateTime.now()
-                                                                        .atZone(ZoneId.systemDefault()).toInstant()));
 
             if (problemData.containsKey("isPublic")) {
                 problemEntity.setPublicProblem((Boolean) problemData.get("isPublic"));
@@ -3827,18 +3854,35 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             if (problemData.containsKey("tags")) {
                 List<String> tagNames = (List<String>) problemData.get("tags");
-                List<TagEntity> tags = new ArrayList<>();
-                for (String name : tagNames) {
-                    TagEntity tag = tagRepo.findByName(name);
-                    if (tag == null) {
-                        tag = new TagEntity();
-                        tag.setName(name);
-                        tag = tagRepo.save(tag);
-                    }
-                    tags.add(tag);
+
+                List<TagEntity> existingTags = tagRepo.findByNameInIgnoreCase(tagNames);
+                Map<String, TagEntity> nameToTagMap = new HashMap<>();
+                for (TagEntity tag : existingTags) {
+                    nameToTagMap.put(tag.getName().toLowerCase(), tag);
                 }
-                problemEntity.setTags(tags);
+
+                List<TagEntity> finalTags = new ArrayList<>();
+                List<TagEntity> newTags = new ArrayList<>();
+
+                for (String name : tagNames) {
+                    String lower = name.toLowerCase();
+                    if (nameToTagMap.containsKey(lower)) {
+                        finalTags.add(nameToTagMap.get(lower));
+                    } else {
+                        TagEntity newTag = new TagEntity();
+                        newTag.setName(name);
+                        newTags.add(newTag);
+                    }
+                }
+
+                if (!newTags.isEmpty()) {
+                    List<TagEntity> saved = tagRepo.saveAll(newTags);
+                    finalTags.addAll(saved);
+                }
+
+                problemEntity.setTags(finalTags);
             }
+
 
             if ("CUSTOM_EVALUATION".equals(problemData.get("scoreEvaluationType"))) {
                 if (problemData.containsKey("solutionCheckerSourceLanguage")) {
@@ -3888,43 +3932,34 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemEntity.setAttachment(String.join(";", attachmentId));
             problemEntity = problemRepo.save(problemEntity);
 
-            for (String role : Arrays.asList(
+            List<String> roles = Arrays.asList(
                 UserContestProblemRole.ROLE_OWNER,
                 UserContestProblemRole.ROLE_EDITOR,
-                UserContestProblemRole.ROLE_VIEWER)) {
+                UserContestProblemRole.ROLE_VIEWER
+            );
+
+            List<UserContestProblemRole> rolesToSave = new ArrayList<>();
+
+            for (String role : roles) {
                 UserContestProblemRole upr = new UserContestProblemRole();
                 upr.setProblemId(problemEntity.getProblemId());
                 upr.setUserId(userId);
                 upr.setRoleId(role);
-                upr.setUpdateByUserId(userId);
-                upr.setCreatedStamp(new Date());
-                upr.setLastUpdated(new Date());
-                userContestProblemRoleRepo.save(upr);
+                rolesToSave.add(upr);
             }
 
             UserLogin admin = userLoginRepo.findByUserLoginId("admin");
             if (userId != null && !userId.equals("admin")) {
-                for (String role : Arrays.asList(
-                    UserContestProblemRole.ROLE_OWNER,
-                    UserContestProblemRole.ROLE_EDITOR,
-                    UserContestProblemRole.ROLE_VIEWER)) {
+                for (String role : roles) {
                     UserContestProblemRole upr = new UserContestProblemRole();
                     upr.setProblemId(problemEntity.getProblemId());
                     upr.setUserId(admin.getUserLoginId());
                     upr.setRoleId(role);
-                    upr.setUpdateByUserId(userId);
-                    upr.setCreatedStamp(new Date());
-                    upr.setLastUpdated(new Date());
-                    userContestProblemRoleRepo.save(upr);
+                    rolesToSave.add(upr);
                 }
-
-                notificationsService.create(
-                    userId,
-                    admin.getUserLoginId(),
-                    userId + " has imported a contest problem with ID " + problemEntity.getProblemId(),
-                    ""
-                );
             }
+
+            userContestProblemRoleRepo.saveAll(rolesToSave);
 
             if (problemData.containsKey("testCases")) {
                 List<Map<String, Object>> testCases = (List<Map<String, Object>>) problemData.get("testCases");
@@ -3989,6 +4024,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
             Files.delete(tempDir);
 
+            notificationsService.create(
+                userId,
+                admin.getUserLoginId(),
+                userId + " has imported a contest problem with ID " + problemEntity.getProblemId(),
+                ""
+            );
+
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -4001,50 +4043,67 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream
     ) throws IOException {
+        Path exportDir = Files.createTempDirectory("problem-export-");
         List<File> files = new ArrayList<>();
 
         try {
-            File problemGeneralInfoFile = exporter.exportProblemInfoToFile(problem);
-            File problemDescriptionFile = exporter.exportProblemDescriptionToFile(problem);
-            File exportProblemInfoAsTextToFile = exporter.exportProblemInfoAsTextToFile(problem);
-            files.add(exportProblemInfoAsTextToFile);
-
-            File problemCorrectSolutionFile = exporter.exportProblemCorrectSolutionToFile(problem);
+            File problemGeneralInfoFile = exporter.exportProblemInfoToFile(problem, exportDir);
+            File problemDescriptionFile = exporter.exportProblemDescriptionToFile(problem, exportDir);
+            File exportProblemInfoAsTextToFile = exporter.exportProblemInfoAsTextToFile(problem, exportDir);
+            File problemCorrectSolutionFile = exporter.exportProblemCorrectSolutionToFile(problem, exportDir);
 
             files.add(problemGeneralInfoFile);
+            files.add(problemDescriptionFile);
+            files.add(exportProblemInfoAsTextToFile);
             files.add(problemCorrectSolutionFile);
 
-            if (problem.getScoreEvaluationType().equals(Constants.ProblemResultEvaluationType.CUSTOM.getValue())) {
-                File problemCustomCheckerFile = exporter.exportProblemCustomCheckerToFile(problem);
+            if (Constants.ProblemResultEvaluationType.CUSTOM.getValue().equals(problem.getScoreEvaluationType())) {
+                File problemCustomCheckerFile = exporter.exportProblemCustomCheckerToFile(problem, exportDir);
                 files.add(problemCustomCheckerFile);
             }
 
             if (!problem.getAttachmentNames().isEmpty()) {
-                files.addAll(exporter.exportProblemAttachmentToFile(problem));
+                files.addAll(exporter.exportProblemAttachmentToFile(problem, exportDir));
             }
 
-            files.addAll(exporter.exportProblemTestCasesToFile(problem));
+            files.addAll(exporter.exportProblemTestCasesToFile(problem, exportDir));
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            ZipOutputStreamUtils.zip(
+                outputStream,
+                files,
+                CompressionMethod.DEFLATE,
+                null,
+                EncryptionMethod.AES,
+                AesKeyStrength.KEY_STRENGTH_256
+            );
+
         } catch (IOException e) {
             e.printStackTrace();
-        }
+            throw e;
+        } finally {
+            for (File file : files) {
+                if (file != null && file.exists()) {
+                    if (!file.delete()) {
+                        System.err.println("Can't delete file: " + file.getAbsolutePath());
+                    }
+                }
+            }
 
-        // Zip files.
-        ZipOutputStreamUtils.zip(
-            outputStream,
-            files,
-            CompressionMethod.DEFLATE,
-            null,
-            EncryptionMethod.AES,
-            AesKeyStrength.KEY_STRENGTH_256);
-
-        //delete files
-        for (File file : files) {
-            file.delete();
+            try {
+                Files.walk(exportDir)
+                     .sorted(Comparator.reverseOrder())
+                     .map(Path::toFile)
+                     .forEach(file -> {
+                         if (!file.delete()) {
+                             System.err.println("Failed to delete: " + file.getAbsolutePath());
+                         }
+                     });
+            } catch (IOException e) {
+                System.err.println("Failed to clean up export temp directory: " + exportDir);
+            }
         }
     }
+
 
     public ModelCreateContestProblemResponse getContestProblemDetailByIdAndTeacher(String problemId, String teacherId)
         throws Exception {

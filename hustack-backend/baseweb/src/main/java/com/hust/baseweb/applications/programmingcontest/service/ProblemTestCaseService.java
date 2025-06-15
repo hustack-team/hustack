@@ -258,7 +258,7 @@ public interface ProblemTestCaseService {
 
     void exportProblem(String id, OutputStream outputStream);
 
-    void exportProblemJson(String problemId, OutputStream outputStream);
+    void exportProblemJson(String problemId, OutputStream outputStream, String userId);
 
     void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId);
 
