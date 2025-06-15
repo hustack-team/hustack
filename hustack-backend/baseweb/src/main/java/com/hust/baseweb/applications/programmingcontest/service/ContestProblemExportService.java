@@ -123,28 +123,22 @@ public class ContestProblemExportService {
         return file;
     }
 
-    public File exportProblemCorrectSolutionToFile(ModelCreateContestProblemResponse problem, Path exportDir) throws IOException {
-        String ext = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getCorrectSolutionLanguage()));
-        File file = exportDir.resolve("Solution" + ext).toFile();
+    public File exportSourceToFile(String filenamePrefix, String sourceCode, String language, Path exportDir) throws IOException {
+        String ext = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(language));
+        File file = exportDir.resolve(filenamePrefix + ext).toFile();
 
-        try (FileWriter fileWriter = new FileWriter(file);
-             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
-            bufferedWriter.write(problem.getCorrectSolutionSourceCode());
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
+            bufferedWriter.write(sourceCode);
         }
 
         return file;
     }
+    public File exportProblemCorrectSolutionToFile(ModelCreateContestProblemResponse problem, Path exportDir) throws IOException {
+        return exportSourceToFile("Solution", problem.getCorrectSolutionSourceCode(), problem.getCorrectSolutionLanguage(), exportDir);
+    }
 
     public File exportProblemCustomCheckerToFile(ModelCreateContestProblemResponse problem, Path exportDir) throws IOException {
-        String ext = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getSolutionCheckerSourceLanguage()));
-        File file = exportDir.resolve("CustomSolutionChecker" + ext).toFile();
-
-        try (FileWriter fileWriter = new FileWriter(file);
-             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
-            bufferedWriter.write(problem.getSolutionCheckerSourceCode());
-        }
-
-        return file;
+        return exportSourceToFile("CustomSolutionChecker", problem.getSolutionCheckerSourceCode(), problem.getSolutionCheckerSourceLanguage(), exportDir);
     }
 
     public File exportProblemToJsonFile(ModelCreateContestProblemResponse problem, Path exportDir) throws IOException {
