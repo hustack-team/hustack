@@ -62,8 +62,8 @@ public class SubmissionServiceImpl implements SubmissionService {
     WebClient.Builder webClientBuilder;
 
     HustackAiServiceConfig hustackAiServiceConfig;
-    private final ContestSubmissionBlockRepo contestSubmissionBlockRepo;
-    private final ProblemBlockRepo problemBlockRepo;
+    ContestSubmissionBlockRepo contestSubmissionBlockRepo;
+    ProblemBlockRepo problemBlockRepo;
 
     /**
      * @param model

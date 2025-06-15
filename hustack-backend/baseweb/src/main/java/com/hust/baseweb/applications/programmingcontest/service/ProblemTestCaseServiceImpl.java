@@ -146,7 +146,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     ObjectMapper objectMapper;
 
     Judge0Utils judge0Utils;
-    private final ContestSubmissionBlockRepo contestSubmissionBlockRepo;
+    ContestSubmissionBlockRepo contestSubmissionBlockRepo;
 
     @Override
     @Transactional
