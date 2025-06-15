@@ -20,6 +20,7 @@ import ExamViolateDialog from "./ExamViolateDialog";
 import SecondaryButton from "../ultils/component/SecondaryButton";
 import {errorNoti, successNoti} from "../../../../utils/notification";
 import ExamContinueDoingDialog from "./ExamContinueDoingDialog";
+import ReactExport from "react-data-export";
 
 const baseColumn = {
   sortable: false,
@@ -28,6 +29,34 @@ const baseColumn = {
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
 }));
+
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const TableBorderStyle = "medium";
+const TableHeaderStyle = {
+  style: {
+    font: { sz: "14", bold: true },
+    alignment: { vertical: "center", horizontal: "center" },
+    border: {
+      top: { style: TableBorderStyle },
+      bottom: { style: TableBorderStyle },
+      left: { style: TableBorderStyle },
+      right: { style: TableBorderStyle },
+    },
+  },
+};
+const TableCellStyle = {
+  style: {
+    font: { sz: "14" },
+    alignment: { vertical: "center", horizontal: "center" },
+    border: {
+      top: { style: TableBorderStyle },
+      bottom: { style: TableBorderStyle },
+      left: { style: TableBorderStyle },
+      right: { style: TableBorderStyle },
+    },
+  },
+};
 
 function ExamDetails(props) {
 
@@ -57,13 +86,6 @@ function ExamDetails(props) {
       headerName: "Số điện thoại",
       ...baseColumn,
       minWidth: 120,
-    },
-    {
-      field: "totalScore",
-      headerName: "Điểm",
-      ...baseColumn,
-      minWidth: 60,
-      maxWidth: 80,
     },
     {
       field: "totalTime",
@@ -96,6 +118,13 @@ function ExamDetails(props) {
       ...baseColumn,
       minWidth: 100,
       maxWidth: 120,
+    },
+    {
+      field: "totalScore",
+      headerName: "Điểm",
+      ...baseColumn,
+      minWidth: 60,
+      maxWidth: 80,
     },
     {
       field: "",
@@ -151,6 +180,7 @@ function ExamDetails(props) {
 
   const [rowData, setRowData] = useState([])
   const [examExamTestIdFocus, setExamExamTestIdFocus] = useState(null)
+  const [examTestFocus, setExamTestFocus] = useState(null)
   const [data, setData] = useState(dataExam)
   const [openTestDetailsDialog, setOpenTestDetailsDialog] = useState(false);
   const [testDetails, setTestDetails] = useState(null)
@@ -161,6 +191,71 @@ function ExamDetails(props) {
   const [examResultIdViolate, setExamResultIdViolate] = useState(null);
   const [openExamContinueDoingDialog, setOpenExamContinueDoingDialog] = useState(false);
   const [examStudentTestSelected, setExamStudentTestSelected] = useState(null);
+
+  const dataSetExcel = [
+    {
+      columns: [
+        {
+          title: "Mã học viên",
+          ...TableHeaderStyle,
+          width: { wch: "20" },
+        },
+        {
+          title: "Họ và tên",
+          ...TableHeaderStyle,
+          width: { wch: "45" },
+        },
+        {
+          title: "Số điện thoại",
+          ...TableHeaderStyle,
+          width: { wch: "15" },
+        },
+        {
+          title: "Thời gian làm",
+          ...TableHeaderStyle,
+          width: { wch: "20" },
+        },
+        {
+          title: "Lỗi vi phạm",
+          ...TableHeaderStyle,
+          width: { wch: "20" },
+        },
+        {
+          title: "Điểm",
+          ...TableHeaderStyle,
+          width: { wch: "10" },
+        },
+      ],
+      data: rowData?.map((item) => {
+        return [
+          {
+            value: item.code,
+            ...TableCellStyle,
+          },
+          {
+            value: item.name,
+            ...TableCellStyle,
+          },
+          {
+            value: item.phone,
+            ...TableCellStyle,
+          },
+          {
+            value: item.startedAt ? getDiffMinutes(item.startedAt, item.submitedAt) ?? '-' : '-',
+            ...TableCellStyle,
+          },
+          {
+            value: item.totalViolate ?? '-',
+            ...TableCellStyle,
+          },
+          {
+            value: item.totalScore ?? '-',
+            ...TableCellStyle,
+          },
+        ];
+      }) ?? [],
+    },
+  ];
 
   const handleOpenPopupTestDetails = (test) =>{
     request(
@@ -229,6 +324,7 @@ function ExamDetails(props) {
     setExpanded(isExpanded ? panel : false);
     if(isExpanded){
       setExamExamTestIdFocus(test.examExamTestId)
+      setExamTestFocus(test)
       handleFetchListStudentExam(test.examExamTestId)
     }
   }
@@ -380,7 +476,27 @@ function ExamDetails(props) {
                       </AccordionSummary>
                       <AccordionDetails>
                         <div style={{width: '100%'}}>
-                          <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
+                          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <h4 style={{margin: '15px 5px 0 0', padding: 0}}>Danh sách học viên:</h4>
+                            <ExcelFile
+                              filename={`Bảng điểm - Đề thi ${examTestFocus?.name?.replace(/[\/\\:*?"<>|]/g, "_")} - Kỳ thi ${data?.name?.replace(/[\/\\:*?"<>|]/g, "_")}`}
+                              element={
+                                <div style={{display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer'}}>
+                                  <img
+                                    alt="Xuất bảng điểm"
+                                    src="/static/images/icons/excel_icon.png"
+                                    style={{width: "25px", height: "25px"}}
+                                  />
+                                  <span style={{fontWeight: 'bolder'}}>Xuất bảng điểm</span>
+                                </div>
+                              }
+                            >
+                              <ExcelSheet
+                                dataSet={dataSetExcel}
+                                name={`${examTestFocus?.name?.replace(/[\/\\:*?"<>|]/g, "_")}`}
+                              />
+                            </ExcelFile>
+                          </div>
                           <DataGrid
                             rows={rowData}
                             columns={columns}
@@ -416,7 +532,7 @@ function ExamDetails(props) {
         )
       }
       {
-        openExamDetailsMarkingDialog && (
+      openExamDetailsMarkingDialog && (
           <ExamMarking
             open={openExamDetailsMarkingDialog}
             setOpen={setOpenExamDetailsMarkingDialog}

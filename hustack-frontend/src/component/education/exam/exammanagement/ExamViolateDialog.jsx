@@ -52,6 +52,8 @@ function ExamViolateDialog(props) {
           return 'Thoát màn hình'
         }else if(rowData?.value === 1){
           return 'Rời camera'
+        }else if(rowData?.value === 2){
+          return 'Có nhiều hơn 1 thí sinh'
         }
         return ''
       },

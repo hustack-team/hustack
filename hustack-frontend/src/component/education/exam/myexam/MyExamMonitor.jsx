@@ -197,7 +197,7 @@ function MyExamMonitor(props) {
             });
           }else if(prevDetectionsLength.current > 1){
             console.log(`Có nhiều hơn 1 sinh viên làm bài thi ${timeDiff} giây, rời từ ${formatDateTime(lastViolateTime.current)} đến ${formatDateTime(currentTime)}`)
-            setMessageBlockScreen(`Có nhiều hơn 1 sinh viên làm bài thi ${timeDiff} giây`)
+            setMessageBlockScreen(`Có nhiều hơn 1 sinh viên làm bài thi.`)
             eventQueue.current.push({
               examResultId: data?.examResultId,
               platform: 1,
