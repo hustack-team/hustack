@@ -34,6 +34,7 @@ import TertiaryButton from "../../button/TertiaryButton";
 import StyledSelect from "../../select/StyledSelect";
 import {useKeycloak} from "@react-keycloak/web";
 import {getLevels, getStatuses} from "./CreateProblem";
+import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 
 const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []}
 
@@ -162,6 +163,28 @@ function ListProblemContent({type}) {
 
     setImportErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isZip =
+      file.type === "application/zip" || file.name.toLowerCase().endsWith(".zip");
+
+    if (!isZip) {
+      setImportErrors((prev) => ({
+        ...prev,
+        file: t("fileRequired")
+      }));
+      return;
+    }
+
+    setImportErrors((prev) => ({
+      ...prev,
+      file: undefined
+    }));
+    handleImportFormChange("file", file);
   };
 
   const handleImportSubmit = () => {
@@ -481,80 +504,82 @@ function ListProblemContent({type}) {
       </Stack>
 
       {/* Import Dialog */}
-      <Dialog open={openImportDialog} onClose={handleCloseImportDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{t("importProblem")}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t("problemId")}
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={importForm.problemId}
-            onChange={(e) => handleImportFormChange('problemId', e.target.value)}
-            error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
-            helperText={
-              importErrors.problemId || 
-              (hasSpecialCharacterProblemId(importForm.problemId) 
-                ? t("problemIdInvalid") 
-                : "")
-            }
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label={t("problemName")}
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={importForm.problemName}
-            onChange={(e) => handleImportFormChange('problemName', e.target.value)}
-            error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
-            helperText={
-              importErrors.problemName || 
-              (hasSpecialCharacterProblemName(importForm.problemName) 
-                ? t("problemNameInvalid") 
-                : "")
-            }
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            type="file"
-            fullWidth
-            variant="outlined"
-            inputProps={{ accept: ".zip,application/zip" }}
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
-                  setImportErrors(prev => ({
-                    ...prev,
-                    file: t("fileRequired")
-                  }));
-                  return;
-                }
-                handleImportFormChange('file', file);
+      <CustomizedDialogs
+        open={openImportDialog}
+        handleClose={handleCloseImportDialog}
+        maxWidth="sm"
+        fullWidth
+        title={t("importProblem")}
+        content={
+          <>
+            {/* Problem ID */}
+            <TextField
+              autoFocus
+              margin="dense"
+              label={t("problemId")}
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={importForm.problemId}
+              onChange={(e) => handleImportFormChange("problemId", e.target.value)}
+              error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
+              helperText={
+                importErrors.problemId ||
+                (hasSpecialCharacterProblemId(importForm.problemId)
+                  ? t("problemIdInvalid")
+                  : "")
               }
-            }}
-            error={!!importErrors.file}
-            helperText={importErrors.file || t("onlyZipFilesAllowed")}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseImportDialog} color="primary">
-            {t("common:cancel")}
-          </Button>
-          <Button 
-            onClick={handleImportSubmit} 
-            color="primary"
-            disabled={loading}
-          >
-            {loading ? t("importing") : t("import")}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              sx={{ mb: 2 }}
+            />
+
+            {/* Problem Name */}
+            <TextField
+              margin="dense"
+              label={t("problemName")}
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={importForm.problemName}
+              onChange={(e) => handleImportFormChange("problemName", e.target.value)}
+              error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
+              helperText={
+                importErrors.problemName ||
+                (hasSpecialCharacterProblemName(importForm.problemName)
+                  ? t("problemNameInvalid")
+                  : "")
+              }
+              sx={{ mb: 2 }}
+            />
+
+            {/* ZIP File */}
+            <TextField
+              margin="dense"
+              type="file"
+              fullWidth
+              variant="outlined"
+              inputProps={{ accept: ".zip,application/zip" }}
+              onChange={handleFileInputChange}
+              error={!!importErrors.file}
+              helperText={importErrors.file || t("onlyZipFilesAllowed")}
+              sx={{ mb: 2 }}
+            />
+          </>
+        }
+        actions={
+          <>
+            <Button onClick={handleCloseImportDialog} color="primary">
+              {t("common:cancel")}
+            </Button>
+            <Button
+              onClick={handleImportSubmit}
+              color="primary"
+              disabled={loading}
+            >
+              {loading ? t("importing") : t("import")}
+            </Button>
+          </>
+        }
+      />
 
       <StandardTable
         columns={COLUMNS.filter(item => {
