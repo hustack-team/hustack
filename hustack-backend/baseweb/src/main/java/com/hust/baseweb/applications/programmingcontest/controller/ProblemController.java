@@ -17,11 +17,13 @@ import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseS
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.service.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -236,6 +239,50 @@ public class ProblemController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + id + ".zip");
+
+        return ResponseEntity.ok().headers(headers).body(stream);
+    }
+
+    @Secured("ROLE_TEACHER")
+    @PostMapping(value = "/problems/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> importProblem(
+        @RequestPart("file") MultipartFile file,
+        @RequestPart("problem") @Valid ModelImportProblem problem,
+        Principal principal
+    ) {
+        Tika tika = new Tika();
+        try {
+            String fileType = tika.detect(file.getInputStream());
+            if (!fileType.equals("application/zip")) {
+                return ResponseEntity.badRequest().body("File must be a valid ZIP file");
+            }
+
+            problemTestCaseService.importProblem(problem, file, principal.getName());
+            return ResponseEntity.ok("Problem imported successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to read file for detection");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to import problem: " + e.getMessage());
+        }
+    }
+
+    @Secured("ROLE_TEACHER")
+    @GetMapping(value = "/problems/{id}/export2")
+    public ResponseEntity<StreamingResponseBody> exportProblem2(
+        @PathVariable @NotBlank String id,
+        Principal principal
+    ) {
+        StreamingResponseBody stream = outputStream -> problemTestCaseService.exportProblemJson(
+            id,
+            outputStream,
+            principal.getName());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + id + "_json.zip");
 
         return ResponseEntity.ok().headers(headers).body(stream);
     }
