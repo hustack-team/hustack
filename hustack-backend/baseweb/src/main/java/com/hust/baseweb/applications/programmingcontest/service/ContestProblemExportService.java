@@ -13,6 +13,7 @@ import com.hust.baseweb.applications.programmingcontest.repo.TestCaseRepo;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
 import lombok.AllArgsConstructor;
 import org.apache.commons.io.IOUtils;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
@@ -65,12 +66,7 @@ public class ContestProblemExportService {
             sb.append("Score evaluation type: ").append(problem.getScoreEvaluationType()).append("\n\n");
 
             sb.append("==== Problem Description ====\n");
-            String plainTextDescription = problem.getProblemDescription()
-                                                 .replaceAll("\\<.*?\\>", "")
-                                                 .replaceAll(" ", " ")
-                                                 .replaceAll("<", "<")
-                                                 .replaceAll(">", ">")
-                                                 .replaceAll("&", "&");
+            String plainTextDescription = Jsoup.parse(problem.getProblemDescription()).text();
 
             sb.append(plainTextDescription).append("\n");
 

@@ -3738,7 +3738,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             for (File file : files) {
                 if (file != null && file.exists()) {
                     if (!file.delete()) {
-                        System.err.println("Can't delete file: " + file.getAbsolutePath());
+                        log.error("Can't delete file: " + file.getAbsolutePath());
                     }
                 }
             }
@@ -3749,11 +3749,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                      .map(Path::toFile)
                      .forEach(file -> {
                          if (!file.delete()) {
-                             System.err.println("Failed to delete: " + file.getAbsolutePath());
+                             log.error("Can't delete file: " + file.getAbsolutePath());
                          }
                      });
             } catch (IOException e) {
-                System.err.println("Failed to clean up temp export directory: " + exportDir);
+                log.error(("Failed to clean up temp export directory: " + exportDir));
             }
         }
     }
@@ -3762,13 +3762,15 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Transactional
     public void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId) {
+        Path tempDir = null;
+        List<File> extractedFiles = new ArrayList<>();
+
         try {
             if (problemRepo.existsByProblemId(model.getProblemId()) || problemRepo.existsByProblemName(model.getProblemName())) {
                 throw new IllegalArgumentException("Problem ID or name already exists");
             }
 
-            Path tempDir = Files.createTempDirectory("problem-import");
-            List<File> extractedFiles = new ArrayList<>();
+            tempDir = Files.createTempDirectory("problem-import");
 
             try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
                 ZipEntry entry;
@@ -3818,9 +3820,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             if (problemData.containsKey("levelId")) {
                 problemEntity.setLevelId((String) problemData.get("levelId"));
             }
-//            if (problemData.containsKey("categoryId")) {
-//                problemEntity.setCategoryId((Integer) problemData.get("categoryId"));
-//            }
             if (problemData.containsKey("levelOrder")) {
                 problemEntity.setLevelOrder(((Number) problemData.get("levelOrder")).intValue());
             }
@@ -3882,7 +3881,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
                 problemEntity.setTags(finalTags);
             }
-
 
             if ("CUSTOM_EVALUATION".equals(problemData.get("scoreEvaluationType"))) {
                 if (problemData.containsKey("solutionCheckerSourceLanguage")) {
@@ -3988,42 +3986,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 }
             }
 
-//            if (problemData.containsKey("blockCodes")) {
-//                List<Map<String, Object>> blockCodes = (List<Map<String, Object>>) problemData.get("blockCodes");
-//                for (Map<String, Object> bc : blockCodes) {
-//                    Integer seq = bc.containsKey("seq") ? ((Number) bc.get("seq")).intValue() : null;
-//                    String programmingLanguage = bc.containsKey("programmingLanguage") ? (String) bc.get("programmingLanguage") : null;
-//
-//                    if (seq == null) {
-//                        throw new IllegalArgumentException("Missing 'seq' field in blockCodes");
-//                    }
-//                    if (programmingLanguage == null) {
-//                        throw new IllegalArgumentException("Missing 'programmingLanguage' field in blockCodes");
-//                    }
-//
-//                    ProblemBlock block = new ProblemBlock();
-//                    block.setProblemId(model.getProblemId());
-//                    block.setSeq(seq);
-//                    if (bc.containsKey("completedBy")) {
-//                        block.setCompletedBy("teacher".equals(bc.get("completedBy")) ? 0 : 1);
-//                    }
-//                    if (bc.containsKey("sourceCode")) {
-//                        block.setSourceCode((String) bc.get("sourceCode"));
-//                    }
-//                    block.setProgrammingLanguage(programmingLanguage);
-//                    problemBlockRepo.save(block);
-//                }
-//            }
-
-            for (File file : extractedFiles) {
-                try {
-                    file.delete();
-                } catch (SecurityException e) {
-                    throw new RuntimeException("Cannot remove extracted file " + file.getName(), e);
-                }
-            }
-            Files.delete(tempDir);
-
             notificationsService.create(
                 userId,
                 admin.getUserLoginId(),
@@ -4035,10 +3997,61 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to import problem: " + e.getMessage(), e);
+        } finally {
+            if (tempDir != null && Files.exists(tempDir)) {
+                try {
+                    for (File file : extractedFiles) {
+                        if (file.exists()) {
+                            try {
+                                if (!file.delete()) {
+                                    file.deleteOnExit();
+                                }
+                            } catch (SecurityException e) {
+                                file.deleteOnExit();
+                            }
+                        }
+                    }
+
+                    File tempDirFile = tempDir.toFile();
+                    File[] remainingFiles = tempDirFile.listFiles();
+                    if (remainingFiles != null) {
+                        for (File subDir : remainingFiles) {
+                            if (subDir.isDirectory()) {
+                                File[] subFiles = subDir.listFiles();
+                                if (subFiles != null) {
+                                    for (File subFile : subFiles) {
+                                        if (!subFile.delete()) {
+                                            subFile.deleteOnExit();
+                                        }
+                                    }
+                                }
+                                if (!subDir.delete()) {
+                                    subDir.deleteOnExit();
+                                }
+                            } else {
+                                if (!subDir.delete()) {
+                                    subDir.deleteOnExit();
+                                }
+                            }
+                        }
+                    }
+
+                    if (!tempDirFile.delete()) {
+                        tempDirFile.deleteOnExit();
+                    }
+
+                } catch (Exception e) {
+                    try {
+                        Files.walk(tempDir)
+                             .map(Path::toFile)
+                             .forEach(File::deleteOnExit);
+                    } catch (IOException ex) {
+                        log.error("Failed to cleanup temp directory: " + tempDir);
+                    }
+                }
+            }
         }
-
     }
-
     private void handleExportProblem(
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream
@@ -4095,11 +4108,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                      .map(Path::toFile)
                      .forEach(file -> {
                          if (!file.delete()) {
-                             System.err.println("Failed to delete: " + file.getAbsolutePath());
+                             log.error("Failed to delete: " + file.getAbsolutePath());
                          }
                      });
             } catch (IOException e) {
-                System.err.println("Failed to clean up export temp directory: " + exportDir);
+                log.error("Failed to clean up export temp directory: " + exportDir);
             }
         }
     }
