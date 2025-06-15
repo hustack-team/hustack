@@ -469,7 +469,7 @@ export default function ContestManagerUserSubmission(props) {
               Judge All
             </LoadingButton>
           </Tooltip>
-          {props.screenAuthorization?.has(`SCR_CONTEST_MANAGER.BTN_REJUDGE.VIEW`)
+          {/* {props.screenAuthorization?.has(`SCR_CONTEST_MANAGER.BTN_REJUDGE.VIEW`)
             && <Tooltip
               title="Rejudge all submissions in this contest"
               arrow
@@ -483,7 +483,7 @@ export default function ContestManagerUserSubmission(props) {
               >
                 Rejudge All
               </LoadingButton>
-            </Tooltip>}
+            </Tooltip>} */}
           <Tooltip title="Export all submissions in this contest" arrow>
             <LoadingButton
               sx={{textTransform: 'none'}}

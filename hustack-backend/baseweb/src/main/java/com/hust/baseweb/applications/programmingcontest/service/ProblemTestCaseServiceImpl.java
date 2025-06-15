@@ -146,6 +146,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     ObjectMapper objectMapper;
 
     Judge0Utils judge0Utils;
+    private final ContestSubmissionBlockRepo contestSubmissionBlockRepo;
 
     @Override
     @Transactional
@@ -2818,9 +2819,58 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             submission.getContestSubmissionId(),
             ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
 
+        boolean isProblemBlock = contestSubmissionBlockRepo.existsBySubmissionId(submission.getContestSubmissionId());
+
+        if (isProblemBlock) {
+            String reconstructedSource = reconstructBlockCodeSubmission(submission);
+            if (StringUtils.isBlank(reconstructedSource)) {
+                contestService.updateContestSubmissionStatus(
+                    submission.getContestSubmissionId(),
+                    ContestSubmissionEntity.SUBMISSION_STATUS_FAILED);
+                return;
+            }
+            submission.setSourceCode(reconstructedSource);
+            contestSubmissionRepo.save(submission);
+//            System.out.println(reconstructedSource);
+        }
+
         sendSubmissionToQueue(submission);
     }
 
+    private String reconstructBlockCodeSubmission(ContestSubmissionEntity submission) {
+        String contestId = submission.getContestId();
+        String problemId = submission.getProblemId();
+        String language = submission.getSourceCodeLanguage();
+
+        List<ContestSubmissionBlock> studentBlocks = contestSubmissionBlockRepo.findBySubmissionId(submission.getContestSubmissionId());
+
+        List<ProblemBlock> teacherBlocks = problemBlockRepo.findByProblemIdAndCompletedByAndProgrammingLanguage(
+            problemId,
+            0,
+            language
+        );
+
+        Map<Integer, String> mergedBySeq = new TreeMap<>();
+
+        for (ProblemBlock teacherBlock : teacherBlocks) {
+            int seq = teacherBlock.getSeq();
+            mergedBySeq.putIfAbsent(seq, "");
+            mergedBySeq.put(seq, mergedBySeq.get(seq) + teacherBlock.getSourceCode() + "\n");
+        }
+
+        for (ContestSubmissionBlock studentBlock : studentBlocks) {
+            int seq = studentBlock.getBlockSeq();
+            mergedBySeq.putIfAbsent(seq, "");
+            mergedBySeq.put(seq, mergedBySeq.get(seq) + studentBlock.getSourceCode() + "\n");
+        }
+
+        StringBuilder mergedCode = new StringBuilder();
+        for (String code : mergedBySeq.values()) {
+            mergedCode.append(code);
+        }
+
+        return mergedCode.toString();
+    }
 
     @Override
     public void evaluateSubmission(ContestSubmissionEntity sub, ContestEntity contest) {

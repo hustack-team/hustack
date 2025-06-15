@@ -108,27 +108,20 @@ export default function StudentViewProgrammingContestProblemDetail() {
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [listLanguagesAllowed, setListLanguagesAllowed] = useState([]);
-  // const [status, setStatus] = useState("");
-  // const [message, setMessage] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
   const [submissionMode, setSubmissionMode] = useState(
     SUBMISSION_MODE_SOURCE_CODE
   );
   const [isSubmitCode, setIsSubmitCode] = useState(0);
-
   const [openModalPreview, setOpenModalPreview] = useState(false);
   const [selectedTestcase, setSelectedTestcase] = useState();
   const [isProcessing, setIsProcessing] = React.useState(false);
-  // const [problemDescription, setProblemDescription] = useState(
-  //   ""
-  // );
   const [editorStateDescription, setEditorStateDescription] = useState(
     EditorState.createEmpty()
   );
   const [sampleTestCase, setSampleTestCase] = useState(
     null//EditorState.createEmpty()
   );
-
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState([]);
@@ -185,48 +178,48 @@ export default function StudentViewProgrammingContestProblemDetail() {
     if (event) event.preventDefault();
     setIsProcessing(true);
 
-    let finalCode = "";
-    if (isProblemBlock) {
-      const blocksForLanguage = blockCodes
-        .filter(block => block.language === selectedLanguage)
-        .sort((a, b) => a.seq - b.seq);
-
-      finalCode = blocksForLanguage
-        .map(block => {
-          if (block.forStudent) {
-            return blockCodeInputs[block.id] || "";
-          } else {
-            return block.code;
-          }
-        })
-        .join("\n\n");
-    } else {
-      finalCode = codeSolution;
-    }
-
-    const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" });
-    const now = new Date();
-    const file = new File(
-      [blob],
-      `${problemId}_${now.getTime()}.txt`,
-      { type: "text/plain;charset=utf-8" }
-    );
-
     const body = {
       problemId: problemId,
       contestId: contestId,
       language: isProblemBlock ? selectedLanguage : language,
+      isProblemBlock: isProblemBlock ? 1 : 0
     };
 
-    if (await isFileBlank(file)) {
-      errorNoti("Source code is required", 3000);
-      setIsProcessing(false);
-      return;
+    if (isProblemBlock) {
+      body.blockCodes = blockCodes
+        .filter(block => block.language === selectedLanguage && block.forStudent)
+        .sort((a, b) => a.seq - b.seq)
+        .map(block => ({
+          seq: block.seq,
+          code: blockCodeInputs[block.id] || "",
+          language: block.language
+        }));
     }
 
     const formData = new FormData();
     formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
-    formData.append("file", file);
+
+    if (!isProblemBlock) {
+      const blob = new Blob([codeSolution], { type: "text/plain;charset=utf-8" });
+      const now = new Date();
+      const file = new File(
+        [blob],
+        `${problemId}_${now.getTime()}.txt`,
+        { type: "text/plain;charset=utf-8" }
+      );
+
+      if (await isFileBlank(file)) {
+        errorNoti("Source code is required", 3000);
+        setIsProcessing(false);
+        return;
+      }
+
+      formData.append("file", file);
+    } else if (await isBlockCodeBlank(body.blockCodes)) {
+      errorNoti("Source code is required", 3000);
+      setIsProcessing(false);
+      return;
+    }
 
     const config = {
       headers: {
@@ -234,7 +227,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
       },
     };
 
-    //TODO: consider remove duplicate code
     request(
       "post",
       "/submissions/file-upload",
@@ -279,9 +271,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
           successNoti("Submitted", 3000);
         }
 
-        // setStatus(res.status);
-        // setMessage(res.message);
-
         setFile(null);
         inputRef.current.value = null;
       },
@@ -298,6 +287,10 @@ export default function StudentViewProgrammingContestProblemDetail() {
       config
     );
   };
+
+  async function isBlockCodeBlank(blockCodes) {
+    return blockCodes.every(block => _.isEmpty(_.trim(block.code)));
+  }
 
   function getProblemDetail() {
     request(
@@ -339,7 +332,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setFetchedImageArray(newFileURLArray);
         }
 
-        // setProblemDescription(res?.problemStatement || "");
         let problemDescriptionHtml = htmlToDraft(res.problemStatement);
         let {contentBlocks, entityMap} = problemDescriptionHtml;
         let contentDescriptionState = ContentState.createFromBlockArray(
@@ -351,21 +343,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         );
         setEditorStateDescription(statementDescription);
 
-        // public testcase    
-        /*  
-        let sampleTestCaseHtml = htmlToDraft(res.sampleTestCase);
-        let { contentBlocksTestCase, entityMapTestCase } = sampleTestCaseHtml;
-        let contentDescriptionStateTestCase = ContentState.createFromBlockArray(
-          contentBlocksTestCase,
-          entityMapTestCase
-        );
-        let editorSampleTestCase = EditorState.createWithContent(
-          contentDescriptionStateTestCase
-        );
-        //setSampleTestCase(editorSampleTestCase);
-        */
         setSampleTestCase(res.sampleTestCase);
-        //console.log('GetProblemDetail, res = ',res);
       },
       {onError: (e) => console.log(e)}
     );
@@ -417,15 +395,19 @@ export default function StudentViewProgrammingContestProblemDetail() {
   };
 
   async function submitCode() {
-    const blob = new Blob([codeSolution], {type: "text/plain;charset=utf-8"});
-    const now = new Date();
-    const file = new File(
-      [blob],
-      `${problemId}_${now.getTime()}.txt`,
-      {type: "text/plain;charset=utf-8"}
-    );
-    setFile(file);
-    setIsSubmitCode(isSubmitCode + 1);
+    if (isProblemBlock) {
+      setIsSubmitCode(isSubmitCode + 1);
+    } else {
+      const blob = new Blob([codeSolution], {type: "text/plain;charset=utf-8"});
+      const now = new Date();
+      const file = new File(
+        [blob],
+        `${problemId}_${now.getTime()}.txt`,
+        {type: "text/plain;charset=utf-8"}
+      );
+      setFile(file);
+      setIsSubmitCode(isSubmitCode + 1);
+    }
   }
 
   useEffect(() => {
@@ -636,8 +618,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
                     isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
                   }
                   sx={{width: 128, textTransform: 'none'}}
-                  // loading={isProcessing}
-                  // loadingIndicator="Submitting…"
                   variant="contained"
                   color="primary"
                   type="submit"
@@ -664,8 +644,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
                 isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
               }
               sx={{width: 128, textTransform: 'none'}}
-              // loading={isProcessing}
-              // loadingIndicator="Submitting…"
               variant="contained"
               color="primary"
               type="submit"
