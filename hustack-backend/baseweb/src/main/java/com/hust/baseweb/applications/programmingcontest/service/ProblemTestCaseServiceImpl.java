@@ -713,7 +713,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             String admin = "admin";
             UserLogin u = userLoginRepo.findByUserLoginId(admin);
-            if (u != null && !"admin".equals(u.getUserLoginId())) {
+            if (u != null && !"admin".equals(userName)) {
                 urc = new UserRegistrationContestEntity();
                 urc.setContestId(modelCreateContest.getContestId());
                 urc.setRoleId(UserRegistrationContestEntity.ROLE_OWNER);
