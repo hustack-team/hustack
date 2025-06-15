@@ -34,6 +34,12 @@ export function formatDate(value){
   return null
 }
 
+export function formatTimeToMMSS(seconds){
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
 export function formatDateApi(value) {
   if(value != null && value !== ''){
     let date = new Date(value);
@@ -66,4 +72,44 @@ export function formatDateTimeApi(value){
     );
   }
   return null
+}
+
+export function getDiffMinutes(date1, date2){
+  if(date1 != null && date1 !== '' && date2 != null && date2 !== ''){
+    const valueDate1 = new Date(date1);
+    const valueDate2 = new Date(date2);
+    const diffMs = valueDate2.getTime() - valueDate1.getTime();
+    return Math.floor(diffMs / 60000)
+  }
+  return null;
+}
+
+export function getDiffTimeFormatted(date1, date2) {
+  if (date1 != null && date1 !== '' && date2 != null && date2 !== '') {
+    const valueDate1 = new Date(date1);
+    const valueDate2 = new Date(date2);
+    const diffMs = valueDate2.getTime() - valueDate1.getTime();
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+  }
+  return null;
+}
+
+
+export function getDiffSeconds(date1, date2){
+  if(date1 != null && date1 !== '' && date2 != null && date2 !== ''){
+    const valueDate1 = new Date(date1);
+    const valueDate2 = new Date(date2);
+    const diffMs = valueDate2.getTime() - valueDate1.getTime();
+    return Math.floor(diffMs / 1000)
+  }
+  return null;
 }

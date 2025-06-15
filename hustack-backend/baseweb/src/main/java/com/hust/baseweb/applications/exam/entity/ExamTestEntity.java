@@ -22,6 +22,9 @@ public class ExamTestEntity extends BaseEntity {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "duration")
+    private Integer duration;
+
     @Column(name = "description")
     private String description;
 }

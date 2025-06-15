@@ -26,6 +26,7 @@ import withScreenSecurity from "../../../withScreenSecurity";
 import QuestionTagManagement from "./QuestionTagManagement";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import FileUploader from "../../../common/uploader/FileUploader";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -79,25 +80,6 @@ function QuestionBankCreateUpdate(props) {
     },
   ]
 
-  const numberAnswers = [
-    {
-      value: 2,
-      name: '2 đán án'
-    },
-    {
-      value: 3,
-      name: '3 đán án'
-    },
-    {
-      value: 4,
-      name: '4 đán án'
-    },
-    {
-      value: 5,
-      name: '5 đán án'
-    },
-  ]
-
   const multichoices = [
     {
       value: false,
@@ -129,11 +111,10 @@ function QuestionBankCreateUpdate(props) {
   const [deletePaths, setDeletePaths] = useState([]);
   const [contentFiles, setContentFiles] = useState([]);
   const [numberAnswer, setNumberAnswer] = useState(question?.numberAnswer);
-  const [contentAnswer1, setContentAnswer1] = useState(question?.contentAnswer1);
-  const [contentAnswer2, setContentAnswer2] = useState(question?.contentAnswer2);
-  const [contentAnswer3, setContentAnswer3] = useState(question?.contentAnswer3);
-  const [contentAnswer4, setContentAnswer4] = useState(question?.contentAnswer4);
-  const [contentAnswer5, setContentAnswer5] = useState(question?.contentAnswer5);
+  const [numberAnswerBlur, setNumberAnswerBlur] = useState(question?.numberAnswer);
+  const [contentAnswers, setContentAnswers] = useState(question?.contentAnswers);
+  const [contentFileAnswers, setContentFileAnswers] = useState(question?.contentFileAnswers);
+  const [contentAnswerFiles, setContentAnswerFiles] = useState([]);
   const [multichoice, setMultichoice] = useState(question?.multichoice);
   const [answer, setAnswer] = useState(question?.answer);
   const [explain, setExplain] = useState(question?.explain);
@@ -155,11 +136,27 @@ function QuestionBankCreateUpdate(props) {
     }
   }, [openQuestionTagManagementDialog]);
 
-  useEffect(() => {
-    console.log('examTags',examTags)
-  }, [examTags]);
-
   const saveQuestion = () =>{
+    let tmpAnswers = []
+    for(let i =0;i<numberAnswerBlur;i++){
+      if(question?.answers[i]){
+        tmpAnswers.push({
+          id: question?.answers[i]?.id,
+          examQuestionId: question?.answers[i]?.examQuestionId,
+          order: question?.answers[i]?.order,
+          content: contentAnswers[i] ? contentAnswers[i] : question?.answers[i]?.content,
+          file: contentAnswerFiles?.find(item => item?.name?.includes(`_answer_${question?.answers[i]?.order}`)) ?
+            null :
+            contentFileAnswers?.find(item => item?.includes(`_answer_${question?.answers[i]?.order}`)),
+        })
+      }else{
+        tmpAnswers.push({
+          order: i+1,
+          content: contentAnswers[i],
+        })
+      }
+    }
+
     const body = {
       code: code,
       type:  type,
@@ -170,11 +167,8 @@ function QuestionBankCreateUpdate(props) {
       filePath: filePath,
       deletePaths: isCreate ? null : deletePaths,
       numberAnswer: type === 0 ? numberAnswer : null,
-      contentAnswer1: type === 0 ? contentAnswer1 : null,
-      contentAnswer2: type === 0 ? contentAnswer2 : null,
-      contentAnswer3: type === 0 ? contentAnswer3 : null,
-      contentAnswer4: type === 0 ? contentAnswer4 : null,
-      contentAnswer5: type === 0 ? contentAnswer5 : null,
+      answers: type === 0 ? tmpAnswers : [],
+      answersDelete: type === 0 && +numberAnswerBlur < question?.numberAnswer ? question?.answers.slice(+numberAnswerBlur) : [],
       multichoice: type === 0 ? multichoice : null,
       answer:  answer,
       explain:  explain
@@ -185,7 +179,8 @@ function QuestionBankCreateUpdate(props) {
 
     let formData = new FormData();
     formData.append("body", new Blob([JSON.stringify(body)], {type: 'application/json'}));
-    for (const file of contentFiles) {
+    const tmpFiles = contentFiles.concat(contentAnswerFiles)
+    for (const file of tmpFiles) {
       formData.append("files", file);
     }
 
@@ -259,28 +254,6 @@ function QuestionBankCreateUpdate(props) {
       toast.error('Lựa chọn môn học')
       return false
     }
-    if(body.type === 0){
-      if(body.contentAnswer1 == null || body.contentAnswer1 === ''){
-        toast.error('Nội dung phương án 1 không được bỏ trống')
-        return false
-      }
-      if((body.contentAnswer2 == null || body.contentAnswer2 === '') && numberAnswer >= 2){
-        toast.error('Nội dung phương án 2 không được bỏ trống')
-        return false
-      }
-      if((body.contentAnswer3 == null || body.contentAnswer3 === '') && numberAnswer >= 3){
-        toast.error('Nội dung phương án 3 không được bỏ trống')
-        return false
-      }
-      if((body.contentAnswer4 == null || body.contentAnswer4 === '') && numberAnswer >= 4){
-        toast.error('Nội dung phương án 4 không được bỏ trống')
-        return false
-      }
-      if((body.contentAnswer5 == null || body.contentAnswer5 === '') && numberAnswer >= 5){
-        toast.error('Nội dung phương án 5 không được bỏ trống')
-        return false
-      }
-    }
     if(body.answer == null || body.answer === ''){
       toast.error('Đáp án không được bỏ trống')
       return false
@@ -312,6 +285,36 @@ function QuestionBankCreateUpdate(props) {
     let tmpDeletePaths = deletePaths
     tmpDeletePaths.push(data)
     setDeletePaths(tmpDeletePaths)
+  }
+
+  const handleContentAnswerChange = (index, value) => {
+    const newContentAnswers = [...contentAnswers];
+    newContentAnswers[index] = value;
+    setContentAnswers(newContentAnswers);
+  };
+
+  const handleUploadContentAnswerFile = (file, index) => {
+    if(file){
+      const fileNameParts = file.name.split('.');
+      const newFileName = `${fileNameParts[0]}_answer_${index}.${fileNameParts[1]}`;
+
+      const updatedFile = new File([file], newFileName, {
+        type: file.type,
+        lastModified: file.lastModified,
+      });
+      setContentAnswerFiles([...contentAnswerFiles, updatedFile])
+    }else{
+      if(contentAnswerFiles){
+        setContentAnswerFiles(contentAnswerFiles.filter((file) => !file.name.includes(`_answer_${index}`)));
+      }
+    }
+  }
+
+  const handleDeleteContentAnswerFile = (file) => {
+    if(file){
+      setContentFileAnswers(contentFileAnswers.map(item => (item === file ? null : item)))
+      setDeletePaths([...deletePaths, file])
+    }
   }
 
   return (
@@ -369,24 +372,25 @@ function QuestionBankCreateUpdate(props) {
                   {
                     (type === 0) && (
                       <TextField
+                        autoFocus
                         required
+                        onKeyPress={handleKeyPress}
                         id="numberAnswer"
-                        select
                         label="Số đáp án"
+                        type="number"
+                        placeholder="Nhập số đáp án"
                         size="small"
                         value={numberAnswer}
                         onChange={(event) => {
                           setNumberAnswer(event.target.value);
                         }}
-                      >
-                        {
-                          numberAnswers.map(item => {
-                            return (
-                              <MenuItem value={item.value}>{item.name}</MenuItem>
-                            )
-                          })
-                        }
-                      </TextField>
+                        onBlur={(event) => {
+                          setNumberAnswerBlur(event.target.value);
+                        }}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
                     )
                   }
 
@@ -556,67 +560,32 @@ function QuestionBankCreateUpdate(props) {
 
                 {
                   (type === 0) && (
-                    <div>
-                      <Typography variant="h6">Nội dung phương án 1</Typography>
-                      <RichTextEditor
-                        content={contentAnswer1}
-                        onContentChange={(contentAnswer1) =>
-                          setContentAnswer1(contentAnswer1)
+                    Array.from({ length: numberAnswerBlur }, (_, index) => (
+                      <div>
+                        <Typography variant="h6">Nội dung phương án {index+1}</Typography>
+                        <RichTextEditor
+                          content={contentAnswers[index]}
+                          onContentChange={(value) => handleContentAnswerChange(index, value)}
+                        />
+                        {
+                          contentFileAnswers[index] ?
+                            (
+                              <div style={{display: 'flex', alignItems: 'center'}}>
+                                <AttachFileOutlined></AttachFileOutlined>
+                                <p style={{fontWeight: 'bold', cursor: 'pointer'}}
+                                   onClick={() => handleOpenFilePreviewDialog(contentFileAnswers[index])}>{getFilenameFromString(contentFileAnswers[index])}</p>
+                                <Delete style={{color: 'red', cursor: 'pointer', marginLeft: '10px'}}
+                                        onClick={() => handleDeleteContentAnswerFile(contentFileAnswers[index])}/>
+                              </div>
+                            ) : (
+                              <FileUploader
+                                onChange={(files) => handleUploadContentAnswerFile(files[0], index+1)}
+                                preview={false}
+                              />
+                            )
                         }
-                      />
-                    </div>
-                  )
-                }
-                {
-                  (type === 0 && numberAnswer >= 2) && (
-                    <div>
-                      <Typography variant="h6">Nội dung phương án 2</Typography>
-                      <RichTextEditor
-                        content={contentAnswer2}
-                        onContentChange={(contentAnswer2) =>
-                          setContentAnswer2(contentAnswer2)
-                        }
-                      />
-                    </div>
-                  )
-                }
-                {
-                  (type === 0 && numberAnswer >= 3) && (
-                    <div>
-                      <Typography variant="h6">Nội dung phương án 3</Typography>
-                      <RichTextEditor
-                        content={contentAnswer3}
-                        onContentChange={(contentAnswer3) =>
-                          setContentAnswer3(contentAnswer3)
-                        }
-                      />
-                    </div>
-                  )
-                }
-                {
-                  (type === 0 && numberAnswer >= 4) && (
-                    <div>
-                      <Typography variant="h6">Nội dung phương án 4</Typography>
-                      <RichTextEditor
-                        content={contentAnswer4}
-                        onContentChange={(contentAnswer4) =>
-                          setContentAnswer4(contentAnswer4)
-                        }
-                      />
-                    </div>
-                  )
-                }
-                {
-                  (type === 0 && numberAnswer >= 5) && (
-                    <div>
-                      <Typography variant="h6">Nội dung phương án 5</Typography>
-                      <RichTextEditor
-                        content={contentAnswer5}
-                        onContentChange={(contentAnswer5) =>
-                          setContentAnswer5(contentAnswer5)
-                        }
-                      />
-                    </div>
+                      </div>
+                    ))
                   )
                 }
 

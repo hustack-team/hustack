@@ -24,11 +24,6 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.content, " +
                    "    eq.file_path as filePath, " +
                    "    eq.number_answer as numberAnswer, " +
-                   "    eq.content_answer1 as contentAnswer1, " +
-                   "    eq.content_answer2 as contentAnswer2, " +
-                   "    eq.content_answer3 as contentAnswer3, " +
-                   "    eq.content_answer4 as contentAnswer4, " +
-                   "    eq.content_answer5 as contentAnswer5, " +
                    "    eq.multichoice, " +
                    "    eq.answer, " +
                    "    eq.explain, " +
@@ -38,21 +33,24 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.updated_by as updatedBy, " +
                    "    es.name as examSubjectName, " +
                    "    eq.level, " +
-                   "    string_agg(et.id, ',') as examTagIdStr, " +
-                   "    string_agg(et.name, ',') as examTagNameStr " +
+                   "    COALESCE( " +
+                   "        (SELECT " +
+                   "             json_agg(json_build_object('id', et.id, 'name', et.name)) " +
+                   "         FROM exam_question_tag eqt " +
+                   "         LEFT JOIN exam_tag et ON " +
+                   "             et.id = eqt.exam_tag_id " +
+                   "         WHERE eqt.exam_question_id = eq.id), '[]') AS examTags, " +
+                   "    COALESCE(json_agg(json_build_object('id', eqa.id, 'examQuestionId', eqa.exam_question_id, 'order', eqa.order, 'content', eqa.content, 'file', eqa.file) ORDER BY eqa.order ASC) FILTER (WHERE eqa.id IS NOT NULL), '[]') AS answers " +
                    "from " +
                    "    exam_question eq " +
+                   "left join exam_question_answer eqa on " +
+                   "    eq.id = eqa.exam_question_id " +
                    "left join exam_subject es on " +
                    "    es.id = eq.exam_subject_id " +
-                   "left join exam_question_tag eqt on " +
-                   "    eqt.exam_question_id = eq.id " +
-                   "left join exam_tag et on " +
-                   "    et.id = eqt.exam_tag_id " +
                    "where " +
                    "    eq.id = :id " +
                    "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer,  " +
-                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3,  " +
-                   "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer,  " +
+                   "    eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by,  " +
                    "    es.name, eq.level", nativeQuery = true)
     Optional<ExamQuestionDetailsRes> findOneById(String id);
@@ -64,11 +62,6 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.content, " +
                    "    eq.file_path as filePath, " +
                    "    eq.number_answer as numberAnswer, " +
-                   "    eq.content_answer1 as contentAnswer1, " +
-                   "    eq.content_answer2 as contentAnswer2, " +
-                   "    eq.content_answer3 as contentAnswer3, " +
-                   "    eq.content_answer4 as contentAnswer4, " +
-                   "    eq.content_answer5 as contentAnswer5, " +
                    "    eq.multichoice, " +
                    "    eq.answer, " +
                    "    eq.explain, " +
@@ -78,21 +71,24 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.updated_by as updatedBy, " +
                    "    es.name as examSubjectName, " +
                    "    eq.level, " +
-                   "    string_agg(et.id, ',') as examTagIdStr, " +
-                   "    string_agg(et.name, ',') as examTagNameStr " +
+                   "    COALESCE( " +
+                   "        (SELECT " +
+                   "             json_agg(json_build_object('id', et.id, 'name', et.name)) " +
+                   "         FROM exam_question_tag eqt " +
+                   "         LEFT JOIN exam_tag et ON " +
+                   "             et.id = eqt.exam_tag_id " +
+                   "         WHERE eqt.exam_question_id = eq.id), '[]') AS examTags, " +
+                   "    COALESCE(json_agg(json_build_object('id', eqa.id, 'examQuestionId', eqa.exam_question_id, 'order', eqa.order, 'content', eqa.content, 'file', eqa.file) ORDER BY eqa.order ASC) FILTER (WHERE eqa.id IS NOT NULL), '[]') AS answers " +
                    "from " +
                    "    exam_question eq " +
+                   "left join exam_question_answer eqa on " +
+                   "    eq.id = eqa.exam_question_id " +
                    "left join exam_subject es on " +
                    "    es.id = eq.exam_subject_id " +
-                   "left join exam_question_tag eqt on " +
-                   "    eqt.exam_question_id = eq.id " +
-                   "left join exam_tag et on " +
-                   "    et.id = eqt.exam_tag_id " +
                    "where " +
                    "    eq.code = :code " +
                    "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer,  " +
-                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3,  " +
-                   "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer,  " +
+                   "    eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by,  " +
                    "    es.name, eq.level", nativeQuery = true)
     Optional<ExamQuestionDetailsRes> findOneByCode(String code);
@@ -103,22 +99,27 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    eq.*, " +
                    "    es.id as examSubjectId, " +
                    "    es.name as examSubjectName, " +
-                   "    COALESCE(json_agg(json_build_object('id', et.id, 'name', et.name)) FILTER (WHERE et.id IS NOT NULL), '[]') AS examTags " +
+                   "    COALESCE( " +
+                   "        (SELECT " +
+                   "             json_agg(json_build_object('id', et.id, 'name', et.name)) " +
+                   "         FROM exam_question_tag eqt " +
+                   "         LEFT JOIN exam_tag et ON " +
+                   "             et.id = eqt.exam_tag_id " +
+                   "         WHERE eqt.exam_question_id = eq.id), '[]') AS examTags, " +
+                   "    COALESCE(json_agg(json_build_object('id', eqa.id, 'examQuestionId', eqa.exam_question_id, 'order', eqa.order, 'content', eqa.content, 'file', eqa.file) ORDER BY eqa.order ASC) FILTER (WHERE eqa.id IS NOT NULL), '[]') AS answers " +
                    "from " +
                    "    exam_question eq " +
+                   "left join exam_question_answer eqa on " +
+                   "    eq.id = eqa.exam_question_id " +
                    "left join exam_subject es on " +
                    "    es.id = eq.exam_subject_id " +
-                   "left join exam_question_tag eqt on " +
-                   "    eq.id = eqt.exam_question_id " +
-                   "left join exam_tag et on " +
-                   "    et.id = eqt.exam_tag_id " +
                    "where " +
                    "    eq.created_by = :userLogin " +
                    "    and es.status = 'ACTIVE' " +
                    "and " +
                    "    (:type is null or eq.type = :type) " +
                    "and " +
-                   "    (:examTagIds is null or eqt.exam_tag_id in (:examTagIds)) " +
+                   "    (:examTagIds IS NULL OR EXISTS (SELECT 1 FROM exam_question_tag eqt2 WHERE eqt2.exam_question_id = eq.id AND eqt2.exam_tag_id IN (:examTagIds))) " +
                    "and " +
                    "    (:level is null or eq.level = :level) " +
                    "and " +
@@ -128,8 +129,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                    "    (lower(eq.code) like CONCAT('%', lower(:keyword),'%')) or " +
                    "    (lower(eq.content) like CONCAT('%', lower(:keyword),'%'))) " +
                    "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
-                   "    eq.content_answer1, eq.content_answer2, eq.content_answer3, " +
-                   "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer, " +
+                   "    eq.multichoice, eq.answer, " +
                    "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by, " +
                    "    eq.exam_subject_id, eq.level ,es.id, es.name " +
                    "order by eq.created_at desc",
@@ -139,17 +139,13 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                         "    exam_question eq " +
                         "left join exam_subject es on " +
                         "    es.id = eq.exam_subject_id " +
-                        "left join exam_question_tag eqt on " +
-                        "    eq.id = eqt.exam_question_id " +
-                        "left join exam_tag et on " +
-                        "    et.id = eqt.exam_tag_id " +
                         "where " +
                         "    eq.created_by = :userLogin " +
                         "    and es.status = 'ACTIVE' " +
                         "and " +
                         "    (:type is null or eq.type = :type) " +
                         "and " +
-                        "    (:examTagIds is null or eqt.exam_tag_id in (:examTagIds)) " +
+                        "    (:examTagIds IS NULL OR EXISTS (SELECT 1 FROM exam_question_tag eqt2 WHERE eqt2.exam_question_id = eq.id AND eqt2.exam_tag_id IN (:examTagIds))) " +
                         "and " +
                         "    (:level is null or eq.level = :level) " +
                         "and " +
@@ -159,8 +155,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestionEntity
                         "    (lower(eq.code) like CONCAT('%', lower(:keyword),'%')) or " +
                         "    (lower(eq.content) like CONCAT('%', lower(:keyword),'%'))) " +
                         "group by eq.id, eq.code, eq.type, eq.content, eq.file_path, eq.number_answer, " +
-                        "    eq.content_answer1, eq.content_answer2, eq.content_answer3, " +
-                        "    eq.content_answer4, eq.content_answer5, eq.multichoice, eq.answer, " +
+                        "    eq.multichoice, eq.answer, " +
                         "    eq.explain, eq.created_at, eq.updated_at, eq.created_by, eq.updated_by, " +
                         "    eq.exam_subject_id, eq.level ,es.id, es.name ",
            nativeQuery = true)

@@ -15,7 +15,7 @@ import TestBankQuestionItem from "./TestBankQuestionItem";
 import QuestionBankDetails from "../questionbank/QuestionBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
 import {AttachFileOutlined} from "@material-ui/icons";
-import {getFilenameFromString} from "../ultils/FileUltils";
+import {getFilenameFromString, getFilePathFromString} from "../ultils/FileUltils";
 import QuestionFilePreview from "../questionbank/QuestionFilePreview";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
@@ -43,18 +43,13 @@ function TestBankDetails(props) {
         content: question.questionContent,
         filePath: question.questionFile,
         numberAnswer: question.questionNumberAnswer,
-        contentAnswer1: question.questionContentAnswer1,
-        contentAnswer2: question.questionContentAnswer2,
-        contentAnswer3: question.questionContentAnswer3,
-        contentAnswer4: question.questionContentAnswer4,
-        contentAnswer5: question.questionContentAnswer5,
+        answers: question.questionAnswers,
         multichoice: question.questionMultichoice,
         answer: question.questionAnswer,
         explain: question.questionExplain,
         order: question.questionOrder,
         examSubjectName: question.examSubjectName,
-        examTagIdStr: question.examTagIdStr,
-        examTagNameStr: question.examTagNameStr,
+        examTags: question.questionExamTags,
       })
     }
     setQuestions(tmpData)
@@ -80,8 +75,16 @@ function TestBankDetails(props) {
         title={data?.name}
         content={
           <div>
-            <h4 style={{margin: '0'}}>Mã đề: {data?.code}</h4>
-            <p>{parseHTMLToString(data?.description)}</p>
+            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+              <h4 style={{margin: '0'}}>Mã đề: {data?.code}</h4>
+              {
+                data?.duration && (
+                  <h4 style={{margin: '0'}}>Thời gian làm: {data?.duration} phút</h4>
+                )
+              }
+            </div>
+
+            <>{parseHTMLToString(data?.description)}</>
 
             <div>
               {
@@ -105,45 +108,19 @@ function TestBankDetails(props) {
                         </div>
                         <p>{parseHTMLToString(value.content)}</p>
                         {
-                          value.type === 0 &&
-                          (<Box display="flex" flexDirection='column'>
-                            <div style={{display: "flex", alignItems: "center"}}>
-                              <span style={{marginRight: "5px"}}>1.</span>
-                              <span>{parseHTMLToString(value.contentAnswer1)}</span>
-                            </div>
-                            {
-                              value.numberAnswer >= 2 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>2.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer2)}</span>
+                          value.type === 0 && (
+                            Array.from({ length: value.numberAnswer }, (_, index) => (
+                              <div style={{display: "flex", alignItems: "center"}}>
+                                <strong style={{marginRight: "5px"}}>{index+1}.</strong>
+                                <div>
+                                  <p>{parseHTMLToString(value.answers[index]?.content)}</p>
+                                  {value.answers[index]?.file && (
+                                    <img src={getFilePathFromString(value.answers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                                  )}
                                 </div>
-                              )
-                            }
-                            {
-                              value.numberAnswer >= 3 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>3.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer3)}</span>
-                                </div>
-                              )
-                            }
-                            {
-                              value.numberAnswer >= 4 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>4.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer4)}</span>
-                                </div>
-                              )
-                            }
-                            {
-                              value.numberAnswer >= 5 && (
-                                <div style={{display: "flex", alignItems: "center"}}>
-                                  <span style={{marginRight: "5px"}}>5.</span>
-                                  <span>{parseHTMLToString(value.contentAnswer5)}</span>
-                                </div>
-                              )
-                            }
-                          </Box>)
+                              </div>
+                            ))
+                          )
                         }
                       </Box>
                       <Box display="flex" justifyContent='space-between' width="70px">
