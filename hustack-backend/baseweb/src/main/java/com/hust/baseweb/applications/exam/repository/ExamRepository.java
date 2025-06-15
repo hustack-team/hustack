@@ -193,6 +193,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    et.code as examTestCode, " +
                    "    et.name as examTestName, " +
                    "    et.duration as examTestDuration, " +
+                   "    er.extra_time as examTestExtraTime, " +
                    "    er.id as examResultId, " +
                    "    er.started_at as startedAt, " +
                    "    er.submit_again as submitAgain, " +
@@ -233,6 +234,7 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
                    "    es.email as examStudentEmail, " +
                    "    es.phone as examStudentPhone, " +
                    "    er.id as examResultId, " +
+                   "    er.extra_time as examTestExtraTime, " +
                    "    er.total_score as totalScore, " +
                    "    er.started_at as startedAt, " +
                    "    er.submited_at as submitedAt, " +

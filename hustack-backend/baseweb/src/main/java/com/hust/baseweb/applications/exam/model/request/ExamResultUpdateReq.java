@@ -14,4 +14,5 @@ public class ExamResultUpdateReq {
     String id;
     String examStudentTestId;
     Boolean submitAgain;
+    Integer extraTime;
 }

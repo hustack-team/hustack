@@ -105,7 +105,7 @@ function MyExamList(props) {
         return (
           <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
             {
-              ((rowData?.row?.totalScore == null && rowData?.row?.submitedAt == null) || rowData?.row?.submitAgain) ? (
+              (rowData?.row?.submitedAt == null) ? (
                 <PrimaryButton
                   variant="contained"
                   color="primary"

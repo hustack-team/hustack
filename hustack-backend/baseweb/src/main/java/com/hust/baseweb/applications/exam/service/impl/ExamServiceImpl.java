@@ -433,8 +433,8 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public ResponseData<ExamResultEntity> doingMyExam(MyExamResultSaveReq myExamResultSaveReq, MultipartFile[] files) {
-        ResponseData<ExamResultEntity> responseData = new ResponseData<>();
+    public ResponseData<List<ExamResultDetailsEntity>> doingMyExam(MyExamResultSaveReq myExamResultSaveReq, MultipartFile[] files) {
+        ResponseData<List<ExamResultDetailsEntity>> responseData = new ResponseData<>();
 
         Optional<ExamResultEntity> examResultExist = examResultRepository.findById(myExamResultSaveReq.getId());
         if(examResultExist.isEmpty()){
@@ -444,7 +444,11 @@ public class ExamServiceImpl implements ExamService {
             return responseData;
         }
         ExamResultEntity examResultEntity = modelMapper.map(examResultExist.get(), ExamResultEntity.class);
-        examResultEntity.setSubmitedAt(LocalDateTime.now());
+        if(Boolean.TRUE.equals(myExamResultSaveReq.getIsSubmit())){
+            examResultEntity.setSubmitedAt(LocalDateTime.now());
+        }else{
+            examResultEntity.setUpdatedAt(LocalDateTime.now());
+        }
         examResultEntity = examResultRepository.save(examResultEntity);
 
         if(files != null){
@@ -469,11 +473,12 @@ public class ExamServiceImpl implements ExamService {
             ExamResultDetailsEntity examResultDetailsEntity = modelMapper.map(examResultDetails, ExamResultDetailsEntity.class);
             examResultDetailsEntities.add(examResultDetailsEntity);
         }
-        examResultDetailsRepository.saveAll(examResultDetailsEntities);
+        examResultDetailsEntities = examResultDetailsRepository.saveAll(examResultDetailsEntities);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
-        responseData.setResultMsg("Nộp bài thành công");
+        responseData.setData(Boolean.FALSE.equals(myExamResultSaveReq.getIsSubmit()) ? examResultDetailsEntities :  null);
+        responseData.setResultMsg(Boolean.TRUE.equals(myExamResultSaveReq.getIsSubmit()) ? "Nộp bài thành công" : "Lưu nháp bài thành công");
         return responseData;
     }
     private Integer getQuestionOrderFromFilename(String filename){

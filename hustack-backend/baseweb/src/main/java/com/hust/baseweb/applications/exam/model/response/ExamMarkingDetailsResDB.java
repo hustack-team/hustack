@@ -14,5 +14,5 @@ public interface ExamMarkingDetailsResDB {
     String getSubmitedAt();
     String getAnswerFiles();
     String getComment();
-
+    Integer getExamTestExtraTime();
 }

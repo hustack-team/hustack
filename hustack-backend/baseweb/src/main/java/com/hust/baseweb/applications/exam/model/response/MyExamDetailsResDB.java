@@ -14,7 +14,8 @@ public interface MyExamDetailsResDB {
     String getExamTestId();
     String getExamTestCode();
     String getExamTestName();
-    String getExamTestDuration();
+    Integer getExamTestDuration();
+    Integer getExamTestExtraTime();
     String getExamResultId();
     String getStartedAt();
     Boolean getSubmitAgain();

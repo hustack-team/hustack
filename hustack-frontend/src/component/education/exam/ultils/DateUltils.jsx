@@ -84,6 +84,25 @@ export function getDiffMinutes(date1, date2){
   return null;
 }
 
+export function getDiffTimeFormatted(date1, date2) {
+  if (date1 != null && date1 !== '' && date2 != null && date2 !== '') {
+    const valueDate1 = new Date(date1);
+    const valueDate2 = new Date(date2);
+    const diffMs = valueDate2.getTime() - valueDate1.getTime();
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+  }
+  return null;
+}
+
 
 export function getDiffSeconds(date1, date2){
   if(date1 != null && date1 !== '' && date2 != null && date2 !== ''){

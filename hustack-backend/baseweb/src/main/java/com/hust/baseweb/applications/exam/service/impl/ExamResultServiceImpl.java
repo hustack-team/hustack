@@ -39,6 +39,7 @@ public class ExamResultServiceImpl implements ExamResultService {
 
         ExamResultEntity examResultEntity = examResultExist.get();
         examResultEntity.setSubmitAgain(examResultUpdateReq.getSubmitAgain());
+        examResultEntity.setExtraTime(examResultUpdateReq.getExtraTime());
         examResultRepository.save(examResultEntity);
 
         responseData.setHttpStatus(HttpStatus.OK);

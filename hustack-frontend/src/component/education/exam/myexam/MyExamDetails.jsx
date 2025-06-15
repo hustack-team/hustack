@@ -64,7 +64,7 @@ function MyExamDetails(props) {
   const location = useLocation();
   const data = location.state?.data
   const { openMenu } = useMenu();
-  const initialSeconds = data?.startedAt ? (data?.examTestDuration * 60 - getDiffSeconds(data?.startedAt, new Date())) : data?.examTestDuration * 60 || 0;
+  const initialSeconds = data?.startedAt ? (data?.examTestExtraTime ? ((data?.examTestDuration * 60 - getDiffSeconds(data?.startedAt, new Date())) + data?.examTestExtraTime*60) : (data?.examTestDuration * 60 - getDiffSeconds(data?.startedAt, new Date()))) : data?.examTestDuration * 60 || 0;
 
   if(data === undefined){
     window.location.href = '/exam/my-exam';
@@ -72,21 +72,22 @@ function MyExamDetails(props) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [dataAnswers, setDataAnswers] = useState([]);
-  const [tmpTextAnswer, setTmpTextAnswer] = useState("");
   const [answersFiles, setAnswersFiles] = useState([]);
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [startDoing, setStartDoing] = useState((data?.examMonitor && data?.examMonitor > 0) ? true : false);
   const [countdown, setCountdown] = useState(data?.submitedAt ? 0 : initialSeconds);
+  const [dirtyAnswers, setDirtyAnswers] = useState(new Set());
 
   useEffect(() => {
     let tmpDataAnswers = []
     let tmpFileAnswers = []
     for(let item of data?.questionList){
       tmpDataAnswers.push({
+        id: item?.examResultDetailsId,
         questionOrder: item?.questionOrder,
         examQuestionId: item?.questionId,
-        answer: ""
+        answer: item?.answer ? item?.answer : ""
       })
       tmpFileAnswers.push({
         questionOrder: item?.questionOrder,
@@ -95,7 +96,7 @@ function MyExamDetails(props) {
     }
     setDataAnswers(tmpDataAnswers)
     setAnswersFiles(tmpFileAnswers)
-    if(data?.examMonitor){
+    if(!data?.submitedAt && data?.examMonitor){
       handleUpdateExamResult();
     }
   }, []);
@@ -107,7 +108,7 @@ function MyExamDetails(props) {
           if (prev <= 1) {
             clearInterval(timer);
             // Thực hiện nộp bài
-            handleSubmit()
+            handleSubmit(true)
             return 0;
           }
           return prev - 1;
@@ -121,10 +122,12 @@ function MyExamDetails(props) {
   const strokeDasharray = 283;
   const strokeDashoffset = (progress / 100) * strokeDasharray;
 
+  // Set lại trạng thái bài thi: Không được làm lại
   const handleUpdateExamResult = () =>{
     const body = {
       examStudentTestId: data?.examStudentTestId,
       submitAgain: false,
+      extraTime: data?.examTestExtraTime,
     }
     request(
       "put",
@@ -139,34 +142,62 @@ function MyExamDetails(props) {
     );
   }
 
-  const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
-    if(isChecked){
-      if(dataAnswers[questionOrder-1]?.answer === ''){
-        dataAnswers[questionOrder-1].answer = answer
-      }else{
-        dataAnswers[questionOrder-1].answer += ',' + answer
-      }
-    }else{
-      const answersArray = dataAnswers[questionOrder-1].answer.split(',');
-      const filteredAnswers = answersArray.filter(item => item !== answer);
-      dataAnswers[questionOrder-1].answer = filteredAnswers.join(',');
+  useEffect(() => {
+    if (startDoing && !data?.submitedAt && countdown > 0) {
+      const saveInterval = setInterval(() => {
+        if (dirtyAnswers && dirtyAnswers?.size > 0) {
+          handleSubmit(false);
+        }
+      }, 10000);
+      return () => {
+        clearInterval(saveInterval);
+      };
     }
+  }, [dirtyAnswers]);
 
-    setDataAnswers(dataAnswers)
+  const handleAnswerCheckboxChange = (questionOrder, answer, isChecked) => {
+    setDataAnswers((prev) => {
+      const newAnswers = [...prev];
+      let currentAnswer = newAnswers[questionOrder - 1].answer || '';
+      if (isChecked) {
+        currentAnswer = currentAnswer ? `${currentAnswer},${answer}` : answer;
+      } else {
+        currentAnswer = currentAnswer
+          .split(',')
+          .filter(item => item !== answer)
+          .join(',');
+      }
+      newAnswers[questionOrder - 1] = {
+        ...newAnswers[questionOrder - 1],
+        answer: currentAnswer
+      };
+      setDirtyAnswers((prev) => new Set(prev).add(questionOrder));
+      return newAnswers;
+    });
   };
 
   const handleAnswerRadioChange = (event, questionOrder) => {
     setDataAnswers((prev) => {
       const newAnswers = [...prev];
-      newAnswers[questionOrder-1].answer = event.target.value
+      newAnswers[questionOrder - 1] = {
+        ...newAnswers[questionOrder - 1],
+        answer: event.target.value
+      };
+      setDirtyAnswers((prev) => new Set(prev).add(questionOrder));
       return newAnswers;
     })
   };
 
   const handleAnswerTextChange = (value, questionOrder) => {
-    dataAnswers[questionOrder-1].answer = value
-
-    setDataAnswers(dataAnswers)
+    setDataAnswers((prev) => {
+      const newAnswers = [...prev];
+      newAnswers[questionOrder - 1] = {
+        ...newAnswers[questionOrder - 1],
+        answer: value
+      };
+      setDirtyAnswers((prev) => new Set(prev).add(questionOrder));
+      return newAnswers;
+    });
   };
 
   const handleAnswerFileChange = async (files, questionOrder) => {
@@ -188,11 +219,18 @@ function MyExamDetails(props) {
     setAnswersFiles(answersFiles)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = (isSubmit) => {
+    let filteredAnswers = dataAnswers.filter(answer => dirtyAnswers.has(answer.questionOrder));
+
+    if (filteredAnswers.length === 0) {
+      if (!isSubmit) return;
+    }
+
     const body = {
       id: data?.examResultId,
+      isSubmit,
       examStudentTestId: data?.examStudentTestId,
-      examResultDetails: dataAnswers
+      examResultDetails: filteredAnswers
     }
 
     let tmpAnswersFiles = []
@@ -224,26 +262,48 @@ function MyExamDetails(props) {
       },
     };
 
-    setIsLoading(true)
+    if(isSubmit){
+      setIsLoading(true)
+    }
     request(
       "post",
       '/exam/student/submissions',
       (res) => {
-        if(res.status === 200){
-          if(res.data.resultCode === 200){
-            successNoti(res.data.resultMsg, 3000)
+        if(isSubmit){
+          if(res.status === 200){
+            if(res.data.resultCode === 200){
+              successNoti(res.data.resultMsg, 3000)
+              setIsLoading(false)
+              history.push("/exam/my-exam")
+            }else{
+              errorNoti(res.data.resultMsg, 3000)
+              setIsLoading(false)
+            }
+            openMenu()
+          }else {
+            errorNoti(res, 3000)
             setIsLoading(false)
-            history.push("/exam/my-exam")
-          }else{
-            errorNoti(res.data.resultMsg, 3000)
-            setIsLoading(false)
+            openMenu()
           }
-          openMenu()
-        }else {
-          errorNoti(res, 3000)
-          setIsLoading(false)
-          openMenu()
+        }else{
+          setDataAnswers((prev) => {
+            const updatedAnswers = [...prev];
+            for (let item of res.data.data) {
+              const index = updatedAnswers.findIndex(
+                (answer) => answer.examQuestionId === item.examQuestionId
+              );
+              if (index !== -1) {
+                updatedAnswers[index] = {
+                  ...updatedAnswers[index],
+                  id: item.id,
+                  answer: item.answer || "",
+                };
+              }
+            }
+            return updatedAnswers;
+          });
         }
+        setDirtyAnswers(new Set());
       },
       { onError: (e) => errorNoti(e, 3000) },
       formData,
@@ -266,7 +326,6 @@ function MyExamDetails(props) {
   }
 
   const handleStartDoing = () => {
-    // setStartLoadTime(new Date());
     setStartDoing(true)
   }
 
@@ -284,15 +343,9 @@ function MyExamDetails(props) {
               <h1 style={{margin: 0, padding: 0}}>{data?.examName}</h1>
               <p style={{margin: 0, padding: 0}}>{parseHTMLToString(data?.examDescription)}</p>
               <h2 style={{margin: 0, padding: 0}}>{data?.examTestName}</h2>
-              {/*<div style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Mã đề:</span>{data?.examTestCode}</div>*/}
-              {/*<div style={{display: "flex"}}>*/}
-              {/*  <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian bắt đầu:</span>{formatDateTime(data?.startTime)}</p>*/}
-              {/*  <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{fontWeight: "bold", marginRight: '5px'}}>Thời gian kết thúc:</span>{formatDateTime(data?.endTime)}</p>*/}
-              {/*</div>*/}
               {
                 countdown > 0 && (
                   <div style={{display: "flex", justifyContent: 'flex-end', width: '100%'}}>
-                    {/*Thời gian còn lại: <strong style={{fontSize: '16px'}}>{formatTimeToMMSS(countdown)}</strong>*/}
                     <div style={{position: 'relative', width: '100px', height: '100px'}}>
                       <svg width="100" height="100" viewBox="0 0 100 100">
                         <circle
@@ -347,6 +400,7 @@ function MyExamDetails(props) {
               }
             </div>
 
+            {/*Thông tin làm bài*/}
             {
               data?.submitedAt != null && (
                 <div>
@@ -449,6 +503,7 @@ function MyExamDetails(props) {
                         }
                       </div>
 
+                      {/*Thông tin câu hỏi*/}
                       <p><strong style={{marginRight: '10px'}}>Câu
                         hỏi: </strong>{parseHTMLToString(value?.questionContent)}</p>
                       {
@@ -464,6 +519,8 @@ function MyExamDetails(props) {
                           })
                         )
                       }
+
+                      {/*Thông tin đáp án nhiều lựa chọn*/}
                       {
                         value?.questionType === 0 && value?.questionMultichoice && (
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -488,7 +545,7 @@ function MyExamDetails(props) {
                                   control={
                                     <Checkbox
                                       color="primary"
-                                      checked={value?.answer?.includes(`${index+1}`)}
+                                      checked={dataAnswers[questionOrder - 1]?.answer?.split(',').includes(`${index + 1}`)}
                                       disabled={data?.submitedAt != null}
                                       onChange={(event) => handleAnswerCheckboxChange(value?.questionOrder, `${index+1}`, event.target.checked)}
                                     />
@@ -499,6 +556,8 @@ function MyExamDetails(props) {
                           </Box>
                         )
                       }
+
+                      {/*Thông tin đáp án 1 lựa chọn*/}
                       {
                         value?.questionType === 0 && !value?.questionMultichoice && (
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -515,7 +574,6 @@ function MyExamDetails(props) {
                                     value={`${index + 1}`}
                                     control={
                                       <Radio
-                                        checked={value?.answer?.includes(`${index+1}`)}
                                         disabled={data?.submitedAt != null}
                                       />
                                     }
@@ -539,6 +597,8 @@ function MyExamDetails(props) {
                           </Box>
                         )
                       }
+
+                      {/*Thông tin đáp án tự luận*/}
                       {
                         value?.questionType === 1 && (
                           <div key={questionOrder}>
@@ -546,7 +606,7 @@ function MyExamDetails(props) {
                               data?.submitedAt == null && startDoing && (
                                 <div>
                                   <RichTextEditor
-                                    content={tmpTextAnswer}
+                                    content={dataAnswers[questionOrder - 1]?.answer || ''}
                                     onContentChange={(value) =>
                                       handleAnswerTextChange(value, questionOrder)
                                     }
@@ -647,62 +707,6 @@ function MyExamDetails(props) {
               })
             }
 
-            {/*{*/}
-            {/*  data?.submitedAt == null && (*/}
-            {/*    <DropzoneArea*/}
-            {/*      dropzoneClass={classes.dropZone}*/}
-            {/*      filesLimit={20}*/}
-            {/*      showPreviews={true}*/}
-            {/*      showPreviewsInDropzone={false}*/}
-            {/*      useChipsForPreview*/}
-            {/*      dropzoneText={`Kéo và thả tệp vào đây hoặc nhấn để chọn tệp cho bài thi`}*/}
-            {/*      previewText="Xem trước:"*/}
-            {/*      previewChipProps={{*/}
-            {/*        variant: "outlined",*/}
-            {/*        color: "primary",*/}
-            {/*        size: "medium",*/}
-            {/*      }}*/}
-            {/*      getFileAddedMessage={(fileName) =>*/}
-            {/*        `Tệp ${fileName} tải lên thành công`*/}
-            {/*      }*/}
-            {/*      getFileRemovedMessage={(fileName) => `Tệp ${fileName} đã loại bỏ`}*/}
-            {/*      getFileLimitExceedMessage={(filesLimit) =>*/}
-            {/*        `Vượt quá số lượng tệp tối đa được cho phép. Chỉ được phép tải lên tối đa ${filesLimit} tệp.`*/}
-            {/*      }*/}
-            {/*      alertSnackbarProps={{*/}
-            {/*        anchorOrigin: {vertical: "bottom", horizontal: "right"},*/}
-            {/*        autoHideDuration: 1800,*/}
-            {/*      }}*/}
-            {/*      onChange={(files) => setAnswersFiles(files)}*/}
-            {/*    ></DropzoneArea>*/}
-            {/*  )*/}
-            {/*}*/}
-
-            {/*{*/}
-            {/*  data?.submitedAt != null && (*/}
-            {/*    <div>*/}
-            {/*      <h4 style={{marginBottom: 0, fontSize: '18px'}}>File đính kèm:</h4>*/}
-            {/*      {*/}
-            {/*        (data?.answerFiles == null || data?.answerFiles == '') ?*/}
-            {/*          (*/}
-            {/*            <div>N/A</div>*/}
-            {/*          ) :*/}
-            {/*          (*/}
-            {/*            data?.answerFiles.split(';').map(item => {*/}
-            {/*              return (*/}
-            {/*                <div style={{display: 'flex', alignItems: 'center'}}>*/}
-            {/*                  <AttachFileOutlined></AttachFileOutlined>*/}
-            {/*                  <p style={{fontWeight: 'bold', cursor: 'pointer'}}*/}
-            {/*                     onClick={() => handleOpenFilePreviewDialog(item)}>{getFilenameFromString(item)}</p>*/}
-            {/*                </div>*/}
-            {/*              )*/}
-            {/*            })*/}
-            {/*          )*/}
-            {/*      }*/}
-            {/*    </div>*/}
-            {/*  )*/}
-            {/*}*/}
-
           </CardContent>
           <CardActions style={{justifyContent: 'flex-end'}}>
             {
@@ -725,7 +729,7 @@ function MyExamDetails(props) {
                   variant="contained"
                   color="primary"
                   style={{marginLeft: "15px"}}
-                  onClick={handleSubmit}
+                  onClick={() => handleSubmit(true)}
                   type="submit"
                 >
                   {isLoading ? <CircularProgress/> : "Nộp bài"}

@@ -26,6 +26,7 @@ public class ExamMarkingDetailsRes {
     String submitedAt;
     String answerFiles;
     String comment;
+    Integer examTestExtraTime;
     List<MyExamQuestionDetailsRes> questionList;
 
     public ExamMarkingDetailsRes(ExamMarkingDetailsResDB examMarkingDetailsResDB,

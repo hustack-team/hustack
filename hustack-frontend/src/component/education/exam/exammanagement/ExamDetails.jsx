@@ -19,6 +19,7 @@ import TertiaryButton from "../../../button/TertiaryButton";
 import ExamViolateDialog from "./ExamViolateDialog";
 import SecondaryButton from "../ultils/component/SecondaryButton";
 import {errorNoti, successNoti} from "../../../../utils/notification";
+import ExamContinueDoingDialog from "./ExamContinueDoingDialog";
 
 const baseColumn = {
   sortable: false,
@@ -106,12 +107,15 @@ function ExamDetails(props) {
           <Box display="flex" justifyContent="end" alignItems='center' width="100%">
             {
               rowData?.row?.examResultId ? (
-                <div style={{display: "flex", gap: 12}}>
+                <div style={{display: "flex", gap: 12, width: 'inherit'}}>
                   {
-                    !rowData?.row?.submitAgain && (
+                    !rowData?.row?.submitedAt && !rowData?.row?.submitAgain && (
                       <SecondaryButton
                         variant="outlined"
-                        onClick={(data) => handleUpdateExamResult(rowData?.row)}
+                        onClick={(data) => {
+                          setOpenExamContinueDoingDialog(true)
+                          setExamStudentTestSelected(rowData?.row)
+                        }}
                       >
                         Mở làm tiếp
                       </SecondaryButton>
@@ -121,18 +125,19 @@ function ExamDetails(props) {
                     variant="contained"
                     color="primary"
                     onClick={(data) => handleMarking(rowData?.row)}
+                    style={{width: !(!rowData?.row?.submitedAt && !rowData?.row?.submitAgain) ? '100%' : ''}}
                   >
                     Chấm điểm
                   </PrimaryButton>
                 </div>
               ) : (
-                <Button
+                <TertiaryButton
                   variant="outlined"
                   color="secondary"
-                  style={{pointerEvents: "none"}}
+                  style={{pointerEvents: "none", width: '100%'}}
                 >
                   Chưa làm
-                </Button>
+                </TertiaryButton>
               )
             }
           </Box>
@@ -154,6 +159,8 @@ function ExamDetails(props) {
   const [expanded, setExpanded] = useState(false)
   const [openExamViolateDialog, setOpenExamViolateDialog] = useState(false);
   const [examResultIdViolate, setExamResultIdViolate] = useState(null);
+  const [openExamContinueDoingDialog, setOpenExamContinueDoingDialog] = useState(false);
+  const [examStudentTestSelected, setExamStudentTestSelected] = useState(null);
 
   const handleOpenPopupTestDetails = (test) =>{
     request(
@@ -424,6 +431,16 @@ function ExamDetails(props) {
             open={openExamViolateDialog}
             setOpen={setOpenExamViolateDialog}
             examResultId={examResultIdViolate}
+          />
+        )
+      }
+      {
+        openExamContinueDoingDialog && (
+          <ExamContinueDoingDialog
+            open={openExamContinueDoingDialog}
+            setOpen={setOpenExamContinueDoingDialog}
+            onReload={() => handleFetchListStudentExam(examExamTestIdFocus)}
+            examStudentTest={examStudentTestSelected}
           />
         )
       }

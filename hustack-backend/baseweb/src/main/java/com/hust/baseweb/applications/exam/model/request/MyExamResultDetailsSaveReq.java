@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -13,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyExamResultDetailsSaveReq {
 
+    String id;
     String examResultId;
     String examQuestionId;
     Integer questionOrder;

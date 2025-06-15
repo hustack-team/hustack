@@ -15,5 +15,6 @@ import java.util.List;
 public class MyExamResultSaveReq {
     String id;
     String examStudentTestId;
+    Boolean isSubmit;
     List<MyExamResultDetailsSaveReq> examResultDetails;
 }

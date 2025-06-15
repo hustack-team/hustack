@@ -1,6 +1,7 @@
 package com.hust.baseweb.applications.exam.controller;
 
 import com.hust.baseweb.applications.exam.entity.ExamEntity;
+import com.hust.baseweb.applications.exam.entity.ExamResultDetailsEntity;
 import com.hust.baseweb.applications.exam.entity.ExamResultEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
@@ -107,8 +108,8 @@ public class ExamController {
     }
 
     @PostMapping("/student/submissions")
-    public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
-                                                                      @RequestPart(value = "files", required = false) MultipartFile[] files) {
+    public ResponseEntity<ResponseData<List<ExamResultDetailsEntity>>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
+                                                                                   @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(examService.doingMyExam(myExamResultSaveReq, files));
     }
 }

@@ -27,6 +27,7 @@ public class MyExamDetailsRes {
     String examTestCode;
     String examTestName;
     Integer examTestDuration;
+    Integer examTestExtraTime;
     String examResultId;
     String startedAt;
     Boolean submitAgain;

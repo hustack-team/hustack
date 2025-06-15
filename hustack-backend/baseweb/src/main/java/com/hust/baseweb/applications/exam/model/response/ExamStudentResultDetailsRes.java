@@ -12,6 +12,7 @@ public interface ExamStudentResultDetailsRes {
     Boolean getSubmitAgain();
     Float getTotalScore();
     String getStartedAt();
+    String getUpdatedAt();
     Integer getTotalViolate();
     String getSubmitedAt();
 }

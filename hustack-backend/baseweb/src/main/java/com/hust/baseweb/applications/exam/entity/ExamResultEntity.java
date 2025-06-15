@@ -39,8 +39,14 @@ public class ExamResultEntity{
     @Column(name = "submited_at")
     private LocalDateTime submitedAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(name = "submit_again")
     private Boolean submitAgain;
+
+    @Column(name = "extraTime")
+    private Integer extraTime;
 
     @PrePersist
     protected void onCreate() {
