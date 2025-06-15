@@ -3,6 +3,8 @@ package com.hust.baseweb.applications.programmingcontest.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -19,4 +21,11 @@ public class ModelContestSubmitProgramViaUploadFile {
     String userId;
 
     String submittedByUserId;
+
+    Integer isProblemBlock;
+
+    List<BlockCode> blockCodes;
+
+    public ModelContestSubmitProgramViaUploadFile(String contestId, String problemId, String language, String trim, String name) {
+    }
 }

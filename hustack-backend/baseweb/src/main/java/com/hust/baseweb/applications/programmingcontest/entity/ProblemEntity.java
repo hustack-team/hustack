@@ -25,7 +25,7 @@ public class ProblemEntity implements Serializable {
     private static final long serialVersionUID = 3487495895819800L;
     public static final String PROBLEM_STATUS_OPEN = "OPEN";
     public static final String PROBLEM_STATUS_HIDDEN = "HIDDEN";
-
+    public static final String PROBLEM_CATEGORY_MULTI_BLOCK = "MULTI_BLOCK";
     @Id
     @Column(name = "problem_id")
     private String problemId;
@@ -55,7 +55,7 @@ public class ProblemEntity implements Serializable {
     private String levelId;
 
     @Column(name = "category_id")
-    private String categoryId;
+    private Integer categoryId;
 
     @Column(name = "correct_solution_source_code")
     private String correctSolutionSourceCode;

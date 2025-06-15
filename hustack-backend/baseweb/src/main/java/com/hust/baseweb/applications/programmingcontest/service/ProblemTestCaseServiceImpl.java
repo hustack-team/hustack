@@ -37,6 +37,7 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,7 @@ import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_JAVA;
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_PYTHON3;
@@ -79,6 +81,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     ProblemRepo problemRepo;
     TeacherGroupRelationRepository teacherGroupRelationRepository;
     ProblemTestCaseServiceCache problemTestCaseServiceCache;
+
+    ProblemBlockRepo problemBlockRepo;
+    ProblemBlockService problemBlockService;
 
     TestCaseRepo testCaseRepo;
 
@@ -141,6 +146,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     ObjectMapper objectMapper;
 
     Judge0Utils judge0Utils;
+    ContestSubmissionBlockRepo contestSubmissionBlockRepo;
 
     @Override
     @Transactional
@@ -155,6 +161,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             throw new DuplicateKeyException("Problem ID already exist");
         }
 
+        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
@@ -182,11 +189,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .problemName(dto.getProblemName())
                                              .problemDescription(dto.getProblemDescription())
                                              .memoryLimit(dto.getMemoryLimit())
-//                                                   .timeLimit(dto.getTimeLimitCPP()) //TODO: remove this after moving all to lms
                                              .timeLimitCPP(dto.getTimeLimitCPP())
                                              .timeLimitJAVA(dto.getTimeLimitJAVA())
                                              .timeLimitPYTHON(dto.getTimeLimitPYTHON())
                                              .levelId(dto.getLevelId())
+                                             .categoryId(dto.getCategoryId())
                                              .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
                                              .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
                                              .solution(dto.getSolution())
@@ -205,6 +212,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .build();
         problem = problemService.saveProblemWithCache(problem);
 
+        if (dto.getCategoryId() != null && Integer.valueOf(1).equals(dto.getCategoryId()) && dto.getBlockCodes() != null) {
+            problemBlockService.createProblemBlocks(problemId, dto.getBlockCodes());
+        }
 
         List<ProblemTag> problemTags = Arrays.stream(dto.getTagIds())
                                              .map(tagId -> ProblemTag.builder()
@@ -213,7 +223,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                              .collect(Collectors.toList());
         problemTagRepo.saveAll(problemTags);
 
-        // grant role owner, manager, view to current user and admin
         List<String> roleIds = Arrays.asList(
             UserContestProblemRole.ROLE_OWNER,
             UserContestProblemRole.ROLE_EDITOR,
@@ -228,18 +237,14 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         for (String user : users) {
             for (String roleId : roleIds) {
                 UserContestProblemRole role = new UserContestProblemRole();
-
                 role.setProblemId(problem.getProblemId());
                 role.setUserId(user);
                 role.setRoleId(roleId);
-
                 roles.add(role);
             }
         }
-
         userContestProblemRoleRepo.saveAll(roles);
 
-        // push notification to admin
         notificationsService.create(
             createdBy,
             "admin",
@@ -248,7 +253,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
         return problem;
     }
-
+    @Transactional
     @Override
     public ProblemEntity updateContestProblem(
         String problemId,
@@ -256,6 +261,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         ModelUpdateContestProblem dto,
         MultipartFile[] files
     ) throws Exception {
+        // Kiểm tra quyền chỉnh sửa
         List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(
             problemId,
             userId);
@@ -285,12 +291,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             throw new MiniLeetCodeException("permission denied", 403);
         }
 
-        // problem há been created, admin is shared edit role, but cannot perform the edit
-        //if (!userId.equals(problem.getUserId())
-        //    && !problem.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
-        //    throw new MiniLeetCodeException("Problem is not opened for edit", 400);
-        //}
-
+        // Xử lý tag
         List<TagEntity> tags = new ArrayList<>();
         Integer[] tagIds = dto.getTagIds();
         for (Integer tagId : tagIds) {
@@ -298,6 +299,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             tags.add(tag);
         }
 
+        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         attachmentId.add(problem.getAttachment());
         String[] fileId = dto.getFileId();
@@ -341,9 +343,9 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         problem.setProblemDescription(dto.getProblemDescription());
         problem.setLevelId(dto.getLevelId());
         problem.setSolution(dto.getSolution());
+//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setIsPreloadCode(dto.getIsPreloadCode());
         problem.setPreloadCode(dto.getPreloadCode());
-//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
         problem.setTimeLimitJAVA(dto.getTimeLimitJAVA());
         problem.setTimeLimitPYTHON(dto.getTimeLimitPYTHON());
@@ -358,13 +360,43 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         problem.setTags(tags);
         problem.setSampleTestcase(dto.getSampleTestCase());
 
+        Integer oldCategoryId = problem.getCategoryId();
+        Integer newCategoryId = dto.getCategoryId();
+        if (Integer.valueOf(1).equals(oldCategoryId) && Integer.valueOf(0).equals(newCategoryId)) {
+            problemBlockRepo.deleteByProblemId(problemId);
+        }
+        problem.setCategoryId(newCategoryId);
+
         if (userId.equals(problem.getCreatedBy())) {
             problem.setStatusId(dto.getStatus().toString());
         }
 
+        if (dto.getBlockCodes() != null && !dto.getBlockCodes().isEmpty()) {
+            problemBlockRepo.deleteByProblemId(problemId);
+
+            List<ProblemBlock> problemBlocks = new ArrayList<>();
+            Map<String, List<ModelUpdateContestProblem.BlockCode>> blocksByLanguage =
+                dto.getBlockCodes().stream()
+                   .collect(Collectors.groupingBy(ModelUpdateContestProblem.BlockCode::getLanguage));
+
+            for (List<ModelUpdateContestProblem.BlockCode> blockCodes : blocksByLanguage.values()) {
+                for (int i = 0; i < blockCodes.size(); i++) {
+                    ModelUpdateContestProblem.BlockCode blockCode = blockCodes.get(i);
+                    ProblemBlock problemBlock = ProblemBlock.builder()
+                                                            .problemId(problemId)
+                                                            .seq(i + 1)
+                                                            .sourceCode(blockCode.getCode())
+                                                            .programmingLanguage(blockCode.getLanguage())
+                                                            .completedBy(Integer.valueOf(1).equals(blockCode.getForStudent()) ? 1 : 0)
+                                                            .build();
+                    problemBlocks.add(problemBlock);
+                }
+            }
+            problemBlockRepo.saveAll(problemBlocks);
+        }
+
         return problemService.saveProblemWithCache(problem);
     }
-
     @Override
     public List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo() {
         //return problemRepo.getAllProblemGeneralInformation();
@@ -747,6 +779,20 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+    }
+
+    private boolean canEditBlocks(ProblemEntity problem) {
+        List<String> contestIds = contestRepo.findContestIdsByProblemId(problem.getProblemId());
+        for (String contestId : contestIds) {
+            if (contestSubmissionRepo.existsByProblemIdAndContestId(problem.getProblemId(), contestId)) {
+                return false;
+            }
+            ContestEntity contest = contestRepo.findContestByContestId(contestId);
+            if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -2773,9 +2819,58 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             submission.getContestSubmissionId(),
             ContestSubmissionEntity.SUBMISSION_STATUS_EVALUATION_IN_PROGRESS);
 
+        boolean isProblemBlock = contestSubmissionBlockRepo.existsBySubmissionId(submission.getContestSubmissionId());
+
+        if (isProblemBlock) {
+            String reconstructedSource = reconstructBlockCodeSubmission(submission);
+            if (StringUtils.isBlank(reconstructedSource)) {
+                contestService.updateContestSubmissionStatus(
+                    submission.getContestSubmissionId(),
+                    ContestSubmissionEntity.SUBMISSION_STATUS_FAILED);
+                return;
+            }
+            submission.setSourceCode(reconstructedSource);
+            contestSubmissionRepo.save(submission);
+//            System.out.println(reconstructedSource);
+        }
+
         sendSubmissionToQueue(submission);
     }
 
+    private String reconstructBlockCodeSubmission(ContestSubmissionEntity submission) {
+        String contestId = submission.getContestId();
+        String problemId = submission.getProblemId();
+        String language = submission.getSourceCodeLanguage();
+
+        List<ContestSubmissionBlock> studentBlocks = contestSubmissionBlockRepo.findBySubmissionId(submission.getContestSubmissionId());
+
+        List<ProblemBlock> teacherBlocks = problemBlockRepo.findByProblemIdAndCompletedByAndProgrammingLanguage(
+            problemId,
+            0,
+            language
+        );
+
+        Map<Integer, String> mergedBySeq = new TreeMap<>();
+
+        for (ProblemBlock teacherBlock : teacherBlocks) {
+            int seq = teacherBlock.getSeq();
+            mergedBySeq.putIfAbsent(seq, "");
+            mergedBySeq.put(seq, mergedBySeq.get(seq) + teacherBlock.getSourceCode() + "\n");
+        }
+
+        for (ContestSubmissionBlock studentBlock : studentBlocks) {
+            int seq = studentBlock.getBlockSeq();
+            mergedBySeq.putIfAbsent(seq, "");
+            mergedBySeq.put(seq, mergedBySeq.get(seq) + studentBlock.getSourceCode() + "\n");
+        }
+
+        StringBuilder mergedCode = new StringBuilder();
+        for (String code : mergedBySeq.values()) {
+            mergedCode.append(code);
+        }
+
+        return mergedCode.toString();
+    }
 
     @Override
     public void evaluateSubmission(ContestSubmissionEntity sub, ContestEntity contest) {
@@ -3756,14 +3851,12 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 //        if (!hasPermission) {
 //            throw new MiniLeetCodeException("You don't have permission to view this problem", 403);
 //        }
-
         ProblemEntity problemEntity = problemRepo.findByProblemId(problemId);
         if (problemEntity == null) {
             throw new MiniLeetCodeException("Problem not found", 404);
         }
 
         if (problemEntity.isPublicProblem() != true) {
-
             List<UserContestProblemRole> ucpr = userContestProblemRoleRepo
                 .findAllByProblemIdAndUserId(problemEntity.getProblemId(), teacherId);
 
@@ -3790,24 +3883,18 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 throw new MiniLeetCodeException("Problem is not open or you do not have permission", 400);
             }
         }
-        /*
-        if (!problemEntity.getUserId().equals(teacherId) &&
-            !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
-            throw new MiniLeetCodeException("Problem is not open", 400);
-        }
-        */
 
         ModelCreateContestProblemResponse problemResponse = new ModelCreateContestProblemResponse();
         problemResponse.setProblemId(problemEntity.getProblemId());
         problemResponse.setProblemName(problemEntity.getProblemName());
         problemResponse.setProblemDescription(problemEntity.getProblemDescription());
         problemResponse.setUserId(problemEntity.getCreatedBy());
-//        problemResponse.setTimeLimit(problemEntity.getTimeLimit());
         problemResponse.setTimeLimitCPP(problemEntity.getTimeLimitCPP());
         problemResponse.setTimeLimitJAVA(problemEntity.getTimeLimitJAVA());
         problemResponse.setTimeLimitPYTHON(problemEntity.getTimeLimitPYTHON());
         problemResponse.setMemoryLimit(problemEntity.getMemoryLimit());
         problemResponse.setLevelId(problemEntity.getLevelId());
+        problemResponse.setCategoryId(problemEntity.getCategoryId());
         problemResponse.setCorrectSolutionSourceCode(problemEntity.getCorrectSolutionSourceCode());
         problemResponse.setCorrectSolutionLanguage(problemEntity.getCorrectSolutionLanguage());
         problemResponse.setSolutionCheckerSourceCode(problemEntity.getSolutionCheckerSourceCode());
@@ -3823,6 +3910,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         problemResponse.setStatus(problemEntity.getStatusId());
         problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
 
+        // Xử lý attachment
         if (problemEntity.getAttachment() != null) {
             String[] fileId = problemEntity.getAttachment().split(";", -1);
             if (fileId.length != 0) {
@@ -3851,9 +3939,54 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             problemResponse.setAttachmentNames(null);
         }
 
+        List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
+        if (problemBlocks != null && !problemBlocks.isEmpty()) {
+            List<BlockCode> blockCodes = problemBlocks.stream()
+                                                      .map(this::mapToBlockCode)
+                                                      .collect(Collectors.toList());
+            problemResponse.setBlockCodes(blockCodes);
+        } else {
+            problemResponse.setBlockCodes(null);
+        }
+
         problemResponse.setRoles(userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, teacherId));
 
+        boolean canEditBlocks = checkCanEditBlocks(problemId);
+        problemResponse.setCanEditBlocks(canEditBlocks);
+
         return problemResponse;
+    }
+
+    private BlockCode mapToBlockCode(ProblemBlock block) {
+        BlockCode blockCode = new BlockCode();
+        blockCode.setId(String.valueOf(block.getId()));
+        blockCode.setCode(block.getSourceCode());
+        blockCode.setForStudent(block.getCompletedBy());
+        blockCode.setSeq(block.getSeq());
+        blockCode.setLanguage(block.getProgrammingLanguage());
+        return blockCode;
+    }
+
+    private boolean checkCanEditBlocks(String problemId) {
+        List<ContestProblem> contestProblems = contestProblemRepo.findAllByProblemId(problemId);
+
+        if (contestProblems.isEmpty()) {
+            return true;
+        }
+
+        for (ContestProblem cp : contestProblems) {
+            ContestEntity contest = contestRepo.findContestByContestId(cp.getContestId());
+            if (contest != null &&
+                !ContestEntity.CONTEST_STATUS_COMPLETED.equals(contest.getStatusId()) &&
+                !ContestEntity.CONTEST_STATUS_CLOSED.equals(contest.getStatusId()) &&
+                !ContestEntity.CONTEST_STATUS_DISABLED.equals(contest.getStatusId())) {
+                return false;
+            }
+        }
+
+        boolean hasSubmissions = contestSubmissionRepo.existsByProblemId(problemId);
+
+        return !hasSubmissions;
     }
 
     @Override

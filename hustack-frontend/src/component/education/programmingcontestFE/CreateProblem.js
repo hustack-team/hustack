@@ -1,23 +1,47 @@
-import {makeStyles} from "@material-ui/core";
-import {Box, Checkbox, Chip, FormControlLabel, Grid, InputAdornment, Link, TextField, Typography} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import { makeStyles } from "@material-ui/core";
+import {
+  Box,
+  Checkbox,
+  Chip,
+  FormControlLabel,
+  Grid,
+  InputAdornment,
+  Link,
+  TextField,
+  Typography,
+  Tabs,
+  Tab,
+  IconButton,
+  Stack,
+  Collapse,
+} from "@mui/material";
+import React, { useEffect, useState, useCallback } from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {useHistory} from "react-router-dom";
-import {CompileStatus} from "./CompileStatus";
-import {extractErrorMessage, request} from "../../../api";
-import {useTranslation} from "react-i18next";
+import { useHistory } from "react-router-dom";
+import { CompileStatus } from "./CompileStatus";
+import { extractErrorMessage, request } from "../../../api";
+import { useTranslation } from "react-i18next";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
-import {errorNoti, successNoti} from "../../../utils/notification";
+import { errorNoti, successNoti } from "../../../utils/notification";
 import HustCodeEditor from "../../common/HustCodeEditor";
-import {LoadingButton} from "@mui/lab";
+import { LoadingButton } from "@mui/lab";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import {COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION} from "./Constant";
-import {getAllTags} from "./service/TagService";
+import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
+import { getAllTags } from "./service/TagService";
 import ModelAddNewTag from "./ModelAddNewTag";
 import AddIcon from '@mui/icons-material/Add';
+import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import StyledSelect from "../../select/StyledSelect";
 import TertiaryButton from "../../button/TertiaryButton";
+import PrimaryButton from "../../button/PrimaryButton";
 import FilterByTag from "../../table/FilterByTag";
 import withScreenSecurity from "../../withScreenSecurity";
 
@@ -25,7 +49,36 @@ const useStyles = makeStyles((theme) => ({
   description: {
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(3),
-  }
+  },
+  blockCodeContainer: {
+    display: "flex",
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  },
+  codeEditorWrapper: {
+    width: "75%",
+  },
+  blockCodeControls: {
+    width: "25%",
+    paddingLeft: theme.spacing(1),
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    gap: theme.spacing(1),
+  },
+  controlButtons: {
+    display: "flex",
+    gap: theme.spacing(0.5),
+  },
+  expandIcon: {
+    transition: theme.transitions.create('transform', {
+      duration: theme.transitions.duration.shortest,
+    }),
+  },
+  expandIconOpen: {
+    transform: 'rotate(180deg)',
+  },
 }));
 
 export const getLevels = (t) => [
@@ -65,20 +118,33 @@ export const getStatuses = (t) => [
   }
 ];
 
+const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
+  label: key,
+  value: COMPUTER_LANGUAGES[key],
+}));
+
+// Custom debounce function
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 function CreateProblem() {
   const history = useHistory();
   const classes = useStyles();
 
-  const {t} = useTranslation(
+  const { t } = useTranslation(
     ["education/programmingcontest/problem", "common", "validation"]
   );
   const levels = getLevels(t);
-  const publicOptions = getPublicOptions(t)
-  const statuses = getStatuses(t)
+  const publicOptions = getPublicOptions(t);
+  const statuses = getStatuses(t);
 
   const [problemId, setProblemID] = useState("");
   const [problemName, setProblemName] = useState("");
-  // const [timeLimit, setTimeLimit] = useState(1);
   const [timeLimitCPP, setTimeLimitCPP] = useState(1);
   const [timeLimitJAVA, setTimeLimitJAVA] = useState(1);
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState(1);
@@ -107,6 +173,12 @@ function CreateProblem() {
   const [loading, setLoading] = useState(false);
 
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
+  const [isProblemBlock, setIsProblemBlock] = useState(false);
+  const [blockCodes, setBlockCodes] = useState(
+    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
+  );
+  const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
+  const [isBlockCodesExpanded, setIsBlockCodesExpanded] = useState(true);
 
   const handleGetTagsSuccess = (res) => setTags(res.data);
 
@@ -130,21 +202,21 @@ function CreateProblem() {
       "post",
       "/check-compile",
       (res) => {
-        setLoading(false)
-
+        setLoading(false);
         setShowCompile(true);
         setStatusSuccessful(res.data.status !== "Compilation Error");
-        setCompileMessage(res.data)
+        setCompileMessage(res.data);
       },
       {
         onError: (e) => {
-          setLoading(false)
+          setLoading(false);
+          setShowCompile(true);
           errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
         }
       },
       body
     );
-  }
+  };
 
   const isValidProblemId = () => {
     return new RegExp(/[%^/\\|.?;[\]]/g).test(problemId);
@@ -159,7 +231,7 @@ function CreateProblem() {
 
   const validateSubmit = () => {
     if (problemId === "") {
-      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemId")}), 3000);
+      errorNoti(t("missingField", { ns: "validation", fieldName: t("problemId") }), 3000);
       return false;
     }
     if (hasSpecialCharacterProblemId()) {
@@ -167,32 +239,37 @@ function CreateProblem() {
       return false;
     }
     if (problemName === "") {
-      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemName")}), 3000);
+      errorNoti(t("missingField", { ns: "validation", fieldName: t("problemName") }), 3000);
       return false;
     }
-    //if (hasSpecialCharacterProblemName()) {
-    //  errorNoti("Problem name must only contain alphanumeric characters.", 3000);
-    //  return false;
-    //}
-    if (timeLimitCPP < 1
-      || timeLimitJAVA < 1
-      || timeLimitPYTHON < 1
-      || timeLimitCPP > 300
-      || timeLimitJAVA > 300
-      || timeLimitPYTHON > 300) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300}), 3000);
+    if (timeLimitCPP < 1 || timeLimitJAVA < 1 || timeLimitPYTHON < 1 ||
+        timeLimitCPP > 300 || timeLimitJAVA > 300 || timeLimitPYTHON > 300) {
+      errorNoti(t("numberBetween", { ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300 }), 3000);
       return false;
     }
     if (memoryLimit < 3 || memoryLimit > 1024) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024}), 3000);
+      errorNoti(t("numberBetween", { ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024 }), 3000);
       return false;
     }
     if (!statusSuccessful) {
       errorNoti(t("validateSubmit.warningCheckSolutionCompile"), 5000);
       return false;
     }
+    if (isProblemBlock && Object.values(blockCodes).every((blocks) => blocks.length === 0)) {
+      errorNoti(t("validateSubmit.noBlockCodesAdded"), 5000);
+      return false;
+    }
     return true;
-  }
+  };
+
+  const handleCopyAllCode = () => {
+    const blocks = blockCodes[selectedLanguage] || [];
+    if (blocks.length === 0) {
+      return;
+    }
+    const allCode = blocks.map(block => block.code).join('\n\n');
+    navigator.clipboard.writeText(allCode);
+  };
 
   function handleSubmit() {
     if (!validateSubmit()) return;
@@ -201,11 +278,25 @@ function CreateProblem() {
     const fileId = attachmentFiles.map((file) => file.name);
     const tagIds = selectedTags.map((tag) => tag.tagId);
 
+    let formattedBlockCodes = [];
+    if (isProblemBlock) {
+      formattedBlockCodes = Object.keys(blockCodes)
+        .filter((language) => blockCodes[language].length > 0)
+        .flatMap((language) =>
+          blockCodes[language].map((block, index) => ({
+            id: `${language}_${index}`,
+            code: block.code,
+            forStudent: block.forStudent ? 1 : 0,
+            language: language,
+            seq: index + 1,
+          }))
+        );
+    }
+
     let body = {
       problemId: problemId,
       problemName: problemName,
       problemDescription: description,
-      // timeLimit: timeLimit,
       timeLimitCPP: timeLimitCPP,
       timeLimitJAVA: timeLimitJAVA,
       timeLimitPYTHON: timeLimitPYTHON,
@@ -223,11 +314,13 @@ function CreateProblem() {
       scoreEvaluationType: isCustomEvaluated ? CUSTOM_EVALUATION : NORMAL_EVALUATION,
       tagIds: tagIds,
       status: status,
-      sampleTestCase: sampleTestCase
+      sampleTestCase: sampleTestCase,
+      categoryId: isProblemBlock ? 1 : 0,
+      blockCodes: formattedBlockCodes,
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
+    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
 
     for (const file of attachmentFiles) {
       formData.append("files", file);
@@ -244,7 +337,7 @@ function CreateProblem() {
       "/problems",
       (res) => {
         setLoading(false);
-        successNoti(t("common:addSuccess", {name: t("problem")}), 3000);
+        successNoti(t("common:addSuccess", { name: t("problem") }), 3000);
         history.push("/programming-contest/list-problems");
       },
       {
@@ -260,14 +353,119 @@ function CreateProblem() {
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
-  }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedLanguage(newValue);
+  };
+
+  const handleDeleteBlock = (index) => {
+    setBlockCodes((prev) => ({
+      ...prev,
+      [selectedLanguage]: prev[selectedLanguage].filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleMoveUp = useCallback((index) => {
+    if (index === 0) return;
+
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]]; 
+      [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
+      const updatedBlocks = newBlocks.map((block, i) => ({
+        ...block,
+        seq: i + 1, 
+      }));
+      return { ...prev, [selectedLanguage]: updatedBlocks };
+    });
+  }, [selectedLanguage]);
+
+  const handleMoveDown = useCallback((index) => {
+    if (index === blockCodes[selectedLanguage].length - 1) return;
+
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]]; 
+      [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
+      const updatedBlocks = newBlocks.map((block, i) => ({
+        ...block,
+        seq: i + 1, 
+      }));
+      return { ...prev, [selectedLanguage]: updatedBlocks };
+    });
+  }, [selectedLanguage]);
+
+  const debouncedMoveUp = useCallback(debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
+  const debouncedMoveDown = useCallback(debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
+
+  const handleInsertAbove = (index) => {
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]];
+      newBlocks.splice(index, 0, {
+        code: "// Write your code here",
+        forStudent: false,
+        seq: index,
+        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+      });
+      return {
+        ...prev,
+        [selectedLanguage]: newBlocks.map((block, i) => ({ ...block, seq: i + 1 })),
+      };
+    });
+  };
+
+  const handleInsertBelow = (index) => {
+    setBlockCodes((prev) => {
+      const newBlocks = [...prev[selectedLanguage]];
+      newBlocks.splice(index + 1, 0, {
+        code: "// Write your code here",
+        forStudent: false,
+        seq: index + 2,
+        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+      });
+      return {
+        ...prev,
+        [selectedLanguage]: newBlocks.map((block, i) => ({ ...block, seq: i + 1 })),
+      };
+    });
+  };
+
+  const handleAddBlockCode = () => {
+    const language = selectedLanguage || COMPUTER_LANGUAGES.CPP17;
+    setBlockCodes((prev) => ({
+      ...prev,
+      [language]: [
+        ...(prev[language] || []),
+        {
+          code: "// Write your code here",
+          forStudent: false,
+          seq: prev[language].length + 1,
+          id: `${language}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        },
+      ],
+    }));
+  };
+
+  // Memoized handler for code changes
+  const handleCodeChange = useCallback((newCode, index) => {
+    try {
+      setBlockCodes((prev) => ({
+        ...prev,
+        [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+          i === index ? { ...b, code: newCode } : b
+        ),
+      }));
+    } catch (error) {
+      console.error("Error updating code:", error);
+      errorNoti(t("Failed to update code"), 3000);
+    }
+  }, [selectedLanguage, t]);
 
   useEffect(() => {
     getAllTags(handleGetTagsSuccess);
-  }, [])
+  }, []);
 
   return (
-    <ProgrammingContestLayout title={t("common:create", {name: t("problem")})} onBack={handleExit}>
+    <ProgrammingContestLayout title={t("common:create", { name: t("problem") })} onBack={handleExit}>
       <Typography variant="h6">
         {t("generalInfo")}
       </Typography>
@@ -291,7 +489,7 @@ function CreateProblem() {
                 ? "Problem ID must not contain special characters including %^/\\|.?;[]"
                 : ""
             }
-            sx={{marginBottom: "12px"}}
+            sx={{ marginBottom: "12px" }}
           />
         </Grid>
         <Grid item xs={3}>
@@ -302,13 +500,6 @@ function CreateProblem() {
             id="problemName"
             label={t("problemName")}
             value={problemName}
-            //error={hasSpecialCharacterProblemName()}
-            helperText={
-              //hasSpecialCharacterProblemName()
-              //  ? "Problem ID must not contain special characters including %^/\\|.?;[]"
-              //  : ""
-              ""
-            }
             onChange={(event) => {
               setProblemName(event.target.value);
             }}
@@ -323,7 +514,7 @@ function CreateProblem() {
             label={t("status")}
             options={statuses}
             value={status}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             onChange={(event) => {
               setStatus(event.target.value);
             }}
@@ -337,7 +528,7 @@ function CreateProblem() {
             key={t("common:public")}
             label={t("common:public")}
             options={publicOptions}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             value={isPublic}
             onChange={(event) => {
               setIsPublic(event.target.value);
@@ -411,7 +602,7 @@ function CreateProblem() {
             onChange={(event) => {
               setMemoryLimit(event.target.value);
             }}
-            InputProps={{endAdornment: <InputAdornment position="end">MB</InputAdornment>,}}
+            InputProps={{ endAdornment: <InputAdornment position="end">MB</InputAdornment> }}
           />
         </Grid>
 
@@ -423,7 +614,7 @@ function CreateProblem() {
             label={t("level")}
             options={levels}
             value={levelId}
-            sx={{minWidth: 'unset', mr: 'unset'}}
+            sx={{ minWidth: 'unset', mr: 'unset' }}
             onChange={(event) => {
               setLevelId(event.target.value);
             }}
@@ -431,34 +622,39 @@ function CreateProblem() {
         </Grid>
 
         <Grid item xs={6}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
-            startIcon={<AddIcon/>}
+            startIcon={<AddIcon />}
             onClick={() => setOpenModalAddNewTag(true)}
           >
-            {t("common:add", {name: t('tag')})}
+            {t("common:add", { name: t('tag') })}
           </TertiaryButton>
+        </Grid>
+
+        <Grid item xs={3}>
+          <FormControlLabel
+            label={t("problemBlock")}
+            control={<Checkbox checked={isProblemBlock} onChange={() => setIsProblemBlock(!isProblemBlock)} />}
+          />
         </Grid>
       </Grid>
 
-      <Link sx={{mt: 3, display: 'inline-block'}} href="/programming-contest/suggest-problem" target="_blank"
+      <Link sx={{ mt: 3, display: 'inline-block' }} href="/programming-contest/suggest-problem" target="_blank"
             underline="hover">
         <Typography variant="body1" color="primary">
           Struggling to create a fresh and exciting challenge? Try our new <b>Problem Suggestion</b> feature
           <Chip label="Beta" color="secondary" variant="outlined" size="small"
-                sx={{marginLeft: "8px", marginBottom: "8px", fontWeight: "bold"}}/></Typography>
+                sx={{ marginLeft: "8px", marginBottom: "8px", fontWeight: "bold" }} />
+        </Typography>
       </Link>
 
       <Box className={classes.description}>
-        <Typography variant="h6" sx={{marginTop: "8px", marginBottom: "8px"}}>
+        <Typography variant="h6" sx={{ marginTop: "8px", marginBottom: "8px" }}>
           {t("problemDescription")}
         </Typography>
-        <RichTextEditor content={description} onContentChange={text => setDescription(text)}/>
-        {/*  
-         <RichTextEditor content={sampleTestCase} onContentChange={text => setSampleTestCase(text)}/>
-        */}
+        <RichTextEditor content={description} onContentChange={text => setDescription(text)} />
         <HustCodeEditor
           title={t("sampleTestCase")}
           placeholder={null}
@@ -467,19 +663,124 @@ function CreateProblem() {
             setSampleTestCase(code);
           }}
         />
-        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)}/>
-      </Box>
-      {/* this function is not implemented yet
-              <Box>
-                <Typography>
-                  <h2>{t("problemSuggestion")}</h2>
-                </Typography>
-                <RichTextEditor
-                  content={solution}
-                  onContentChange={text => setSolution(text)}
+        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)} />
+        {isProblemBlock && (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
+              <IconButton
+                onClick={() => setIsBlockCodesExpanded(!isBlockCodesExpanded)}
+                aria-expanded={isBlockCodesExpanded}
+                aria-label={t("common:toggleBlockCodes")}
+                style={{ color: '#00bcd4' }}
+                size="small"
+              >
+                <ExpandMoreIcon
+                  className={`${classes.expandIcon} ${isBlockCodesExpanded ? classes.expandIconOpen : ''}`}
                 />
-              </Box>
-              */}
+              </IconButton>
+              <Typography variant="body1">
+                {t("common:toggleBlockCodes")}
+              </Typography>
+            </Box>
+            <Collapse in={isBlockCodesExpanded}>
+              <Tabs value={selectedLanguage} onChange={handleTabChange} sx={{ marginTop: "12px" }}>
+                {PROGRAMMING_LANGUAGES.map((lang) => (
+                  <Tab key={lang.value} label={lang.label} value={lang.value} />
+                ))}
+              </Tabs>
+              {blockCodes[selectedLanguage].map((block, index) => (
+                <Box className={classes.blockCodeContainer} key={block.id}>
+                  <Box className={classes.codeEditorWrapper}>
+                    <HustCodeEditor
+                      sourceCode={block.code || ""}
+                      hideProgrammingLanguage={1}
+                      blockEditor={1}
+                      isStudentBlock={block.forStudent}
+                      onChangeSourceCode={(newCode) => handleCodeChange(newCode, index)}
+                      language={selectedLanguage}
+                      height="300px"
+                    />
+                  </Box>
+                  <Box className={classes.blockCodeControls} sx={{ mt: 2 }}>
+                    <StyledSelect
+                      size="small"
+                      value={block.forStudent ? "student" : "teacher"}
+                      onChange={(event) => {
+                        setBlockCodes((prev) => ({
+                          ...prev,
+                          [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                            i === index ? { ...b, forStudent: event.target.value === "student" } : b
+                          ),
+                        }));
+                      }}
+                      options={[
+                        { label: t("forTeacher"), value: "teacher" },
+                        { label: t("forStudent"), value: "student" },
+                      ]}
+                      sx={{ width: "250px", mt: 2 }}
+                    />
+                    <Box className={classes.controlButtons} sx={{ mt: 1 }}>
+                      <IconButton
+                        onClick={() => debouncedMoveUp(index)}
+                        disabled={index === 0}
+                        title={t("common:moveUp")}
+                        size="small"
+                      >
+                        <ArrowUpwardIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => debouncedMoveDown(index)}
+                        disabled={index === blockCodes[selectedLanguage].length - 1}
+                        title={t("common:moveDown")}
+                        size="small"
+                      >
+                        <ArrowDownwardIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleInsertAbove(index)}
+                        title={t("common:insertAbove")}
+                        size="small"
+                      >
+                        <KeyboardDoubleArrowUpIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleInsertBelow(index)}
+                        title={t("common:insertBelow")}
+                        size="small"
+                      >
+                        <KeyboardDoubleArrowDownIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDeleteBlock(index)}
+                        title={t("common:delete")}
+                        size="small"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Box>
+              ))}
+            </Collapse>
+            <Stack direction="row" spacing={2} sx={{ marginTop: "12px" }}>
+              <TertiaryButton
+                variant="outlined"
+                onClick={handleAddBlockCode}
+              >
+                {t("addProblemBlock")}
+              </TertiaryButton>
+              <TertiaryButton
+                variant="outlined"
+                startIcon={<ContentCopyIcon />}
+                onClick={handleCopyAllCode}
+                disabled={!(blockCodes[selectedLanguage]?.length > 0)}
+              >
+                {t("common:copyAllCode")}
+              </TertiaryButton>
+            </Stack>
+          </>
+        )}
+      </Box>
 
       <HustCodeEditor
         title={t("solutionSourceCode") + " *"}
@@ -496,7 +797,7 @@ function CreateProblem() {
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{margin: "12px 0", textTransform: 'none'}}
+        sx={{ margin: "12px 0", textTransform: 'none' }}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -506,14 +807,15 @@ function CreateProblem() {
         detail={compileMessage}
       />
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isPreloadCode")}
           control={
             <Checkbox
               checked={isPreloadCode}
               onChange={() => setIsPreloadCode(!isPreloadCode)}
-            />}
+            />
+          }
         />
         {isPreloadCode &&
           <HustCodeEditor
@@ -528,14 +830,15 @@ function CreateProblem() {
         }
       </Box>
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{ marginTop: "12px" }}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
             <Checkbox
               checked={isCustomEvaluated}
               onChange={() => setIsCustomEvaluated(!isCustomEvaluated)}
-            />}
+            />
+          }
         />
         <Typography variant="body2" color="gray">{t("customEvaluationNote1")}</Typography>
 
@@ -555,22 +858,22 @@ function CreateProblem() {
         }
       </Box>
 
-      <Box width="100%" sx={{marginTop: "20px"}}>
+      <Box width="100%" sx={{ marginTop: "20px" }}>
         <LoadingButton
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
-          sx={{textTransform: 'capitalize'}}
+          sx={{ textTransform: 'capitalize' }}
         >
-          {t("save", {ns: "common"})}
+          {t("save", { ns: "common" })}
         </LoadingButton>
       </Box>
 
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", {name: t('tag')}), 3000)
-          getAllTags(handleGetTagsSuccess)
+          successNoti(t("common:addSuccess", { name: t('tag') }), 3000);
+          getAllTags(handleGetTagsSuccess);
         }}
         handleClose={() => setOpenModalAddNewTag(false)}
       />
