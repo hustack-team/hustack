@@ -1694,41 +1694,42 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     // TODO: try approach one join query
     @Override
+    @Transactional(readOnly = true)
     public ModelGetContestPageResponse getRegisteredContestsByUser(String userId) {
         List<UserRegistrationContestEntity> registrations = userRegistrationContestRepo
-            .findAllByUserIdAndRoleIdAndStatus(
+            .findByUserIdAndRoleIdAndStatus(
                 userId,
                 UserRegistrationContestEntity.ROLE_PARTICIPANT,
                 UserRegistrationContestEntity.STATUS_SUCCESSFUL);
 
-        List<ModelGetContestResponse> res = new ArrayList<>();
+        List<ModelGetContestResponse> contests = new ArrayList<>();
         if (registrations != null) {
             Set<String> contestIds = registrations
                 .stream()
                 .map(UserRegistrationContestEntity::getContestId)
                 .collect(Collectors.toSet());
 
-            List<ContestEntity> contests = contestRepo.findByContestIdInAndStatusIdNot(
-                contestIds,
-                ContestEntity.CONTEST_STATUS_DISABLED);
-
-            res = contests.stream()
-                          .map(contest -> ModelGetContestResponse.builder()
-                                                                 .contestId(contest.getContestId())
-                                                                 .contestName(contest.getContestName())
-                                                                 .contestTime(contest.getContestSolvingTime())
-                                                                 .countDown(contest.getCountDown())
-                                                                 .startAt(contest.getStartedAt())
-                                                                 .statusId(contest.getStatusId())
-                                                                 .userId(contest.getUserId())
-                                                                 .createdAt(contest.getCreatedAt())
-                                                                 .build())
-                          .collect(Collectors.toList());
+            contests = contestRepo
+                .findByContestIdInAndStatusIdIn(
+                    contestIds,
+                    List.of("CREATED", "RUNNING", "COMPLETED"),
+                    Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(contest -> ModelGetContestResponse.builder()
+                                                       .contestId(contest.getContestId())
+                                                       .contestName(contest.getContestName())
+                                                       .contestTime(contest.getContestSolvingTime())
+                                                       .countDown(contest.getCountDown())
+                                                       .startAt(contest.getStartedAt())
+                                                       .statusId(contest.getStatusId())
+                                                       .userId(contest.getUserId())
+                                                       .createdAt(contest.getCreatedAt())
+                                                       .build())
+                .collect(Collectors.toList());
         }
 
-        Collections.reverse(res);
         return ModelGetContestPageResponse.builder()
-                                          .contests(res)
+                                          .contests(contests)
                                           .build();
     }
 

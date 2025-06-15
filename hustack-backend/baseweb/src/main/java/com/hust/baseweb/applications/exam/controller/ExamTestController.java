@@ -2,8 +2,6 @@ package com.hust.baseweb.applications.exam.controller;
 
 import com.hust.baseweb.applications.exam.entity.ExamTestEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
-import com.hust.baseweb.applications.exam.model.request.ExamTestDeleteReq;
-import com.hust.baseweb.applications.exam.model.request.ExamTestDetailsReq;
 import com.hust.baseweb.applications.exam.model.request.ExamTestFilterReq;
 import com.hust.baseweb.applications.exam.model.request.ExamTestSaveReq;
 import com.hust.baseweb.applications.exam.model.response.ExamTestDetailsRes;
@@ -13,12 +11,19 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @Slf4j
 @RestController
 @RequestMapping("/exam-test")

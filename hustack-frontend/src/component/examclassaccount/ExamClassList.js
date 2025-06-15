@@ -1,50 +1,51 @@
-
-import React, { useEffect, useState } from "react";
-import { Link, useHistory } from "react-router-dom";
-import { Button } from "@mui/material";
+import React, {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {Paper, Stack, Typography} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import StandardTable from "../table/StandardTable";
-import { errorNoti } from "../../utils/notification";
-import { request } from "../../api";
+import {errorNoti} from "../../utils/notification";
+import {request} from "../../api";
+import withScreenSecurity from "../withScreenSecurity";
+import PrimaryButton from "../button/PrimaryButton";
+import {useTranslation} from "react-i18next";
 
-function ExamClassList(){
-    const [examClasses, setExamClasses] = useState([]);
-    const history = useHistory();
-    const columns = [
-        {
-            title: "ID",
-            field: "id",
-            render: (examClass) => (
-              <Link to={`/exam-class/detail/${examClass.id}`}>{examClass.id}</Link>
-            ),
-          },
-          { title: "Exam Class", field: "name" },
-          { title: "Date", field: "execute_date" },
-    ];
-    const CreateExamClassButton = (
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={() => history.push(`create`)}
-        >
-          <AddIcon /> Thêm mới
-        </Button>
-      );
-    const actions = [{ icon: () => CreateExamClassButton, isFreeAction: true }];
-    
-    function getExamClassList(){
-        let successHandler = (res) => setExamClasses(res.data);
+function ExamClassList() {
+  const [examClasses, setExamClasses] = useState([]);
+  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
+  const columns = [
+    {
+      title: "Name",
+      field: "name",
+      render: (rowData) => (
+        <Link to={`/exam-class/detail/${rowData.id}`}>{rowData.name}</Link>
+      ),
+    },
+    {title: "Date", field: "execute_date"},
+  ];
+
+  function getExamClassList() {
+    let successHandler = (res) => setExamClasses(res.data);
     let errorHandlers = {
       onError: () => errorNoti("Đã xảy ra lỗi khi tải dữ liệu", true),
     };
     request("GET", "/get-all-exam-class", successHandler, errorHandlers);
-    }
+  }
 
-    useEffect(getExamClassList, []);
+  useEffect(getExamClassList, []);
 
-    return (
-        <><StandardTable
-        title="Exam Class List"
+  return (
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
+      <Stack direction="row" justifyContent='space-between' mb={1.5}>
+        <Typography variant="h6">Exam Class List</Typography>
+        <PrimaryButton
+          startIcon={<AddIcon/>}
+          onClick={() => {
+            window.open("/exam-class/create");
+          }}>
+          {t("common:create", {name: ''})}
+        </PrimaryButton>
+      </Stack>
+      <StandardTable
         columns={columns}
         data={examClasses}
         hideCommandBar
@@ -53,10 +54,13 @@ function ExamClassList(){
           search: true,
           sorting: true,
         }}
-        actions={actions}
+        components={{
+          Container: (props) => <Paper {...props} elevation={0}/>,
+        }}
       />
-      </>
-    );
+    </Paper>
+  );
 }
 
-export default ExamClassList;
+const screenName = "SCR_EXAM_CLASS_LIST";
+export default withScreenSecurity(ExamClassList, screenName, true);

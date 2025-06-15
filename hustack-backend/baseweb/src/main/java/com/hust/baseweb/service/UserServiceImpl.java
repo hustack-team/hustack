@@ -121,8 +121,12 @@ public class UserServiceImpl implements UserService {
         //personModel.setMiddleName(person.getMiddleName());
         //personModel.setLastName(person.getLastName());
         //personModel.setAffiliations(affiliations);
-        personModel.setLastName(userLogin.getLastName());
-        personModel.setFirstName(userLogin.getFirstName());
+        personModel.setLastName(Optional.ofNullable(userLogin)
+                                        .map(UserLogin::getLastName)
+                                        .orElse(null));
+        personModel.setFirstName(Optional.ofNullable(userLogin)
+                                         .map(UserLogin::getFirstName)
+                                         .orElse(null));
 
         return personModel;
         //mId2Person.put(userLoginId, personModel);

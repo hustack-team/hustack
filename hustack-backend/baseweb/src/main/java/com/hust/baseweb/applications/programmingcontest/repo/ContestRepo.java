@@ -1,6 +1,7 @@
 package com.hust.baseweb.applications.programmingcontest.repo;
 
 import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ import java.util.Set;
 public interface ContestRepo extends JpaRepository<ContestEntity, String> {
 
     ContestEntity findContestByContestId(String contestId);
+
+    List<ContestEntity> findByContestIdInAndStatusIdIn(Set<String> contestIds, List<String> statusIds, Sort sort);
 
     List<ContestEntity> findByContestIdInAndStatusIdNot(Set<String> ids, String statusId);
 
