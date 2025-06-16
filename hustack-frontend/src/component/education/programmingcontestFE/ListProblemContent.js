@@ -69,7 +69,6 @@ function ListProblemContent({type}) {
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState(filterInitValue);
 
-  // Import dialog state
   const [openImportDialog, setOpenImportDialog] = useState(false);
   const [importForm, setImportForm] = useState({
     problemId: "",
@@ -212,11 +211,29 @@ function ListProblemContent({type}) {
       {
         onError: (e) => {
           setLoading(false);
-          const message = e.response?.data?.message || t("common:error");
-          errorNoti(message, 3000);
+          
+          let errorMessage = t("common:error");
+          
+          if (e.response?.data) {
+            const errorData = e.response.data;
+            
+            if (typeof errorData === 'string') {
+              const translatedMessage = t(errorData, { defaultValue: errorData });
+              errorMessage = translatedMessage;
+            }
+            else if (errorData.message) {
+              const translatedMessage = t(errorData.message, { defaultValue: errorData.message });
+              errorMessage = translatedMessage;
+            }
+            else if (errorData.error) {
+              const translatedMessage = t(errorData.error, { defaultValue: errorData.error });
+              errorMessage = translatedMessage;
+            }
+          }
+          
+          errorNoti(errorMessage, 5000);
         },
-        headers: {
-        }
+        headers: {}
       },
       formData,
     );
@@ -611,4 +628,4 @@ function ListProblemContent({type}) {
   );
 }
 
-export default ListProblemContent
+export default ListProblemContent;
