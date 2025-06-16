@@ -90,9 +90,7 @@ public class NotificationsServiceImpl implements NotificationsService {
     @Override
     public void create(Notifications notification) {
         notification = notificationsRepo.save(notification);
-        NotificationDTO dto = mapper.convertValue(
-            notificationsRepo.findNotificationById(notification.getId()),
-            NotificationDTO.class);
+        NotificationDTO dto = toDTO(notification);
         dispatchNotification(notification.getToUser(), dto);
     }
 
@@ -101,10 +99,23 @@ public class NotificationsServiceImpl implements NotificationsService {
      */
     @Override
     public void createEphemeralNotification(Notifications notification) {
-        NotificationDTO dto = mapper.convertValue(notification, NotificationDTO.class);
+        NotificationDTO dto = toDTO(notification);
         dispatchNotification(notification.getToUser(), dto);
     }
 
+    public static NotificationDTO toDTO(Notifications n) {
+        if (n == null) return null;
+
+        NotificationDTO dto = new NotificationDTO();
+        dto.setId(n.getId() != null ? n.getId().toString() : null);
+        dto.setContent(n.getContent());
+        dto.setType(n.getType());
+        dto.setFromUser(n.getFromUser());
+        dto.setUrl(n.getUrl());
+        dto.setStatusId(n.getStatusId());
+
+        return dto;
+    }
     private void dispatchNotification(String toUser, NotificationDTO dto) {
         List<SseEmitter> subscription = subscriptions.get(toUser);
         if (null != subscription) {

@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -67,6 +68,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_JAVA;
 import static com.hust.baseweb.applications.programmingcontest.entity.ContestEntity.PROG_LANGUAGES_PYTHON3;
@@ -3699,7 +3701,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 throw new AccessDeniedException("You do not have permission to export this problem.");
             }
             if (problem != null) {
-                handleExportProblemJson(problem, outputStream);
+                handleExportProblemJson(problem, outputStream, userId);
             }
 
         } catch (Exception e) {
@@ -3709,51 +3711,53 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     private void handleExportProblemJson(
         ModelCreateContestProblemResponse problem,
-        OutputStream outputStream
+        OutputStream outputStream,
+        String userId
     ) throws IOException {
-        Path exportDir = Files.createTempDirectory("problem-export-json-");
-        List<File> files = new ArrayList<>();
+
+        long maxSizeBytes = 50 * 1024 * 1024;
+        long totalSize = 0;
+
+        Map<String, ByteArrayOutputStream> fileStreams = new HashMap<>();
 
         try {
-            File problemJsonFile = exporter.exportProblemToJsonFile(problem, exportDir);
-            files.add(problemJsonFile);
+            ByteArrayOutputStream problemJsonStream = exporter.exportProblemToJsonStream(problem);
+            fileStreams.put("ProblemData.json", problemJsonStream);
+            totalSize += problemJsonStream.size();
 
             if (!problem.getAttachmentNames().isEmpty()) {
-                files.addAll(exporter.exportProblemAttachmentToFile(problem, exportDir));
-            }
-
-            ZipOutputStreamUtils.zip(
-                outputStream,
-                files,
-                CompressionMethod.DEFLATE,
-                null,
-                EncryptionMethod.AES,
-                AesKeyStrength.KEY_STRENGTH_256
-            );
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            for (File file : files) {
-                if (file != null && file.exists()) {
-                    if (!file.delete()) {
-                        log.error("Can't delete file: " + file.getAbsolutePath());
-                    }
+                List<Map.Entry<String, ByteArrayOutputStream>> attachmentStreams =
+                    exporter.exportProblemAttachmentToStream(problem);
+                for (Map.Entry<String, ByteArrayOutputStream> entry : attachmentStreams) {
+                    fileStreams.put(entry.getKey(), entry.getValue());
+                    totalSize += entry.getValue().size();
                 }
             }
 
-            try {
-                Files.walk(exportDir)
-                     .sorted(Comparator.reverseOrder())
-                     .map(Path::toFile)
-                     .forEach(file -> {
-                         if (!file.delete()) {
-                             log.error("Can't delete file: " + file.getAbsolutePath());
-                         }
-                     });
-            } catch (IOException e) {
-                log.error(("Failed to clean up temp export directory: " + exportDir));
+            if (totalSize > maxSizeBytes) {
+                UserLogin admin = userLoginRepo.findByUserLoginId("admin");
+
+                notificationsService.create(
+                    userId,
+                    admin.getUserLoginId(),
+                    userId + " exported problem with ID " + problem.getProblemId() +
+                    " has size " + String.format("%.2f", totalSize / (1024.0 * 1024.0)) + "MB, exceeds threshold " + "50 " + "MB",
+                    ""
+                );
+            }
+
+            try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
+                for (Map.Entry<String, ByteArrayOutputStream> entry : fileStreams.entrySet()) {
+                    ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                    zipOut.putNextEntry(zipEntry);
+                    entry.getValue().writeTo(zipOut);
+                    zipOut.closeEntry();
+                }
+            }
+
+        } finally {
+            for (ByteArrayOutputStream stream : fileStreams.values()) {
+                stream.close();
             }
         }
     }
@@ -3762,41 +3766,58 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Transactional
     public void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId) {
-        Path tempDir = null;
-        List<File> extractedFiles = new ArrayList<>();
+        final long MAX_ZIP_SIZE = 50 * 1024 * 1024;
+        final int MAX_FILE_COUNT = 100;
+        final long MAX_TOTAL_UNZIPPED_SIZE = 100 * 1024 * 1024;
+
+        Map<String, byte[]> extractedFiles = new HashMap<>();
+        long totalUnzippedSize = 0;
 
         try {
             if (problemRepo.existsByProblemId(model.getProblemId()) || problemRepo.existsByProblemName(model.getProblemName())) {
                 throw new IllegalArgumentException("Problem ID or name already exists");
             }
-
-            tempDir = Files.createTempDirectory("problem-import");
-
+            if (zipFile.getSize() > MAX_ZIP_SIZE) {
+                throw new IllegalArgumentException("ZIP file size exceeds "+  MAX_ZIP_SIZE + "MB limit");
+            }
             try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    File file = new File(tempDir.toFile(), entry.getName());
+                    if (extractedFiles.size() >= MAX_FILE_COUNT) {
+                        throw new IllegalArgumentException("Too many files in ZIP (max: " + MAX_FILE_COUNT + ")");
+                    }
+
                     if (entry.isDirectory()) {
-                        if (!file.mkdirs()) {
-                            throw new RuntimeException("Cannot create temporary directory: " + file.getAbsolutePath());
-                        }
                         continue;
                     }
-                    try (FileOutputStream fos = new FileOutputStream(file)) {
-                        IOUtils.copy(zis, fos);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    long fileSize = 0;
+
+                    while ((bytesRead = zis.read(buffer)) != -1) {
+                        baos.write(buffer, 0, bytesRead);
+                        fileSize += bytesRead;
+                        totalUnzippedSize += bytesRead;
+
+                        if (totalUnzippedSize > MAX_TOTAL_UNZIPPED_SIZE) {
+                            throw new IllegalArgumentException("Total unzipped size exceeds 100MB limit");
+                        }
                     }
-                    extractedFiles.add(file);
+
+                    extractedFiles.put(entry.getName(), baos.toByteArray());
                     zis.closeEntry();
                 }
             }
 
-            File jsonFile = extractedFiles.stream()
-                                          .filter(f -> f.getName().equals("ProblemData.json"))
-                                          .findFirst()
-                                          .orElseThrow(() -> new IllegalArgumentException("ProblemData.json not found in ZIP file"));
+            byte[] jsonData = extractedFiles.get("ProblemData.json");
+            if (jsonData == null) {
+                throw new IllegalArgumentException("ProblemData.json not found in ZIP file");
+            }
 
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> problemData = objectMapper.readValue(jsonFile, Map.class);
+            Map<String, Object> problemData = objectMapper.readValue(jsonData, Map.class);
 
             ProblemEntity problemEntity = new ProblemEntity();
             problemEntity.setProblemId(model.getProblemId());
@@ -3853,7 +3874,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             if (problemData.containsKey("tags")) {
                 List<String> tagNames = (List<String>) problemData.get("tags");
-
                 List<TagEntity> existingTags = tagRepo.findByNameInIgnoreCase(tagNames);
                 Map<String, TagEntity> nameToTagMap = new HashMap<>();
                 for (TagEntity tag : existingTags) {
@@ -3892,40 +3912,33 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             }
 
             List<String> attachmentId = new ArrayList<>();
-            String[] fileId = extractedFiles.stream()
-                                            .filter(f -> !f.getName().equals("ProblemData.json"))
-                                            .map(File::getName)
-                                            .toArray(String[]::new);
-            List<MultipartFile> fileArray = extractedFiles.stream()
-                                                          .filter(f -> !f.getName().equals("ProblemData.json"))
-                                                          .map(f -> {
-                                                              try {
-                                                                  return new MockMultipartFile(
-                                                                      f.getName(),
-                                                                      f.getName(),
-                                                                      Files.probeContentType(f.toPath()),
-                                                                      Files.readAllBytes(f.toPath())
-                                                                  );
-                                                              } catch (IOException e) {
-                                                                  throw new RuntimeException("Failed to convert file: " + f.getName(), e);
-                                                              }
-                                                          })
-                                                          .collect(Collectors.toList());
+            for (Map.Entry<String, byte[]> entry : extractedFiles.entrySet()) {
+                if (entry.getKey().equals("ProblemData.json")) {
+                    continue;
+                }
 
-            fileArray.forEach(file -> {
-                ContentModel contentModel = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                String fileName = entry.getKey();
+                byte[] fileContent = entry.getValue();
+                MultipartFile multipartFile = new MockMultipartFile(
+                    fileName,
+                    fileName,
+                    "application/octet-stream",
+                    fileContent
+                );
 
+                ContentModel contentModel = new ContentModel(fileName, multipartFile);
                 ObjectId id = null;
                 try {
                     id = mongoContentService.storeFileToGridFs(contentModel);
                 } catch (IOException e) {
+                    throw new RuntimeException("Failed to store file: " + fileName, e);
                 }
 
                 if (id != null) {
                     ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
                     attachmentId.add(rs.getId());
                 }
-            });
+            }
 
             problemEntity.setAttachment(String.join(";", attachmentId));
             problemEntity = problemRepo.save(problemEntity);
@@ -3937,7 +3950,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             );
 
             List<UserContestProblemRole> rolesToSave = new ArrayList<>();
-
             for (String role : roles) {
                 UserContestProblemRole upr = new UserContestProblemRole();
                 upr.setProblemId(problemEntity.getProblemId());
@@ -3998,60 +4010,10 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to import problem: " + e.getMessage(), e);
         } finally {
-            if (tempDir != null && Files.exists(tempDir)) {
-                try {
-                    for (File file : extractedFiles) {
-                        if (file.exists()) {
-                            try {
-                                if (!file.delete()) {
-                                    file.deleteOnExit();
-                                }
-                            } catch (SecurityException e) {
-                                file.deleteOnExit();
-                            }
-                        }
-                    }
-
-                    File tempDirFile = tempDir.toFile();
-                    File[] remainingFiles = tempDirFile.listFiles();
-                    if (remainingFiles != null) {
-                        for (File subDir : remainingFiles) {
-                            if (subDir.isDirectory()) {
-                                File[] subFiles = subDir.listFiles();
-                                if (subFiles != null) {
-                                    for (File subFile : subFiles) {
-                                        if (!subFile.delete()) {
-                                            subFile.deleteOnExit();
-                                        }
-                                    }
-                                }
-                                if (!subDir.delete()) {
-                                    subDir.deleteOnExit();
-                                }
-                            } else {
-                                if (!subDir.delete()) {
-                                    subDir.deleteOnExit();
-                                }
-                            }
-                        }
-                    }
-
-                    if (!tempDirFile.delete()) {
-                        tempDirFile.deleteOnExit();
-                    }
-
-                } catch (Exception e) {
-                    try {
-                        Files.walk(tempDir)
-                             .map(Path::toFile)
-                             .forEach(File::deleteOnExit);
-                    } catch (IOException ex) {
-                        log.error("Failed to cleanup temp directory: " + tempDir);
-                    }
-                }
-            }
+            extractedFiles.clear();
         }
     }
+
     private void handleExportProblem(
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream

@@ -20,10 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,9 +63,11 @@ public class ContestProblemExportService {
             sb.append("Score evaluation type: ").append(problem.getScoreEvaluationType()).append("\n\n");
 
             sb.append("==== Problem Description ====\n");
-            String plainTextDescription = Jsoup.parse(problem.getProblemDescription()).text();
+//            String plainTextDescription = Jsoup.parse(problem.getProblemDescription()).text();
+            System.out.println("hehhsddsad" + problem.getProblemDescription());
 
-            sb.append(plainTextDescription).append("\n");
+//            System.out.println("hehhhhhehe" + plainTextDescription);
+            sb.append(problem.getProblemDescription()).append("\n");
 
             bufferedWriter.write(sb.toString());
         }
@@ -141,8 +140,7 @@ public class ContestProblemExportService {
         return exportSourceToFile("CustomSolutionChecker", problem.getSolutionCheckerSourceCode(), problem.getSolutionCheckerSourceLanguage(), exportDir);
     }
 
-    public File exportProblemToJsonFile(ModelCreateContestProblemResponse problem, Path exportDir) throws IOException {
-        File file = exportDir.resolve("ProblemData.json").toFile();
+    public ByteArrayOutputStream exportProblemToJsonStream(ModelCreateContestProblemResponse problem) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -196,13 +194,32 @@ public class ContestProblemExportService {
         }
         problemData.put("testCases", testCaseData);
 
-        try (FileWriter fileWriter = new FileWriter(file);
-             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
-            String jsonString = objectMapper.writeValueAsString(problemData);
-            bufferedWriter.write(jsonString);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        objectMapper.writeValue(stream, problemData);
+        return stream;
+    }
+
+    public List<Map.Entry<String, ByteArrayOutputStream>> exportProblemAttachmentToStream(ModelCreateContestProblemResponse problem) throws IOException {
+        ProblemEntity problemEntity = problemRepo.findByProblemId(problem.getProblemId());
+        List<Map.Entry<String, ByteArrayOutputStream>> attachments = new ArrayList<>();
+
+        if (!problemEntity.getAttachment().isEmpty()) {
+            String[] fileIds = problemEntity.getAttachment().split(";", -1);
+            if (fileIds.length != 0) {
+                for (String fileId : fileIds) {
+                    GridFsResource content = mongoContentService.getById(fileId);
+                    if (content != null) {
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        try (InputStream inputStream = content.getInputStream()) {
+                            IOUtils.copy(inputStream, stream);
+                        }
+                        attachments.add(new AbstractMap.SimpleEntry<>(content.getFilename(), stream));
+                    }
+                }
+            }
         }
 
-        return file;
+        return attachments;
     }
 
     public List<File> exportProblemAttachmentToFile(ModelCreateContestProblemResponse problem, Path exportDir) throws IOException {
