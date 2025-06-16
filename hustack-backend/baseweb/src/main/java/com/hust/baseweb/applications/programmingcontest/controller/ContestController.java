@@ -10,7 +10,7 @@ import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
-import com.hust.baseweb.applications.programmingcontest.service.StudentProblemViewService;
+import com.hust.baseweb.applications.programmingcontest.service.StudentProblemViewServiceImpl;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestController {
 
-    StudentProblemViewService studentProblemViewService;
+    StudentProblemViewServiceImpl studentProblemViewServiceImpl;
     TestCaseRepo testCaseRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
@@ -262,7 +262,7 @@ public class ContestController {
         @PathVariable("contestId") String contestId
     ) {
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
-        ModelStudentViewProblemDetail result = studentProblemViewService.getProblemDetailForStudentView(
+        ModelStudentViewProblemDetail result = studentProblemViewServiceImpl.getProblemDetailForStudentView(
             principal.getName(), contestId, problemId
         );
         if (result == null) {
@@ -302,7 +302,7 @@ public class ContestController {
         logStudentGetDetailContest(userId, contestId);
 
         List<ModelStudentOverviewProblem> responses =
-            studentProblemViewService.getStudentOverviewProblems(userId, contestId);
+            studentProblemViewServiceImpl.getStudentOverviewProblems(userId, contestId);
 
         return ResponseEntity.ok().body(responses);
     }

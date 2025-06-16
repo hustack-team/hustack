@@ -26,6 +26,6 @@ public class ModelContestSubmitProgramViaUploadFile {
 
     List<BlockCode> blockCodes;
 
-    public ModelContestSubmitProgramViaUploadFile(String contestId, String problemId, String language, String trim, String name) {
+    public ModelContestSubmitProgramViaUploadFile(String contestId, String problemId, String language, String userId, String submittedByUserId) {
     }
 }

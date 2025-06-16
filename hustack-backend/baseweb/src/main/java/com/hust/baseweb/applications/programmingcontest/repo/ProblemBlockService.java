@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface ProblemBlockService {
     List<ProblemBlock> createProblemBlocks(String problemId, List<BlockCode> blockCodes);
-    List<BlockCode> getBlockCodesByProblemId(String problemId);
 }

@@ -206,7 +206,8 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
     }
 
-    private String processBlockCodeSubmission(ModelContestSubmitProgramViaUploadFile model, ContestProblem problem) {
+    @Transactional
+    public String processBlockCodeSubmission(ModelContestSubmitProgramViaUploadFile model, ContestProblem problem) {
         String language = model.getLanguage();
 
         List<ProblemBlock> teacherBlocks = problemBlockRepo.findByProblemIdAndCompletedByAndProgrammingLanguage(
@@ -239,8 +240,8 @@ public class SubmissionServiceImpl implements SubmissionService {
         return mergedCode.toString();
     }
 
-
-    private void saveSubmissionBlockCodes(UUID submissionId, List<BlockCode> blockCodes) {
+    @Transactional
+    public void saveSubmissionBlockCodes(UUID submissionId, List<BlockCode> blockCodes) {
         List<ContestSubmissionBlock> submissionBlocks = new ArrayList<>();
 
 

@@ -17,16 +17,16 @@ import java.util.UUID;
 public class ContestSubmissionBlock {
 
     @Id
-    @GeneratedValue(generator = "uuid1")
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false, updatable = false)
-    private UUID id;
+    UUID id;
 
     @Column(name = "submission_id")
-    private UUID submissionId;
+    UUID submissionId;
 
     @Column(name = "block_seq")
-    private Integer blockSeq;
+    Integer blockSeq;
 
     @Column(name = "source_code", columnDefinition = "text")
-    private String sourceCode;
+    String sourceCode;
 }

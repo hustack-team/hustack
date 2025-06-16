@@ -52,17 +52,4 @@ public class ProblemBlockServiceImpl implements ProblemBlockService {
 
         return problemBlockRepo.saveAll(problemBlocks);
     }
-    public List<BlockCode> getBlockCodesByProblemId(String problemId) {
-        List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
-        return problemBlocks.stream()
-                            .map(pb -> {
-                                BlockCode blockCode = new BlockCode();
-                                blockCode.setId(pb.getId().toString());
-                                blockCode.setCode(pb.getSourceCode());
-                                blockCode.setForStudent(pb.getCompletedBy());
-                                blockCode.setLanguage(pb.getProgrammingLanguage());
-                                return blockCode;
-                            })
-                            .collect(Collectors.toList());
-    }
 }

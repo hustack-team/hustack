@@ -3,7 +3,9 @@ package com.hust.baseweb.applications.programmingcontest.service;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,15 +16,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class StudentProblemViewService {
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class StudentProblemViewServiceImpl implements StudentProblemViewService {
 
-    private final ContestRepo contestRepo;
-    private final ContestProblemRepo contestProblemRepo;
-    private final ProblemRepo problemRepo;
-    private final ProblemBlockRepo problemBlockRepo;
-    private final ProblemTestCaseService problemTestCaseService;
-    private final ContestService contestService;
-    private final ContestSubmissionRepo contestSubmissionRepo;
+    ContestRepo contestRepo;
+    ContestProblemRepo contestProblemRepo;
+    ProblemRepo problemRepo;
+    ProblemBlockRepo problemBlockRepo;
+    ProblemTestCaseService problemTestCaseService;
+    ContestService contestService;
+    ContestSubmissionRepo contestSubmissionRepo;
 
     public ModelStudentViewProblemDetail getProblemDetailForStudentView(String userId, String contestId, String problemId) {
         try {
