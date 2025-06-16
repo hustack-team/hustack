@@ -206,7 +206,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public String processBlockCodeSubmission(ModelContestSubmitProgramViaUploadFile model, ContestProblem problem) {
         String language = model.getLanguage();
 

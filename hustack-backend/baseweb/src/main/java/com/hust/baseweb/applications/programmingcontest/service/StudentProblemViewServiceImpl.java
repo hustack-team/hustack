@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
     ContestService contestService;
     ContestSubmissionRepo contestSubmissionRepo;
 
+    @Transactional(readOnly = true)
     public ModelStudentViewProblemDetail getProblemDetailForStudentView(String userId, String contestId, String problemId) {
         try {
             ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
@@ -85,6 +87,7 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ModelStudentOverviewProblem> getStudentOverviewProblems(String userId, String contestId) {
         ContestEntity contest = contestService.findContest(contestId);
 

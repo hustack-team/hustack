@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -42,7 +43,7 @@ public class ContestSubmission {
     String violationForbiddenInstructionMessage;
 
     String createdByIp;
-    
+
     String codeAuthorship;
 
     Integer finalSelectedSubmission;
