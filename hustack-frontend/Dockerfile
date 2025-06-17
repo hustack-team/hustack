@@ -2,11 +2,9 @@ FROM node:14.21.3 as react-build
 WORKDIR /app
 COPY package.json .
 # COPY package-lock.json .
-RUN npm i --no-save npm-force-resolutions
-RUN npx npm-force-resolutions
-RUN npm i
+RUN yarn install
 COPY . ./
-RUN npm run build
+RUN yarn build
 
 FROM leanhtuan/nginx-with-brotli:latest
 COPY default.conf /etc/nginx/nginx.conf
