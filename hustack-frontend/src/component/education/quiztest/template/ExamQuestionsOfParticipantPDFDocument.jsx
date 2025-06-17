@@ -5,20 +5,6 @@ import React from "react";
 import fontNormal from "../../../../assets/fonts/IBMPlexSans-Regular.ttf"
 import fontBold from "../../../../assets/fonts/IBMPlexSans-Bold.ttf"
 
-Font.register({
-  family: "IBMPlexSans",
-  fonts: [
-    {
-      src: fontNormal,
-      fontWeight: 'normal',
-    },
-    {
-      src: fontBold,
-      fontWeight: 'bold',
-    },
-  ],
-});
-
 const styles = StyleSheet.create({
   page: {
     fontFamily: "IBMPlexSans",
@@ -67,6 +53,20 @@ const checkBoxBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACoSURBVFhH7dexDcMgFEXRn6zADsxFh0TFFOxAx1zsQE3pBERK632chuKdBhkJ6wpZNn5dX3KQ9xqPwSCEQQiDkOOCVC/GWquUUqS1tmb2GGPEOSfW2jVzT7VD/8QMY+24h4Zqh7z3c8w5z3HXzno+1AiDEAYhDEIYhDAIOS5I9bWPMUrvfV09M85EKaV1dU+1QyGEecOnfgc0Df5KIwxCGIQwCDksSOQD5Zw1Tp9gAfMAAAAASUVORK5CYII=";
 
 function ExamQuestionsOfParticipantPDFDocument({data}) {
+  Font.register({
+    family: "IBMPlexSans",
+    fonts: [
+      {
+        src: fontNormal,
+        fontWeight: 'normal',
+      },
+      {
+        src: fontBold,
+        fontWeight: 'bold',
+      },
+    ],
+  });
+
   return (
     <Document>
       {data?.map(
