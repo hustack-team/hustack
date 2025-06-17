@@ -502,7 +502,6 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-    @Transactional(readOnly = true)
     private void handleExportProblem(
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream
