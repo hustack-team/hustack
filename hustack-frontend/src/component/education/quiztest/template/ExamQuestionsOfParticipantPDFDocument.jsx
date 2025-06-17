@@ -5,7 +5,7 @@ import React from "react";
 import fontNormal from "../../../../assets/fonts/IBMPlexSans-Regular.ttf"
 import fontBold from "../../../../assets/fonts/IBMPlexSans-Bold.ttf"
 
-const styles = {
+const pdfStyles = {
   page: {
     fontFamily: "IBMPlexSans",
     fontSize: 12,
@@ -86,24 +86,24 @@ function ExamQuestionsOfParticipantPDFDocument({data}) {
         ) => {
           const MainContent = () => (
             <>
-              <Page size="A4" style={styles.page} wrap>
+              <Page size="A4" style={pdfStyles.page} wrap>
                 <View>
-                  <Text style={styles.textLine}>Quiz test: {testName}</Text>
-                  <Text style={styles.textLine}>Code: {groupCode}</Text>
-                  <Text style={styles.textLine}>Học phần: {courseName}</Text>
-                  <Text style={styles.textLine}>MSSV: {userDetail.id}</Text>
-                  <Text style={styles.textLine}>
+                  <Text style={pdfStyles.textLine}>Quiz test: {testName}</Text>
+                  <Text style={pdfStyles.textLine}>Code: {groupCode}</Text>
+                  <Text style={pdfStyles.textLine}>Học phần: {courseName}</Text>
+                  <Text style={pdfStyles.textLine}>MSSV: {userDetail.id}</Text>
+                  <Text style={pdfStyles.textLine}>
                     FullName: {userDetail?.fullName}
                   </Text>
-                  <Text style={styles.textLine}>
+                  <Text style={pdfStyles.textLine}>
                     Start Time: {scheduleDatetime}
                   </Text>
-                  <Text style={styles.textLine}>
+                  <Text style={pdfStyles.textLine}>
                     Duration: {duration} minutes
                   </Text>
 
                   {listQuestion?.map((q, qIndex) => (
-                    <View key={q.questionId} style={styles.question}>
+                    <View key={q.questionId} style={pdfStyles.question}>
                       {parse(q.statement).map((ele, eIndex) => {
                         if (eIndex > 0) {
                           if (ele.type === "ul") {
@@ -119,13 +119,13 @@ function ExamQuestionsOfParticipantPDFDocument({data}) {
                                 {ele.props.children.map((ulChild, ulIndex) => {
                                   if (ulChild.type === "li")
                                     return (
-                                      <Text key={`li-${ulIndex}`} style={styles.ulChild}>
+                                      <Text key={`li-${ulIndex}`} style={pdfStyles.ulChild}>
                                         • {ulChild.props.children}
                                       </Text>
                                     );
                                   else if (ulChild !== "\n")
                                     return (
-                                      <Text key={`ul-text-${ulIndex}`} style={styles.ulChild}>
+                                      <Text key={`ul-text-${ulIndex}`} style={pdfStyles.ulChild}>
                                         {ulChild}
                                       </Text>
                                     );
@@ -140,7 +140,7 @@ function ExamQuestionsOfParticipantPDFDocument({data}) {
                         }
                         return (
                           <Text key={`question-${qIndex}`}>
-                            <Text style={styles.bold}>Question {qIndex + 1}. </Text>
+                            <Text style={pdfStyles.bold}>Question {qIndex + 1}. </Text>
                             {ele}
                           </Text>
                         );
@@ -148,7 +148,7 @@ function ExamQuestionsOfParticipantPDFDocument({data}) {
 
                       {q.attachment?.length > 0 &&
                         q.attachment.map((imageBase64, index) => (
-                          <View key={`image-${index}`} style={styles.imageContainer}>
+                          <View key={`image-${index}`} style={pdfStyles.imageContainer}>
                             <Image
                               src={`data:application/pdf;base64,${imageBase64}`}
                               style={{
@@ -175,7 +175,7 @@ function ExamQuestionsOfParticipantPDFDocument({data}) {
                               height: "24px",
                             }}
                           />
-                          <Text style={styles.answer}>
+                          <Text style={pdfStyles.answer}>
                             {parse(ans.choiceAnswerContent)}
                           </Text>
                         </View>
@@ -230,9 +230,9 @@ function ExamQuestionsOfParticipantPDFDocument({data}) {
               <Page
                 key={`blank-${examIndex}-${i}`}
                 size="A4"
-                style={styles.page}
+                style={pdfStyles.page}
               >
-                {/*<View style={styles.blankPage}>*/}
+                {/*<View style={pdfStyles.blankPage}>*/}
                 {/*  <Text>*/}
                 {/*    This page is intentionally left blank*/}
                 {/*    {i < mainBlankPages ? " (main content padding)" : ""}*/}
