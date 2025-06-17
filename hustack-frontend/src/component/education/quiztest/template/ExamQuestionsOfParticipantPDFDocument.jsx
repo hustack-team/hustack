@@ -8,17 +8,17 @@ import fontBold from "../../../../assets/fonts/IBMPlexSans-Bold.ttf"
 const styles = StyleSheet.create({
   page: {
     fontFamily: "IBMPlexSans",
-    fontSize: "12px",
+    fontSize: 12,
     padding: 40,
     flexGrow: 1,
   },
   question: {
-    marginTop: "20px",
-    marginBottom: "4px",
+    marginTop: 20,
+    marginBottom: 4,
   },
   answer: {
-    marginTop: "4px",
-    marginBottom: "4px",
+    marginTop: 4,
+    marginBottom: 4,
     flexGrow: 1,
     flexShrink: 1,
     display: "inline",
@@ -27,17 +27,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   textLine: {
-    marginBottom: "4px",
+    marginBottom: 4,
   },
   imageContainer: {
     display: "flex",
     alignItems: "flex-start",
-    maxHeight: "300px",
+    maxHeight: 300,
   },
   ulChild: {
     paddingLeft: 20,
-    marginTop: "4px",
-    marginBottom: "4px",
+    marginTop: 4,
+    marginBottom: 4,
   },
   blankPage: {
     display: "flex",
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: "100%",
     color: "#666666",
-    fontSize: "14px",
+    fontSize: 14,
   },
 });
 
