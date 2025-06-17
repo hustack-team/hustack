@@ -1,8 +1,7 @@
 import ReplayIcon from "@mui/icons-material/Replay";
-import {Box, LinearProgress, Paper, Typography} from "@mui/material";
+import {Box, LinearProgress, Paper, Typography, Checkbox, Button} from "@mui/material";
 import {request} from "api";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
-import HustModal from "component/common/HustModal";
 import StandardTable from "component/table/StandardTable";
 import React, {forwardRef, useEffect, useImperativeHandle, useState} from "react";
 import {useTranslation} from "react-i18next";
@@ -11,6 +10,8 @@ import {getStatusColor} from "./lib";
 import {mapLanguageToDisplayName} from "./Constant";
 import {toFormattedDateTime} from "../../../utils/dateutils";
 import {localeOption} from "../../../utils/NumberFormat";
+import {errorNoti, successNoti} from "utils/notification";
+import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 
 const StudentViewSubmission = forwardRef((props, ref) => {
   const {t} = useTranslation(
@@ -24,6 +25,11 @@ const StudentViewSubmission = forwardRef((props, ref) => {
   const [openModalMessage, setOpenModalMessage] = useState(false);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [currentLockedSubmissionId, setCurrentLockedSubmissionId] = useState(null);
+  const [allowPinSubmission, setAllowPinSubmission] = useState(0);
+  const [openConfirmModal, setOpenConfirmModal] = useState(false); 
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null); 
+  const [pendingSubmission, setPendingSubmission] = useState(null);
 
   const getCommentsBySubmissionId = async (submissionId) => {
     setLoadingComments(true);
@@ -50,9 +56,79 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     request("GET",
       requestUrl,
       (res) => {
-        setSubmissions(res.data.content);
+        const submissionsData = res.data.content;
+        setSubmissions(submissionsData);
+        const lockedSubmission = submissionsData.find(
+          (submission) => submission.finalSelectedSubmission === 1
+        );
+        setCurrentLockedSubmissionId(
+          lockedSubmission ? lockedSubmission.contestSubmissionId : null
+        );
+        if (submissionsData.length > 0) {
+          setAllowPinSubmission(submissionsData[0].allowParticipantPinSubmission);
+        }
         setLoading(false);
-      });
+      }
+    );
+  };
+
+  const handleSwitchSubmission = (newSubmissionId) => {
+    if (newSubmissionId === currentLockedSubmissionId) {
+      return;
+    }
+
+    const selectedSubmission = submissions.find(
+      (submission) => submission.contestSubmissionId === newSubmissionId
+    );
+    const maxPoint = Math.max(...submissions.map(s => s.point || 0));
+    const selectedPoint = selectedSubmission?.point || 0;
+
+    if (selectedPoint < maxPoint) {
+      setPendingSubmission(selectedSubmission);
+      setSelectedSubmissionId(newSubmissionId);
+      setOpenConfirmModal(true);
+    } else {
+      confirmSwitchSubmission(newSubmissionId);
+    }
+  };
+
+  const confirmSwitchSubmission = (newSubmissionId) => {
+    setLoading(true);
+
+    request(
+      "post",
+      `/contests/users/submissions/lock?contestId=${contestId}&problemId=${problemId}`,
+      (res) => {
+        successNoti(t("common:switchSubmissionSuccess"), 3000);
+        setCurrentLockedSubmissionId(newSubmissionId);
+        getSubmissions();
+      },
+      {
+        onError: (e) => {
+          errorNoti(t("common:switchSubmissionFailed"), 3000);
+          setLoading(false);
+        },
+      },
+      {
+        newSubmissionId: newSubmissionId,
+        oldSubmissionId: currentLockedSubmissionId,
+      }
+    );
+  };
+
+  const handleConfirmSwitch = () => {
+    setOpenConfirmModal(false);
+    if (selectedSubmissionId) {
+      confirmSwitchSubmission(selectedSubmissionId);
+    }
+    setSelectedSubmissionId(null);
+    setPendingSubmission(null);
+  };
+
+  const handleCancelSwitch = () => {
+    setOpenConfirmModal(false);
+    setSelectedSubmissionId(null);
+    setPendingSubmission(null);
   };
 
   useEffect(() => {
@@ -79,7 +155,7 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       title: t("submissionList.status"),
       field: "status",
       cellStyle: {
-        minWidth: 120,
+        minWidth: 120
       },
       render: (rowData) => (
         <span style={{color: getStatusColor(`${rowData.status}`)}}>
@@ -138,6 +214,24 @@ const StudentViewSubmission = forwardRef((props, ref) => {
       render: (rowData) => toFormattedDateTime(rowData.createAt),
       // minWidth: "128px"
     },
+    ...(allowPinSubmission === 1
+      ? [
+          {
+            title: t("common:finalSubmission"),
+            sorting: false,
+            cellStyle: { minWidth: 120, textAlign: "center" },
+            render: (rowData) => (
+              <Checkbox
+                checked={rowData.finalSelectedSubmission === 1}
+                onChange={() =>
+                  handleSwitchSubmission(rowData.contestSubmissionId)
+                }
+                disabled={loading}
+              />
+            ),
+          },
+        ]
+      : []),
     // {
     //   title: t('common:message'),
     //   sorting: false,
@@ -175,27 +269,29 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     }
 
     return (
-      <HustModal
+      <CustomizedDialogs
         open={openModalMessage}
-        onClose={() => setOpenModalMessage(false)}
-        isNotShowCloseButton
-        showCloseBtnTitle={false}
-      >
-        <HustCopyCodeBlock title="Message" text={message}/>
-        <Typography variant="h6" sx={{mt: 2}}>Comments:</Typography>
-        <Box sx={{maxHeight: "400px", overflowY: "auto"}}>
-          {loadingComments && <LinearProgress/>}
-          {comments.length > 0 ? (
-            comments.map((comment) => (
-              <Typography key={comment.id} variant="body2" sx={{mb: 1}}>
-                <strong>{comment.username}:</strong> {comment.comment} {/* In dam ten nguoi comment */}
-              </Typography>
-            ))
-          ) : (
-            <Typography variant="body2" sx={{mb: 1}}>No comments available.</Typography>
-          )}
-        </Box>
-      </HustModal>
+        handleClose={() => setOpenModalMessage(false)}
+        title="Submission Details"
+        content={
+          <>
+            <HustCopyCodeBlock title="Message" text={message}/>
+            <Typography variant="h6" sx={{mt: 2}}>Comments:</Typography>
+            <Box sx={{maxHeight: "400px", overflowY: "auto"}}>
+              {loadingComments && <LinearProgress/>}
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <Typography key={comment.id} variant="body2" sx={{mb: 1}}>
+                    <strong>{comment.username}:</strong> {comment.comment}
+                  </Typography>
+                ))
+              ) : (
+                <Typography variant="body2" sx={{mb: 1}}>No comments available.</Typography>
+              )}
+            </Box>
+          </>
+        }
+      />
     );
   };
 
@@ -223,6 +319,34 @@ const StudentViewSubmission = forwardRef((props, ref) => {
         ]}
       />
       <ModalMessage rowData={selectedRowData}/>
+      <CustomizedDialogs
+        open={openConfirmModal}
+        handleClose={handleCancelSwitch}
+        title={t("common:confirmChangeFinalSubmission")}
+        content={
+          <Typography variant="body1">
+            {t("common:selectSubmissionWarning")}
+          </Typography>
+        }
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleCancelSwitch}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleConfirmSwitch}
+            >
+              Confirm
+            </Button>
+          </>
+        }
+      />
     </>
   );
 });

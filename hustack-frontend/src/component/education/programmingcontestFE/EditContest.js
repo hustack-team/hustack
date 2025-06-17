@@ -68,6 +68,8 @@ function EditContest() {
   const [startDate, setStartDate] = useState(new Date());
   const [countDown, setCountDown] = useState(Number(0));
   const [contestPublic, setContestPublic] = useState(false);
+  const [allowParticipantPinSubmission, setAllowParticipantPinSubmission] = useState(0); 
+  const [canEditCoefficientPoint, setCanEditCoefficientPoint] = useState(0); 
 
   const [options, setOptions] = useState({
     // status: [],
@@ -81,6 +83,14 @@ function EditContest() {
     contestType: [],
     participantViewComment: [],
     contestPublic: [],
+    allowParticipantPinSubmission: [ 
+      { label: t("common:no"), value: "0" },
+      { label: t("common:yes"), value: "1" },
+    ],
+    canEditCoefficientPoint: [ 
+      { label: t("common:no"), value: 0 },
+      { label: t("common:yes"), value: 1 },
+    ],
   });
 
   const [contestType, setContestType] = useState("");
@@ -119,6 +129,8 @@ function EditContest() {
       contestShowTag: participantViewProblemsTag,
       contestShowComment: participantViewComment,
       contestPublic: contestPublic,
+      allowParticipantPinSubmission: allowParticipantPinSubmission,
+      canEditCoefficientPoint: canEditCoefficientPoint, 
     };
 
     request(
@@ -191,6 +203,14 @@ function EditContest() {
           {label: "Yes", value: true},
           {label: "No", value: false},
         ],
+        allowParticipantPinSubmission: [
+          {label: t("common:no"), value: "0"},
+          {label: t("common:yes"), value: "1"},
+        ],
+        canEditCoefficientPoint: [
+          { label: t("common:no"), value: 0 },
+          { label: t("common:yes"), value: 1 },
+        ],
       });
 
       setContestTime(data.contestTime);
@@ -217,6 +237,8 @@ function EditContest() {
       setParticipantViewProblemsTag(data.contestShowTag);
       setParticipantViewComment(data.contestShowComment);
       setContestPublic(data.contestPublic);
+      setAllowParticipantPinSubmission(data.allowParticipantPinSubmission || 0);
+      setCanEditCoefficientPoint(data.canEditCoefficientPoint); 
     });
   }
 
@@ -425,6 +447,28 @@ function EditContest() {
                     options={options.contestPublic}
                     onChange={(event) => {
                       setContestPublic(event.target.value);
+                    }}
+                  />,
+                  <StyledSelect
+                    fullWidth
+                    id="allowParticipantPinSubmission"
+                    label="Allow Participant Pin Submission"
+                    key={"allowParticipantPinSubmission"}
+                    value={allowParticipantPinSubmission}
+                    options={options.allowParticipantPinSubmission}
+                    onChange={(event) => {
+                      setAllowParticipantPinSubmission(event.target.value);
+                    }}
+                  />,
+                  <StyledSelect
+                    fullWidth
+                    id="canEditCoefficientPoint"
+                    label={t("common:canEditCoefficientPoint")}
+                    key={"canEditCoefficientPoint"}
+                    value={canEditCoefficientPoint}
+                    options={options.canEditCoefficientPoint}
+                    onChange={(event) => {
+                      setCanEditCoefficientPoint(event.target.value);
                     }}
                   />,
                 ].map((input, index) => (

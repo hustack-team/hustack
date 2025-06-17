@@ -4,6 +4,7 @@ import com.hust.baseweb.applications.programmingcontest.model.ModelSearchUserRes
 import com.hust.baseweb.entity.Party;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.PersonModel;
+import com.hust.baseweb.model.UserFullNameProjection;
 import com.hust.baseweb.model.UserLoginWithPersonModel;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
@@ -83,6 +84,10 @@ public interface UserLoginRepo extends JpaRepository<UserLogin, String> {
         @Param("partOfLoginId") String partOfLoginId,
         @Param("limit") Integer limit
     );
+
+    @Query("SELECT u.userLoginId AS userLoginId, u.firstName AS firstName, u.lastName AS lastName " +
+           "FROM UserLogin u WHERE u.userLoginId IN :userIds")
+    List<UserFullNameProjection> findFullNamesByIds(@Param("userIds") List<String> userIds);
 
     @Query(
         nativeQuery = true,

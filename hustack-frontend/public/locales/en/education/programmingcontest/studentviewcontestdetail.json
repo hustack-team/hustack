@@ -1,10 +1,12 @@
 {
   "ID": "ID",
   "problem": "Problem",
+  "problemCode": "Code",
   "problemId": "Problem ID",
   "level": "Level",
   "submitted": "Submitted",
   "accepted": "Accepted",
+  "point": "Point",
   "maxPoint": "Achieved Point",
   "tags": "Tags",
   "problemList": {

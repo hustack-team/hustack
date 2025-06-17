@@ -1,23 +1,29 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelGetProblemDetailResponse implements Serializable {
 
-    private String problemId;
-    private String problemName;
-    private String levelId;
-    private int levelOrder;
-    private String problemDescription;
-    private String createdByUserId;
-    private String submissionMode;
-    private boolean unauthorized;
-    private String problemRename;
-    private String problemRecode;
-    private String forbiddenInstructions;
+    String problemId;
+    String problemName;
+    String levelId;
+    int levelOrder;
+    String problemDescription;
+    String createdByUserId;
+    String submissionMode;
+    boolean unauthorized;
+    String problemRename;
+    String problemRecode;
+    String forbiddenInstructions;
+    int testCasesCount;
+    int totalPointTestCase;
+    Double coefficientPoint;
 }
