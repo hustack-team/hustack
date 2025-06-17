@@ -60,11 +60,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProblemServiceImpl implements ProblemService {
-    public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
-
     ProblemRepo problemRepo;
+
     TeacherGroupRelationRepository teacherGroupRelationRepository;
-    ProblemTestCaseServiceCache problemTestCaseServiceCache;
 
     TestCaseRepo testCaseRepo;
 
@@ -74,27 +72,11 @@ public class ProblemServiceImpl implements ProblemService {
 
     Constants constants;
 
-    ContestPagingAndSortingRepo contestPagingAndSortingRepo;
-
     ContestSubmissionRepo contestSubmissionRepo;
-
-    UserRegistrationContestRepo userRegistrationContestRepo;
 
     NotificationsService notificationsService;
 
-    UserRegistrationContestPagingAndSortingRepo userRegistrationContestPagingAndSortingRepo;
-
     ContestSubmissionPagingAndSortingRepo contestSubmissionPagingAndSortingRepo;
-
-    ContestSubmissionTestCaseEntityRepo contestSubmissionTestCaseEntityRepo;
-
-    UserService userService;
-
-    ContestRoleRepo contestRoleRepo;
-
-    CodePlagiarismRepo codePlagiarismRepo;
-
-    ContestSubmissionHistoryRepo contestSubmissionHistoryRepo;
 
     ContestProblemRepo contestProblemRepo;
 
@@ -108,26 +90,11 @@ public class ProblemServiceImpl implements ProblemService {
 
     ContestService contestService;
 
-    TestCaseService testCaseService;
-
-    RabbitTemplate rabbitTemplate;
-
-    ProblemTestCaseServiceCache cacheService;
-
     ContestProblemExportService exporter;
-
-    ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
-
-    UserRegistrationContestService userRegistrationContestService;
-
-    Judge0Service judge0Service;
 
     ProblemTagRepo problemTagRepo;
 
     ObjectMapper objectMapper;
-
-    Judge0Utils judge0Utils;
-
 
     @Override
     @Transactional
