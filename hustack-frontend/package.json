@@ -89,8 +89,7 @@
     "start": "craco start",
     "build": "craco --max_old_space_size=4096 build",
     "test": "craco test",
-    "eject": "react-scripts eject",
-    "preinstall": "npx npm-force-resolutions"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
