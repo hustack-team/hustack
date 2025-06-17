@@ -2,10 +2,8 @@ FROM node:14.21.3 as react-build
 WORKDIR /app
 COPY package.json .
 # COPY package-lock.json .
-RUN npm i
-RUN npm install --no-save npm-force-resolutions \
- && npx npm-force-resolutions
-RUN rm -rf node_modules
+RUN npm i --no-save npm-force-resolutions
+RUN npx npm-force-resolutions
 RUN npm i
 COPY . ./
 RUN npm run build
