@@ -25,6 +25,7 @@ import com.hust.baseweb.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -54,9 +55,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RestController
-@CrossOrigin
-@AllArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = {@Autowired})
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProblemServiceImpl implements ProblemService {
@@ -203,6 +202,7 @@ public class ProblemServiceImpl implements ProblemService {
         return problem;
     }
 
+    @Transactional
     @Override
     public ProblemEntity updateContestProblem(
         String problemId,
@@ -410,6 +410,8 @@ public class ProblemServiceImpl implements ProblemService {
         }
         return result;
     }
+
+    @Transactional(readOnly = true)
     @Override
     public List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo() {
         //return problemRepo.getAllProblemGeneralInformation();
@@ -417,6 +419,7 @@ public class ProblemServiceImpl implements ProblemService {
 
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ModelCreateContestProblemResponse getContestProblem(String problemId) throws Exception {
         ProblemEntity problemEntity;
@@ -483,6 +486,7 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    @Transactional(readOnly = true)
     public void exportProblem(String problemId, OutputStream outputStream) {
         try {
             ModelCreateContestProblemResponse problem = getContestProblem(problemId);
@@ -496,6 +500,7 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    @Transactional(readOnly = true)
     private void handleExportProblem(
         ModelCreateContestProblemResponse problem,
         OutputStream outputStream
@@ -658,6 +663,7 @@ public class ProblemServiceImpl implements ProblemService {
         return problemResponse;
     }
 
+    @Transactional
     @Override
     public List<ModelImportProblemFromContestResponse> importProblemsFromAContest(ModelImportProblemsFromAContestInput I) {
         ContestEntity contest = contestRepo.findContestByContestId(I.getFromContestId());
@@ -697,6 +703,7 @@ public class ProblemServiceImpl implements ProblemService {
      * @param isPublic
      * @return
      */
+    @Transactional(readOnly = true)
     public Page<ProblemDTO> getProblems(String userId, ProblemFilter filter, Boolean isPublic) {
         return fetchProblems(userId, filter, isPublic, false);
     }
@@ -706,6 +713,7 @@ public class ProblemServiceImpl implements ProblemService {
      * @param filter
      * @return
      */
+    @Transactional(readOnly = true)
     public Page<ProblemDTO> getSharedProblems(String userId, ProblemFilter filter) {
         return fetchProblems(userId, filter, null, true);
     }
@@ -775,12 +783,14 @@ public class ProblemServiceImpl implements ProblemService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ProblemEntity> getAllProblems(String userId) {
         List<ProblemEntity> problems = problemRepo.findAll();
         return problems;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<SubmissionModelResponse> extApiGetSubmissions(String participantId) {
         List<ContestSubmissionEntity> sub = contestSubmissionPagingAndSortingRepo.findAllByUserId(participantId);
@@ -927,11 +937,13 @@ public class ProblemServiceImpl implements ProblemService {
         return newProblem;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId) {
         return userContestProblemRoleRepo.findAllByProblemIdWithFullName(problemId);
     }
 
+    @Transactional
     @Override
     public Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception {
         boolean isOwner = this.userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
@@ -981,6 +993,7 @@ public class ProblemServiceImpl implements ProblemService {
         return response;
     }
 
+    @Transactional
     @Override
     public boolean removeUserProblemRole(String userName, ModelUserProblemRole input) throws Exception {
         boolean isOwner = this.userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
