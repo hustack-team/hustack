@@ -2,16 +2,18 @@ import {Document, Font, Image, Page, StyleSheet, Text, View,} from "@react-pdf/r
 import parse from "html-react-parser";
 import Footer from "./Footer";
 import React from "react";
+import fontNormal from "../../../../assets/fonts/IBMPlexSans-Regular.ttf"
+import fontBold from "../../../../assets/fonts/IBMPlexSans-Bold.ttf"
 
 Font.register({
   family: "IBMPlexSans",
   fonts: [
     {
-      src: '/static/fonts/IBMPlexSans-Regular.ttf',
+      src: fontNormal,
       fontWeight: 'normal',
     },
     {
-      src: '/static/fonts/IBMPlexSans-Bold.ttf',
+      src: fontBold,
       fontWeight: 'bold',
     },
   ],
