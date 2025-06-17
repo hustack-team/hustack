@@ -11,6 +11,7 @@ import com.hust.baseweb.applications.programmingcontest.model.externalapi.Contes
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.GetSubmissionsOfParticipantModelInput;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemService;
 import com.hust.baseweb.applications.programmingcontest.repo.TestCaseRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.UserContestProblemRoleRepo;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
@@ -45,19 +46,13 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProblemController {
 
-    TestCaseRepo testCaseRepo;
-
     ProblemTestCaseService problemTestCaseService;
-
-    UserService userService;
-
-    UserContestProblemRoleRepo userContestProblemRoleRepo;
-
-    ProblemRepo problemRepo;
 
     ChatGPTService chatGPTService;
 
     ApiService apiService;
+
+    ProblemService problemService;
 
     @Secured("ROLE_TEACHER")
     @PostMapping(value = "/problems", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -66,13 +61,13 @@ public class ProblemController {
         @RequestPart("dto") ModelCreateContestProblem dto,
         @RequestPart(value = "files", required = false) MultipartFile[] files
     ) {
-        return ResponseEntity.ok().body(problemTestCaseService.createContestProblem(principal.getName(), dto, files));
+        return ResponseEntity.ok().body(problemService.createContestProblem(principal.getName(), dto, files));
     }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/problems/general-info")
     public ResponseEntity<?> getAllContestProblemsGeneralInfo() {
-        return ResponseEntity.ok().body(problemTestCaseService.getAllProblemsGeneralInfo());
+        return ResponseEntity.ok().body(problemService.getAllProblemsGeneralInfo());
     }
 
     @Secured("ROLE_TEACHER")
@@ -98,7 +93,6 @@ public class ProblemController {
         apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log",logM);
     }
 
-
     @Secured("ROLE_TEACHER")
     @GetMapping("/teacher/problems/{problemId}")
     public ResponseEntity<?> getProblemDetailViewByTeacher(
@@ -109,7 +103,7 @@ public class ProblemController {
 
             logManagerGetProblemDetail(teacher.getName(),problemId);
 
-            ModelCreateContestProblemResponse problemResponse = problemTestCaseService.getContestProblemDetailByIdAndTeacher(
+            ModelCreateContestProblemResponse problemResponse = problemService.getContestProblemDetailByIdAndTeacher(
                 problemId,
                 teacher.getName());
             return ResponseEntity.status(200).body(problemResponse);
@@ -126,7 +120,7 @@ public class ProblemController {
         @RequestPart("dto") ModelUpdateContestProblem dto,
         @RequestPart(value = "files", required = false) MultipartFile[] files
     ) throws Exception {
-        return ResponseEntity.ok().body(problemTestCaseService.updateContestProblem(
+        return ResponseEntity.ok().body(problemService.updateContestProblem(
             problemId,
             principal.getName(),
             dto,
@@ -159,6 +153,7 @@ public class ProblemController {
         s = s.concat("Hello");
         return ResponseEntity.ok().body(s);
     }
+
     @Secured("ROLE_TEACHER")
     @GetMapping("/problems/{problemId}/testcases")
     public ResponseEntity<?> getTestCaseListByProblem(@PathVariable("problemId") String problemId, TestCaseFilter filter) {
@@ -183,7 +178,7 @@ public class ProblemController {
 
     @GetMapping("/problems/{problemId}/users/role")
     public ResponseEntity<?> getUserContestProblemRoles(@PathVariable String problemId) {
-        List<ModelResponseUserProblemRole> res = problemTestCaseService.getUserProblemRoles(problemId);
+        List<ModelResponseUserProblemRole> res = problemService.getUserProblemRoles(problemId);
         return ResponseEntity.ok().body(res);
     }
 
@@ -191,7 +186,7 @@ public class ProblemController {
     @PostMapping("/problems/users/role")
     public ResponseEntity<?> addContestProblemRole(Principal principal, @RequestBody ModelUserProblemRoleInput input) {
         try {
-            Map<String, Object> ok = problemTestCaseService.addUserProblemRole(principal.getName(), input);
+            Map<String, Object> ok = problemService.addUserProblemRole(principal.getName(), input);
             return ResponseEntity.ok().body(ok);
         } catch (Exception e) {
             if (e instanceof MiniLeetCodeException) {
@@ -213,7 +208,7 @@ public class ProblemController {
                 return ResponseEntity.ok().body(false);
             }
 
-            boolean ok = problemTestCaseService.removeUserProblemRole(principal.getName(), input);
+            boolean ok = problemService.removeUserProblemRole(principal.getName(), input);
             return ResponseEntity.ok().body(ok);
         } catch (Exception e) {
             if (e instanceof MiniLeetCodeException) {
@@ -229,7 +224,7 @@ public class ProblemController {
     public ResponseEntity<StreamingResponseBody> exportProblem(
         @PathVariable @NotBlank String id
     ) {
-        StreamingResponseBody stream = outputStream -> problemTestCaseService.exportProblem(
+        StreamingResponseBody stream = outputStream -> problemService.exportProblem(
             id,
             outputStream);
 
@@ -242,7 +237,7 @@ public class ProblemController {
 
     @PostMapping(value = "/teachers/problems/clone")
     public ResponseEntity<?> cloneProblem(Principal principal, @RequestBody ModelCloneProblem cloneRequest) throws MiniLeetCodeException {
-        return ResponseEntity.ok().body(problemTestCaseService.cloneProblem(principal.getName(), cloneRequest));
+        return ResponseEntity.ok().body(problemService.cloneProblem(principal.getName(), cloneRequest));
     }
 
     /**
@@ -253,7 +248,7 @@ public class ProblemController {
     @Secured("ROLE_TEACHER")
     @GetMapping("/teacher/owned-problems")
     public ResponseEntity<?> getAllMyProblems(Principal owner, ProblemFilter filter) {
-        return ResponseEntity.ok().body(this.problemTestCaseService.getProblems(owner.getName(), filter, null));
+        return ResponseEntity.ok().body(this.problemService.getProblems(owner.getName(), filter, null));
     }
 
     /**
@@ -265,7 +260,7 @@ public class ProblemController {
     @Secured("ROLE_TEACHER")
     @GetMapping("/teacher/shared-problems")
     public ResponseEntity<?> getAllSharedProblems(Principal owner, ProblemFilter filter) {
-        return ResponseEntity.ok().body(this.problemTestCaseService.getSharedProblems(owner.getName(), filter));
+        return ResponseEntity.ok().body(this.problemService.getSharedProblems(owner.getName(), filter));
     }
 
     /**
@@ -277,7 +272,7 @@ public class ProblemController {
     @Secured("ROLE_TEACHER")
     @GetMapping("/teacher/public-problems")
     public ResponseEntity<?> getPublicProblems(Principal owner, ProblemFilter filter) {
-        return ResponseEntity.ok().body(this.problemTestCaseService.getPublicProblems(owner.getName(), filter));
+        return ResponseEntity.ok().body(this.problemService.getPublicProblems(owner.getName(), filter));
     }
 
     //    @Secured("ROLE_TEACHER")
@@ -285,18 +280,21 @@ public class ProblemController {
 //    public List<ProblemEntity> getAllProblems(Principal owner) {
 //        return this.problemTestCaseService.getAllProblems(owner.getName());
 //    }
+
     //@Secured("ROLE_EXT_DATA_QUERY")
     @GetMapping("/extapi/all-problems")
     public ResponseEntity<?> extGetAllProblems(Principal principal){
         List<ContestProblemModelResponse> problems = problemTestCaseService.extApiGetAllProblems(principal.getName());
         return ResponseEntity.ok().body(problems);
     }
+
     @PostMapping("extapi/get-submissions-of-participant")
     public ResponseEntity<?> getSubmissionOf(Principal principal, @RequestBody GetSubmissionsOfParticipantModelInput I){
         String participantId = I.getParticipantId();
-        List<SubmissionModelResponse> res = problemTestCaseService.extApiGetSubmissions(participantId);
+        List<SubmissionModelResponse> res = problemService.extApiGetSubmissions(participantId);
         return ResponseEntity.ok().body(res);
     }
+
 //    @GetMapping("/grant-owner-role-problem-to-admin")
 //    public ResponseEntity<?> grantOwnerRoleProblemToAdmin(Principal principal){
 //        List<ProblemEntity> probs = problemRepo.findAll();
