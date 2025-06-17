@@ -22,7 +22,7 @@
     "@mui/x-date-pickers": "^5.0.0-alpha.5",
     "@react-keycloak/web": "^3.4.0",
     "@react-pdf/font": "2.2.0",
-    "@react-pdf/renderer": "2.1.1",
+    "@react-pdf/renderer": "2.1.0",
     "@welldone-software/why-did-you-render": "^6.2.0",
     "ace-builds": "^1.14.0",
     "axios": "^0.21.1",
@@ -114,5 +114,8 @@
     "compression-webpack-plugin": "^6.1.1",
     "immutable": "^5.0.3",
     "prop-types": "^15.7.2"
+  },
+  "resolutions": {
+    "@react-pdf/font": "2.2.0"
   }
 }

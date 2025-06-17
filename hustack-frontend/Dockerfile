@@ -3,7 +3,9 @@ WORKDIR /app
 COPY package.json .
 # COPY package-lock.json .
 RUN npm i
-RUN rm -rf ./node_module/@uiw/react-codemirror/node_module
+# Sửa fetch__default["default"] thành globalThis.fetch
+RUN sed -i 's/fetch__default\["default"\](/fetch__default["default"].bind(globalThis)(/' node_modules/@react-pdf/font/lib/index.js
+RUN cat node_modules/@react-pdf/font/lib/index.js
 COPY . ./
 RUN npm run build
 
