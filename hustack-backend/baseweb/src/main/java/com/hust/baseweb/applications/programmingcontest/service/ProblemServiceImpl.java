@@ -42,6 +42,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +56,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
