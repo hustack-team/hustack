@@ -4,8 +4,7 @@ COPY package.json .
 # COPY package-lock.json .
 RUN npm i
 # Sửa fetch__default["default"] thành globalThis.fetch
-RUN sed -i 's/fetch__default\["default"\](src, options)/(typeof fetch === "function" ? fetch : globalThis.fetch)(src, options)/' node_modules/@react-pdf/font/lib/index.js
-RUN cat node_modules/@react-pdf/font/lib/index.js | grep fetch
+RUN find node_modules/@react-pdf -type f -name '*.js' -exec sed -i 's/fetch__default\["default"\](/(typeof fetch === "function" ? fetch : require("cross-fetch"))(/g' {} +
 COPY . ./
 RUN npm run build
 
