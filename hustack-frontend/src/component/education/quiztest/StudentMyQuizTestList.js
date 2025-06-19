@@ -1,21 +1,20 @@
 /* eslint-disable */
-import {Card, CardContent} from "@material-ui/core/";
-import MaterialTable from "material-table";
-import {useEffect, useState} from "react";
-import {useParams} from "react-router";
+import React, {useEffect, useState} from "react";
 import {useHistory} from "react-router-dom";
 import {request} from "../../../api";
-import {LinearProgress} from "@mui/material";
+import {Paper, Stack, Typography} from "@mui/material";
+import StandardTable from "../../table/StandardTable";
+import {errorNoti} from "../../../utils/notification";
+import {useTranslation} from "react-i18next";
 
 function StudentMyQuizTestList() {
-  const params = useParams();
+  const {t} = useTranslation(["common"]);
 
   const history = useHistory();
   const [ListQuiz, setListQuizs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const onClickQuizId = (quizid, viewTypeId) => {
-    console.log("click " + quizid);
 
+  const onClickQuizId = (quizid, viewTypeId) => {
     //history.push("/edu/class/student/quiztest/detail", {
     //  testId: quizid,
     //  viewTypeId: viewTypeId,
@@ -28,36 +27,37 @@ function StudentMyQuizTestList() {
       title: "Mã Quiz Test",
       field: "testId",
       render: (rowData) =>
-        rowData["statusId"] == "STATUS_APPROVED" ? (
+        rowData["statusId"] === "STATUS_APPROVED" ? (
           <a
-            style={{ cursor: "pointer" }}
+            style={{cursor: "pointer"}}
             onClick={() => {
               onClickQuizId(rowData["testId"], rowData["viewTypeId"]);
             }}
           >
-            {" "}
-            {rowData["testId"]}{" "}
+            {rowData["testId"]}
           </a>
         ) : (
           <p>{rowData["testId"]}</p>
         ),
     },
-    { title: "Quiz Test Name", field: "testName" },
+    {title: "Tên Quiz Test", field: "testName"},
   ];
 
   async function getQuizList() {
     setLoading(true);
     request(
-      // token,
-      // history,
       "get",
       "/get-my-quiz-test-list",
       (res) => {
-        console.log(res);
         setListQuizs(res.data);
         setLoading(false);
       },
-      { 401: () => {} }
+      {
+        onError: e => {
+          setLoading(false);
+          errorNoti(t("common:error", 3000))
+        }
+      }
     );
   }
 
@@ -66,12 +66,23 @@ function StudentMyQuizTestList() {
   }, []);
 
   return (
-    <Card>
-      <CardContent>
-      {loading && <LinearProgress/>}
-        <MaterialTable title={"Quiz Tests"} columns={columns} data={ListQuiz} />
-      </CardContent>
-    </Card>
+    <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
+      <Stack direction="row" justifyContent='space-between' mb={1.5}>
+        <Typography variant="h6">Quiz Tests</Typography>
+      </Stack>
+      <StandardTable columns={columns}
+                     data={ListQuiz}
+                     hideCommandBar
+                     options={{
+                       selection: false,
+                       pageSize: 5,
+                       sorting: false,
+                     }}
+                     components={{
+                       Container: (props) => <Paper {...props} elevation={0}/>,
+                     }}
+      />
+    </Paper>
   );
 }
 
