@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/hustack-backend/baseweb"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "01:00"
+      timezone: "Asia/Ho_Chi_Minh"
+    open-pull-requests-limit: 10
+    assignees:
+      - "AnhTuan-AiT"
+    reviewers:
+      - "AnhTuan-AiT"
+    labels:
+      - "dependencies"
+      - "maven"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      spring-dependencies:
+        patterns:
+          - "org.springframework.*"
+        update-types: [ "major" ]
