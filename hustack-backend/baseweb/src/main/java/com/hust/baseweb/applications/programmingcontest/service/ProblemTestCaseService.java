@@ -21,21 +21,6 @@ import java.util.UUID;
 
 public interface ProblemTestCaseService {
 
-    ProblemEntity createContestProblem(String userID, ModelCreateContestProblem dto, MultipartFile[] files);
-
-    ProblemEntity updateContestProblem(
-        String problemId,
-        String userId,
-        ModelUpdateContestProblem dto,
-        MultipartFile[] files
-    ) throws Exception;
-
-    List<ModelStudentOverviewProblem> getStudentContestProblems(String userId, String contestId);
-
-    List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo();
-
-    ModelCreateContestProblemResponse getContestProblem(String problemId) throws Exception;
-
 //    ModelGetTestCaseResultResponse getTestCaseResult(
 //        String problemId,
 //        String userName,
@@ -160,6 +145,9 @@ public interface ProblemTestCaseService {
         SubmissionFilter filter
     );
 
+
+
+
     Page<ContestSubmission> findContestGroupSubmissionByContestIdPaging(
         Pageable pageable,
         String contestId,
@@ -242,12 +230,6 @@ public interface ProblemTestCaseService {
 
     boolean updatePermissionMemberToContest(String userId, ModelUpdatePermissionMemberToContestInput input);
 
-    List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId);
-
-    Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception;
-
-    boolean removeUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
-
     List<TagEntity> getAllTags();
 
     TagEntity addNewTag(ModelTag tag);
@@ -258,30 +240,7 @@ public interface ProblemTestCaseService {
 
     void switchAllContestJudgeMode(String judgeMode);
 
-    void exportProblem(String id, OutputStream outputStream);
-
-    Page<ProblemDTO> getProblems(String ownerId, ProblemFilter filter, Boolean isPublic);
-
-    Page<ProblemDTO> getSharedProblems(String userId, ProblemFilter filter);
-
-    Page<ProblemDTO> getPublicProblems(String userId, ProblemFilter filter);
-
-    List<ProblemEntity> getAllProblems(String userId);
-
     List<ContestProblemModelResponse> extApiGetAllProblems(String userID);
 
-    List<SubmissionModelResponse> extApiGetSubmissions(String participantId);
-
-
-    ModelCreateContestProblemResponse getContestProblemDetailByIdAndTeacher(
-        String problemId,
-        String teacherId
-    ) throws Exception;
-
-    List<ModelImportProblemFromContestResponse> importProblemsFromAContest(ModelImportProblemsFromAContestInput I);
-
     ModelGetContestPageResponse getAllPublicContests();
-
-    ProblemEntity cloneProblem(String userId, ModelCloneProblem cloneRequest) throws MiniLeetCodeException;
-
 }
