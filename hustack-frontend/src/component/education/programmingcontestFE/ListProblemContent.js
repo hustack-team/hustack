@@ -35,6 +35,8 @@ import StyledSelect from "../../select/StyledSelect";
 import {useKeycloak} from "@react-keycloak/web";
 import {getLevels, getStatuses} from "./CreateProblem";
 import CustomizedDialogs from "component/dialog/CustomizedDialogs";
+import { BsFiletypeJson } from "react-icons/bs";
+import { FaFileArchive } from "react-icons/fa";
 
 const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []}
 
@@ -233,7 +235,6 @@ function ListProblemContent({type}) {
           
           errorNoti(errorMessage, 5000);
         },
-        headers: {}
       },
       formData,
     );
@@ -305,7 +306,7 @@ function ListProblemContent({type}) {
 
   const onJsonExport = async (problem) => {
     request("GET",
-      `/problems/${problem.problemId}/export2`,
+      `/problems/${problem.problemId}/export/json`,
       (res) => {
         saveFile(`${problem.problemId}.zip`, res.data);
       },
@@ -415,7 +416,7 @@ function ListProblemContent({type}) {
                 color="primary"
                 onClick={() => onSingleDownload(rowData)}
               >
-                <GetApp/>
+                <FaFileArchive />
               </IconButton>
             </Tooltip>
             <Tooltip title={t("exportJson")}>
@@ -424,7 +425,7 @@ function ListProblemContent({type}) {
                 color="primary"
                 onClick={() => onJsonExport(rowData)}
               >
-                <GetAppIcon/>
+                <BsFiletypeJson />
               </IconButton>
             </Tooltip>
           </Stack>
@@ -584,9 +585,9 @@ function ListProblemContent({type}) {
         }
         actions={
           <>
-            <Button onClick={handleCloseImportDialog} color="primary">
+            <PrimaryButton onClick={handleCloseImportDialog} color="primary">
               {t("common:cancel")}
-            </Button>
+            </PrimaryButton>
             <Button
               onClick={handleImportSubmit}
               color="primary"

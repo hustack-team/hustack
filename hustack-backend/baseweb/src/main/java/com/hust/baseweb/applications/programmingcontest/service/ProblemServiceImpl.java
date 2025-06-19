@@ -36,13 +36,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,6 +103,8 @@ public class ProblemServiceImpl implements ProblemService {
     ProblemTagRepo problemTagRepo;
 
     ObjectMapper objectMapper;
+
+    IEProblemProperties iEProblemProperties;
 
     @Override
     @Transactional
@@ -604,7 +606,7 @@ public class ProblemServiceImpl implements ProblemService {
             String userId
     ) throws IOException {
 
-        long maxSizeBytes = 50 * 1024 * 1024;
+        long maxSizeBytes = iEProblemProperties.getExportConf().getMaxSizeBytes();
         long totalSize = 0;
 
         Map<String, ByteArrayOutputStream> fileStreams = new HashMap<>();
@@ -652,12 +654,11 @@ public class ProblemServiceImpl implements ProblemService {
     }
 
 
-
     @Transactional
     public void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId) {
-        final long MAX_ZIP_SIZE = 50 * 1024 * 1024;
-        final int MAX_FILE_COUNT = 100;
-        final long MAX_TOTAL_UNZIPPED_SIZE = 100 * 1024 * 1024;
+        final long MAX_ZIP_SIZE = iEProblemProperties.getImportConf().getMaxSizeBytes();
+        final int MAX_FILE_COUNT = iEProblemProperties.getImportConf().getFileCount();
+        final long MAX_TOTAL_UNZIPPED_SIZE = iEProblemProperties.getImportConf().getMaxSizeUnzip();
 
         Map<String, byte[]> extractedFiles = new HashMap<>();
         long totalUnzippedSize = 0;
@@ -808,14 +809,50 @@ public class ProblemServiceImpl implements ProblemService {
 
                 String fileName = entry.getKey();
                 byte[] fileContent = entry.getValue();
-                MultipartFile multipartFile = new MockMultipartFile(
-                        fileName,
-                        fileName,
-                        "application/octet-stream",
-                        fileContent
-                );
 
-                ContentModel contentModel = new ContentModel(fileName, multipartFile);
+                MultipartFile customMultipartFile = new MultipartFile() {
+                    @Override
+                    public String getName() {
+                        return fileName;
+                    }
+
+                    @Override
+                    public String getOriginalFilename() {
+                        return fileName;
+                    }
+
+                    @Override
+                    public String getContentType() {
+                        return "application/octet-stream";
+                    }
+
+                    @Override
+                    public boolean isEmpty() {
+                        return fileContent.length == 0;
+                    }
+
+                    @Override
+                    public long getSize() {
+                        return fileContent.length;
+                    }
+
+                    @Override
+                    public byte[] getBytes() {
+                        return fileContent;
+                    }
+
+                    @Override
+                    public InputStream getInputStream() {
+                        return new ByteArrayInputStream(fileContent);
+                    }
+
+                    @Override
+                    public void transferTo(File dest) throws IOException {
+                        Files.write(dest.toPath(), fileContent);
+                    }
+                };
+
+                ContentModel contentModel = new ContentModel(null, customMultipartFile);
                 ObjectId id = null;
                 try {
                     id = mongoContentService.storeFileToGridFs(contentModel);
@@ -833,9 +870,9 @@ public class ProblemServiceImpl implements ProblemService {
             problemEntity = problemRepo.save(problemEntity);
 
             List<String> roles = Arrays.asList(
-                    UserContestProblemRole.ROLE_OWNER,
-                    UserContestProblemRole.ROLE_EDITOR,
-                    UserContestProblemRole.ROLE_VIEWER
+                UserContestProblemRole.ROLE_OWNER,
+                UserContestProblemRole.ROLE_EDITOR,
+                UserContestProblemRole.ROLE_VIEWER
             );
 
             List<UserContestProblemRole> rolesToSave = new ArrayList<>();

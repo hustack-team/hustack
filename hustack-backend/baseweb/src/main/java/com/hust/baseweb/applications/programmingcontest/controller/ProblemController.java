@@ -265,8 +265,8 @@ public class ProblemController {
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping(value = "/problems/{id}/export2")
-    public ResponseEntity<StreamingResponseBody> exportProblem2(
+    @GetMapping(value = "/problems/{id}/export/json")
+    public ResponseEntity<StreamingResponseBody> exportProblemJson(
         @PathVariable @NotBlank String id,
         Principal principal
     ) {
