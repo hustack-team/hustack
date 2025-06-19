@@ -1,40 +1,25 @@
-import {
-  Document,
-  Font,
-  Image,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
+import {Document, Font, Image, Page, StyleSheet, Text, View,} from "@react-pdf/renderer";
 import parse from "html-react-parser";
 import Footer from "./Footer";
 import React from "react";
 
-const options = {
-  cMapUrl: "https://unpkg.com/pdfjs-dist@4.7.76/cmaps/",
-  cMapPacked: true,
-};
-
 Font.register({
-  family: "Roboto",
+  family: "IBMPlexSans",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf",
-      fontWeight: "normal",
+      src: '/static/fonts/IBMPlexSans-Regular.ttf',
+      fontWeight: 'normal',
     },
     {
-      src: "https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc9.ttf",
-      fontWeight: "bold",
+      src: '/static/fonts/IBMPlexSans-Bold.ttf',
+      fontWeight: 'bold',
     },
   ],
 });
 
-Font.registerHyphenationCallback((word) => [word]);
-
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Roboto",
+    fontFamily: "IBMPlexSans",
     fontSize: "12px",
     padding: 40,
     flexGrow: 1,
@@ -79,9 +64,9 @@ const styles = StyleSheet.create({
 const checkBoxBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACoSURBVFhH7dexDcMgFEXRn6zADsxFh0TFFOxAx1zsQE3pBERK632chuKdBhkJ6wpZNn5dX3KQ9xqPwSCEQQiDkOOCVC/GWquUUqS1tmb2GGPEOSfW2jVzT7VD/8QMY+24h4Zqh7z3c8w5z3HXzno+1AiDEAYhDEIYhDAIOS5I9bWPMUrvfV09M85EKaV1dU+1QyGEecOnfgc0Df5KIwxCGIQwCDksSOQD5Zw1Tp9gAfMAAAAASUVORK5CYII=";
 
-function ExamQuestionsOfParticipantPDFDocument({ data }) {
+function ExamQuestionsOfParticipantPDFDocument({data}) {
   return (
-    <Document options={options}>
+    <Document>
       {data?.map(
         (
           {
@@ -196,77 +181,77 @@ function ExamQuestionsOfParticipantPDFDocument({ data }) {
                     </View>
                   ))}
                 </View>
-                <Footer />
-                <PageTracker examIndex={examIndex} />
+                <Footer/>
+                <PageTracker examIndex={examIndex}/>
               </Page>
             </>
           );
 
-          const PageTracker = ({ examIndex }) => (
+          const PageTracker = ({examIndex}) => (
             <Text
-              render={({ pageNumber, totalPages }) => {
+              render={({pageNumber, totalPages}) => {
                 const mainPages = totalPages || 1;
                 window[`exam_${examIndex}_pages`] = mainPages;
                 const mainBlankPages = (4 - (mainPages % 4)) % 4;
                 window[`exam_${examIndex}_main_blank_pages`] = mainBlankPages;
-                console.log(`Exam ${examIndex + 1}: Main content pages`, {
-                  totalPages: mainPages,
-                  pageNumber,
-                  mainBlankPages,
-                  paddedMainPages: mainPages + mainBlankPages - 1,
-                });
+                // console.log(`Exam ${examIndex + 1}: Main content pages`, {
+                //   totalPages: mainPages,
+                //   pageNumber,
+                //   mainBlankPages,
+                //   paddedMainPages: mainPages + mainBlankPages - 1,
+                // });
                 return null;
               }}
             />
           );
 
-          const BlankPages = ({ examIndex }) => {
+          const BlankPages = ({examIndex}) => {
             const mainPages = window[`exam_${examIndex}_pages`] || 1;
             const mainBlankPages = window[`exam_${examIndex}_main_blank_pages`] || 0;
             const totalPages = mainPages + mainBlankPages;
             const extraPages = (4 - (totalPages % 4)) % 4;
             const finalPageCount = totalPages + extraPages;
 
-            console.log(`Exam ${examIndex + 1}: Blank page calculation`, {
-              mainPages,
-              mainBlankPages,
-              totalPages,
-              extraPages,
-              finalPageCount,
-            });
+            // console.log(`Exam ${examIndex + 1}: Blank page calculation`, {
+            //   mainPages,
+            //   mainBlankPages,
+            //   totalPages,
+            //   extraPages,
+            //   finalPageCount,
+            // });
 
             if (mainBlankPages + extraPages % 4 !== 0) {
 
             }
 
-            return Array.from({ length: (mainBlankPages + extraPages) / 4 * 4 }, (_, i) => (
+            return Array.from({length: (mainBlankPages + extraPages) / 4 * 4}, (_, i) => (
               <Page
                 key={`blank-${examIndex}-${i}`}
                 size="A4"
                 style={styles.page}
               >
-                <View style={styles.blankPage}>
-                  <Text>
-                    This page is intentionally left blank
-                    {i < mainBlankPages ? " (main content padding)" : ""}
-                  </Text>
-                </View>
-                <Footer />
+                {/*<View style={styles.blankPage}>*/}
+                {/*  <Text>*/}
+                {/*    This page is intentionally left blank*/}
+                {/*    {i < mainBlankPages ? " (main content padding)" : ""}*/}
+                {/*  </Text>*/}
+                {/*</View>*/}
+                <Footer/>
               </Page>
             ));
           };
 
           return (
             <React.Fragment key={`exam-${examIndex}`}>
-              <MainContent />
-              <BlankPages examIndex={examIndex} />
-              {console.log(
-                `Exam ${examIndex + 1}: Final page count`,
-                (window[`exam_${examIndex}_pages`] || 1) +
-                  (window[`exam_${examIndex}_main_blank_pages`] || 0) +
-                  ((4 - (((window[`exam_${examIndex}_pages`] || 1) + 
-                          (window[`exam_${examIndex}_main_blank_pages`] || 0)) % 4)) % 4)
-              )}
+              <MainContent/>
+              <BlankPages examIndex={examIndex}/>
+              {/*{console.log(*/}
+              {/*  `Exam ${examIndex + 1}: Final page count`,*/}
+              {/*  (window[`exam_${examIndex}_pages`] || 1) +*/}
+              {/*  (window[`exam_${examIndex}_main_blank_pages`] || 0) +*/}
+              {/*  ((4 - (((window[`exam_${examIndex}_pages`] || 1) +*/}
+              {/*    (window[`exam_${examIndex}_main_blank_pages`] || 0)) % 4)) % 4)*/}
+              {/*)}*/}
             </React.Fragment>
           );
         }

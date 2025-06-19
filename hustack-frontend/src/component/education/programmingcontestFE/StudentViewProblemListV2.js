@@ -9,32 +9,25 @@ import StandardTable from "../../table/StandardTable";
 import {getColorLevel} from "./lib";
 import {getLevels} from "./CreateProblem";
 import {errorNoti} from "../../../utils/notification";
+import { MTableToolbar } from "material-table";
 
 export default function StudentViewProblemList() {
-  const {t} = useTranslation(["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
+  const {t} = useTranslation([ "education/programmingcontest/studentviewcontestdetail","education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
   const levels = getLevels(t);
 
   const {contestId} = useParams();
   const [problems, setProblems] = useState([]);
-
   const [loading, setLoading] = useState(false);
+  const [totalSubmittedPoints, setTotalSubmittedPoints] = useState(0);
+  const [totalMaxPoints, setTotalMaxPoints] = useState(0);
 
   const columns = [
-    // {
-    //   title: "Code",
-    //   field: "problemCode",
-    // },
     {
       title: t("problem"),
       field: "problemName",
       render: (rowData) => (
         <Link
-          to={
-            "/programming-contest/student-view-contest-problem-detail/" +
-            contestId +
-            "/" +
-            rowData.problemId
-          }
+          to={`/programming-contest/student-view-contest-problem-detail/${contestId}/${rowData.problemId}`}
           style={{
             textDecoration: "none",
             color: "blue",
@@ -68,28 +61,27 @@ export default function StudentViewProblemList() {
       ),
     },
     {
-      title: t("education/programmingcontest/testcase:point"),
+      title: t("common:maxSubmittedPoint"),
       field: "maxSubmittedPoint",
       type: 'numeric',
       render: (rowData) => (
         <>
-          {
-            rowData.maxSubmittedPoint &&
-            rowData.maxSubmittedPoint.toLocaleString("fr-FR", localeOption)
-            // (
-            //   <Chip
-            //     size="small"
-            //     color="primary"
-            //     variant="outlined"
-            //     label={rowData.maxSubmittedPoint}
-            //     sx={{
-            //       padding: "4px",
-            //       border: "2px solid lightgray",
-            //       width: "52px",
-            //     }}
-            //   />
-            // )
-          }
+          {rowData.maxSubmittedPoint &&
+            rowData.maxSubmittedPoint.toLocaleString("fr-FR", localeOption)}
+        </>
+      ),
+      align: "right",
+      minWidth: 160,
+    },
+    {
+      title: t("common:maxPoint"),
+      field: "maxPoint",
+      type: "numeric",
+      render: (rowData) => (
+        <>
+          {rowData.maxPoint != null
+            ? rowData.maxPoint.toLocaleString("fr-FR", localeOption)
+            : ""}
         </>
       ),
       align: "right",
@@ -111,6 +103,7 @@ export default function StudentViewProblemList() {
           {rowData?.tags.length > 0 &&
             rowData.tags.map((tag) => (
               <Chip
+                key={tag}
                 size="small"
                 label={tag}
                 sx={{
@@ -127,42 +120,71 @@ export default function StudentViewProblemList() {
   ];
 
   function getContestDetail() {
+    setLoading(true);
     request(
       "get",
       "/contests/" + contestId + "/problems/v2",
       (res) => {
-        setProblems(res.data);
-        // TODO: rm this code
-        // for (let i = 0; i < res.data.length; i++) {
-        //   let idSource = contestId + "-" + res.data[i].problemId + "-source";
-        //   let tmpSource = localStorage.getItem(idSource);
-        //   let idLanguage =
-        //     contestId + "-" + res.data[i].problemId + "-language";
-        //   let tmpLanguage = localStorage.getItem(idLanguage);
-        //   if (tmpSource == null) {
-        //     localStorage.setItem(idSource, "");
-        //   }
-        //   if (tmpLanguage == null) {
-        //     localStorage.setItem(idLanguage, "CPP");
-        //   }
-        // }
+        const problemsData = res.data;
+        setProblems(problemsData);
+
+        const totalSubmitted = problemsData.reduce(
+          (sum, problem) => sum + (problem.maxSubmittedPoint || 0),
+          0
+        );
+        const totalMax = problemsData.reduce(
+          (sum, problem) => sum + (problem.maxPoint || 0),
+          0
+        );
+        setTotalSubmittedPoints(totalSubmitted);
+        setTotalMaxPoints(totalMax);
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error", 3000))
+          errorNoti(t("common:error"), 3000);
         }
       }
-    )
-    // .then(() => setLoading(false));
+    ).finally(() => setLoading(false));
   }
 
   useEffect(() => {
     getContestDetail();
   }, []);
 
+  const getPointsColor = () => {
+    const submitted = totalSubmittedPoints || 0;
+    const max = totalMaxPoints || 0;
+    if (submitted === 0) return "#f44336";
+    if (submitted < max) return "#0288d1";
+    return "#4caf50";
+  };
+
   return (
     <>
-      {loading && <LinearProgress/>}
+      {loading && <LinearProgress />}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "2px 7px",
+          marginBottom: "-8px",
+          // backgroundColor: "#f5f5f5",
+          // borderBottom: "1px solid rgb(224, 224, 224)",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: getPointsColor(),
+          }}
+        >
+          {t("common:maxSubmittedPoint")}:{" "}
+          {totalSubmittedPoints?.toFixed(2) || 0} /{" "}
+          {t("common:maxPoint")}:{" "}
+          {totalMaxPoints?.toFixed(2) || 0}
+        </Typography>
+      </Box>
       <StandardTable
         columns={columns}
         data={problems}
@@ -174,6 +196,31 @@ export default function StudentViewProblemList() {
         }}
         components={{
           Container: (props) => <Paper {...props} elevation={0}/>,
+          Toolbar: (toolBarProps) => (
+            toolBarProps.hideToolBar ? null : (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "8px 8px",
+                }}
+              >
+                <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "flex-end" }}>
+                  <MTableToolbar
+                    {...toolBarProps}
+                    classes={{
+                      highlight: { backgroundColor: "transparent" },
+                    }}
+                    searchFieldStyle={{
+                      height: 40,
+                      ...toolBarProps.options?.searchFieldStyle,
+                    }}
+                  />
+                </Box>
+              </Box>
+            )
+          ),
         }}
       />
     </>

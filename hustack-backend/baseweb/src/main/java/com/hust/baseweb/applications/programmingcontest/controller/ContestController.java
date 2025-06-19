@@ -7,17 +7,16 @@ import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestProblemRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -42,11 +41,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestController {
 
+    TestCaseRepo testCaseRepo;
     ProblemTestCaseService problemTestCaseService;
     ContestRepo contestRepo;
     ContestSubmissionRepo contestSubmissionRepo;
@@ -56,6 +56,7 @@ public class ContestController {
     ContestService contestService;
 
     ApiService apiService;
+    ProblemService problemService;
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/map-new-problem-to-submissions-in-contest")
@@ -137,7 +138,7 @@ public class ContestController {
     public ResponseEntity<?> importProblemsFromAContest(@RequestBody ModelImportProblemsFromAContestInput input) {
 
         try {
-            List<ModelImportProblemFromContestResponse> res = problemTestCaseService.importProblemsFromAContest(input);
+            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(input);
             return ResponseEntity.ok().body(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -268,10 +269,10 @@ public class ContestController {
             if (cp == null) {
                 return ResponseEntity.ok().body("NOTFOUND");
             }
-            if (!contestEntity.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
+            if (!ContestEntity.CONTEST_STATUS_RUNNING.equals(contestEntity.getStatusId())) {
                 return ResponseEntity.ok().body(null);
             }
-            ModelCreateContestProblemResponse problemEntity = problemTestCaseService.getContestProblem(problemId);
+            ModelCreateContestProblemResponse problemEntity = problemService.getContestProblem(problemId);
             ModelStudentViewProblemDetail model = new ModelStudentViewProblemDetail();
             if (contestEntity.getProblemDescriptionViewType() != null &&
                 contestEntity.getProblemDescriptionViewType()
@@ -328,71 +329,10 @@ public class ContestController {
         Principal principal
     ) {
         String userId = principal.getName();
-
         logStudentGetDetailContest(userId, contestId);
 
-        ContestEntity contest = contestService.findContest(contestId);
-
-
-        List<ProblemEntity> problems = contest.getProblems();
-        List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsOfUser(userId, contestId);
-        List<ModelProblemMaxSubmissionPoint> submittedProblems = contestSubmissionRepo.findSubmittedProblemsOfUser(
-            userId,
-            contestId);
-
-        Map<String, Long> mapProblemToMaxSubmissionPoint = new HashMap<>();
-        for (ModelProblemMaxSubmissionPoint problem : submittedProblems) {
-            mapProblemToMaxSubmissionPoint.put(problem.getProblemId(), problem.getMaxPoint());
-        }
-
-        List<ModelStudentOverviewProblem> responses = new ArrayList<>();
-
-        if (contest.getStatusId().equals(ContestEntity.CONTEST_STATUS_RUNNING)) {
-            Set<String> problemIds = problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet());
-            List<ContestProblem> contestProblems = contestProblemRepo.findByContestIdAndProblemIdIn(
-                contestId,
-                problemIds);
-
-            Map<String, ContestProblem> problemId2ContestProblem = new HashMap<>();
-            contestProblems.forEach(p -> problemId2ContestProblem.put(p.getProblemId(), p));
-
-            for (ProblemEntity problem : problems) {
-                String problemId = problem.getProblemId();
-
-                ContestProblem contestProblem = problemId2ContestProblem.get(problemId);
-                if (contestProblem.getSubmissionMode() != null) {
-                    if (contestProblem.getSubmissionMode().equals(ContestProblem.SUBMISSION_MODE_HIDDEN)) {
-                        continue;
-                    }
-                }
-
-                ModelStudentOverviewProblem response = new ModelStudentOverviewProblem();
-                response.setProblemId(problemId);
-                response.setProblemName(contestProblem.getProblemRename());
-                response.setProblemCode(contestProblem.getProblemRecode());
-                response.setLevelId(problem.getLevelId());
-
-                if (contest.getContestShowTag() != null && contest.getContestShowTag().equals("N")) {
-                    response.setTags(new ArrayList<>());
-                } else {
-                    List<String> tags = problem.getTags().stream().map(TagEntity::getName).collect(Collectors.toList());
-                    response.setTags(tags);
-                }
-
-                if (mapProblemToMaxSubmissionPoint.containsKey(problemId)) {
-                    response.setSubmitted(true);
-                    response.setMaxSubmittedPoint(mapProblemToMaxSubmissionPoint.get(problemId));
-                }
-
-                if (acceptedProblems.contains(problemId)) {
-                    response.setAccepted(true);
-                }
-
-                responses.add(response);
-            }
-        }
-
-        return ResponseEntity.ok().body(responses);
+        List<ModelStudentOverviewProblem> responses = problemService.getStudentContestProblems(userId, contestId);
+        return ResponseEntity.ok(responses);
     }
 
     @Secured("ROLE_TEACHER")
@@ -745,7 +685,8 @@ public class ContestController {
                 problemId);
         return ResponseEntity.ok().body(page);
     }
-
+    
+    
     @Async
     protected void logGetSubmissionsOfContest(String userId, String contestId) {
         if (true) {
