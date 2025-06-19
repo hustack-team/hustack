@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProblemService {
+public class ProblemCacheService {
 
     ProblemRepo problemRepo;
 

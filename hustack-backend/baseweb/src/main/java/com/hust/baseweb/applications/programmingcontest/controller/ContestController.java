@@ -56,6 +56,7 @@ public class ContestController {
     ContestService contestService;
 
     ApiService apiService;
+    ProblemService problemService;
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/map-new-problem-to-submissions-in-contest")
@@ -137,7 +138,7 @@ public class ContestController {
     public ResponseEntity<?> importProblemsFromAContest(@RequestBody ModelImportProblemsFromAContestInput input) {
 
         try {
-            List<ModelImportProblemFromContestResponse> res = problemTestCaseService.importProblemsFromAContest(input);
+            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(input);
             return ResponseEntity.ok().body(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -271,7 +272,7 @@ public class ContestController {
             if (!ContestEntity.CONTEST_STATUS_RUNNING.equals(contestEntity.getStatusId())) {
                 return ResponseEntity.ok().body(null);
             }
-            ModelCreateContestProblemResponse problemEntity = problemTestCaseService.getContestProblem(problemId);
+            ModelCreateContestProblemResponse problemEntity = problemService.getContestProblem(problemId);
             ModelStudentViewProblemDetail model = new ModelStudentViewProblemDetail();
             if (contestEntity.getProblemDescriptionViewType() != null &&
                 contestEntity.getProblemDescriptionViewType()
@@ -330,7 +331,7 @@ public class ContestController {
         String userId = principal.getName();
         logStudentGetDetailContest(userId, contestId);
 
-        List<ModelStudentOverviewProblem> responses = problemTestCaseService.getStudentContestProblems(userId, contestId);
+        List<ModelStudentOverviewProblem> responses = problemService.getStudentContestProblems(userId, contestId);
         return ResponseEntity.ok(responses);
     }
 
