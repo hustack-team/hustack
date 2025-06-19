@@ -13,7 +13,6 @@ import com.hust.baseweb.applications.programmingcontest.repo.TestCaseRepo;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
 import lombok.AllArgsConstructor;
 import org.apache.commons.io.IOUtils;
-import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
