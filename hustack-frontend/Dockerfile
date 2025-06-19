@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json .
 # COPY package-lock.json .
 RUN npm i
-# Sửa fetch__default["default"] thành globalThis.fetch
+# Fix TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation from @react-pdf/renderer package
 RUN find node_modules/@react-pdf -type f -name '*.js' -exec sed -i 's/fetch__default\["default"\](/(typeof fetch === "function" ? fetch : require("cross-fetch"))(/g' {} +
 COPY . ./
 RUN npm run build
