@@ -31,9 +31,7 @@ export const detail = (key, value, sx, helpText) => (
           {key}
           {
             <Tooltip arrow title={helpText}>
-              <IconButton sx={{p: 0.5, pt: 0}}>
-                <HelpOutlineIcon sx={{fontSize: 16, color: "#000000de"}}/>
-              </IconButton>
+              <HelpOutlineIcon sx={{margin: "0 4px -2px", fontSize: 16, color: "#000000de"}}/>
             </Tooltip>
           }
         </>

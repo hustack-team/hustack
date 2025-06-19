@@ -56,7 +56,7 @@ public class ContestController {
     UserService userService;
     ProblemRepo problemRepo;
     ContestService contestService;
-
+    ProblemService problemService;
     ApiService apiService;
 
     @Secured("ROLE_TEACHER")
@@ -139,7 +139,7 @@ public class ContestController {
     public ResponseEntity<?> importProblemsFromAContest(@RequestBody ModelImportProblemsFromAContestInput input) {
 
         try {
-            List<ModelImportProblemFromContestResponse> res = problemTestCaseService.importProblemsFromAContest(input);
+            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(input);
             return ResponseEntity.ok().body(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

@@ -27,6 +27,7 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
     ProblemTestCaseService problemTestCaseService;
     ContestService contestService;
     ContestSubmissionRepo contestSubmissionRepo;
+    ProblemService problemService;
 
     @Transactional(readOnly = true)
     public ModelStudentViewProblemDetail getProblemDetailForStudentView(String userId, String contestId, String problemId) {
@@ -41,7 +42,7 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
                 return null;
             }
 
-            ModelCreateContestProblemResponse problemEntity = problemTestCaseService.getContestProblem(problemId);
+            ModelCreateContestProblemResponse problemEntity = problemService.getContestProblem(problemId);
             ProblemEntity problem = problemRepo.findByProblemId(problemId);
             if (problem == null) return null;
 

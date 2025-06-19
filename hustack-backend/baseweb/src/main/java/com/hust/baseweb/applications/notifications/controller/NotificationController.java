@@ -63,7 +63,7 @@ public class NotificationController {
         }); // OK
         subscription.onError((e) -> { // Must consider carefully, but currently OK
             if (e.getMessage() != null &&
-                !e.getMessage().contains("Broken pipe")) {
+                !"Servlet container error notification for disconnected client".equals(e.getMessage())) {
                 log.error("onError fired on connection {} with exception: {}", toUser, e.getMessage());
             }
             subscription.completeWithError(e);
