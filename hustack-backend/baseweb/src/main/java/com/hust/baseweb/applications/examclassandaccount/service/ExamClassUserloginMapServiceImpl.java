@@ -54,7 +54,7 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
             UserRepresentation user = new UserRepresentation();
 
             user.setFirstName(dto.getFullName());
-            user.setEnabled(true);
+            user.setEnabled(false);
 
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("oneTimeAccount", List.of("true"));
@@ -91,14 +91,14 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
             if (attempt != maxRetries) {
                 ecu.setRandomUserLoginId(username);
                 ecu.setPassword(password);
-                ecu.setStatus(ExamClassUserloginMap.STATUS_ACTIVE);
+                ecu.setStatus(ExamClassUserloginMap.STATUS_DISABLE);
 
                 //
                 UserLogin ul = new UserLogin();
 
                 ul.setUserLoginId(username);
                 ul.setEmail(dto.getEmail());
-                ul.setEnabled(true);
+                ul.setEnabled(false);
                 ul.setFirstName(dto.getFullName());
 
                 userLogins.add(ul);
