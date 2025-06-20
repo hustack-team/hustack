@@ -30,8 +30,11 @@ public interface ProblemService {
 
     void exportProblemJson(String problemId, OutputStream outputStream, String userId);
 
-    void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId);
-
+    void importProblem(
+        ModelImportProblem model,
+        MultipartFile[] files,
+        String userId
+    );
 
     boolean removeUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
 

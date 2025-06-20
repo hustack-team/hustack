@@ -241,23 +241,15 @@ public class ProblemController {
     @Secured("ROLE_TEACHER")
     @PostMapping(value = "/problems/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> importProblem(
-        @RequestPart("file") MultipartFile file,
-        @RequestPart("problem") @Valid ModelImportProblem problem,
+        @RequestPart(value = "problemDetail") @Valid ModelImportProblem problemDetail,
+        @RequestPart(value = "files", required = false) MultipartFile[] files,
         Principal principal
     ) {
-        Tika tika = new Tika();
         try {
-            String fileType = tika.detect(file.getInputStream());
-            if (!fileType.equals("application/zip")) {
-                return ResponseEntity.badRequest().body("File must be a valid ZIP file");
-            }
-
-            problemService.importProblem(problem, file, principal.getName());
+            problemService.importProblem(problemDetail, files, principal.getName());
             return ResponseEntity.ok("Problem imported successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to read file for detection");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to import problem: " + e.getMessage());

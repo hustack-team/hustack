@@ -37,8 +37,23 @@ import {getLevels, getStatuses} from "./CreateProblem";
 import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 import { BsFiletypeJson } from "react-icons/bs";
 import { FaFileArchive } from "react-icons/fa";
+import { LoadingButton } from "@mui/lab";
 
-const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []}
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILES = 5;
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf", ".docx", ".xlsx", ".pptx"];
+const JSON_MIME_TYPE = "application/json";
+const JSON_EXTENSION = ".json";
+
+const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []};
 
 export const selectProps = (options) => ({
   multiple: true,
@@ -59,34 +74,38 @@ export const selectProps = (options) => ({
       ))}
     </Box>
   )
-})
+});
 
 function ListProblemContent({type}) {
   const {keycloak} = useKeycloak();
-
+  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState(filterInitValue);
-
   const [openImportDialog, setOpenImportDialog] = useState(false);
   const [importForm, setImportForm] = useState({
     problemId: "",
     problemName: "",
-    file: null
+    jsonFile: null,
+    jsonContent: "",
+    attachments: [],
   });
   const [importErrors, setImportErrors] = useState({});
+
+  const levels = getLevels(t);
+  const statuses = getStatuses(t);
 
   const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
   const handleChangePageSize = (newSize) => {
-    setPage(0)
-    setPageSize(newSize)
-  }
+    setPage(0);
+    setPageSize(newSize);
+  };
 
   const handleSelectLevels = (event) => {
     setFilter(prevFilter => ({...prevFilter, levelIds: event.target.value}));
@@ -94,19 +113,19 @@ function ListProblemContent({type}) {
 
   const handleSelectTags = (tags) => {
     setFilter(prevFilter => ({...prevFilter, tags: tags}));
-  }
+  };
 
   const handleChangeProblemName = (event) => {
     setFilter(prevFilter => ({...prevFilter, name: event.target.value}));
-  }
+  };
 
   const handleChangeStatus = (event) => {
     setFilter(prevFilter => ({...prevFilter, statuses: event.target.value}));
-  }
+  };
 
   const resetFilter = () => {
-    setFilter(filterInitValue)
-  }
+    setFilter(filterInitValue);
+  };
 
   const hasSpecialCharacterProblemId = (value) => {
     return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(value);
@@ -123,9 +142,11 @@ function ListProblemContent({type}) {
   const handleCloseImportDialog = () => {
     setOpenImportDialog(false);
     setImportForm({
-      problemId: "",
-      problemName: "",
-      file: null
+      problemId: '',
+      problemName: '',
+      jsonFile: null,
+      jsonContent: '',
+      attachments: [],
     });
     setImportErrors({});
   };
@@ -138,8 +159,137 @@ function ListProblemContent({type}) {
     if (importErrors[field]) {
       setImportErrors(prev => ({
         ...prev,
-        [field]: ""
+        [field]: ''
       }));
+    }
+  };
+
+  const readJsonFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target.result);
+      reader.onerror = (error) => reject(error);
+      reader.readAsText(file);
+    });
+  };
+
+  const isValidFile = (file, isJson = false) => {
+    if (!file || !file.name) return false;
+    const extension = `.${file.name.split(".").pop().toLowerCase()}`;
+    if (isJson) {
+      return file.type === JSON_MIME_TYPE && extension === JSON_EXTENSION;
+    }
+    return ALLOWED_MIME_TYPES.includes(file.type) && ALLOWED_EXTENSIONS.includes(extension);
+  };
+
+  const isValidFileSize = (file) => {
+    return file && file.size <= MAX_FILE_SIZE && file.size > 0;
+  };
+
+  const isValidJson = (text) => {
+    try {
+      JSON.parse(text);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const handleFileInputChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isValidFile(file, true)) {
+      setImportErrors((prev) => ({
+        ...prev,
+        jsonFile: t("invalidJsonFormat"),
+      }));
+      return;
+    }
+
+    if (!isValidFileSize(file)) {
+      setImportErrors((prev) => ({
+        ...prev,
+        jsonFile: file.size === 0 
+          ? t("fileEmpty", { file: file.name }) 
+          : t("fileTooLarge", { maxSize: MAX_FILE_SIZE / (1024 * 1024) }),
+      }));
+      return;
+    }
+
+    try {
+      const jsonText = await readJsonFile(file);
+      if (!isValidJson(jsonText)) {
+        setImportErrors((prev) => ({
+          ...prev,
+          jsonFile: t("invalidJsonContent"),
+        }));
+        return;
+      }
+      handleImportFormChange("jsonFile", file);
+      handleImportFormChange("jsonContent", jsonText);
+    } catch (error) {
+      console.error("Error reading JSON file:", error);
+      setImportErrors((prev) => ({
+        ...prev,
+        jsonFile: t("errorReadingFile"),
+      }));
+    }
+  };
+
+  const handleJsonContentChange = (e) => {
+    const text = e.target.value;
+    handleImportFormChange("jsonContent", text);
+    if (importErrors.jsonContent && isValidJson(text)) {
+      setImportErrors((prev) => ({
+        ...prev,
+        jsonContent: "",
+      }));
+    }
+  };
+
+  const handleAttachmentChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (files.length + importForm.attachments.length > MAX_FILES) {
+      setImportErrors((prev) => ({
+        ...prev,
+        attachments: t("tooManyFiles", { maxFiles: MAX_FILES }),
+      }));
+      return;
+    }
+
+    const validFiles = files.filter((file) => {
+      if (!isValidFile(file)) {
+        setImportErrors((prev) => ({
+          ...prev,
+          attachments: t("invalidFileFormat", { file: file.name }),
+        }));
+        return false;
+      }
+      if (!isValidFileSize(file)) {
+        setImportErrors((prev) => ({
+          ...prev,
+          attachments: file.size === 0 
+            ? t("fileEmpty", { file: file.name }) 
+            : t("fileTooLarge", { maxSize: MAX_FILE_SIZE / (1024 * 1024), file: file.name }),
+        }));
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      handleImportFormChange("attachments", [...importForm.attachments, ...validFiles]);
+    }
+  };
+
+  const handleRemoveAttachment = (index) => {
+    const newAttachments = importForm.attachments.filter((_, i) => i !== index);
+    handleImportFormChange("attachments", newAttachments);
+    if (importErrors.attachments) {
+      setImportErrors((prev) => ({ ...prev, attachments: "" }));
     }
   };
 
@@ -158,34 +308,79 @@ function ListProblemContent({type}) {
       errors.problemName = t("problemNameInvalid");
     }
 
-    if (!importForm.file) {
-      errors.file = t("fileRequired");
+    if (!importForm.jsonContent) {
+      errors.jsonContent = t("jsonContentRequired");
+    } else if (!isValidJson(importForm.jsonContent)) {
+      errors.jsonContent = t("invalidJsonContent");
+    }
+
+    if (importForm.jsonContent && isValidJson(importForm.jsonContent)) {
+      try {
+        const jsonData = JSON.parse(importForm.jsonContent);
+
+        if (jsonData.timeLimitCPP == null || isNaN(jsonData.timeLimitCPP) || jsonData.timeLimitCPP <= 0) {
+          errors.jsonContent = errors.jsonContent || t("timeLimitCPPRequired");
+        }
+
+        if (jsonData.timeLimitJAVA == null || isNaN(jsonData.timeLimitJAVA) || jsonData.timeLimitJAVA <= 0) {
+          errors.jsonContent = errors.jsonContent || t("timeLimitJAVARequired");
+        }
+
+        if (jsonData.timeLimitPYTHON == null || isNaN(jsonData.timeLimitPYTHON) || jsonData.timeLimitPYTHON <= 0) {
+          errors.jsonContent = errors.jsonContent || t("timeLimitPYTHONRequired");
+        }
+
+        if (jsonData.memoryLimit == null || isNaN(jsonData.memoryLimit) || jsonData.memoryLimit <= 0) {
+          errors.jsonContent = errors.jsonContent || t("memoryLimitRequired");
+        }
+
+        if (jsonData.levelOrder == null || isNaN(jsonData.levelOrder) || jsonData.levelOrder < 0) {
+          errors.jsonContent = errors.jsonContent || t("levelOrderRequired");
+        }
+
+        if (jsonData.isPublicProblem == null) {
+          errors.jsonContent = errors.jsonContent || t("isPublicProblemRequired");
+        }
+
+        if (jsonData.scoreEvaluationType === "CUSTOM_EVALUATION") {
+          if (!jsonData.solutionCheckerSourceLanguage || !jsonData.solutionCheckerSourceLanguage.trim()) {
+            errors.jsonContent = errors.jsonContent || t("solutionCheckerSourceLanguageRequired");
+          }
+          if (!jsonData.solutionCheckerSourceCode || !jsonData.solutionCheckerSourceCode.trim()) {
+            errors.jsonContent = errors.jsonContent || t("solutionCheckerSourceCodeRequired");
+          }
+        }
+
+        if (jsonData.testCases && Array.isArray(jsonData.testCases)) {
+          jsonData.testCases.forEach((testCase, index) => {
+            if (!['Y', 'N'].includes(testCase.isPublic)) {
+              errors.jsonContent = errors.jsonContent || t("testCaseIsPublicRequired", { index: index + 1 });
+            }
+            if (testCase.testCasePoint == null || isNaN(testCase.testCasePoint) || testCase.testCasePoint <= 0) {
+              errors.jsonContent = errors.jsonContent || t("testCasePointRequired", { index: index + 1 });
+            }
+            if (!testCase.correctAnswer || !testCase.correctAnswer.trim()) {
+              errors.jsonContent = errors.jsonContent || t("testCaseCorrectAnswerRequired", { index: index + 1 });
+            }
+            if (!testCase.testCase || !testCase.testCase.trim()) {
+              errors.jsonContent = errors.jsonContent || t("testCaseInputRequired", { index: index + 1 });
+            }
+          });
+        }
+
+        if (jsonData.tags && Array.isArray(jsonData.tags)) {
+          if (jsonData.tags.some(tag => !tag || !tag.trim())) {
+            errors.jsonContent = errors.jsonContent || t("invalidTags");
+          }
+        }
+      } catch (e) {
+        console.error("JSON validation error:", e);
+        errors.jsonContent = t("invalidJsonContent");
+      }
     }
 
     setImportErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  const handleFileInputChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const isZip =
-      file.type === "application/zip" || file.name.toLowerCase().endsWith(".zip");
-
-    if (!isZip) {
-      setImportErrors((prev) => ({
-        ...prev,
-        file: t("fileRequired")
-      }));
-      return;
-    }
-
-    setImportErrors((prev) => ({
-      ...prev,
-      file: undefined
-    }));
-    handleImportFormChange("file", file);
   };
 
   const handleImportSubmit = () => {
@@ -193,14 +388,46 @@ function ListProblemContent({type}) {
       return;
     }
 
+    let problemDetailData;
+    try {
+      problemDetailData = JSON.parse(importForm.jsonContent);
+      problemDetailData.problemId = importForm.problemId;
+      problemDetailData.problemName = importForm.problemName;
+      problemDetailData.fileId = importForm.attachments.map((file) => file.name);
+      if (problemDetailData.appearances == null) {
+        problemDetailData.appearances = 0;
+      }
+      if (problemDetailData.isPublic !== undefined) {
+        problemDetailData.isPublicProblem = problemDetailData.isPublic;
+        delete problemDetailData.isPublic;
+      }
+    } catch (e) {
+      console.error("JSON parsing error in submit:", e);
+      setImportErrors((prev) => ({
+        ...prev,
+        jsonContent: t("invalidJsonContent"),
+      }));
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("file", importForm.file);
-    formData.append("problem", new Blob([JSON.stringify({
-      problemId: importForm.problemId,
-      problemName: importForm.problemName,
-    })], { type: "application/json" }));
+    formData.append("problemDetail", new Blob([JSON.stringify(problemDetailData)], { type: "application/json" }));
+    for (const file of importForm.attachments) {
+      formData.append("files", file);
+    }
+
+    console.log("FormData contents:");
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? value.name : value}`);
+    }
 
     setLoading(true);
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
+
     request(
       "post",
       "/problems/import",
@@ -213,30 +440,43 @@ function ListProblemContent({type}) {
       {
         onError: (e) => {
           setLoading(false);
-          
           let errorMessage = t("common:error");
           
           if (e.response?.data) {
             const errorData = e.response.data;
             
             if (typeof errorData === 'string') {
-              const translatedMessage = t(errorData, { defaultValue: errorData });
-              errorMessage = translatedMessage;
+              errorMessage = t(errorData, { defaultValue: errorData });
+            } else if (errorData.message) {
+              errorMessage = t(errorData.message, { defaultValue: errorData.message });
+            } else if (errorData.error) {
+              errorMessage = t(errorData.error, { defaultValue: errorData.error });
+            } else if (errorData.errors && Array.isArray(errorData.errors)) {
+              errorMessage = errorData.errors.map(err => t(err.message, { defaultValue: err.message })).join("; ");
             }
-            else if (errorData.message) {
-              const translatedMessage = t(errorData.message, { defaultValue: errorData.message });
-              errorMessage = translatedMessage;
+            if (errorData.message && errorData.message.includes("Too many files")) {
+              errorMessage = t("tooManyFiles", { maxFiles: MAX_FILES });
             }
-            else if (errorData.error) {
-              const translatedMessage = t(errorData.error, { defaultValue: errorData.error });
-              errorMessage = translatedMessage;
+            if (errorData.message && errorData.message.includes("size exceeds")) {
+              errorMessage = t("fileTooLarge", { maxSize: MAX_FILE_SIZE / (1024 * 1024) });
+            }
+            if (errorData.message && errorData.message.includes("is empty")) {
+              errorMessage = t("fileEmpty");
+            }
+            if (errorData.message && errorData.message.includes("Failed to store file")) {
+              errorMessage = t("failedToStoreFile");
+            }
+            if (errorData === "Problem ID or name already exists") {
+              errorMessage = t("problemIdNameExists");
             }
           }
           
+          console.error("Import error:", e.response?.data || e);
           errorNoti(errorMessage, 5000);
         },
       },
       formData,
+      config
     );
   };
 
@@ -246,13 +486,13 @@ function ListProblemContent({type}) {
     switch (type) {
       case 0:
         url = `/teacher/owned-problems?page=${page}&size=${pageSize}`;
-        break
+        break;
       case 1:
         url = `/teacher/shared-problems?page=${page}&size=${pageSize}`;
-        break
+        break;
       case 2:
         url = `/teacher/public-problems?page=${page}&size=${pageSize}`;
-        break
+        break;
     }
 
     if (filter.name) {
@@ -267,27 +507,23 @@ function ListProblemContent({type}) {
       (res) => {
         setLoading(false);
 
-        const data = res.data
-        const myProblems = data.content
+        const data = res.data;
+        const myProblems = data.content;
 
         if (data.numberOfElements === 0 && data.number > 0) {
-          setPage(0)
+          setPage(0);
         } else {
           setProblems(myProblems);
-          setTotalCount(data.totalElements)
+          setTotalCount(data.totalElements);
         }
       },
       {
         onError: (e) => {
           setLoading(false);
-          errorNoti(t("common:error", 3000))
+          errorNoti(t("common:error"), 3000);
         }
       });
-  }
-
-  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
-  const levels = getLevels(t);
-  const statuses = getStatuses(t)
+  };
 
   const onSingleDownload = async (problem) => {
     request("GET",
@@ -297,7 +533,7 @@ function ListProblemContent({type}) {
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error", 3000))
+          errorNoti(t("common:error"), 3000);
         }
       },
       {},
@@ -312,7 +548,7 @@ function ListProblemContent({type}) {
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error", 3000))
+          errorNoti(t("common:error"), 3000);
         }
       },
       {},
@@ -435,7 +671,7 @@ function ListProblemContent({type}) {
   ];
 
   useEffect(() => {
-    handleSearch()
+    handleSearch();
   }, [page, pageSize]);
 
   return (
@@ -521,80 +757,134 @@ function ListProblemContent({type}) {
         </Stack>
       </Stack>
 
-      {/* Import Dialog */}
       <CustomizedDialogs
         open={openImportDialog}
         handleClose={handleCloseImportDialog}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         title={t("importProblem")}
         content={
           <>
-            {/* Problem ID */}
-            <TextField
-              autoFocus
-              margin="dense"
-              label={t("problemId")}
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={importForm.problemId}
-              onChange={(e) => handleImportFormChange("problemId", e.target.value)}
-              error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
-              helperText={
-                importErrors.problemId ||
-                (hasSpecialCharacterProblemId(importForm.problemId)
-                  ? t("problemIdInvalid")
-                  : "")
-              }
-              sx={{ mb: 2 }}
-            />
-
-            {/* Problem Name */}
-            <TextField
-              margin="dense"
-              label={t("problemName")}
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={importForm.problemName}
-              onChange={(e) => handleImportFormChange("problemName", e.target.value)}
-              error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
-              helperText={
-                importErrors.problemName ||
-                (hasSpecialCharacterProblemName(importForm.problemName)
-                  ? t("problemNameInvalid")
-                  : "")
-              }
-              sx={{ mb: 2 }}
-            />
-
-            {/* ZIP File */}
-            <TextField
-              margin="dense"
-              type="file"
-              fullWidth
-              variant="outlined"
-              inputProps={{ accept: ".zip,application/zip" }}
-              onChange={handleFileInputChange}
-              error={!!importErrors.file}
-              helperText={importErrors.file || t("onlyZipFilesAllowed")}
-              sx={{ mb: 2 }}
-            />
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label={t("problemId")}
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={importForm.problemId}
+                  onChange={(e) => handleImportFormChange("problemId", e.target.value)}
+                  error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
+                  helperText={
+                    importErrors.problemId ||
+                    (hasSpecialCharacterProblemId(importForm.problemId)
+                      ? t("problemIdInvalid")
+                      : "")
+                  }
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  margin="dense"
+                  label={t("problemName")}
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={importForm.problemName}
+                  onChange={(e) => handleImportFormChange("problemName", e.target.value)}
+                  error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
+                  helperText={
+                    importErrors.problemName ||
+                    (hasSpecialCharacterProblemName(importForm.problemName)
+                      ? t("problemNameInvalid")
+                      : "")
+                  }
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  margin="dense"
+                  type="file"
+                  fullWidth
+                  variant="outlined"
+                  inputProps={{ accept: ".json" }}
+                  onChange={handleFileInputChange}
+                  error={!!importErrors.jsonFile}
+                  helperText={importErrors.jsonFile || t("uploadJsonFile")}
+                  // label={t("jsonFile")}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  margin="dense"
+                  label={t("jsonContent")}
+                  type="text"
+                  fullWidth
+                  multiline
+                  rows={10}
+                  variant="outlined"
+                  value={importForm.jsonContent}
+                  onChange={handleJsonContentChange}
+                  error={!!importErrors.jsonContent}
+                  helperText={importErrors.jsonContent}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  margin="dense"
+                  type="file"
+                  fullWidth
+                  variant="outlined"
+                  inputProps={{ accept: ALLOWED_EXTENSIONS.join(","), multiple: true }}
+                  onChange={handleAttachmentChange}
+                  error={!!importErrors.attachments}
+                  helperText={
+                    importErrors.attachments ||
+                    t("allowedFileTypes", {
+                      types: ALLOWED_EXTENSIONS.join(", "),
+                      maxFiles: MAX_FILES,
+                      maxSize: MAX_FILE_SIZE / (1024 * 1024),
+                    })
+                  }
+                  // label={t("attachments")}
+                />
+              </Grid>
+              {importForm.attachments.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2">{t("selectedFiles")}</Typography>
+                  <Stack spacing={1}>
+                    {importForm.attachments.map((file, index) => (
+                      <Stack key={index} direction="row" alignItems="center" spacing={1}>
+                        <Typography variant="body2">{file.name}</Typography>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveAttachment(index)}
+                        >
+                          {t("remove")}
+                        </Button>
+                      </Stack>
+                    ))}
+                  </Stack>
+                </Grid>
+              )}
+            </Grid>
           </>
         }
         actions={
           <>
-            <PrimaryButton onClick={handleCloseImportDialog} color="primary">
+            <TertiaryButton onClick={handleCloseImportDialog} color="primary">
               {t("common:cancel")}
-            </PrimaryButton>
-            <Button
+            </TertiaryButton>
+            <LoadingButton
               onClick={handleImportSubmit}
               color="primary"
               disabled={loading}
             >
               {loading ? t("importing") : t("import")}
-            </Button>
+            </LoadingButton>
           </>
         }
       />
@@ -602,9 +892,9 @@ function ListProblemContent({type}) {
       <StandardTable
         columns={COLUMNS.filter(item => {
           if (type === 0) {
-            return item.field !== 'userId'
+            return item.field !== 'userId';
           } else {
-            return true
+            return true;
           }
         })}
         data={problems}
@@ -617,7 +907,7 @@ function ListProblemContent({type}) {
           sorting: false,
         }}
         components={{
-          Container: (props) => <Paper {...props} elevation={0}/>,
+          Container: (props) => <Paper {...props} elevation={0}/>
         }}
         isLoading={loading}
         page={page}

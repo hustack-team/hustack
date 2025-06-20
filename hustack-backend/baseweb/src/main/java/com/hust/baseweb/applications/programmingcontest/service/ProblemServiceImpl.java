@@ -2,29 +2,26 @@ package com.hust.baseweb.applications.programmingcontest.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hust.baseweb.applications.chatgpt.ChatGPTService;
 import com.hust.baseweb.applications.contentmanager.model.ContentHeaderModel;
 import com.hust.baseweb.applications.contentmanager.model.ContentModel;
 import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputStreamUtils;
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
-import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.ApiService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
-import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
+import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
+import com.hust.baseweb.config.IEProblemProperties;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.ProblemProjection;
 import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
-import com.hust.baseweb.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +31,7 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,13 +41,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
-import vn.edu.hust.soict.judge0client.service.Judge0Service;
-import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -60,7 +50,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 @Service
@@ -463,6 +452,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setPublicProblem(problemEntity.isPublicProblem());
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
+            problemResponse.setStatus(problemEntity.getStatusId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {
@@ -511,89 +501,63 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-    private void handleExportProblem(
-            ModelCreateContestProblemResponse problem,
-            OutputStream outputStream
-    ) throws IOException {
-        Path exportDir = Files.createTempDirectory("problem-export-");
-        List<File> files = new ArrayList<>();
+    private void handleExportProblem(ModelCreateContestProblemResponse problem, OutputStream outputStream) throws IOException {
+        List<Map.Entry<String, ByteArrayOutputStream>> entries = new ArrayList<>();
 
         try {
-            File problemGeneralInfoFile = exporter.exportProblemInfoToFile(problem, exportDir);
-            File problemDescriptionFile = exporter.exportProblemDescriptionToFile(problem, exportDir);
-            File exportProblemInfoAsTextToFile = exporter.exportProblemInfoAsTextToFile(problem, exportDir);
-            File problemCorrectSolutionFile = exporter.exportProblemCorrectSolutionToFile(problem, exportDir);
+            ByteArrayOutputStream problemGeneralInfoStream = exporter.exportProblemInfoToStream(problem);
+            ByteArrayOutputStream problemDescriptionStream = exporter.exportProblemDescriptionToStream(problem);
+            ByteArrayOutputStream problemGeneralDescriptionTxtStream = exporter.exportProblemGeneralDescriptionToTxtStream(problem);
+            ByteArrayOutputStream problemCorrectSolutionStream = exporter.exportProblemCorrectSolutionToStream(problem);
 
-            files.add(problemGeneralInfoFile);
-            files.add(problemDescriptionFile);
-            files.add(exportProblemInfoAsTextToFile);
-            files.add(problemCorrectSolutionFile);
+            String solutionExt = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getCorrectSolutionLanguage()));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemGeneralInformation.html", problemGeneralInfoStream));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemDescription.html", problemDescriptionStream));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemGeneralDescription.txt", problemGeneralDescriptionTxtStream));
+            entries.add(new AbstractMap.SimpleEntry<>("Solution" + solutionExt, problemCorrectSolutionStream));
 
-            if (Constants.ProblemResultEvaluationType.CUSTOM.getValue().equals(problem.getScoreEvaluationType())) {
-                File problemCustomCheckerFile = exporter.exportProblemCustomCheckerToFile(problem, exportDir);
-                files.add(problemCustomCheckerFile);
+            if (problem.getScoreEvaluationType().equals(Constants.ProblemResultEvaluationType.CUSTOM.getValue())) {
+                ByteArrayOutputStream problemCustomCheckerStream = exporter.exportProblemCustomCheckerToStream(problem);
+                String checkerExt = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getSolutionCheckerSourceLanguage()));
+                entries.add(new AbstractMap.SimpleEntry<>("CustomSolutionChecker" + checkerExt, problemCustomCheckerStream));
             }
 
             if (!problem.getAttachmentNames().isEmpty()) {
-                files.addAll(exporter.exportProblemAttachmentToFile(problem, exportDir));
+                entries.addAll(exporter.exportProblemAttachmentToStream(problem));
             }
 
-            files.addAll(exporter.exportProblemTestCasesToFile(problem, exportDir));
+            entries.addAll(exporter.exportProblemTestCasesToStream(problem));
 
-            ZipOutputStreamUtils.zip(
-                    outputStream,
-                    files,
-                    CompressionMethod.DEFLATE,
-                    null,
-                    EncryptionMethod.AES,
-                    AesKeyStrength.KEY_STRENGTH_256
-            );
+            ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+            for (Map.Entry<String, ByteArrayOutputStream> entry : entries) {
+                ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                zipOutputStream.putNextEntry(zipEntry);
+                zipOutputStream.write(entry.getValue().toByteArray());
+                zipOutputStream.closeEntry();
+            }
+            zipOutputStream.close();
 
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
-        } finally {
-            for (File file : files) {
-                if (file != null && file.exists()) {
-                    if (!file.delete()) {
-                        System.err.println("Can't delete file: " + file.getAbsolutePath());
-                    }
-                }
-            }
-
-            try {
-                Files.walk(exportDir)
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(file -> {
-                            if (!file.delete()) {
-                                log.error("Failed to delete: " + file.getAbsolutePath());
-                            }
-                        });
-            } catch (IOException e) {
-                log.error("Failed to clean up export temp directory: " + exportDir);
-            }
         }
     }
 
     @Transactional(readOnly = true)
     public void exportProblemJson(String problemId, OutputStream outputStream, String userId) {
         try {
-            ModelCreateContestProblemResponse problem = getContestProblem(problemId);
-
-            List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problem.getProblemId(), userId);
+            List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, userId);
             boolean hasPermission = roles.stream().anyMatch(role ->
-                    role.equals(UserContestProblemRole.ROLE_OWNER) ||
-                            role.equals(UserContestProblemRole.ROLE_EDITOR) ||
-                            role.equals(UserContestProblemRole.ROLE_VIEWER)
+                                                                role.equals(UserContestProblemRole.ROLE_OWNER) ||
+                                                                role.equals(UserContestProblemRole.ROLE_EDITOR) ||
+                                                                role.equals(UserContestProblemRole.ROLE_VIEWER)
             );
 
             if (!hasPermission) {
                 throw new AccessDeniedException("You do not have permission to export this problem.");
             }
-            if (problem != null) {
-                handleExportProblemJson(problem, outputStream, userId);
-            }
+
+            handleExportProblemJson(problemId, outputStream, userId);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -601,10 +565,11 @@ public class ProblemServiceImpl implements ProblemService {
     }
 
     private void handleExportProblemJson(
-            ModelCreateContestProblemResponse problem,
-            OutputStream outputStream,
-            String userId
-    ) throws IOException {
+        String problemId,
+        OutputStream outputStream,
+        String userId
+    ) throws Exception {
+        ModelCreateContestProblemResponse problem = getContestProblem(problemId);
 
         long maxSizeBytes = iEProblemProperties.getExportConf().getMaxSizeBytes();
         long totalSize = 0;
@@ -616,9 +581,11 @@ public class ProblemServiceImpl implements ProblemService {
             fileStreams.put("ProblemData.json", problemJsonStream);
             totalSize += problemJsonStream.size();
 
-            if (!problem.getAttachmentNames().isEmpty()) {
+            List<String> attachmentNames = problem.getAttachmentNames();
+            if (attachmentNames != null && !attachmentNames.isEmpty()) {
                 List<Map.Entry<String, ByteArrayOutputStream>> attachmentStreams =
-                        exporter.exportProblemAttachmentToStream(problem);
+                    exporter.exportProblemAttachmentToStream(problem);
+
                 for (Map.Entry<String, ByteArrayOutputStream> entry : attachmentStreams) {
                     fileStreams.put(entry.getKey(), entry.getValue());
                     totalSize += entry.getValue().size();
@@ -626,14 +593,13 @@ public class ProblemServiceImpl implements ProblemService {
             }
 
             if (totalSize > maxSizeBytes) {
-                UserLogin admin = userLoginRepo.findByUserLoginId("admin");
-
                 notificationsService.create(
-                        userId,
-                        admin.getUserLoginId(),
-                        userId + " exported problem with ID " + problem.getProblemId() +
-                                " has size " + String.format("%.2f", totalSize / (1024.0 * 1024.0)) + "MB, exceeds threshold " + "50 " + "MB",
-                        ""
+                    userId,
+                    "admin",
+                    userId + " exported problem with ID " + problem.getProblemId() +
+                    " has size " + String.format("%.2f", totalSize / (1024.0 * 1024.0)) + "MB, exceeds threshold" +
+                    String.format("%.2f", totalSize / (1024.0 * 1024.0)) +  "MB",
+                    ""
                 );
             }
 
@@ -653,117 +619,67 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-
     @Transactional
-    public void importProblem(ModelImportProblem model, MultipartFile zipFile, String userId) {
-        final long MAX_ZIP_SIZE = iEProblemProperties.getImportConf().getMaxSizeBytes();
+    public void importProblem(
+        ModelImportProblem model,
+        MultipartFile[] files,
+        String userId
+    ) {
+        final long MAX_FILE_SIZE = iEProblemProperties.getImportConf().getMaxSizeBytes();
         final int MAX_FILE_COUNT = iEProblemProperties.getImportConf().getFileCount();
-        final long MAX_TOTAL_UNZIPPED_SIZE = iEProblemProperties.getImportConf().getMaxSizeUnzip();
-
-        Map<String, byte[]> extractedFiles = new HashMap<>();
-        long totalUnzippedSize = 0;
 
         try {
-            if (problemRepo.existsByProblemId(model.getProblemId()) || problemRepo.existsByProblemName(model.getProblemName())) {
+            if (problemRepo.existsByProblemId(model.getProblemId()) ||
+                problemRepo.existsByProblemName(model.getProblemName())) {
                 throw new IllegalArgumentException("Problem ID or name already exists");
             }
-            if (zipFile.getSize() > MAX_ZIP_SIZE) {
-                throw new IllegalArgumentException("ZIP file size exceeds "+  MAX_ZIP_SIZE + "MB limit");
+
+            List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                    .map(Arrays::asList)
+                                                    .orElseGet(Collections::emptyList);
+
+            if (fileArray.size() > MAX_FILE_COUNT) {
+                throw new IllegalArgumentException("Too many files (max: " + MAX_FILE_COUNT + ")");
             }
-            try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
-                ZipEntry entry;
-                while ((entry = zis.getNextEntry()) != null) {
-                    if (extractedFiles.size() >= MAX_FILE_COUNT) {
-                        throw new IllegalArgumentException("Too many files in ZIP (max: " + MAX_FILE_COUNT + ")");
-                    }
 
-                    if (entry.isDirectory()) {
-                        continue;
-                    }
-
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    long fileSize = 0;
-
-                    while ((bytesRead = zis.read(buffer)) != -1) {
-                        baos.write(buffer, 0, bytesRead);
-                        fileSize += bytesRead;
-                        totalUnzippedSize += bytesRead;
-
-                        if (totalUnzippedSize > MAX_TOTAL_UNZIPPED_SIZE) {
-                            throw new IllegalArgumentException("Total unzipped size exceeds 100MB limit");
-                        }
-                    }
-
-                    extractedFiles.put(entry.getName(), baos.toByteArray());
-                    zis.closeEntry();
+            for (MultipartFile file : fileArray) {
+                if (file.isEmpty()) {
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " is empty");
+                }
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " size exceeds " +
+                                                       (MAX_FILE_SIZE / (1024 * 1024)) + "MB limit");
                 }
             }
 
-            byte[] jsonData = extractedFiles.get("ProblemData.json");
-            if (jsonData == null) {
-                throw new IllegalArgumentException("ProblemData.json not found in ZIP file");
-            }
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> problemData = objectMapper.readValue(jsonData, Map.class);
-
             ProblemEntity problemEntity = new ProblemEntity();
-            problemEntity.setProblemId(model.getProblemId());
+            problemEntity.setProblemId(model.getProblemId().trim());
             problemEntity.setProblemName(model.getProblemName());
+            problemEntity.setTimeLimitCPP(model.getTimeLimitCPP());
+            problemEntity.setTimeLimitJAVA(model.getTimeLimitJAVA());
+            problemEntity.setTimeLimitPYTHON(model.getTimeLimitPYTHON());
+            problemEntity.setMemoryLimit(model.getMemoryLimit());
+            problemEntity.setLevelOrder(model.getLevelOrder());
+            problemEntity.setAppearances(model.getAppearances());
+            problemEntity.setPublicProblem(model.getIsPublicProblem());
+            problemEntity.setLevelId(model.getLevelId());
+            problemEntity.setStatusId(model.getStatusId());
+            problemEntity.setProblemDescription(model.getProblemDescription());
+            problemEntity.setCorrectSolutionLanguage(model.getCorrectSolutionLanguage());
+            problemEntity.setCorrectSolutionSourceCode(model.getCorrectSolutionSourceCode());
+            problemEntity.setScoreEvaluationType(model.getScoreEvaluationType());
+            problemEntity.setSolution(model.getSolution());
+            problemEntity.setIsPreloadCode(model.getIsPreloadCode());
+            problemEntity.setPreloadCode(model.getPreloadCode());
+            problemEntity.setSampleTestcase(model.getSampleTestCase());
 
-            if (problemData.containsKey("isPublic")) {
-                problemEntity.setPublicProblem((Boolean) problemData.get("isPublic"));
-            }
-            if (problemData.containsKey("timeLimitCPP")) {
-                problemEntity.setTimeLimitCPP(((Number) problemData.get("timeLimitCPP")).floatValue());
-            }
-            if (problemData.containsKey("timeLimitJAVA")) {
-                problemEntity.setTimeLimitJAVA(((Number) problemData.get("timeLimitJAVA")).floatValue());
-            }
-            if (problemData.containsKey("timeLimitPYTHON")) {
-                problemEntity.setTimeLimitPYTHON(((Number) problemData.get("timeLimitPYTHON")).floatValue());
-            }
-            if (problemData.containsKey("memoryLimit")) {
-                problemEntity.setMemoryLimit(((Number) problemData.get("memoryLimit")).floatValue());
-            }
-            if (problemData.containsKey("levelId")) {
-                problemEntity.setLevelId((String) problemData.get("levelId"));
-            }
-            if (problemData.containsKey("levelOrder")) {
-                problemEntity.setLevelOrder(((Number) problemData.get("levelOrder")).intValue());
-            }
-            if (problemData.containsKey("status")) {
-                problemEntity.setStatusId((String) problemData.get("status"));
-            }
-            if (problemData.containsKey("problemDescription")) {
-                problemEntity.setProblemDescription((String) problemData.get("problemDescription"));
-            }
-            if (problemData.containsKey("correctSolutionLanguage")) {
-                problemEntity.setCorrectSolutionLanguage((String) problemData.get("correctSolutionLanguage"));
-            }
-            if (problemData.containsKey("correctSolutionSourceCode")) {
-                problemEntity.setCorrectSolutionSourceCode((String) problemData.get("correctSolutionSourceCode"));
-            }
-            if (problemData.containsKey("scoreEvaluationType")) {
-                problemEntity.setScoreEvaluationType((String) problemData.get("scoreEvaluationType"));
-            }
-            if (problemData.containsKey("solution")) {
-                problemEntity.setSolution((String) problemData.get("solution"));
-            }
-            if (problemData.containsKey("isPreloadCode")) {
-                problemEntity.setIsPreloadCode((Boolean) problemData.get("isPreloadCode"));
-            }
-            if (problemData.containsKey("preloadCode")) {
-                problemEntity.setPreloadCode((String) problemData.get("preloadCode"));
-            }
-            if (problemData.containsKey("sampleTestCase")) {
-                problemEntity.setSampleTestcase((String) problemData.get("sampleTestCase"));
+            if ("CUSTOM_EVALUATION".equals(model.getScoreEvaluationType())) {
+                problemEntity.setSolutionCheckerSourceLanguage(model.getSolutionCheckerSourceLanguage());
+                problemEntity.setSolutionCheckerSourceCode(model.getSolutionCheckerSourceCode());
             }
 
-            if (problemData.containsKey("tags")) {
-                List<String> tagNames = (List<String>) problemData.get("tags");
+            if (model.getTags() != null && !model.getTags().isEmpty()) {
+                List<String> tagNames = model.getTags();
                 List<TagEntity> existingTags = tagRepo.findByNameInIgnoreCase(tagNames);
                 Map<String, TagEntity> nameToTagMap = new HashMap<>();
                 for (TagEntity tag : existingTags) {
@@ -792,81 +708,26 @@ public class ProblemServiceImpl implements ProblemService {
                 problemEntity.setTags(finalTags);
             }
 
-            if ("CUSTOM_EVALUATION".equals(problemData.get("scoreEvaluationType"))) {
-                if (problemData.containsKey("solutionCheckerSourceLanguage")) {
-                    problemEntity.setSolutionCheckerSourceLanguage((String) problemData.get("solutionCheckerSourceLanguage"));
-                }
-                if (problemData.containsKey("solutionCheckerSourceCode")) {
-                    problemEntity.setSolutionCheckerSourceCode((String) problemData.get("solutionCheckerSourceCode"));
-                }
-            }
-
             List<String> attachmentId = new ArrayList<>();
-            for (Map.Entry<String, byte[]> entry : extractedFiles.entrySet()) {
-                if (entry.getKey().equals("ProblemData.json")) {
-                    continue;
-                }
-
-                String fileName = entry.getKey();
-                byte[] fileContent = entry.getValue();
-
-                MultipartFile customMultipartFile = new MultipartFile() {
-                    @Override
-                    public String getName() {
-                        return fileName;
-                    }
-
-                    @Override
-                    public String getOriginalFilename() {
-                        return fileName;
-                    }
-
-                    @Override
-                    public String getContentType() {
-                        return "application/octet-stream";
-                    }
-
-                    @Override
-                    public boolean isEmpty() {
-                        return fileContent.length == 0;
-                    }
-
-                    @Override
-                    public long getSize() {
-                        return fileContent.length;
-                    }
-
-                    @Override
-                    public byte[] getBytes() {
-                        return fileContent;
-                    }
-
-                    @Override
-                    public InputStream getInputStream() {
-                        return new ByteArrayInputStream(fileContent);
-                    }
-
-                    @Override
-                    public void transferTo(File dest) throws IOException {
-                        Files.write(dest.toPath(), fileContent);
-                    }
-                };
-
-                ContentModel contentModel = new ContentModel(null, customMultipartFile);
+            String[] fileId = model.getFileId();
+            fileArray.forEach((file) -> {
+                ContentModel contentModel = new ContentModel(fileId[fileArray.indexOf(file)], file);
                 ObjectId id = null;
                 try {
                     id = mongoContentService.storeFileToGridFs(contentModel);
                 } catch (IOException e) {
-                    throw new RuntimeException("Failed to store file: " + fileName, e);
+                    e.printStackTrace();
                 }
 
                 if (id != null) {
                     ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
                     attachmentId.add(rs.getId());
                 }
-            }
+            });
+
 
             problemEntity.setAttachment(String.join(";", attachmentId));
+
             problemEntity = problemRepo.save(problemEntity);
 
             List<String> roles = Arrays.asList(
@@ -884,12 +745,11 @@ public class ProblemServiceImpl implements ProblemService {
                 rolesToSave.add(upr);
             }
 
-            UserLogin admin = userLoginRepo.findByUserLoginId("admin");
             if (userId != null && !userId.equals("admin")) {
                 for (String role : roles) {
                     UserContestProblemRole upr = new UserContestProblemRole();
                     upr.setProblemId(problemEntity.getProblemId());
-                    upr.setUserId(admin.getUserLoginId());
+                    upr.setUserId("admin");
                     upr.setRoleId(role);
                     rolesToSave.add(upr);
                 }
@@ -897,9 +757,8 @@ public class ProblemServiceImpl implements ProblemService {
 
             userContestProblemRoleRepo.saveAll(rolesToSave);
 
-            if (problemData.containsKey("testCases")) {
-                List<Map<String, Object>> testCases = (List<Map<String, Object>>) problemData.get("testCases");
-                for (Map<String, Object> tc : testCases) {
+            if (model.getTestCases() != null) {
+                for (Map<String, Object> tc : model.getTestCases()) {
                     TestCaseEntity testCase = new TestCaseEntity();
                     testCase.setProblemId(model.getProblemId());
                     if (tc.containsKey("testCasePoint")) {
@@ -923,13 +782,16 @@ public class ProblemServiceImpl implements ProblemService {
                     testCaseRepo.save(testCase);
                 }
             }
+            notificationsService.create(
+                userId,
+                "admin",
+                userId + "created a contest problem ID " + problemEntity.getProblemId(),
+                "");
 
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to import problem: " + e.getMessage(), e);
-        } finally {
-            extractedFiles.clear();
         }
     }
 
