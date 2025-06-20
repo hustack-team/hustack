@@ -246,6 +246,9 @@ public class ExamClassServiceImpl implements ExamClassService {
             for (ExamClassUserloginMap e : data) {
                 try {
                     keycloakService.updateEnabledUser(e.getRandomUserLoginId(), enabled);
+                    if (!enabled) { // log out all user's sessions after disabling the account
+                        keycloakService.logout(e.getRandomUserLoginId());
+                    }
                     e.setStatus(newStatus);
                     updateSuccessful.add(e);
                     success++;

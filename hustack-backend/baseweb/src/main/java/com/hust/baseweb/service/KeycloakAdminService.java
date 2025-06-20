@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.utils.StringUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -63,7 +65,7 @@ public class KeycloakAdminService {
             credential.setValue(password);
             keycloak.realm(realm).users().get(userId).resetPassword(credential);
 
-            // Assign group
+            // Assign groups
             String studentGroupId = getStudentGroupId();
             keycloak.realm(realm).users().get(userId).joinGroup(studentGroupId);
 
@@ -115,5 +117,19 @@ public class KeycloakAdminService {
                 .users()
                 .get(userId)
                 .resetPassword(credential);
+    }
+
+    public void logout(String username) {
+        String realm = keycloakAdminProperties.getRealm();
+        List<UserRepresentation> users = keycloak.realm(realm)
+                                                 .users()
+                                                 .search(username, true);
+        if (users.isEmpty()) {
+            log.info("User not found with username: {} in realm: {}", username, realm);
+            return;
+        }
+
+        String userId = users.get(0).getId();
+        keycloak.realm(realm).users().get(userId).logout();
     }
 }
