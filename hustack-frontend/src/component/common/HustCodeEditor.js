@@ -20,6 +20,8 @@ const HustCodeEditor = (props) => {
     onChangeSourceCode,
     height = "420px",
     hideLanguagePicker,
+    readOnly,
+    theme = "monokai",
     ...remainProps
   } = props;
 
@@ -51,10 +53,11 @@ const HustCodeEditor = (props) => {
         style={{paddingTop: "6px"}}
         placeholder={placeholder}
         mode={convertLanguageToEditorMode(language)}
-        theme="monokai"
+        theme={theme}
         onChange={onChangeSourceCode}
         fontSize={16}
-        value={sourceCode}/>
+        value={sourceCode}
+        readOnly={readOnly}/>
     </Box>
 
   );

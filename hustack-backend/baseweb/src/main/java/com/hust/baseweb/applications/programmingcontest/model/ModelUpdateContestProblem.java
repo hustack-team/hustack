@@ -31,7 +31,7 @@ public class ModelUpdateContestProblem {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
