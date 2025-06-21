@@ -46,11 +46,6 @@ code {
   left: 0;
 }
 
-.leaflet-container {
-  width: 100%;
-  height: calc(100vh - 112px);
-}
-
 .slider-parent .slick-track {
   height: 100% !important;
 }
