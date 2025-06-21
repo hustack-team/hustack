@@ -164,7 +164,7 @@ public class ExamClassServiceImpl implements ExamClassService {
                 UserRepresentation user = new UserRepresentation();
 
                 user.setFirstName(ecu.getFullname());
-                user.setEnabled(true);
+                user.setEnabled(false);
 
                 Map<String, List<String>> attributes = new HashMap<>();
                 attributes.put("oneTimeAccount", List.of("true"));
@@ -185,7 +185,7 @@ public class ExamClassServiceImpl implements ExamClassService {
                         if (keycloakService.createUser(user, password)) {
                             ecu.setRandomUserLoginId(username);
                             ecu.setPassword(password);
-                            ecu.setStatus(ExamClassUserloginMap.STATUS_ACTIVE);
+                            ecu.setStatus(ExamClass.STATUS_DISABLE);
 
                             updateSuccessful.add(ecu);
 
@@ -194,7 +194,7 @@ public class ExamClassServiceImpl implements ExamClassService {
 
                             ul.setUserLoginId(username);
                             ul.setEmail(ecu.getRealUserLoginId());
-                            ul.setEnabled(true);
+                            ul.setEnabled(false);
                             ul.setFirstName(ecu.getFullname());
 
                             userLogins.add(ul);

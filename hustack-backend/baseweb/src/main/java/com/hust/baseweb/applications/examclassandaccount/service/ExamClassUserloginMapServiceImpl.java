@@ -1,5 +1,6 @@
 package com.hust.baseweb.applications.examclassandaccount.service;
 
+import com.hust.baseweb.applications.examclassandaccount.entity.ExamClass;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClassUserloginMap;
 import com.hust.baseweb.applications.examclassandaccount.model.ExamClassAccountDTO;
 import com.hust.baseweb.applications.examclassandaccount.repo.ExamClassUserloginMapRepo;
@@ -91,7 +92,7 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
             if (attempt != maxRetries) {
                 ecu.setRandomUserLoginId(username);
                 ecu.setPassword(password);
-                ecu.setStatus(ExamClassUserloginMap.STATUS_DISABLE);
+                ecu.setStatus(ExamClass.STATUS_DISABLE);
 
                 //
                 UserLogin ul = new UserLogin();
