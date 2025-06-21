@@ -62,6 +62,8 @@ public class SubmissionServiceImpl implements SubmissionService {
     WebClient.Builder webClientBuilder;
 
     HustackAiServiceConfig hustackAiServiceConfig;
+    ContestSubmissionBlockRepo contestSubmissionBlockRepo;
+    ProblemBlockRepo problemBlockRepo;
 
     /**
      * @param model
@@ -136,8 +138,18 @@ public class SubmissionServiceImpl implements SubmissionService {
             cacheService.addUserLastProblemSubmissionTimeToCache(model.getProblemId(), model.getUserId());
         }
 
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(file.getBytes())) {
-            String source = IOUtils.toString(stream, StandardCharsets.UTF_8);
+        try {
+            String source;
+            if (Integer.valueOf(1).equals(model.getIsProblemBlock())) {
+                source = processBlockCodeSubmission(model, problem);
+            } else {
+                if (file == null) {
+                    return buildSubmissionResponseSourceCodeRequired();
+                }
+                try (ByteArrayInputStream stream = new ByteArrayInputStream(file.getBytes())) {
+                    source = IOUtils.toString(stream, StandardCharsets.UTF_8);
+                }
+            }
 
             if (StringUtils.isBlank(source)) {
                 return buildSubmissionResponseSourceCodeRequired();
@@ -156,14 +168,12 @@ public class SubmissionServiceImpl implements SubmissionService {
                 model.getLanguage(),
                 getClientIp(request),
                 numOfSubmissions == 0 ? 1 : 0
-                );
-
+            );
 
             if (problem.getForbiddenInstructions() != null) {
                 String[] forbiddenInstructions = problem.getForbiddenInstructions().split(",");
                 for (String rawInstruction : forbiddenInstructions) {
                     String instruction = rawInstruction.trim();
-
                     if (!instruction.isEmpty() && source.contains(instruction)) {
                         return submitContestProblemNotExecuteDueToForbiddenInstructions(
                             dto,
@@ -187,12 +197,65 @@ public class SubmissionServiceImpl implements SubmissionService {
                 res = submitContestProblemStoreOnlyNotExecute(dto, model.getUserId(), model.getSubmittedByUserId());
             }
 
+            if (Integer.valueOf(1).equals(model.getIsProblemBlock())) {
+                saveSubmissionBlockCodes(res.getContestSubmissionID(), model.getBlockCodes());
+            }
             return res;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Transactional(readOnly = true)
+    public String processBlockCodeSubmission(ModelContestSubmitProgramViaUploadFile model, ContestProblem problem) {
+        String language = model.getLanguage();
+
+        List<ProblemBlock> teacherBlocks = problemBlockRepo.findByProblemIdAndCompletedByAndProgrammingLanguage(
+            model.getProblemId(),
+            0,
+            language
+        );
+
+        List<BlockCode> studentBlocks = model.getBlockCodes();
+
+        Map<Integer, String> mergedBySeq = new TreeMap<>();
+
+        for (ProblemBlock teacherBlock : teacherBlocks) {
+            int seq = teacherBlock.getSeq();
+            mergedBySeq.putIfAbsent(seq, "");
+            mergedBySeq.put(seq, mergedBySeq.get(seq) + teacherBlock.getSourceCode() + "\n");
+        }
+
+        for (BlockCode studentBlock : studentBlocks) {
+            int seq = studentBlock.getSeq();
+            mergedBySeq.putIfAbsent(seq, "");
+            mergedBySeq.put(seq, mergedBySeq.get(seq) + studentBlock.getCode() + "\n");
+        }
+
+        StringBuilder mergedCode = new StringBuilder();
+        for (String code : mergedBySeq.values()) {
+            mergedCode.append(code);
+        }
+
+        return mergedCode.toString();
+    }
+
+    @Transactional
+    public void saveSubmissionBlockCodes(UUID submissionId, List<BlockCode> blockCodes) {
+        List<ContestSubmissionBlock> submissionBlocks = new ArrayList<>();
+
+
+        for (BlockCode block : blockCodes) {
+            ContestSubmissionBlock submissionBlock = ContestSubmissionBlock.builder()
+                                                                           .submissionId(submissionId)
+                                                                           .blockSeq(block.getSeq())
+                                                                           .sourceCode(block.getCode())
+                                                                           .build();
+            submissionBlocks.add(submissionBlock);
+        }
+
+        contestSubmissionBlockRepo.saveAll(submissionBlocks);
+    }
 
     /**
      * @param principal
@@ -415,6 +478,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         problemTestCaseService.sendSubmissionToQueue(submission);
         return ModelContestSubmissionResponse.builder()
                                              .status("IN_PROGRESS")
+                                             .contestSubmissionID(submission.getContestSubmissionId())
                                              .message("Submission is being evaluated")
                                              .build();
     }
