@@ -7,7 +7,6 @@ import AcademicCap from '@heroicons/react/24/solid/AcademicCapIcon';
 import Users from '@heroicons/react/24/solid/UsersIcon';
 import InfoCard from "./dashboard/InfoCard";
 import DailyProgramming from "./dashboard/DailyProgramming";
-import DailyQuiz from "./dashboard/DailyQuiz";
 import {motion} from 'framer-motion';
 import {Box} from "@material-ui/core";
 import TopicWordCloud from "./dashboard/TopicWordCloud";
@@ -47,7 +46,7 @@ export default function Home() {
                 icon={CodeBracket}
                 iconColor="#0d2d80"
                 mainTitle="1500+"
-                subTitle="Coding Problems"
+                subTitle="Problems"
               />
             }
           />
@@ -61,8 +60,8 @@ export default function Home() {
               <InfoCard
                 icon={AcademicCap}
                 iconColor="#1976d2"
-                mainTitle="450+"
-                subTitle="Quiz Tests"
+                mainTitle="1000+"
+                subTitle="Contests"
               />
             }
           />
@@ -76,8 +75,8 @@ export default function Home() {
               <InfoCard
                 icon={Users}
                 iconColor="#139529"
-                mainTitle="10,000+"
-                subTitle="Active Users"
+                mainTitle="15 000+"
+                subTitle="Users"
               />
             }
           />
@@ -91,8 +90,8 @@ export default function Home() {
               <InfoCard
                 icon={CommandLine}
                 iconColor="#b5ba0d"
-                mainTitle="1030,000+"
-                subTitle="Code Submissions"
+                mainTitle="1 500 000+"
+                subTitle="Submissions"
               />
             }
           />
