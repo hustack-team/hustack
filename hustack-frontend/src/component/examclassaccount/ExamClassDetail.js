@@ -62,10 +62,10 @@ function ExamClassDetail() {
   };
 
   const columns = [
-    {title: "UserName", field: "realUserLoginId"},
-    {title: "StudentCode", field: "studentCode"},
-    {title: "FullName", field: "fullname"},
-    {title: "Random username", field: "randomUserLoginId"},
+    {title: "Username / Email", field: "realUserLoginId"},
+    {title: "Student code", field: "studentCode"},
+    {title: "Full name", field: "fullname"},
+    {title: "Keycloak username", field: "randomUserLoginId"},
     {title: "Password", field: "password"},
     {title: "Status", field: "status"},
   ];
@@ -74,8 +74,7 @@ function ExamClassDetail() {
     event.preventDefault();
 
     setIsProcessing(true);
-    let formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify({examClassId})], {type: 'application/json'}));
+    const formData = new FormData();
     formData.append("file", importedExcelFile);
 
     let successHandler = (res) => {
@@ -99,7 +98,7 @@ function ExamClassDetail() {
 
     request(
       "POST",
-      "/create-exam-accounts-map",
+      `/exam-classes/${examClassId}/accounts/import`,
       successHandler,
       errorHandlers,
       formData,
@@ -108,7 +107,7 @@ function ExamClassDetail() {
   }
 
   function getExamClassDetail() {
-    request("get", "/get-exam-class-detail/" + examClassId, (res) => {
+    request("get", `/exam-classes/${examClassId}`, (res) => {
       //setLoading(false);
       setName(res.data.name);
       setDescription(res.data.description);
@@ -150,14 +149,14 @@ function ExamClassDetail() {
     sheet["!cols"] = wbcols;
 
     XLSX.utils.book_append_sheet(wb, sheet, "students");
-    XLSX.writeFile(wb, examClassId + ".xlsx");
+    XLSX.writeFile(wb, `${name}.xlsx`);
   };
 
   function exportPdf() {
     handleLoadingStateChange('exportingPDF', true);
 
     request("GET",
-      `/exam-class/${examClassId}/export`,
+      `/exam-classes/${examClassId}/accounts/export`,
       (res) => {
         handleLoadingStateChange('exportingPDF', false);
         saveFile(`${name}.pdf`, res.data)
@@ -303,14 +302,13 @@ function ExamClassDetail() {
         ))}
       </Grid>
 
-      <Stack direction={"row"} spacing={1} mt={2}>
+      <Stack direction="row" spacing={1} mt={2}>
         <InputFileUpload
           id="exam-class-selected-upload-file"
           label={t("common:selectFile")}
           onChange={onFileChange}
           ref={inputRef}
         />
-        {/*{importedExcelFile && <Typography variant="body1">{importedExcelFile.name}</Typography>}*/}
         {importedExcelFile && (
           <Chip
             color="success"
@@ -337,28 +335,30 @@ function ExamClassDetail() {
           loading={loadingState.exportingPDF}
           loadingPosition="center"
           variant="outlined"
+          disabled={!(mapUserLogins?.length > 0)}
           onClick={exportPdf}
         >
           Xuất PDF
         </LoadingButton>
-        <TertiaryButton variant="outlined" onClick={downloadHandler}>
+        <TertiaryButton variant="outlined" disabled={!(mapUserLogins?.length > 0)} onClick={downloadHandler}>
           Xuất Excel
         </TertiaryButton>
-        <TertiaryButton variant="outlined" onClick={generateAccounts}>
+        <TertiaryButton variant="outlined" disabled={!(mapUserLogins?.length > 0)} onClick={generateAccounts}>
           Sinh tài khoản
         </TertiaryButton>
-        <TertiaryButton variant="outlined" onClick={handleResetPassword}>
+        <TertiaryButton variant="outlined" disabled={!(mapUserLogins?.length > 0)} onClick={handleResetPassword}>
           Sinh lại mật khẩu
         </TertiaryButton>
         <TertiaryButton onClick={() => updateStatus(true)}
-                        variant="outlined">
+                        variant="outlined" disabled={!(mapUserLogins?.length > 0)}>
           Kích hoạt tài khoản
         </TertiaryButton>
         <TertiaryButton onClick={() => updateStatus(false)}
-                        variant="outlined">
+                        variant="outlined" disabled={!(mapUserLogins?.length > 0)}>
           Vô hiệu hoá tài khoản
         </TertiaryButton>
-        <TertiaryButton variant="outlined" color="error" onClick={() => setOpenModalConfirmDelete(true)}>
+        <TertiaryButton variant="outlined" color="error" disabled={!(mapUserLogins?.length > 0)}
+                        onClick={() => setOpenModalConfirmDelete(true)}>
           Xoá tài khoản
         </TertiaryButton>
       </Stack>
@@ -366,7 +366,7 @@ function ExamClassDetail() {
       <Divider sx={{mt: 2, mb: 2}}/>
 
       <Stack direction="row" justifyContent='space-between' mb={1.5}>
-        <Typography variant="h6">Mapped UserLogin</Typography>
+        <Typography variant="h6">Accounts</Typography>
       </Stack>
       <StandardTable
         columns={columns}

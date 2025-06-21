@@ -83,7 +83,7 @@ public class ExamClassServiceImpl implements ExamClassService {
         examClassDetail.setName(ec.getName());
         examClassDetail.setDescription(ec.getDescription());
         examClassDetail.setExecuteDate(ec.getExecuteDate());
-        examClassDetail.setAccounts(examClassUserloginMapService.getExamClassUserloginMap(examClassId));
+        examClassDetail.setAccounts(examClassUserloginMapService.findByExamClassId(examClassId));
 
         return examClassDetail;
     }

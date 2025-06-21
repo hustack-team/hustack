@@ -3,7 +3,10 @@ package com.hust.baseweb.applications.examclassandaccount.controller;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClass;
 import com.hust.baseweb.applications.examclassandaccount.entity.ExamClassUserloginMap;
 import com.hust.baseweb.applications.examclassandaccount.entity.RandomGeneratedUserLogin;
-import com.hust.baseweb.applications.examclassandaccount.model.*;
+import com.hust.baseweb.applications.examclassandaccount.model.ExamClassAccountDTO;
+import com.hust.baseweb.applications.examclassandaccount.model.ExamClassAccountStatusUpdateRequestDTO;
+import com.hust.baseweb.applications.examclassandaccount.model.ModelCreateExamClass;
+import com.hust.baseweb.applications.examclassandaccount.model.ModelCreateGeneratedUserLogin;
 import com.hust.baseweb.applications.examclassandaccount.repo.RandomGeneratedUserLoginRepo;
 import com.hust.baseweb.applications.examclassandaccount.service.ExamClassService;
 import com.hust.baseweb.applications.examclassandaccount.service.ExamClassUserloginMapService;
@@ -46,14 +49,14 @@ public class ExamClassAccountController {
     RandomGeneratedUserLoginRepo randomGeneratedUserLoginRepo;
 
     @Secured("ROLE_ADMIN")
-    @GetMapping("/get-all-exam-class")
+    @GetMapping("/exam-classes")
     public ResponseEntity<?> getAllExamClass(Principal principal) {
         List<ExamClass> res = examClassService.getAllExamClass();
         return ResponseEntity.ok().body(res);
     }
 
     @Secured("ROLE_ADMIN")
-    @PostMapping("/create-exam-class")
+    @PostMapping("/exam-classes")
     public ResponseEntity<?> createExamClass(Principal principal, @RequestBody ModelCreateExamClass m) {
         ExamClass ec = examClassService.createExamClass(principal.getName(), m);
         return ResponseEntity.ok().body(ec);
@@ -75,14 +78,12 @@ public class ExamClassAccountController {
     }
 
     @Secured("ROLE_ADMIN")
-    @PostMapping(value = "/create-exam-accounts-map",
+    @PostMapping(value = "/exam-classes/{examClassId}/accounts/import",
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createExamAccountsMap(
-        @RequestPart("dto") ModelCreateExamAccountMap dto,
+        @PathVariable UUID examClassId,
         @RequestPart("file") MultipartFile file
     ) throws IOException {
-        UUID examClassId = dto.getExamClassId();
-
         try (InputStream is = file.getInputStream()) {
             XSSFWorkbook wb = new XSSFWorkbook(is);
             XSSFSheet sheet = wb.getSheetAt(0);
@@ -130,10 +131,9 @@ public class ExamClassAccountController {
 
                 ExamClassAccountDTO u = new ExamClassAccountDTO(email, studentCode, fullName);
                 users.add(u);
-
             }
 
-            List<ExamClassUserloginMap> res = examClassUserloginMapService.createExamClassAccount(examClassId, users);
+            List<ExamClassUserloginMap> res = examClassUserloginMapService.importAccounts(examClassId, users);
             return ResponseEntity.ok().body(res);
         }
     }
@@ -145,14 +145,13 @@ public class ExamClassAccountController {
     }
 
     @Secured("ROLE_ADMIN")
-    @GetMapping("/get-exam-class-detail/{examClassId}")
-    public ResponseEntity<?> getExamClassDetail(Principal principal, @PathVariable UUID examClassId) {
-        ModelRepsonseExamClassDetail res = examClassService.getExamClassDetail(examClassId);
-        return ResponseEntity.ok().body(res);
+    @GetMapping("/exam-classes/{examClassId}")
+    public ResponseEntity<?> getExamClassDetail(@PathVariable UUID examClassId) {
+        return ResponseEntity.ok().body(examClassService.getExamClassDetail(examClassId));
     }
 
     @Secured("ROLE_ADMIN")
-    @GetMapping("/exam-class/{examClassId}/export")
+    @GetMapping("/exam-classes/{examClassId}/accounts/export")
     public ResponseEntity<?> exportExamClass(@PathVariable UUID examClassId) {
         byte[] pdfBytes = examClassService.exportExamClass(examClassId);
         return ResponseEntity.ok()

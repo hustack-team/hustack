@@ -38,13 +38,13 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExamClassUserloginMap> getExamClassUserloginMap(UUID examClassId) {
+    public List<ExamClassUserloginMap> findByExamClassId(UUID examClassId) {
         return examClassUserloginMapRepo.findByExamClassId(examClassId);
 
     }
 
     @Override
-    public List<ExamClassUserloginMap> createExamClassAccount(UUID examClassId, List<ExamClassAccountDTO> users) {
+    public List<ExamClassUserloginMap> importAccounts(UUID examClassId, List<ExamClassAccountDTO> users) {
         List<ExamClassUserloginMap> examClass = new ArrayList<>();
         List<UserLogin> userLogins = new ArrayList<>();
 

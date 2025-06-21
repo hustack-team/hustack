@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ExamClassUserloginMapService {
-    List<ExamClassUserloginMap> getExamClassUserloginMap(UUID examClassId);
 
-    List<ExamClassUserloginMap> createExamClassAccount(UUID examClassId, List<ExamClassAccountDTO> users);
+    List<ExamClassUserloginMap> findByExamClassId(UUID examClassId);
+
+    List<ExamClassUserloginMap> importAccounts(UUID examClassId, List<ExamClassAccountDTO> users);
 
 
 }

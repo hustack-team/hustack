@@ -20,7 +20,7 @@ function ExamClassCreate(){
       
           request(
             "post",
-            "/create-exam-class",
+            "/exam-classes",
             (res) => {
               console.log("Create Exam Class = ", res.data);
               history.push("/exam-class/list");

@@ -28,7 +28,7 @@ function ExamClassList() {
     let errorHandlers = {
       onError: () => errorNoti("Đã xảy ra lỗi khi tải dữ liệu", true),
     };
-    request("GET", "/get-all-exam-class", successHandler, errorHandlers);
+    request("GET", "/exam-classes", successHandler, errorHandlers);
   }
 
   useEffect(getExamClassList, []);
