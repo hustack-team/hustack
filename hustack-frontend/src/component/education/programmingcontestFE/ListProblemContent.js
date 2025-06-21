@@ -1,16 +1,16 @@
-import {GetApp} from "@material-ui/icons";
+import { GetApp } from "@material-ui/icons";
 import AddIcon from "@material-ui/icons/Add";
 import GetAppIcon from "@material-ui/icons/GetApp";
 import {
-  Box, 
-  Chip, 
-  Divider, 
-  Grid, 
-  IconButton, 
-  Paper, 
-  Stack, 
-  TextField, 
-  Tooltip, 
+  Box,
+  Chip,
+  Divider,
+  Grid,
+  IconButton,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
   Typography,
   Dialog,
   DialogActions,
@@ -18,26 +18,27 @@ import {
   DialogTitle,
   Button
 } from "@mui/material";
-import {request, saveFile} from "api";
-import React, {useEffect, useState} from "react";
-import {useTranslation} from "react-i18next";
-import {Link} from "react-router-dom";
-import {toFormattedDateTime} from "utils/dateutils";
-import {errorNoti, successNoti} from "utils/notification";
+import { request, saveFile } from "api";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { toFormattedDateTime } from "utils/dateutils";
+import { errorNoti, successNoti } from "utils/notification";
 import StandardTable from "component/table/StandardTable";
-import {getColorLevel, getColorStatus} from "./lib";
+import { getColorLevel, getColorStatus } from "./lib";
 import FilterByTag from "component/table/FilterByTag";
 import PrimaryButton from "../../button/PrimaryButton";
 import SearchIcon from "@mui/icons-material/Search";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import TertiaryButton from "../../button/TertiaryButton";
 import StyledSelect from "../../select/StyledSelect";
-import {useKeycloak} from "@react-keycloak/web";
-import {getLevels, getStatuses} from "./CreateProblem";
+import { useKeycloak } from "@react-keycloak/web";
+import { getLevels, getStatuses } from "./CreateProblem";
 import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 import { BsFiletypeJson } from "react-icons/bs";
 import { FaFileArchive } from "react-icons/fa";
 import { LoadingButton } from "@mui/lab";
+import HustCodeEditor from "component/common/HustCodeEditor";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_FILES = 5;
@@ -53,12 +54,12 @@ const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf", ".docx", ".xlsx", "
 const JSON_MIME_TYPE = "application/json";
 const JSON_EXTENSION = ".json";
 
-const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []};
+const filterInitValue = { levelIds: [], tags: [], name: "", statuses: [] };
 
 export const selectProps = (options) => ({
   multiple: true,
   renderValue: (selected) => (
-    <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 0.5}}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
       {selected.map((value) => (
         <Chip
           size="small"
@@ -237,14 +238,11 @@ function ListProblemContent({type}) {
     }
   };
 
-  const handleJsonContentChange = (e) => {
-    const text = e.target.value;
-    handleImportFormChange("jsonContent", text);
-    if (importErrors.jsonContent && isValidJson(text)) {
-      setImportErrors((prev) => ({
-        ...prev,
-        jsonContent: "",
-      }));
+  const handleClearJson = () => {
+    handleImportFormChange("jsonFile", null);
+    handleImportFormChange("jsonContent", "");
+    if (importErrors.jsonFile) {
+      setImportErrors(prev => ({ ...prev, jsonFile: "" }));
     }
   };
 
@@ -260,13 +258,13 @@ function ListProblemContent({type}) {
       return;
     }
 
-    const validFiles = files.filter((file) => {
+    const invalidFiles = files.filter((file) => {
       if (!isValidFile(file)) {
         setImportErrors((prev) => ({
           ...prev,
           attachments: t("invalidFileFormat", { file: file.name }),
         }));
-        return false;
+        return true;
       }
       if (!isValidFileSize(file)) {
         setImportErrors((prev) => ({
@@ -275,11 +273,14 @@ function ListProblemContent({type}) {
             ? t("fileEmpty", { file: file.name }) 
             : t("fileTooLarge", { maxSize: MAX_FILE_SIZE / (1024 * 1024), file: file.name }),
         }));
-        return false;
+        return true;
       }
-      return true;
+      return false;
     });
 
+    if (invalidFiles.length > 0) return;
+
+    const validFiles = files.filter((file) => isValidFile(file) && isValidFileSize(file));
     if (validFiles.length > 0) {
       handleImportFormChange("attachments", [...importForm.attachments, ...validFiles]);
     }
@@ -766,110 +767,153 @@ function ListProblemContent({type}) {
         content={
           <>
             <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label={t("problemId")}
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={importForm.problemId}
-                  onChange={(e) => handleImportFormChange("problemId", e.target.value)}
-                  error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
-                  helperText={
-                    importErrors.problemId ||
-                    (hasSpecialCharacterProblemId(importForm.problemId)
-                      ? t("problemIdInvalid")
-                      : "")
-                  }
-                />
+              <Grid container item xs={12} spacing={2}>
+                <Grid item xs={6}>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    label={t("problemId")}
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={importForm.problemId}
+                    onChange={(e) => handleImportFormChange("problemId", e.target.value)}
+                    error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
+                    helperText={
+                      importErrors.problemId ||
+                      (hasSpecialCharacterProblemId(importForm.problemId)
+                        ? t("problemIdInvalid")
+                        : "")
+                    }
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    margin="dense"
+                    label={t("problemName")}
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={importForm.problemName}
+                    onChange={(e) => handleImportFormChange("problemName", e.target.value)}
+                    error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
+                    helperText={
+                      importErrors.problemName ||
+                      (hasSpecialCharacterProblemName(importForm.problemName)
+                        ? t("problemNameInvalid")
+                        : "")
+                    }
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  margin="dense"
-                  label={t("problemName")}
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={importForm.problemName}
-                  onChange={(e) => handleImportFormChange("problemName", e.target.value)}
-                  error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
-                  helperText={
-                    importErrors.problemName ||
-                    (hasSpecialCharacterProblemName(importForm.problemName)
-                      ? t("problemNameInvalid")
-                      : "")
-                  }
-                />
-              </Grid>
+             <Grid container item xs={12} spacing={2} alignItems="center">
               <Grid item xs={12}>
-                <TextField
-                  margin="dense"
-                  type="file"
-                  fullWidth
-                  variant="outlined"
-                  inputProps={{ accept: ".json" }}
-                  onChange={handleFileInputChange}
-                  error={!!importErrors.jsonFile}
-                  helperText={importErrors.jsonFile || t("uploadJsonFile")}
-                  // label={t("jsonFile")}
-                />
+                <Stack direction="row" spacing={4} alignItems="center">
+                  <Typography>{t("resourceFile")}</Typography>
+
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleClearJson}
+                    disabled={!importForm.jsonFile}
+                  >
+                    {t("common:delete")}
+                  </Button>
+
+                  <Button variant="outlined" component="label">
+                    {t("common:selectFile")}
+                    <input
+                      type="file"
+                      hidden
+                      accept=".json"
+                      onChange={handleFileInputChange}
+                    />
+                  </Button>
+                </Stack>
               </Grid>
+            </Grid>
+
               <Grid item xs={12}>
-                <TextField
-                  margin="dense"
-                  label={t("jsonContent")}
-                  type="text"
-                  fullWidth
-                  multiline
-                  rows={10}
-                  variant="outlined"
-                  value={importForm.jsonContent}
-                  onChange={handleJsonContentChange}
-                  error={!!importErrors.jsonContent}
-                  helperText={importErrors.jsonContent}
+                <HustCodeEditor
+                  title={t("jsonContent")}
+                  language="JSON" 
+                  sourceCode={importForm.jsonContent}
+                  onChangeSourceCode={() => {}} 
+                  height="300px"
+                  hideLanguagePicker={true} 
+                  readOnly={true}
+                  theme="github"
                 />
+                {importErrors.jsonContent && (
+                  <Typography color="error" variant="body2">
+                    {importErrors.jsonContent}
+                  </Typography>
+                )}
               </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  margin="dense"
-                  type="file"
-                  fullWidth
-                  variant="outlined"
-                  inputProps={{ accept: ALLOWED_EXTENSIONS.join(","), multiple: true }}
-                  onChange={handleAttachmentChange}
-                  error={!!importErrors.attachments}
-                  helperText={
-                    importErrors.attachments ||
-                    t("allowedFileTypes", {
+              <Grid container item xs={12} spacing={2} alignItems="center">
+                <Grid item xs={12}>
+                  <Typography>{t("attachments")}</Typography>
+                  <Box
+                    sx={{
+                      border: "2px dashed gray",
+                      padding: "16px",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      marginBottom: "8px",
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleAttachmentChange({ target: { files: e.dataTransfer.files } });
+                    }}
+                    onClick={() => document.getElementById("attachment-input").click()}
+                  >
+                    {t("dragOrClickToUpload")}
+                    <br />
+                    {t("allowedFileTypes", {
                       types: ALLOWED_EXTENSIONS.join(", "),
                       maxFiles: MAX_FILES,
                       maxSize: MAX_FILE_SIZE / (1024 * 1024),
-                    })
-                  }
-                  // label={t("attachments")}
-                />
-              </Grid>
-              {importForm.attachments.length > 0 && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2">{t("selectedFiles")}</Typography>
-                  <Stack spacing={1}>
-                    {importForm.attachments.map((file, index) => (
-                      <Stack key={index} direction="row" alignItems="center" spacing={1}>
-                        <Typography variant="body2">{file.name}</Typography>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={() => handleRemoveAttachment(index)}
-                        >
-                          {t("remove")}
-                        </Button>
-                      </Stack>
-                    ))}
-                  </Stack>
+                    })}
+                    <input
+                      id="attachment-input"
+                      type="file"
+                      hidden
+                      accept={ALLOWED_EXTENSIONS.join(",")}
+                      multiple
+                      onChange={handleAttachmentChange}
+                    />
+                  </Box>
+                  {importErrors.attachments && (
+                    <Typography color="error" variant="body2">
+                      {importErrors.attachments}
+                    </Typography>
+                  )}
                 </Grid>
-              )}
+                {importForm.attachments.length > 0 && (
+                  <Grid item xs={12}>
+                    <Stack spacing={1}>
+                      {importForm.attachments.map((file, index) => (
+                        <Stack
+                          key={index}
+                          direction="row"
+                          alignItems="center"
+                          spacing={1} 
+                        >
+                          <Typography variant="body2">{file.name}</Typography>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveAttachment(index)}
+                          >
+                            {t("common:delete")}
+                          </Button>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Grid>
+                )}
+              </Grid>
             </Grid>
           </>
         }

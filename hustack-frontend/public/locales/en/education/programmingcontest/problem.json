@@ -79,5 +79,9 @@
   "invalidFileFormat": "Invalid file format: {{file}}",
   "failedToStoreFile": "Failed to store file",
   "problemIdNameExists": "Problem ID or name already exists",
-  "essentialInfoMissing": "Essential information is missing"
+  "essentialInfoMissing": "Essential information is missing",
+  "dragOrClickToUpload": "Drag and drop files here or click to select files",
+  "resourceFile": "Resource File *",
+  "selectJsonFile": "Select file JSON"
+
 }

@@ -77,5 +77,8 @@
   "invalidFileFormat": "Định dạng tệp không hợp lệ: {{file}}",
   "failedToStoreFile": "Lưu tệp thất bại",
   "problemIdNameExists": "Mã bài hoặc tên bài đã tồn tại",
-  "essentialInfoMissing": "Thiếu thông tin cần thiết"
+  "essentialInfoMissing": "Thiếu thông tin cần thiết",
+  "dragOrClickToUpload": "Kéo thả tệp vào đây hoặc nhấn để chọn tệp",
+  "resourceFile": "Tệp tài nguyên *",
+  "selectJsonFile": "Chọn tệp JSON"
 }
