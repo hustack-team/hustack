@@ -15,33 +15,31 @@ import java.util.UUID;
 @Entity
 @Table(name = "exam_class_userlogin_map")
 public class ExamClassUserloginMap {
-    public static final String STATUS_ACTIVE = "ACTIVE";
-    public static final String STATUS_DISABLE = "DISABLE";
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID Id;
 
-    @Column(name="exam_class_id")
+    @Column(name = "exam_class_id")
     private UUID examClassId;
 
-    @Column(name="random_user_login_id")
+    @Column(name = "random_user_login_id")
     private String randomUserLoginId;
 
-    @Column(name="password")
+    @Column(name = "password")
     private String password;
 
-    @Column(name="real_user_login_id")
+    @Column(name = "real_user_login_id")
     private String realUserLoginId;
 
-    @Column(name="code")
+    @Column(name = "code")
     private String studentCode;
 
-    @Column(name="fullname")
+    @Column(name = "fullname")
     private String fullname;
 
-    @Column(name="status")
+    @Column(name = "status")
     private String status;
 
 }

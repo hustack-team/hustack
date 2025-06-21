@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package.json .
 # COPY package-lock.json .
 RUN npm i
-RUN rm -rf ./node_module/@uiw/react-codemirror/node_module
+# Fix TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation from @react-pdf/renderer package
+RUN find node_modules/@react-pdf -type f -name '*.js' -exec sed -i 's/fetch__default\["default"\](/(typeof fetch === "function" ? fetch : require("cross-fetch"))(/g' {} +
 COPY . ./
 RUN npm run build
 

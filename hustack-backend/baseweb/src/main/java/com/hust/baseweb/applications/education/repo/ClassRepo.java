@@ -205,27 +205,23 @@ public interface ClassRepo extends JpaRepository<EduClass, UUID> {
            nativeQuery = true)
     List<GetClassesOfStudentOM> getClassesDetailOf(String studentId, List<String> status);
 
-    @Query(value = "select\n" +
-                   "\tcast(ecl.id as varchar) id,\n" +
-                   "\tecl.code code,\n" +
-                   "\tec.id courseId,\n" +
-                   "\tec.course_name \"name\",\n" +
-                   "\tecl.class_type classType,\n" +
-                   "\tecl.semester_id semester,\n" +
-                   "\tconcat(p.first_name , ' ', p.middle_name , ' ', p.last_name ) teacherName,\n" +
-                   "\tur.email email\n" +
-                   "from\n" +
-                   "\tedu_class ecl\n" +
-                   "inner join edu_course ec on\n" +
-                   "\tecl.course_id = ec.id\n" +
-                   "inner join user_login ul on\n" +
-                   "\tecl.teacher_id = ul.user_login_id\n" +
-                   "inner join person p on\n" +
-                   "\tul.party_id = p.party_id\n" +
-                   "left outer join user_register ur on\n" +
-                   "\tul.user_login_id = ur.user_login_id\n" +
-                   "where\n" +
-                   "\tecl.id = ?1",
+    @Query(value = "select " +
+                   "    cast(ecl.id as varchar) id, " +
+                   "    ecl.code code, " +
+                   "    ec.id courseId, " +
+                   "    ec.course_name \"name\", " +
+                   "    ecl.class_type classType, " +
+                   "    ecl.semester_id semester, " +
+                   "    concat(ul.first_name , ' ', ul.last_name ) teacherName, " +
+                   "    ul.email email " +
+                   "from " +
+                   "    edu_class ecl " +
+                   "inner join edu_course ec on " +
+                   "    ecl.course_id = ec.id " +
+                   "inner join user_login ul on " +
+                   "    ecl.teacher_id = ul.user_login_id " +
+                   "where " +
+                   "    ecl.id = ?1",
            nativeQuery = true)
     GetClassDetailOM getDetailOf(UUID classId);
 
