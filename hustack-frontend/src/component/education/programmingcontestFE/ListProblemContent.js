@@ -769,6 +769,7 @@ function ListProblemContent({ type }) {
       </Stack>
 
       <CustomizedDialogs
+
         open={openImportDialog}
         handleClose={handleCloseImportDialog}
         maxWidth="md"
@@ -777,7 +778,7 @@ function ListProblemContent({ type }) {
         title={t("importProblem")}
         content={
           <Grid container spacing={3}>
-            <Grid container item xs={12} spacing={2}>
+            <Grid container item xs={12} spacing={2} mb={1}>
               <Grid item xs={6}>
                 <TextField
                   autoFocus
@@ -817,10 +818,10 @@ function ListProblemContent({ type }) {
               </Grid>
             </Grid>
 
-            <Grid item xs={12} sx={{ mt: 3 }}>
+            <Grid item xs={12} sx={{ mt: -1, mb: -5 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={12} md={4}>
-                  <Typography variant="h6" component='span'>
+                  <Typography variant="h6" component="span">
                     {t("resourceFile")}
                   </Typography>
                 </Grid>
@@ -843,13 +844,12 @@ function ListProblemContent({ type }) {
               </Grid>
             </Grid>
 
-            <Grid item xs={12} sx={{ mt: 2 }}>
+            <Grid item xs={12} sx={{ mt: 2, mb: -3 }}>
               <HustCodeEditor
                 language="JSON"
                 hidePlaceholder
                 sourceCode={importForm.jsonContent}
                 onChangeSourceCode={() => { }}
-                // height="300px"
                 hideLanguagePicker={true}
                 readOnly={true}
                 theme="github"
@@ -857,13 +857,14 @@ function ListProblemContent({ type }) {
                 minLines={15}
               />
               {importErrors.jsonFile && (
-                <Typography color="error" variant="body2">
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
                   {importErrors.jsonFile}
                 </Typography>
               )}
             </Grid>
 
-            <Grid item xs={12} sx={{ mt: 3 }}>
+            {/* Container Tệp đính kèm - không cần mt vì container JSON đã có spacing bottom */}
+            <Grid item xs={12}>
               <HustDropzoneArea
                 ref={dropzoneRef}
                 key={`dropzone-${importForm.attachments.length}`}
@@ -877,12 +878,13 @@ function ListProblemContent({ type }) {
                 hideLogo={true}
               />
               {importErrors.attachments && (
-                <Typography color="error" variant="body2">
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
                   {importErrors.attachments}
                 </Typography>
               )}
             </Grid>
 
+            {/* Container danh sách files - không cần spacing vì đã có spacing từ Grid container */}
             {importForm.attachments.length > 0 && (
               <Grid item xs={12}>
                 <Stack spacing={1}>
@@ -911,6 +913,7 @@ function ListProblemContent({ type }) {
             )}
           </Grid>
         }
+
         actions={
           <Stack direction="row" spacing={2}>
             <TertiaryButton variant="outlined" onClick={handleCloseImportDialog} sx={{ textTransform: "none" }}>

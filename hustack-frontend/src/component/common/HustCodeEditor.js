@@ -45,14 +45,30 @@ const HustCodeEditor = (props) => {
   }
   return (
     <Box {...remainProps} className={`${classRoot}`} sx={{marginTop: "24px"}}>
-      <Box sx={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginBottom: "8px"}}>
-        <Typography variant="h6">{title}</Typography>
-        {language && !hideLanguagePicker && <HustCodeLanguagePicker listLanguagesAllowed={listLanguagesAllowed} language={language} onChangeLanguage={onChangeLanguage}/>}
-      </Box>
+{language && (
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: "-8px",
+    }}
+  >
+    <Typography variant="h6">{title}</Typography>
+    {!hideLanguagePicker && (
+      <HustCodeLanguagePicker
+        listLanguagesAllowed={listLanguagesAllowed}
+        language={language}
+        onChangeLanguage={onChangeLanguage}
+      />
+    )}
+  </Box>
+)}
+
 
       <AceEditor
         width="100%"
-        height={height}
+        height={maxLines || minLines ? undefined : height}
         style={{paddingTop: "6px"}}
         placeholder={hidePlaceholder ? "" : placeholder}
         mode={convertLanguageToEditorMode(language)}
