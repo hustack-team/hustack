@@ -1,3 +1,4 @@
+import { Divider } from "@material-ui/core";
 import { grey } from "@material-ui/core/colors";
 import Dialog from "@material-ui/core/Dialog";
 import MuiDialogActions from "@material-ui/core/DialogActions";
@@ -109,6 +110,7 @@ export default function CustomizedDialogs(props) {
     handleClose,
     actions,
     content,
+    showDividerUnderTitle,
   } = props;
 
   return (
@@ -127,6 +129,7 @@ export default function CustomizedDialogs(props) {
         >
           <strong>{title}</strong>
         </DialogTitle>
+        {showDividerUnderTitle && <Divider/>}
         <DialogContent
           className={clsx(
             {

@@ -2,29 +2,26 @@ package com.hust.baseweb.applications.programmingcontest.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hust.baseweb.applications.chatgpt.ChatGPTService;
 import com.hust.baseweb.applications.contentmanager.model.ContentHeaderModel;
 import com.hust.baseweb.applications.contentmanager.model.ContentModel;
 import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputStreamUtils;
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
-import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.ApiService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
-import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
+import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
+import com.hust.baseweb.config.IEProblemProperties;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.ProblemProjection;
 import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
-import com.hust.baseweb.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +31,6 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -42,19 +38,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
-import vn.edu.hust.soict.judge0client.service.Judge0Service;
-import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
@@ -96,6 +92,8 @@ public class ProblemServiceImpl implements ProblemService {
     ProblemTagRepo problemTagRepo;
 
     ObjectMapper objectMapper;
+
+    IEProblemProperties iEProblemProperties;
 
     @Override
     @Transactional
@@ -454,6 +452,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setPublicProblem(problemEntity.isPublicProblem());
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
+            problemResponse.setStatus(problemEntity.getStatusId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {
@@ -502,49 +501,297 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-    private void handleExportProblem(
-        ModelCreateContestProblemResponse problem,
-        OutputStream outputStream
-    ) throws IOException {
-        List<File> files = new ArrayList<>();
+    private void handleExportProblem(ModelCreateContestProblemResponse problem, OutputStream outputStream) throws IOException {
+        List<Map.Entry<String, ByteArrayOutputStream>> entries = new ArrayList<>();
 
         try {
-            File problemGeneralInfoFile = exporter.exportProblemInfoToFile(problem);
-            File problemDescriptionFile = exporter.exportProblemDescriptionToFile(problem);
-            File problemCorrectSolutionFile = exporter.exportProblemCorrectSolutionToFile(problem);
+            ByteArrayOutputStream problemGeneralInfoStream = exporter.exportProblemInfoToStream(problem);
+            ByteArrayOutputStream problemDescriptionStream = exporter.exportProblemDescriptionToStream(problem);
+            ByteArrayOutputStream problemGeneralDescriptionTxtStream = exporter.exportProblemGeneralDescriptionToTxtStream(problem);
+            ByteArrayOutputStream problemCorrectSolutionStream = exporter.exportProblemCorrectSolutionToStream(problem);
 
-            files.add(problemGeneralInfoFile);
-            files.add(problemCorrectSolutionFile);
+            String solutionExt = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getCorrectSolutionLanguage()));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemGeneralInformation.html", problemGeneralInfoStream));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemDescription.html", problemDescriptionStream));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemGeneralDescription.txt", problemGeneralDescriptionTxtStream));
+            entries.add(new AbstractMap.SimpleEntry<>("Solution" + solutionExt, problemCorrectSolutionStream));
 
             if (problem.getScoreEvaluationType().equals(Constants.ProblemResultEvaluationType.CUSTOM.getValue())) {
-                File problemCustomCheckerFile = exporter.exportProblemCustomCheckerToFile(problem);
-                files.add(problemCustomCheckerFile);
+                ByteArrayOutputStream problemCustomCheckerStream = exporter.exportProblemCustomCheckerToStream(problem);
+                String checkerExt = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getSolutionCheckerSourceLanguage()));
+                entries.add(new AbstractMap.SimpleEntry<>("CustomSolutionChecker" + checkerExt, problemCustomCheckerStream));
             }
 
             if (!problem.getAttachmentNames().isEmpty()) {
-                files.addAll(exporter.exportProblemAttachmentToFile(problem));
+                entries.addAll(exporter.exportProblemAttachmentToStream(problem));
             }
 
-            files.addAll(exporter.exportProblemTestCasesToFile(problem));
+            entries.addAll(exporter.exportProblemTestCasesToStream(problem));
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+            for (Map.Entry<String, ByteArrayOutputStream> entry : entries) {
+                ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                zipOutputStream.putNextEntry(zipEntry);
+                zipOutputStream.write(entry.getValue().toByteArray());
+                zipOutputStream.closeEntry();
+            }
+            zipOutputStream.close();
+
         } catch (IOException e) {
             e.printStackTrace();
+            throw e;
         }
+    }
 
-        // Zip files.
-        ZipOutputStreamUtils.zip(
-            outputStream,
-            files,
-            CompressionMethod.DEFLATE,
-            null,
-            EncryptionMethod.AES,
-            AesKeyStrength.KEY_STRENGTH_256);
+    @Transactional(readOnly = true)
+    public void exportProblemJson(String problemId, OutputStream outputStream, String userId) {
+        try {
+            List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, userId);
+            boolean hasPermission = roles.stream().anyMatch(role ->
+                                                                role.equals(UserContestProblemRole.ROLE_OWNER) ||
+                                                                role.equals(UserContestProblemRole.ROLE_EDITOR) ||
+                                                                role.equals(UserContestProblemRole.ROLE_VIEWER)
+            );
 
-        //delete files
-        for (File file : files) {
-            file.delete();
+            if (!hasPermission) {
+                throw new AccessDeniedException("You do not have permission to export this problem.");
+            }
+
+            handleExportProblemJson(problemId, outputStream, userId);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleExportProblemJson(
+        String problemId,
+        OutputStream outputStream,
+        String userId
+    ) throws Exception {
+        ModelCreateContestProblemResponse problem = getContestProblem(problemId);
+
+        long maxSizeBytes = iEProblemProperties.getExportConf().getMaxSizeBytes();
+        long totalSize = 0;
+
+        Map<String, ByteArrayOutputStream> fileStreams = new HashMap<>();
+
+        try {
+            ByteArrayOutputStream problemJsonStream = exporter.exportProblemToJsonStream(problem);
+            fileStreams.put("ProblemData.json", problemJsonStream);
+            totalSize += problemJsonStream.size();
+
+            List<String> attachmentNames = problem.getAttachmentNames();
+            if (attachmentNames != null && !attachmentNames.isEmpty()) {
+                List<Map.Entry<String, ByteArrayOutputStream>> attachmentStreams =
+                    exporter.exportProblemAttachmentToStream(problem);
+
+                for (Map.Entry<String, ByteArrayOutputStream> entry : attachmentStreams) {
+                    fileStreams.put(entry.getKey(), entry.getValue());
+                    totalSize += entry.getValue().size();
+                }
+            }
+
+            if (totalSize > maxSizeBytes) {
+                notificationsService.create(
+                    userId,
+                    "admin",
+                    userId + " exported problem with ID " + problem.getProblemId() +
+                    " has size " + String.format("%.2f", totalSize / (1024.0 * 1024.0)) + "MB, exceeds threshold" +
+                    String.format("%.2f", totalSize / (1024.0 * 1024.0)) +  "MB",
+                    ""
+                );
+            }
+
+            try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
+                for (Map.Entry<String, ByteArrayOutputStream> entry : fileStreams.entrySet()) {
+                    ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                    zipOut.putNextEntry(zipEntry);
+                    entry.getValue().writeTo(zipOut);
+                    zipOut.closeEntry();
+                }
+            }
+
+        } finally {
+            for (ByteArrayOutputStream stream : fileStreams.values()) {
+                stream.close();
+            }
+        }
+    }
+
+    @Transactional
+    public void importProblem(
+        ModelImportProblem model,
+        MultipartFile[] files,
+        String userId
+    ) {
+        final long MAX_FILE_SIZE = iEProblemProperties.getImportConf().getMaxSizeBytes();
+        final int MAX_FILE_COUNT = iEProblemProperties.getImportConf().getFileCount();
+
+        try {
+            if (problemRepo.existsByProblemId(model.getProblemId()) ||
+                problemRepo.existsByProblemName(model.getProblemName())) {
+                throw new IllegalArgumentException("Problem ID or name already exists");
+            }
+
+            List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                    .map(Arrays::asList)
+                                                    .orElseGet(Collections::emptyList);
+
+            if (fileArray.size() > MAX_FILE_COUNT) {
+                throw new IllegalArgumentException("Too many files (max: " + MAX_FILE_COUNT + ")");
+            }
+
+            for (MultipartFile file : fileArray) {
+                if (file.isEmpty()) {
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " is empty");
+                }
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " size exceeds " +
+                                                       (MAX_FILE_SIZE / (1024 * 1024)) + "MB limit");
+                }
+            }
+
+            ProblemEntity problemEntity = new ProblemEntity();
+            problemEntity.setProblemId(model.getProblemId().trim());
+            problemEntity.setProblemName(model.getProblemName());
+            problemEntity.setTimeLimitCPP(model.getTimeLimitCPP());
+            problemEntity.setTimeLimitJAVA(model.getTimeLimitJAVA());
+            problemEntity.setTimeLimitPYTHON(model.getTimeLimitPYTHON());
+            problemEntity.setMemoryLimit(model.getMemoryLimit());
+            problemEntity.setLevelOrder(model.getLevelOrder());
+            problemEntity.setAppearances(model.getAppearances());
+            problemEntity.setPublicProblem(model.getIsPublicProblem());
+            problemEntity.setLevelId(model.getLevelId());
+            problemEntity.setStatusId(model.getStatusId());
+            problemEntity.setProblemDescription(model.getProblemDescription());
+            problemEntity.setCorrectSolutionLanguage(model.getCorrectSolutionLanguage());
+            problemEntity.setCorrectSolutionSourceCode(model.getCorrectSolutionSourceCode());
+            problemEntity.setScoreEvaluationType(model.getScoreEvaluationType());
+            problemEntity.setSolution(model.getSolution());
+            problemEntity.setIsPreloadCode(model.getIsPreloadCode());
+            problemEntity.setPreloadCode(model.getPreloadCode());
+            problemEntity.setSampleTestcase(model.getSampleTestCase());
+
+            if ("CUSTOM_EVALUATION".equals(model.getScoreEvaluationType())) {
+                problemEntity.setSolutionCheckerSourceLanguage(model.getSolutionCheckerSourceLanguage());
+                problemEntity.setSolutionCheckerSourceCode(model.getSolutionCheckerSourceCode());
+            }
+
+            if (model.getTags() != null && !model.getTags().isEmpty()) {
+                List<String> tagNames = model.getTags();
+                List<TagEntity> existingTags = tagRepo.findByNameInIgnoreCase(tagNames);
+                Map<String, TagEntity> nameToTagMap = new HashMap<>();
+                for (TagEntity tag : existingTags) {
+                    nameToTagMap.put(tag.getName().toLowerCase(), tag);
+                }
+
+                List<TagEntity> finalTags = new ArrayList<>();
+                List<TagEntity> newTags = new ArrayList<>();
+
+                for (String name : tagNames) {
+                    String lower = name.toLowerCase();
+                    if (nameToTagMap.containsKey(lower)) {
+                        finalTags.add(nameToTagMap.get(lower));
+                    } else {
+                        TagEntity newTag = new TagEntity();
+                        newTag.setName(name);
+                        newTags.add(newTag);
+                    }
+                }
+
+                if (!newTags.isEmpty()) {
+                    List<TagEntity> saved = tagRepo.saveAll(newTags);
+                    finalTags.addAll(saved);
+                }
+
+                problemEntity.setTags(finalTags);
+            }
+
+            List<String> attachmentId = new ArrayList<>();
+            String[] fileId = model.getFileId();
+            fileArray.forEach((file) -> {
+                ContentModel contentModel = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(contentModel);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
+
+
+            problemEntity.setAttachment(String.join(";", attachmentId));
+
+            problemEntity = problemRepo.save(problemEntity);
+
+            List<String> roles = Arrays.asList(
+                UserContestProblemRole.ROLE_OWNER,
+                UserContestProblemRole.ROLE_EDITOR,
+                UserContestProblemRole.ROLE_VIEWER
+            );
+
+            List<UserContestProblemRole> rolesToSave = new ArrayList<>();
+            for (String role : roles) {
+                UserContestProblemRole upr = new UserContestProblemRole();
+                upr.setProblemId(problemEntity.getProblemId());
+                upr.setUserId(userId);
+                upr.setRoleId(role);
+                rolesToSave.add(upr);
+            }
+
+            if (userId != null && !userId.equals("admin")) {
+                for (String role : roles) {
+                    UserContestProblemRole upr = new UserContestProblemRole();
+                    upr.setProblemId(problemEntity.getProblemId());
+                    upr.setUserId("admin");
+                    upr.setRoleId(role);
+                    rolesToSave.add(upr);
+                }
+            }
+
+            userContestProblemRoleRepo.saveAll(rolesToSave);
+
+            if (model.getTestCases() != null) {
+                for (Map<String, Object> tc : model.getTestCases()) {
+                    TestCaseEntity testCase = new TestCaseEntity();
+                    testCase.setProblemId(model.getProblemId());
+                    if (tc.containsKey("testCasePoint")) {
+                        testCase.setTestCasePoint(((Number) tc.get("testCasePoint")).intValue());
+                    }
+                    if (tc.containsKey("isPublic")) {
+                        testCase.setIsPublic((String) tc.get("isPublic"));
+                    }
+                    if (tc.containsKey("statusId")) {
+                        testCase.setStatusId((String) tc.get("statusId"));
+                    }
+                    if (tc.containsKey("description")) {
+                        testCase.setDescription((String) tc.get("description"));
+                    }
+                    if (tc.containsKey("testCase")) {
+                        testCase.setTestCase((String) tc.get("testCase"));
+                    }
+                    if (tc.containsKey("correctAnswer")) {
+                        testCase.setCorrectAnswer((String) tc.get("correctAnswer"));
+                    }
+                    testCaseRepo.save(testCase);
+                }
+            }
+            notificationsService.create(
+                userId,
+                "admin",
+                userId + "created a contest problem ID " + problemEntity.getProblemId(),
+                "");
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to import problem: " + e.getMessage(), e);
         }
     }
 
