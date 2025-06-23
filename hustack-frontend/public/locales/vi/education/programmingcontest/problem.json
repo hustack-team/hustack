@@ -80,5 +80,6 @@
   "essentialInfoMissing": "Thiếu thông tin cần thiết",
   "dragOrClickToUpload": "Kéo thả tệp vào đây hoặc nhấn để chọn tệp",
   "resourceFile": "Tệp tài nguyên *",
-  "selectJsonFile": "Chọn tệp JSON"
+  "selectJsonFile": "Chọn tệp JSON",
+  "noFileSelected": "Chưa chọn tệp"
 }

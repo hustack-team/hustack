@@ -13,6 +13,7 @@ const HustCodeEditor = (props) => {
     classRoot,
     title,
     placeholder = "Write your source code here",
+    hidePlaceholder = false,
     language,
     onChangeLanguage,
     listLanguagesAllowed,
@@ -51,7 +52,7 @@ const HustCodeEditor = (props) => {
         width="100%"
         height={height}
         style={{paddingTop: "6px"}}
-        placeholder={placeholder}
+        placeholder={hidePlaceholder ? "" : placeholder}
         mode={convertLanguageToEditorMode(language)}
         theme={theme}
         onChange={onChangeSourceCode}

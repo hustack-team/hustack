@@ -82,6 +82,6 @@
   "essentialInfoMissing": "Essential information is missing",
   "dragOrClickToUpload": "Drag and drop files here or click to select files",
   "resourceFile": "Resource File *",
-  "selectJsonFile": "Select file JSON"
-
+  "selectJsonFile": "Select file JSON",
+  "noFileSelected": "No file selected"
 }

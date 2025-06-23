@@ -1,71 +1,140 @@
-import React from "react";
-import {DropzoneArea} from "material-ui-dropzone";
-import {useTranslation} from "react-i18next";
+import React, { useCallback } from "react";
+import { DropzoneArea } from "material-ui-dropzone";
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
-import {makeStyles} from "@material-ui/core";
-import {Typography} from "@mui/material";
+import { makeStyles } from "@material-ui/core";
+import { Typography } from "@mui/material";
 
 const useStyles = makeStyles((theme) => ({
   dropzone: {
-    minHeight: "60px",
+    minHeight: "100px",
     borderRadius: "16px",
     marginBottom: theme.spacing(1),
+    whiteSpace: "pre-line",
+    "& .MuiDropzoneArea-text": {
+      fontSize: "14px !important",
+      lineHeight: "1.4 !important",
+    },
+  },
+  dropzoneWithInfo: {
+    minHeight: "100px",
+    borderRadius: "16px",
+    marginBottom: theme.spacing(1),
+    whiteSpace: "pre-line",
+    "& .MuiDropzoneArea-text": {
+      fontSize: "15px !important",
+      lineHeight: "1.1 !important",
+    },
+  },
+  hideLogo: {
+    "& .MuiDropzoneArea-icon": {
+      display: "none",
+    },
   },
 }));
 
-const HustDropzoneArea = (props) => {
+const HustDropzoneArea = React.forwardRef((props, ref) => {
   const {
     title,
     onChangeAttachment,
     classRoot,
+    hideFileList = false,
+    hideLogo = false,
+    acceptedFiles,
+    maxFileSize,
+    filesLimit,
+    initialFiles = [],
+    showAlerts = true,
     ...remainProps
   } = props;
 
-  const {t} = useTranslation("component/dropzone");
-
+  const { t } = useTranslation("component/dropzone");
   const classes = useStyles();
 
+  let dropzoneText = t("dropzoneTextDefault");
+  const hasFileRestrictions = acceptedFiles && maxFileSize && filesLimit;
+
+  if (hasFileRestrictions) {
+    const readableExtensions = acceptedFiles
+      .map((ext) => ext.replace(".", ""))
+      .join(", ");
+    const readableMaxSizeMB = Math.floor(maxFileSize / (1024 * 1024));
+    dropzoneText = t("dropzoneTextWithInfo", {
+      types: readableExtensions,
+      maxSize: readableMaxSizeMB,
+      maxFiles: filesLimit,
+    });
+  }
+
+  const handleChange = useCallback(
+    (files) => {
+      console.log("DropzoneArea handleChange:", files);
+      if (onChangeAttachment) {
+        onChangeAttachment(files, []);
+      }
+    },
+    [onChangeAttachment]
+  );
+
+  const handleDrop = useCallback(
+    (acceptedFiles, rejectedFiles) => {
+      console.log("DropzoneArea handleDrop:", { acceptedFiles, rejectedFiles });
+      if (onChangeAttachment) {
+        onChangeAttachment(acceptedFiles, rejectedFiles);
+      }
+    },
+    [onChangeAttachment]
+  );
+
   return (
-    <Box className={`${classRoot}`}>
+    <Box className={`${classRoot} ${hideLogo ? classes.hideLogo : ""}`}>
       <Typography
         variant="h6"
         display="block"
-        style={{margin: "24px 0 8px 0px", width: "100%"}}
+        style={{ margin: "24px 0 8px 0px", width: "100%" }}
       >
         {title ? title : t("title")}
       </Typography>
       <DropzoneArea
         {...remainProps}
-        dropzoneClass={classes.dropzone}
-        filesLimit={10}
-        showPreviews={true}
+        ref={ref}
+        acceptedFiles={acceptedFiles}
+        maxFileSize={maxFileSize}
+        filesLimit={filesLimit}
+        initialFiles={initialFiles}
+        dropzoneClass={
+          hasFileRestrictions ? classes.dropzoneWithInfo : classes.dropzone
+        }
+        showPreviews={!hideFileList}
         showPreviewsInDropzone={false}
-        useChipsForPreview
-        dropzoneText={t("dropzoneText")}
+        useChipsForPreview={!hideFileList}
+        dropzoneText={dropzoneText}
         previewText={t("previewText")}
         previewChipProps={{
           variant: "outlined",
           color: "primary",
           size: "medium",
+          ...props.previewChipProps,
         }}
         getFileAddedMessage={(fileName) =>
-          t("getFileAddedMessage", {fileName: fileName})
+          t("getFileAddedMessage", { fileName })
         }
         getFileRemovedMessage={(fileName) =>
-          t("getFileRemovedMessage", {fileName: fileName})
+          t("getFileRemovedMessage", { fileName })
         }
         getFileLimitExceedMessage={(filesLimit) =>
-          t("getFileLimitExceedMessage", {filesLimit: filesLimit})
+          t("getFileLimitExceedMessage", { filesLimit })
         }
         alertSnackbarProps={{
-          anchorOrigin: {vertical: "bottom", horizontal: "right"},
+          anchorOrigin: { vertical: "bottom", horizontal: "right" },
           autoHideDuration: 1800,
         }}
-        onChange={onChangeAttachment}
+        showAlerts={showAlerts}
+        onChange={handleChange}
+        onDrop={handleDrop}
       />
     </Box>
-
   );
-};
+});
 
 export default React.memo(HustDropzoneArea);
