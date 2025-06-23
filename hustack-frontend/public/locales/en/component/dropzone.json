@@ -1,8 +1,9 @@
 {
   "title": "Attachment files",
-  "dropzoneText": "Drop file here or click to upload",
+  "dropzoneTextDefault": "Drop file here or click to upload",
+  "dropzoneTextWithInfo": "Drag and drop files here or click to select files.\nFile format: {{types}}.\nMaximum file size: {{maxSize}}MB.\nMaximum number of files: {{maxFiles}}",
   "previewText": "Files:",
   "getFileAddedMessage": "File {{fileName}} uploaded successfully",
-  "getFileRemovedMessage": "File {{fileName}} remove",
+  "getFileRemovedMessage": "File {{fileName}} removed",
   "getFileLimitExceedMessage": "Maximum number of files exceeded. You can upload up to {{filesLimit}} files"
 }
