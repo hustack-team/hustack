@@ -393,7 +393,8 @@ public class ProblemServiceImpl implements ProblemService {
             fileStreams.put("ProblemData.json", problemJsonStream);
             totalSize += problemJsonStream.size();
 
-            // Export attachments if available
+
+
             List<String> attachmentNames = problem.getAttachmentNames();
             if (attachmentNames != null && !attachmentNames.isEmpty()) {
                 List<Map.Entry<String, ByteArrayOutputStream>> attachmentStreams =
@@ -501,6 +502,8 @@ public class ProblemServiceImpl implements ProblemService {
             problemEntity.setIsPreloadCode(model.getIsPreloadCode());
             problemEntity.setPreloadCode(model.getPreloadCode());
             problemEntity.setSampleTestcase(model.getSampleTestCase());
+            // Set categoryId
+            problemEntity.setCategoryId(model.getCategoryId() != null ? model.getCategoryId() : 1); // Default to 1 if null
 
             if ("CUSTOM_EVALUATION".equals(model.getScoreEvaluationType())) {
                 problemEntity.setSolutionCheckerSourceLanguage(model.getSolutionCheckerSourceLanguage());
@@ -554,10 +557,24 @@ public class ProblemServiceImpl implements ProblemService {
                 }
             });
 
-
             problemEntity.setAttachment(String.join(";", attachmentId));
 
             problemEntity = problemRepo.save(problemEntity);
+
+            if (model.getBlockCodes() != null && !model.getBlockCodes().isEmpty()) {
+                List<ProblemBlock> problemBlocks = new ArrayList<>();
+                for (BlockCode blockCode : model.getBlockCodes()) {
+                    ProblemBlock problemBlock = ProblemBlock.builder()
+                                                            .problemId(problemEntity.getProblemId())
+                                                            .seq(blockCode.getSeq())
+                                                            .sourceCode(blockCode.getCode())
+                                                            .programmingLanguage(blockCode.getLanguage())
+                                                            .completedBy(blockCode.getForStudent())
+                                                            .build();
+                    problemBlocks.add(problemBlock);
+                }
+                problemBlockRepo.saveAll(problemBlocks);
+            }
 
             List<String> roles = Arrays.asList(
                 UserContestProblemRole.ROLE_OWNER,
@@ -611,10 +628,11 @@ public class ProblemServiceImpl implements ProblemService {
                     testCaseRepo.save(testCase);
                 }
             }
+
             notificationsService.create(
                 userId,
                 "admin",
-                userId + "created a contest problem ID " + problemEntity.getProblemId(),
+                userId + " created a contest problem ID " + problemEntity.getProblemId(),
                 "");
 
         } catch (IllegalArgumentException e) {
@@ -758,6 +776,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setPublicProblem(problemEntity.isPublicProblem());
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
+            problemResponse.setCategoryId(problemEntity.getCategoryId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {

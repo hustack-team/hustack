@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
+import com.hust.baseweb.applications.programmingcontest.entity.ProblemBlock;
 import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.TagEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.TestCaseEntity;
+import com.hust.baseweb.applications.programmingcontest.model.BlockCode;
 import com.hust.baseweb.applications.programmingcontest.model.ModelCreateContestProblemResponse;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemBlockRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.TestCaseRepo;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
@@ -33,6 +36,7 @@ public class ContestProblemExportService {
     ProblemRepo problemRepo;
     TestCaseRepo testCaseRepo;
     MongoContentService mongoContentService;
+    private final ProblemBlockRepo problemBlockRepo;
 
     public ByteArrayOutputStream exportProblemDescriptionToStream(ModelCreateContestProblemResponse problem) throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -149,6 +153,17 @@ public class ContestProblemExportService {
             problemData.put("tags", new ArrayList<>());
         }
 
+        if (Integer.valueOf(1).equals(problem.getCategoryId())) {
+            List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problem.getProblemId());
+            if (!problemBlocks.isEmpty()) {
+                List<BlockCode> blockCodes = problemBlocks.stream()
+                                                          .map(this::mapToBlockCode)
+                                                          .collect(Collectors.toList());
+
+                problemData.put("blockCodes", blockCodes);
+            }
+        }
+
         if ("CUSTOM_EVALUATION".equals(problem.getScoreEvaluationType())) {
             problemData.put("solutionCheckerSourceLanguage", problem.getSolutionCheckerSourceLanguage());
             problemData.put("solutionCheckerSourceCode", problem.getSolutionCheckerSourceCode());
@@ -171,6 +186,16 @@ public class ContestProblemExportService {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         objectMapper.writeValue(stream, problemData);
         return stream;
+    }
+
+    private BlockCode mapToBlockCode(ProblemBlock block) {
+        BlockCode blockCode = new BlockCode();
+        blockCode.setId(String.valueOf(block.getId()));
+        blockCode.setCode(block.getSourceCode());
+        blockCode.setForStudent(block.getCompletedBy());
+        blockCode.setSeq(block.getSeq());
+        blockCode.setLanguage(block.getProgrammingLanguage());
+        return blockCode;
     }
 
     public ByteArrayOutputStream exportProblemGeneralDescriptionToTxtStream(ModelCreateContestProblemResponse problem) throws IOException {

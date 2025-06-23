@@ -40,7 +40,7 @@ public class ModelImportProblem {
 
     @NotNull(message = "Public problem status is required")
     Boolean isPublicProblem;
-
+    Integer categoryId;
     String levelId;
     String statusId;
     String problemDescription;
@@ -56,4 +56,5 @@ public class ModelImportProblem {
     List<String> tags;
     List<Map<String, Object>> testCases;
     String[] fileId;
+    List<BlockCode> blockCodes;
 }
