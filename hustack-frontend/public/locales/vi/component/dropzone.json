@@ -1,7 +1,7 @@
 {
   "title": "File đính kèm",
   "dropzoneText": "Kéo thả tệp vào đây hoặc nhấn để chọn tệp",
-  "dropzoneTextWithInfo": "Kéo và thả tệp vào đây hoặc nhấn để chọn tệp.\nTệp định dạn: {{types}}.\nKích thước tối đa mỗi tệp: {{maxSize}}MB.\nSố tệp tối đa: {{maxFiles}}",
+  "dropzoneTextWithInfo": "Kéo và thả tệp vào đây hoặc nhấn để chọn tệp.\nTệp định dạng: {{types}}.\nKích thước tối đa mỗi tệp: {{maxSize}}MB.\nSố tệp tối đa: {{maxFiles}}",
   "previewText": "Danh sách tệp tải lên:",
   "getFileAddedMessage": "Tệp {{fileName}} tải lên thành công",
   "getFileRemovedMessage": "Tệp {{fileName}} đã loại bỏ",

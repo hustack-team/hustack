@@ -173,7 +173,7 @@ function ListProblemContent({ type }) {
       attachments: [],
     });
     setImportErrors({});
-    fileIdCounter = 0; 
+    fileIdCounter = 0;
   };
 
   const handleImportFormChange = (field, value) => {
@@ -235,8 +235,8 @@ function ListProblemContent({ type }) {
     if (!isValidFileSize(file)) {
       setImportErrors((prev) => ({
         ...prev,
-        jsonFile: file.size === 0 
-          ? t("fileEmpty", { file: file.name }) 
+        jsonFile: file.size === 0
+          ? t("fileEmpty", { file: file.name })
           : t("fileTooLarge", { maxSize: MAX_FILE_SIZE / (1024 * 1024) }),
       }));
       return;
@@ -271,94 +271,94 @@ function ListProblemContent({ type }) {
   };
 
   const handleAttachmentChange = (acceptedFiles, rejectedFiles = []) => {
-  console.log('handleAttachmentChange called:', { acceptedFiles, rejectedFiles });
+    console.log('handleAttachmentChange called:', { acceptedFiles, rejectedFiles });
 
-  setImportForm((prev) => {
-    const currentFiles = prev.attachments || [];
-    const remainingSlots = MAX_FILES - currentFiles.length;
+    setImportForm((prev) => {
+      const currentFiles = prev.attachments || [];
+      const remainingSlots = MAX_FILES - currentFiles.length;
 
-    const newState = {
-      ...prev,
-      errors: { ...prev.errors, attachments: "" }
-    };
+      const newState = {
+        ...prev,
+        errors: { ...prev.errors, attachments: "" }
+      };
 
-    // Handle rejected files
-    if (rejectedFiles.length > 0) {
-      const errorMessages = rejectedFiles.map((rejected) => {
-        const file = rejected.file;
-        if (rejected.errors.some((err) => err.code === "file-too-large")) {
-          return t("fileTooLarge", { file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024) });
+      // Handle rejected files
+      if (rejectedFiles.length > 0) {
+        const errorMessages = rejectedFiles.map((rejected) => {
+          const file = rejected.file;
+          if (rejected.errors.some((err) => err.code === "file-too-large")) {
+            return t("fileTooLarge", { file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024) });
+          }
+          if (rejected.errors.some((err) => err.code === "file-invalid-type")) {
+            return t("invalidFileFormat", { file: file.name });
+          }
+          if (rejected.errors.some((err) => err.code === "too-many-files")) {
+            return t("tooManyFiles", { maxFiles: MAX_FILES });
+          }
+          if (rejected.errors.some((err) => err.code === "file-too-small")) {
+            return t("fileEmpty", { file: file.name });
+          }
+          return t("errorProcessingFile", { file: file.name });
+        });
+
+        return {
+          ...newState,
+          errors: { ...newState.errors, attachments: errorMessages.join("; ") }
+        };
+      }
+
+      // If no accepted files, return the current state
+      if (!acceptedFiles || acceptedFiles.length === 0) {
+        return newState;
+      }
+
+      // Validate accepted files
+      const validFiles = [];
+      const invalidFiles = [];
+
+      acceptedFiles.forEach((file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          invalidFiles.push({ name: file.name, error: t("fileTooLarge", { file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024) }) });
+        } else if (file.size === 0) {
+          invalidFiles.push({ name: file.name, error: t("fileEmpty", { file: file.name }) });
+        } else {
+          const extension = `.${file.name.split(".").pop().toLowerCase()}`;
+          if (!ALLOWED_EXTENSIONS.includes(extension)) {
+            invalidFiles.push({ name: file.name, error: t("invalidFileFormat", { file: file.name }) });
+          } else {
+            validFiles.push(file);
+          }
         }
-        if (rejected.errors.some((err) => err.code === "file-invalid-type")) {
-          return t("invalidFileFormat", { file: file.name });
-        }
-        if (rejected.errors.some((err) => err.code === "too-many-files")) {
-          return t("tooManyFiles", { maxFiles: MAX_FILES });
-        }
-        if (rejected.errors.some((err) => err.code === "file-too-small")) {
-          return t("fileEmpty", { file: file.name });
-        }
-        return t("errorProcessingFile", { file: file.name });
       });
 
-      return {
-        ...newState,
-        errors: { ...newState.errors, attachments: errorMessages.join("; ") }
-      };
-    }
+      // Notify about invalid files
+      invalidFiles.forEach(({ name, error }) => {
+        errorNoti(error, 5000);
+      });
 
-    // If no accepted files, return the current state
-    if (!acceptedFiles || acceptedFiles.length === 0) {
-      return newState;
-    }
+      // Update attachments with valid files
+      const updatedAttachments = [...currentFiles, ...validFiles];
 
-    // Validate accepted files
-    const validFiles = [];
-    const invalidFiles = [];
-
-    acceptedFiles.forEach((file) => {
-      if (file.size > MAX_FILE_SIZE) {
-        invalidFiles.push({ name: file.name, error: t("fileTooLarge", { file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024) }) });
-      } else if (file.size === 0) {
-        invalidFiles.push({ name: file.name, error: t("fileEmpty", { file: file.name }) });
-      } else {
-        const extension = `.${file.name.split(".").pop().toLowerCase()}`;
-        if (!ALLOWED_EXTENSIONS.includes(extension)) {
-          invalidFiles.push({ name: file.name, error: t("invalidFileFormat", { file: file.name }) });
-        } else {
-          validFiles.push(file);
-        }
+      // Check if we exceed the maximum number of files
+      if (updatedAttachments.length > MAX_FILES) {
+        errorNoti(t("tooManyFiles", { maxFiles: MAX_FILES }), 5000);
+        return {
+          ...newState,
+          errors: { ...newState.errors, attachments: t("tooManyFiles", { maxFiles: MAX_FILES }) },
+          attachments: currentFiles // Keep the current files
+        };
       }
-    });
 
-    // Notify about invalid files
-    invalidFiles.forEach(({ name, error }) => {
-      errorNoti(error, 5000);
-    });
-
-    // Update attachments with valid files
-    const updatedAttachments = [...currentFiles, ...validFiles];
-
-    // Check if we exceed the maximum number of files
-    if (updatedAttachments.length > MAX_FILES) {
-      errorNoti(t("tooManyFiles", { maxFiles: MAX_FILES }), 5000);
       return {
         ...newState,
-        errors: { ...newState.errors, attachments: t("tooManyFiles", { maxFiles: MAX_FILES }) },
-        attachments: currentFiles // Keep the current files
+        attachments: updatedAttachments
       };
+    });
+
+    if (importErrors.attachments) {
+      setImportErrors((prev) => ({ ...prev, attachments: "" }));
     }
-
-    return {
-      ...newState,
-      attachments: updatedAttachments
-    };
-  });
-
-  if (importErrors.attachments) {
-    setImportErrors((prev) => ({ ...prev, attachments: "" }));
-  }
-};
+  };
 
 
   const handleRemoveAttachment = (index) => {
@@ -462,10 +462,10 @@ function ListProblemContent({ type }) {
         onError: (e) => {
           setLoading(false);
           let errorMessage = t("common:error");
-          
+
           if (e.response?.data) {
             const errorData = e.response.data;
-            
+
             if (typeof errorData === "string") {
               errorMessage = t(errorData, { defaultValue: errorData });
             } else if (errorData.message) {
@@ -491,7 +491,7 @@ function ListProblemContent({ type }) {
               errorMessage = t("problemIdNameExists");
             }
           }
-          
+
           console.error("Import error:", e.response?.data || e);
           errorNoti(errorMessage, 5000);
         },
@@ -773,6 +773,7 @@ function ListProblemContent({ type }) {
         handleClose={handleCloseImportDialog}
         maxWidth="md"
         fullWidth
+        showDividerUnderTitle={true}
         title={t("importProblem")}
         content={
           <Grid container spacing={3}>
@@ -816,98 +817,98 @@ function ListProblemContent({ type }) {
               </Grid>
             </Grid>
 
-            <Grid container item xs={12} spacing={2}>
-              <Grid item xs={12}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={12} md={3}>
-                    <Typography variant="body2" color="textSecondary">
-                      {t("resourceFile")}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={9}>
-                    <Stack direction="row" spacing={2} justifyContent="flex-end">
-                      <TertiaryButton
-                        onClick={handleClearJson}
-                        disabled={!importForm.jsonFile}
-                        sx={{ textTransform: "none" }}
-                        color="error"
-                      >
-                        {t("common:delete")}
-                      </TertiaryButton>
-                      <PrimaryButton variant="outlined" component="label" sx={{ textTransform: "none" }}>
-                        {t("selectJsonFile")}
-                        <input type="file" hidden accept=".json" onChange={handleFileInputChange} />
-                      </PrimaryButton>
-                    </Stack>
-                  </Grid>
-                </Grid>
-              </Grid>
-              <Grid item xs={12}>
-                <HustCodeEditor
-                  language="JSON"
-                  hidePlaceholder
-                  sourceCode={importForm.jsonContent}
-                  onChangeSourceCode={() => {}}
-                  height="300px"
-                  hideLanguagePicker={true}
-                  readOnly={true}
-                  theme="github"
-                />
-                {importErrors.jsonFile && (
-                  <Typography color="error" variant="body2">
-                    {importErrors.jsonFile}
+            <Grid item xs={12} sx={{ mt: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={12} md={4}>
+                  <Typography variant="h6" component='span'>
+                    {t("resourceFile")}
                   </Typography>
-                )}
+                </Grid>
+                <Grid item xs={12} sm={12} md={8}>
+                  <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <TertiaryButton
+                      onClick={handleClearJson}
+                      disabled={!importForm.jsonFile}
+                      sx={{ textTransform: "none" }}
+                      color="error"
+                    >
+                      {t("common:delete")}
+                    </TertiaryButton>
+                    <PrimaryButton variant="outlined" component="label" sx={{ textTransform: "none" }}>
+                      {t("selectJsonFile")}
+                      <input type="file" hidden accept=".json" onChange={handleFileInputChange} />
+                    </PrimaryButton>
+                  </Stack>
+                </Grid>
               </Grid>
             </Grid>
 
-            <Grid container item xs={12} spacing={2}>
-              <Grid item xs={12}>
-                <HustDropzoneArea
-                  ref={dropzoneRef}
-                  key={`dropzone-${importForm.attachments.length}`} 
-                  onChangeAttachment={handleAttachmentChange}
-                  acceptedFiles={ALLOWED_EXTENSIONS}
-                  filesLimit={MAX_FILES}
-                  maxFileSize={MAX_FILE_SIZE}
-                  title={t("attachments")}
-                  hideFileList={true}
-                  initialFiles={[]} 
-                  hideLogo={true}
-                />
-                {importErrors.attachments && (
-                  <Typography color="error" variant="body2">
-                    {importErrors.attachments}
-                  </Typography>
-                )}
-              </Grid>
-              {importForm.attachments.length > 0 && (
-                <Grid item xs={12}>
-                  <Stack spacing={1}>
-                    {importForm.attachments.map((file, index) => (
-                      <Box
-                        key={generateFileKey(file)}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          padding: "8px",
-                          borderRadius: "4px",
-                          "&:hover": { backgroundColor: "#f5f5f5" },
-                        }}
-                      >
-                        {getFileIcon(file.name)}
-                        <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                          {file.name}
-                        </Typography>
-                        <IconButton size="small" color="error" onClick={() => handleRemoveAttachment(index)}>
-                          <FaTrash />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Grid>
+            <Grid item xs={12} sx={{ mt: 2 }}>
+              <HustCodeEditor
+                language="JSON"
+                hidePlaceholder
+                sourceCode={importForm.jsonContent}
+                onChangeSourceCode={() => { }}
+                // height="300px"
+                hideLanguagePicker={true}
+                readOnly={true}
+                theme="github"
+                maxLines={15}
+                minLines={15}
+              />
+              {importErrors.jsonFile && (
+                <Typography color="error" variant="body2">
+                  {importErrors.jsonFile}
+                </Typography>
               )}
             </Grid>
+
+            <Grid item xs={12} sx={{ mt: 3 }}>
+              <HustDropzoneArea
+                ref={dropzoneRef}
+                key={`dropzone-${importForm.attachments.length}`}
+                onChangeAttachment={handleAttachmentChange}
+                acceptedFiles={ALLOWED_EXTENSIONS}
+                filesLimit={MAX_FILES}
+                maxFileSize={MAX_FILE_SIZE}
+                title={t("attachments")}
+                hideFileList={true}
+                initialFiles={[]}
+                hideLogo={true}
+              />
+              {importErrors.attachments && (
+                <Typography color="error" variant="body2">
+                  {importErrors.attachments}
+                </Typography>
+              )}
+            </Grid>
+
+            {importForm.attachments.length > 0 && (
+              <Grid item xs={12}>
+                <Stack spacing={1}>
+                  {importForm.attachments.map((file, index) => (
+                    <Box
+                      key={generateFileKey(file)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "8px",
+                        borderRadius: "4px",
+                        "&:hover": { backgroundColor: "#f5f5f5" },
+                      }}
+                    >
+                      {getFileIcon(file.name)}
+                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                        {file.name}
+                      </Typography>
+                      <IconButton size="small" color="error" onClick={() => handleRemoveAttachment(index)}>
+                        <FaTrash />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Stack>
+              </Grid>
+            )}
           </Grid>
         }
         actions={

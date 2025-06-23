@@ -23,6 +23,8 @@ const HustCodeEditor = (props) => {
     hideLanguagePicker,
     readOnly,
     theme = "monokai",
+    maxLines,
+    minLines,
     ...remainProps
   } = props;
 
@@ -58,6 +60,8 @@ const HustCodeEditor = (props) => {
         onChange={onChangeSourceCode}
         fontSize={16}
         value={sourceCode}
+        maxLines={maxLines}
+        minLines={minLines}
         readOnly={readOnly}/>
     </Box>
 
