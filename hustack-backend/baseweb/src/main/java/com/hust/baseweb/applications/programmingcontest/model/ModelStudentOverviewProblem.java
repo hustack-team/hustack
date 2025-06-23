@@ -19,4 +19,6 @@ public class ModelStudentOverviewProblem {
     private Long maxSubmittedPoint;
     private Long maxPoint;
     private List<String> tags = new ArrayList<>();
+    private int blockProblem;
+    private List<BlockCode> blockCodes;
 }

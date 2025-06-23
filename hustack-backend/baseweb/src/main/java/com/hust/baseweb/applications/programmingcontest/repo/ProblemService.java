@@ -28,7 +28,7 @@ public interface ProblemService {
 
     List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo();
 
-    void exportProblemJson(String problemId, OutputStream outputStream, String userId);
+    void exportProblemJson(String problemId, OutputStream outputStream, String userId) throws Exception;
 
     void importProblem(
         ModelImportProblem model,

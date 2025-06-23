@@ -5,21 +5,37 @@ import {useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import displayTime from "utils/DateTimeUtils";
 import {localeOption} from "utils/NumberFormat";
-import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
 import {detail, resolveLanguage,} from "./ContestProblemSubmissionDetailViewedByManager";
 import ParticipantProgramSubmissionDetailTestCaseByTestCase
   from "./ParticipantProgramSubmissionDetailTestCaseByTestCase";
 import {getStatusColor} from "./lib";
 import {useTranslation} from "react-i18next";
-import {errorNoti} from "../../../utils/notification";
-import {mapLanguageToDisplayName} from "./Constant";
+import {mapLanguageToDisplayName } from "./Constant";
+import {makeStyles} from "@material-ui/core/styles";
+import {Collapse, IconButton} from "@mui/material";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
+import { errorNoti } from "utils/notification";
+
+const useStyles = makeStyles((theme) => ({
+  expandIcon: {
+    transition: theme.transitions.create('transform', {
+      duration: theme.transitions.duration.shortest,
+    }),
+  },
+  expandIconOpen: {
+    transform: 'rotate(180deg)',
+  },
+}));
 
 export default function ContestProblemSubmissionDetail() {
+  const classes = useStyles();
   const {problemSubmissionId} = useParams();
   const {t} = useTranslation(["education/programmingcontest/testcase", "education/programmingcontest/problem", "education/programmingcontest/contest", 'common']);
 
   const [submission, setSubmission] = useState({});
   const [comments, setComments] = useState([]);
+  const [isSourceCodeExpanded, setIsSourceCodeExpanded] = useState(false);
 
   useEffect(() => {
     request(
@@ -82,13 +98,28 @@ export default function ContestProblemSubmissionDetail() {
                 />
               </Box>
             )}
-          <Box sx={{mb: 4}}>
-            <Typography variant="h6" sx={{mb: 1}}>{t('common:sourceCode')}</Typography>
-            <HustCopyCodeBlock
-              text={submission.sourceCode}
-              language={resolveLanguage(submission.sourceCodeLanguage)}
-              showLineNumbers
-            />
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <IconButton
+                onClick={() => setIsSourceCodeExpanded(!isSourceCodeExpanded)}
+                aria-expanded={isSourceCodeExpanded}
+                style={{ color: '#00bcd4' }}
+                aria-label={t("common:toggleBlockCodes")}
+                size="small"
+              >
+                <ExpandMoreIcon
+                  className={`${classes.expandIcon} ${isSourceCodeExpanded ? classes.expandIconOpen : ''}`}
+                />
+              </IconButton>
+              <Typography variant="h6">{t("common:toggleBlockCodes")}</Typography>
+            </Box>
+            <Collapse in={isSourceCodeExpanded}>
+              <HustCopyCodeBlock
+                text={submission.sourceCode}
+                language={resolveLanguage(submission.sourceCodeLanguage)}
+                showLineNumbers
+              />
+            </Collapse>
           </Box>
           {comments?.length > 0 && (<Box>
             <Typography variant="h6" sx={{mb: 1}}>

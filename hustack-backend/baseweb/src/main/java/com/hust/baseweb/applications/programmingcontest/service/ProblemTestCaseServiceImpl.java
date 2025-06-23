@@ -142,12 +142,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     Judge0Utils judge0Utils;
 
-
-
-
-
-
-
     private float getTimeLimitByLanguage(ProblemEntity problem, String language) {
         float timeLimit;
         switch (language) {

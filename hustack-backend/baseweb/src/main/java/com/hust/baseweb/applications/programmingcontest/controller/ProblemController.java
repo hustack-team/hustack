@@ -262,14 +262,18 @@ public class ProblemController {
         @PathVariable @NotBlank String id,
         Principal principal
     ) {
-        StreamingResponseBody stream = outputStream -> problemService.exportProblemJson(
-            id,
-            outputStream,
-            principal.getName());
+        StreamingResponseBody stream = outputStream -> {
+            try {
+                problemService.exportProblemJson(id, outputStream, principal.getName());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to export problem", e);
+            }
+        };
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + id + "_json.zip");
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + id + "_export.zip\"");
+        headers.add(HttpHeaders.CACHE_CONTROL, "no-cache");
 
         return ResponseEntity.ok().headers(headers).body(stream);
     }

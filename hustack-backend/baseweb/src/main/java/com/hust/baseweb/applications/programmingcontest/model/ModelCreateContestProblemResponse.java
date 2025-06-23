@@ -71,5 +71,10 @@ public class ModelCreateContestProblemResponse {
     List<String> roles;
 
     String sampleTestCase;
+
+    List<BlockCode> blockCodes;
+
+    Boolean canEditBlocks;
+
 }
 
