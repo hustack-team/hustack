@@ -34,7 +34,7 @@ import { FaFileArchive, FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel,
 import HustDropzoneArea from "component/common/HustDropzoneArea";
 import HustCodeEditor from "component/common/HustCodeEditor";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILES = 5;
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
@@ -43,6 +43,7 @@ const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/zip",
 ];
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf", ".docx", ".xlsx", ".pptx"];
 const JSON_MIME_TYPE = "application/json";
@@ -569,7 +570,7 @@ function ListProblemContent({ type }) {
       "get",
       `/problems/${problem.problemId}/export/json`,
       (res) => {
-        saveFile(`${problem.problemId}.json`, res.data);
+        saveFile(`${problem.problemId}.zip`, res.data);
       },
       {
         onError: (e) => {
