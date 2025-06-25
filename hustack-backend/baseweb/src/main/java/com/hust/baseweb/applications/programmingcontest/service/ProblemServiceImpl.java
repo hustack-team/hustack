@@ -16,6 +16,8 @@ import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
+import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
+import com.hust.baseweb.config.IEProblemProperties;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.ProblemProjection;
@@ -53,8 +55,11 @@ import vn.edu.hust.soict.judge0client.service.Judge0Service;
 import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
 import java.io.*;
+import java.nio.file.AccessDeniedException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
@@ -97,12 +102,16 @@ public class ProblemServiceImpl implements ProblemService {
 
     ObjectMapper objectMapper;
 
+    ProblemBlockService problemBlockService;
+    ProblemBlockRepo problemBlockRepo;
+    IEProblemProperties iEProblemProperties;
+
     @Override
     @Transactional
     public ProblemEntity createContestProblem(
-        String createdBy,
-        ModelCreateContestProblem dto,
-        MultipartFile[] files
+            String createdBy,
+            ModelCreateContestProblem dto,
+            MultipartFile[] files
     ) {
         String problemId = dto.getProblemId().trim();
 
@@ -110,11 +119,12 @@ public class ProblemServiceImpl implements ProblemService {
             throw new DuplicateKeyException("Problem ID already exist");
         }
 
+        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
-                                                .map(Arrays::asList)
-                                                .orElseGet(Collections::emptyList);
+                .map(Arrays::asList)
+                .orElseGet(Collections::emptyList);
 
         fileArray.forEach((file) -> {
             ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
@@ -133,46 +143,48 @@ public class ProblemServiceImpl implements ProblemService {
         });
 
         ProblemEntity problem = ProblemEntity.builder()
-                                             .problemId(problemId)
-                                             .problemName(dto.getProblemName())
-                                             .problemDescription(dto.getProblemDescription())
-                                             .memoryLimit(dto.getMemoryLimit())
-//                                                   .timeLimit(dto.getTimeLimitCPP()) //TODO: remove this after moving all to lms
-                                             .timeLimitCPP(dto.getTimeLimitCPP())
-                                             .timeLimitJAVA(dto.getTimeLimitJAVA())
-                                             .timeLimitPYTHON(dto.getTimeLimitPYTHON())
-                                             .levelId(dto.getLevelId())
-                                             .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
-                                             .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
-                                             .solution(dto.getSolution())
-                                             .isPreloadCode(dto.getIsPreloadCode())
-                                             .preloadCode(dto.getPreloadCode())
-                                             .solutionCheckerSourceCode(dto.getSolutionChecker())
-                                             .solutionCheckerSourceLanguage(dto.getSolutionCheckerLanguage())
-                                             .scoreEvaluationType(dto.getScoreEvaluationType() != null
-                                                                      ? dto.getScoreEvaluationType()
-                                                                      : Constants.ProblemResultEvaluationType.NORMAL.getValue())
-                                             .isPublicProblem(dto.getIsPublic())
-                                             .levelOrder(constants.getMapLevelOrder().get(dto.getLevelId()))
-                                             .attachment(String.join(";", attachmentId))
-                                             .statusId(dto.getStatus().toString())
-                                             .sampleTestcase(dto.getSampleTestCase())
-                                             .build();
+                .problemId(problemId)
+                .problemName(dto.getProblemName())
+                .problemDescription(dto.getProblemDescription())
+                .memoryLimit(dto.getMemoryLimit())
+                .timeLimitCPP(dto.getTimeLimitCPP())
+                .timeLimitJAVA(dto.getTimeLimitJAVA())
+                .timeLimitPYTHON(dto.getTimeLimitPYTHON())
+                .levelId(dto.getLevelId())
+                .categoryId(dto.getCategoryId())
+                .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
+                .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
+                .solution(dto.getSolution())
+                .isPreloadCode(dto.getIsPreloadCode())
+                .preloadCode(dto.getPreloadCode())
+                .solutionCheckerSourceCode(dto.getSolutionChecker())
+                .solutionCheckerSourceLanguage(dto.getSolutionCheckerLanguage())
+                .scoreEvaluationType(dto.getScoreEvaluationType() != null
+                        ? dto.getScoreEvaluationType()
+                        : Constants.ProblemResultEvaluationType.NORMAL.getValue())
+                .isPublicProblem(dto.getIsPublic())
+                .levelOrder(constants.getMapLevelOrder().get(dto.getLevelId()))
+                .attachment(String.join(";", attachmentId))
+                .statusId(dto.getStatus().toString())
+                .sampleTestcase(dto.getSampleTestCase())
+                .build();
         problem = problemCacheService.saveProblemWithCache(problem);
 
+        if (dto.getCategoryId() != null && Integer.valueOf(1).equals(dto.getCategoryId()) && dto.getBlockCodes() != null) {
+            problemBlockService.createProblemBlocks(problemId, dto.getBlockCodes());
+        }
 
         List<ProblemTag> problemTags = Arrays.stream(dto.getTagIds())
-                                             .map(tagId -> ProblemTag.builder()
-                                                                     .id(new ProblemTagId(tagId, problemId))
-                                                                     .build())
-                                             .collect(Collectors.toList());
+                .map(tagId -> ProblemTag.builder()
+                        .id(new ProblemTagId(tagId, problemId))
+                        .build())
+                .collect(Collectors.toList());
         problemTagRepo.saveAll(problemTags);
 
-        // grant role owner, manager, view to current user and admin
         List<String> roleIds = Arrays.asList(
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR,
-            UserContestProblemRole.ROLE_VIEWER
+                UserContestProblemRole.ROLE_OWNER,
+                UserContestProblemRole.ROLE_EDITOR,
+                UserContestProblemRole.ROLE_VIEWER
         );
         List<UserContestProblemRole> roles = new ArrayList<>();
         List<String> users = new ArrayList<>();
@@ -183,23 +195,19 @@ public class ProblemServiceImpl implements ProblemService {
         for (String user : users) {
             for (String roleId : roleIds) {
                 UserContestProblemRole role = new UserContestProblemRole();
-
                 role.setProblemId(problem.getProblemId());
                 role.setUserId(user);
                 role.setRoleId(roleId);
-
                 roles.add(role);
             }
         }
-
         userContestProblemRoleRepo.saveAll(roles);
 
-        // push notification to admin
         notificationsService.create(
-            createdBy,
-            "admin",
-            createdBy + " has created a contest problem ID " + problem.getProblemId(),
-            "");
+                createdBy,
+                "admin",
+                createdBy + " has created a contest problem ID " + problem.getProblemId(),
+                "");
 
         return problem;
     }
@@ -207,19 +215,20 @@ public class ProblemServiceImpl implements ProblemService {
     @Transactional
     @Override
     public ProblemEntity updateContestProblem(
-        String problemId,
-        String userId,
-        ModelUpdateContestProblem dto,
-        MultipartFile[] files
+            String problemId,
+            String userId,
+            ModelUpdateContestProblem dto,
+            MultipartFile[] files
     ) throws Exception {
+        // Kiểm tra quyền chỉnh sửa
         List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(
-            problemId,
-            userId);
+                problemId,
+                userId);
 
         boolean hasPermission = false;
         for (UserContestProblemRole role : roles) {
             if (role.getRoleId().equals(UserContestProblemRole.ROLE_EDITOR) ||
-                role.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)) {
+                    role.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)) {
                 hasPermission = true;
                 break;
             }
@@ -230,23 +239,18 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         ProblemEntity problem = problemRepo
-            .findById(problemId)
-            .orElseThrow(() -> new EntityNotFoundException("Problem ID not found"));
+                .findById(problemId)
+                .orElseThrow(() -> new EntityNotFoundException("Problem ID not found"));
         if (!userId.equals(problem.getCreatedBy())
-            &&
-            !userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
-                problemId,
-                userId,
-                UserContestProblemRole.ROLE_EDITOR)) {
+                &&
+                !userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
+                        problemId,
+                        userId,
+                        UserContestProblemRole.ROLE_EDITOR)) {
             throw new MiniLeetCodeException("permission denied", 403);
         }
 
-        // problem há been created, admin is shared edit role, but cannot perform the edit
-        //if (!userId.equals(problem.getUserId())
-        //    && !problem.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
-        //    throw new MiniLeetCodeException("Problem is not opened for edit", 400);
-        //}
-
+        // Xử lý tag
         List<TagEntity> tags = new ArrayList<>();
         Integer[] tagIds = dto.getTagIds();
         for (Integer tagId : tagIds) {
@@ -254,12 +258,13 @@ public class ProblemServiceImpl implements ProblemService {
             tags.add(tag);
         }
 
+        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         attachmentId.add(problem.getAttachment());
         String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
-                                                .map(Arrays::asList)
-                                                .orElseGet(Collections::emptyList);
+                .map(Arrays::asList)
+                .orElseGet(Collections::emptyList);
 
         List<String> removedFilesId = dto.getRemovedFilesId();
         if (problem.getAttachment() != null && !problem.getAttachment().isEmpty()) {
@@ -297,9 +302,9 @@ public class ProblemServiceImpl implements ProblemService {
         problem.setProblemDescription(dto.getProblemDescription());
         problem.setLevelId(dto.getLevelId());
         problem.setSolution(dto.getSolution());
+//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setIsPreloadCode(dto.getIsPreloadCode());
         problem.setPreloadCode(dto.getPreloadCode());
-//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
         problem.setTimeLimitJAVA(dto.getTimeLimitJAVA());
         problem.setTimeLimitPYTHON(dto.getTimeLimitPYTHON());
@@ -314,12 +319,329 @@ public class ProblemServiceImpl implements ProblemService {
         problem.setTags(tags);
         problem.setSampleTestcase(dto.getSampleTestCase());
 
+        Integer oldCategoryId = problem.getCategoryId();
+        Integer newCategoryId = dto.getCategoryId();
+        if (Integer.valueOf(1).equals(oldCategoryId) && Integer.valueOf(0).equals(newCategoryId)) {
+            problemBlockRepo.deleteByProblemId(problemId);
+        }
+        problem.setCategoryId(newCategoryId);
+
         if (userId.equals(problem.getCreatedBy())) {
             problem.setStatusId(dto.getStatus().toString());
         }
 
+        if (dto.getBlockCodes() != null && !dto.getBlockCodes().isEmpty()) {
+            problemBlockRepo.deleteByProblemId(problemId);
+
+            List<ProblemBlock> problemBlocks = new ArrayList<>();
+            Map<String, List<ModelUpdateContestProblem.BlockCode>> blocksByLanguage =
+                    dto.getBlockCodes().stream()
+                            .collect(Collectors.groupingBy(ModelUpdateContestProblem.BlockCode::getLanguage));
+
+            for (List<ModelUpdateContestProblem.BlockCode> blockCodes : blocksByLanguage.values()) {
+                for (int i = 0; i < blockCodes.size(); i++) {
+                    ModelUpdateContestProblem.BlockCode blockCode = blockCodes.get(i);
+                    ProblemBlock problemBlock = ProblemBlock.builder()
+                            .problemId(problemId)
+                            .seq(i + 1)
+                            .sourceCode(blockCode.getCode())
+                            .programmingLanguage(blockCode.getLanguage())
+                            .completedBy(Integer.valueOf(1).equals(blockCode.getForStudent()) ? 1 : 0)
+                            .build();
+                    problemBlocks.add(problemBlock);
+                }
+            }
+            problemBlockRepo.saveAll(problemBlocks);
+        }
+
         return problemCacheService.saveProblemWithCache(problem);
     }
+
+    @Transactional(readOnly = true)
+    public void exportProblemJson(String problemId, OutputStream outputStream, String userId)
+        throws Exception {
+
+        List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, userId);
+        boolean hasPermission = roles.stream().anyMatch(role ->
+                                                            role.equals(UserContestProblemRole.ROLE_OWNER) ||
+                                                            role.equals(UserContestProblemRole.ROLE_EDITOR) ||
+                                                            role.equals(UserContestProblemRole.ROLE_VIEWER)
+        );
+
+        if (!hasPermission) {
+            throw new AccessDeniedException("You do not have permission to export this problem.");
+        }
+
+        handleExportProblemJson(problemId, outputStream, userId);
+    }
+
+    private void handleExportProblemJson(
+        String problemId,
+        OutputStream outputStream,
+        String userId
+    ) throws Exception {
+
+        ModelCreateContestProblemResponse problem = getContestProblem(problemId);
+        long maxSizeBytes = iEProblemProperties.getExportConf().getMaxSizeBytes();
+        long totalSize = 0;
+
+        Map<String, ByteArrayOutputStream> fileStreams = new HashMap<>();
+
+        try {
+            // Export problem data to JSON
+            ByteArrayOutputStream problemJsonStream = exporter.exportProblemToJsonStream(problem);
+            fileStreams.put("ProblemData.json", problemJsonStream);
+            totalSize += problemJsonStream.size();
+
+
+
+            List<String> attachmentNames = problem.getAttachmentNames();
+            if (attachmentNames != null && !attachmentNames.isEmpty()) {
+                List<Map.Entry<String, ByteArrayOutputStream>> attachmentStreams =
+                    exporter.exportProblemAttachmentToStream(problem);
+
+                for (Map.Entry<String, ByteArrayOutputStream> entry : attachmentStreams) {
+                    fileStreams.put(entry.getKey(), entry.getValue());
+                    totalSize += entry.getValue().size();
+                }
+            }
+
+            // Check size limit and notify if exceeded
+            if (totalSize > maxSizeBytes) {
+                double sizeMB = totalSize / (1024.0 * 1024.0);
+                double thresholdMB = maxSizeBytes / (1024.0 * 1024.0);
+
+                notificationsService.create(
+                    userId,
+                    "admin",
+                    String.format("User %s exported problem %s with size %.2fMB, exceeds threshold %.2fMB",
+                                  userId, problem.getProblemId(), sizeMB, thresholdMB),
+                    ""
+                );
+            }
+
+            // Create ZIP file
+            try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
+                zipOut.setLevel(ZipOutputStream.DEFLATED);
+
+                for (Map.Entry<String, ByteArrayOutputStream> entry : fileStreams.entrySet()) {
+                    ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                    zipEntry.setTime(System.currentTimeMillis());
+
+                    zipOut.putNextEntry(zipEntry);
+                    entry.getValue().writeTo(zipOut);
+                    zipOut.closeEntry();
+                }
+
+                zipOut.finish();
+            }
+
+        } finally {
+            // Clean up streams
+            for (ByteArrayOutputStream stream : fileStreams.values()) {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    // Log but don't throw - cleanup operation
+                    log.warn("Failed to close stream during cleanup", e);
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public void importProblem(
+        ModelImportProblem model,
+        MultipartFile[] files,
+        String userId
+    ) {
+        final long MAX_FILE_SIZE = iEProblemProperties.getImportConf().getMaxSizeBytes();
+        final int MAX_FILE_COUNT = iEProblemProperties.getImportConf().getFileCount();
+
+        try {
+            if (problemRepo.existsByProblemId(model.getProblemId()) ||
+                problemRepo.existsByProblemName(model.getProblemName())) {
+                throw new IllegalArgumentException("Problem ID or name already exists");
+            }
+
+            List<MultipartFile> fileArray = Optional.ofNullable(files)
+                                                    .map(Arrays::asList)
+                                                    .orElseGet(Collections::emptyList);
+
+            if (fileArray.size() > MAX_FILE_COUNT) {
+                throw new IllegalArgumentException("Too many files (max: " + MAX_FILE_COUNT + ")");
+            }
+
+            for (MultipartFile file : fileArray) {
+                if (file.isEmpty()) {
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " is empty");
+                }
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " size exceeds " +
+                                                       (MAX_FILE_SIZE / (1024 * 1024)) + "MB limit");
+                }
+            }
+
+            ProblemEntity problemEntity = new ProblemEntity();
+            problemEntity.setProblemId(model.getProblemId().trim());
+            problemEntity.setProblemName(model.getProblemName());
+            problemEntity.setTimeLimitCPP(model.getTimeLimitCPP());
+            problemEntity.setTimeLimitJAVA(model.getTimeLimitJAVA());
+            problemEntity.setTimeLimitPYTHON(model.getTimeLimitPYTHON());
+            problemEntity.setMemoryLimit(model.getMemoryLimit());
+            problemEntity.setLevelOrder(model.getLevelOrder());
+            problemEntity.setAppearances(model.getAppearances());
+            problemEntity.setPublicProblem(model.getIsPublicProblem());
+            problemEntity.setLevelId(model.getLevelId());
+            problemEntity.setStatusId(model.getStatusId());
+            problemEntity.setProblemDescription(model.getProblemDescription());
+            problemEntity.setCorrectSolutionLanguage(model.getCorrectSolutionLanguage());
+            problemEntity.setCorrectSolutionSourceCode(model.getCorrectSolutionSourceCode());
+            problemEntity.setScoreEvaluationType(model.getScoreEvaluationType());
+            problemEntity.setSolution(model.getSolution());
+            problemEntity.setIsPreloadCode(model.getIsPreloadCode());
+            problemEntity.setPreloadCode(model.getPreloadCode());
+            problemEntity.setSampleTestcase(model.getSampleTestCase());
+            // Set categoryId
+            problemEntity.setCategoryId(model.getCategoryId() != null ? model.getCategoryId() : 1); // Default to 1 if null
+
+            if ("CUSTOM_EVALUATION".equals(model.getScoreEvaluationType())) {
+                problemEntity.setSolutionCheckerSourceLanguage(model.getSolutionCheckerSourceLanguage());
+                problemEntity.setSolutionCheckerSourceCode(model.getSolutionCheckerSourceCode());
+            }
+
+            if (model.getTags() != null && !model.getTags().isEmpty()) {
+                List<String> tagNames = model.getTags();
+                List<TagEntity> existingTags = tagRepo.findByNameInIgnoreCase(tagNames);
+                Map<String, TagEntity> nameToTagMap = new HashMap<>();
+                for (TagEntity tag : existingTags) {
+                    nameToTagMap.put(tag.getName().toLowerCase(), tag);
+                }
+
+                List<TagEntity> finalTags = new ArrayList<>();
+                List<TagEntity> newTags = new ArrayList<>();
+
+                for (String name : tagNames) {
+                    String lower = name.toLowerCase();
+                    if (nameToTagMap.containsKey(lower)) {
+                        finalTags.add(nameToTagMap.get(lower));
+                    } else {
+                        TagEntity newTag = new TagEntity();
+                        newTag.setName(name);
+                        newTags.add(newTag);
+                    }
+                }
+
+                if (!newTags.isEmpty()) {
+                    List<TagEntity> saved = tagRepo.saveAll(newTags);
+                    finalTags.addAll(saved);
+                }
+
+                problemEntity.setTags(finalTags);
+            }
+
+            List<String> attachmentId = new ArrayList<>();
+            String[] fileId = model.getFileId();
+            fileArray.forEach((file) -> {
+                ContentModel contentModel = new ContentModel(fileId[fileArray.indexOf(file)], file);
+                ObjectId id = null;
+                try {
+                    id = mongoContentService.storeFileToGridFs(contentModel);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (id != null) {
+                    ContentHeaderModel rs = new ContentHeaderModel(id.toHexString());
+                    attachmentId.add(rs.getId());
+                }
+            });
+
+            problemEntity.setAttachment(String.join(";", attachmentId));
+
+            problemEntity = problemRepo.save(problemEntity);
+
+            if (model.getBlockCodes() != null && !model.getBlockCodes().isEmpty()) {
+                List<ProblemBlock> problemBlocks = new ArrayList<>();
+                for (BlockCode blockCode : model.getBlockCodes()) {
+                    ProblemBlock problemBlock = ProblemBlock.builder()
+                                                            .problemId(problemEntity.getProblemId())
+                                                            .seq(blockCode.getSeq())
+                                                            .sourceCode(blockCode.getCode())
+                                                            .programmingLanguage(blockCode.getLanguage())
+                                                            .completedBy(blockCode.getForStudent())
+                                                            .build();
+                    problemBlocks.add(problemBlock);
+                }
+                problemBlockRepo.saveAll(problemBlocks);
+            }
+
+            List<String> roles = Arrays.asList(
+                UserContestProblemRole.ROLE_OWNER,
+                UserContestProblemRole.ROLE_EDITOR,
+                UserContestProblemRole.ROLE_VIEWER
+            );
+
+            List<UserContestProblemRole> rolesToSave = new ArrayList<>();
+            for (String role : roles) {
+                UserContestProblemRole upr = new UserContestProblemRole();
+                upr.setProblemId(problemEntity.getProblemId());
+                upr.setUserId(userId);
+                upr.setRoleId(role);
+                rolesToSave.add(upr);
+            }
+
+            if (userId != null && !userId.equals("admin")) {
+                for (String role : roles) {
+                    UserContestProblemRole upr = new UserContestProblemRole();
+                    upr.setProblemId(problemEntity.getProblemId());
+                    upr.setUserId("admin");
+                    upr.setRoleId(role);
+                    rolesToSave.add(upr);
+                }
+            }
+
+            userContestProblemRoleRepo.saveAll(rolesToSave);
+
+            if (model.getTestCases() != null) {
+                for (Map<String, Object> tc : model.getTestCases()) {
+                    TestCaseEntity testCase = new TestCaseEntity();
+                    testCase.setProblemId(model.getProblemId());
+                    if (tc.containsKey("testCasePoint")) {
+                        testCase.setTestCasePoint(((Number) tc.get("testCasePoint")).intValue());
+                    }
+                    if (tc.containsKey("isPublic")) {
+                        testCase.setIsPublic((String) tc.get("isPublic"));
+                    }
+                    if (tc.containsKey("statusId")) {
+                        testCase.setStatusId((String) tc.get("statusId"));
+                    }
+                    if (tc.containsKey("description")) {
+                        testCase.setDescription((String) tc.get("description"));
+                    }
+                    if (tc.containsKey("testCase")) {
+                        testCase.setTestCase((String) tc.get("testCase"));
+                    }
+                    if (tc.containsKey("correctAnswer")) {
+                        testCase.setCorrectAnswer((String) tc.get("correctAnswer"));
+                    }
+                    testCaseRepo.save(testCase);
+                }
+            }
+
+            notificationsService.create(
+                userId,
+                "admin",
+                userId + " created a contest problem ID " + problemEntity.getProblemId(),
+                "");
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to import problem: " + e.getMessage(), e);
+        }
+    }
+
 
     @Transactional(readOnly = true)
     @Override
@@ -337,7 +659,7 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         Map<String, Long> mapProblemToMaxSubmissionPoint = submittedProblems.stream()
-                                                                            .collect(Collectors.toMap(ModelProblemMaxSubmissionPoint::getProblemId, ModelProblemMaxSubmissionPoint::getMaxPoint));
+                .collect(Collectors.toMap(ModelProblemMaxSubmissionPoint::getProblemId, ModelProblemMaxSubmissionPoint::getMaxPoint));
 
         Map<String, Long> mProblem2MaxPoint = calculateMaxPointForProblems(contest, contestId);
 
@@ -346,9 +668,9 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         Map<String, ContestProblem> problemId2ContestProblem = contestProblemRepo
-            .findByContestIdAndProblemIdIn(contestId, problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet()))
-            .stream()
-            .collect(Collectors.toMap(ContestProblem::getProblemId, cp -> cp));
+                .findByContestIdAndProblemIdIn(contestId, problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet()))
+                .stream()
+                .collect(Collectors.toMap(ContestProblem::getProblemId, cp -> cp));
 
         List<ModelStudentOverviewProblem> responses = new ArrayList<>();
 
@@ -454,6 +776,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setPublicProblem(problemEntity.isPublicProblem());
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
+            problemResponse.setCategoryId(problemEntity.getCategoryId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {
@@ -502,51 +825,48 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-    private void handleExportProblem(
-        ModelCreateContestProblemResponse problem,
-        OutputStream outputStream
-    ) throws IOException {
-        List<File> files = new ArrayList<>();
+    private void handleExportProblem(ModelCreateContestProblemResponse problem, OutputStream outputStream) throws IOException {
+        List<Map.Entry<String, ByteArrayOutputStream>> entries = new ArrayList<>();
 
         try {
-            File problemGeneralInfoFile = exporter.exportProblemInfoToFile(problem);
-            File problemDescriptionFile = exporter.exportProblemDescriptionToFile(problem);
-            File problemCorrectSolutionFile = exporter.exportProblemCorrectSolutionToFile(problem);
+            ByteArrayOutputStream problemGeneralInfoStream = exporter.exportProblemInfoToStream(problem);
+            ByteArrayOutputStream problemDescriptionStream = exporter.exportProblemDescriptionToStream(problem);
+            ByteArrayOutputStream problemGeneralDescriptionTxtStream = exporter.exportProblemGeneralDescriptionToTxtStream(problem);
+            ByteArrayOutputStream problemCorrectSolutionStream = exporter.exportProblemCorrectSolutionToStream(problem);
 
-            files.add(problemGeneralInfoFile);
-            files.add(problemCorrectSolutionFile);
+            String solutionExt = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getCorrectSolutionLanguage()));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemGeneralInformation.html", problemGeneralInfoStream));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemDescription.html", problemDescriptionStream));
+            entries.add(new AbstractMap.SimpleEntry<>("ProblemGeneralDescription.txt", problemGeneralDescriptionTxtStream));
+            entries.add(new AbstractMap.SimpleEntry<>("Solution" + solutionExt, problemCorrectSolutionStream));
 
             if (problem.getScoreEvaluationType().equals(Constants.ProblemResultEvaluationType.CUSTOM.getValue())) {
-                File problemCustomCheckerFile = exporter.exportProblemCustomCheckerToFile(problem);
-                files.add(problemCustomCheckerFile);
+                ByteArrayOutputStream problemCustomCheckerStream = exporter.exportProblemCustomCheckerToStream(problem);
+                String checkerExt = ComputerLanguage.mapLanguageToExtension(ComputerLanguage.Languages.valueOf(problem.getSolutionCheckerSourceLanguage()));
+                entries.add(new AbstractMap.SimpleEntry<>("CustomSolutionChecker" + checkerExt, problemCustomCheckerStream));
             }
 
             if (!problem.getAttachmentNames().isEmpty()) {
-                files.addAll(exporter.exportProblemAttachmentToFile(problem));
+                entries.addAll(exporter.exportProblemAttachmentToStream(problem));
             }
 
-            files.addAll(exporter.exportProblemTestCasesToFile(problem));
+            entries.addAll(exporter.exportProblemTestCasesToStream(problem));
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+            for (Map.Entry<String, ByteArrayOutputStream> entry : entries) {
+                ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                zipOutputStream.putNextEntry(zipEntry);
+                zipOutputStream.write(entry.getValue().toByteArray());
+                zipOutputStream.closeEntry();
+            }
+            zipOutputStream.close();
+
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        // Zip files.
-        ZipOutputStreamUtils.zip(
-            outputStream,
-            files,
-            CompressionMethod.DEFLATE,
-            null,
-            EncryptionMethod.AES,
-            AesKeyStrength.KEY_STRENGTH_256);
-
-        //delete files
-        for (File file : files) {
-            file.delete();
+            throw e;
         }
     }
+
 
     @Transactional(readOnly = true)
     @Override
@@ -564,16 +884,14 @@ public class ProblemServiceImpl implements ProblemService {
 //        if (!hasPermission) {
 //            throw new MiniLeetCodeException("You don't have permission to view this problem", 403);
 //        }
-
         ProblemEntity problemEntity = problemRepo.findByProblemId(problemId);
         if (problemEntity == null) {
             throw new MiniLeetCodeException("Problem not found", 404);
         }
 
         if (problemEntity.isPublicProblem() != true) {
-
             List<UserContestProblemRole> ucpr = userContestProblemRoleRepo
-                .findAllByProblemIdAndUserId(problemEntity.getProblemId(), teacherId);
+                    .findAllByProblemIdAndUserId(problemEntity.getProblemId(), teacherId);
 
             boolean ok = true;
             if (!problemEntity.getCreatedBy().equals(teacherId)) {
@@ -588,7 +906,7 @@ public class ProblemServiceImpl implements ProblemService {
                         }
                     }
                     if (!owner && problemEntity.getStatusId() != null &&
-                        !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
+                            !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
                         ok = false;
                     }
                 }
@@ -598,24 +916,18 @@ public class ProblemServiceImpl implements ProblemService {
                 throw new MiniLeetCodeException("Problem is not open or you do not have permission", 400);
             }
         }
-        /*
-        if (!problemEntity.getUserId().equals(teacherId) &&
-            !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
-            throw new MiniLeetCodeException("Problem is not open", 400);
-        }
-        */
 
         ModelCreateContestProblemResponse problemResponse = new ModelCreateContestProblemResponse();
         problemResponse.setProblemId(problemEntity.getProblemId());
         problemResponse.setProblemName(problemEntity.getProblemName());
         problemResponse.setProblemDescription(problemEntity.getProblemDescription());
         problemResponse.setUserId(problemEntity.getCreatedBy());
-//        problemResponse.setTimeLimit(problemEntity.getTimeLimit());
         problemResponse.setTimeLimitCPP(problemEntity.getTimeLimitCPP());
         problemResponse.setTimeLimitJAVA(problemEntity.getTimeLimitJAVA());
         problemResponse.setTimeLimitPYTHON(problemEntity.getTimeLimitPYTHON());
         problemResponse.setMemoryLimit(problemEntity.getMemoryLimit());
         problemResponse.setLevelId(problemEntity.getLevelId());
+        problemResponse.setCategoryId(problemEntity.getCategoryId());
         problemResponse.setCorrectSolutionSourceCode(problemEntity.getCorrectSolutionSourceCode());
         problemResponse.setCorrectSolutionLanguage(problemEntity.getCorrectSolutionLanguage());
         problemResponse.setSolutionCheckerSourceCode(problemEntity.getSolutionCheckerSourceCode());
@@ -631,6 +943,7 @@ public class ProblemServiceImpl implements ProblemService {
         problemResponse.setStatus(problemEntity.getStatusId());
         problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
 
+        // Xử lý attachment
         if (problemEntity.getAttachment() != null) {
             String[] fileId = problemEntity.getAttachment().split(";", -1);
             if (fileId.length != 0) {
@@ -659,9 +972,55 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setAttachmentNames(null);
         }
 
+        List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
+        if (problemBlocks != null && !problemBlocks.isEmpty()) {
+            List<BlockCode> blockCodes = problemBlocks.stream()
+                    .map(this::mapToBlockCode)
+                    .collect(Collectors.toList());
+            problemResponse.setBlockCodes(blockCodes);
+        } else {
+            problemResponse.setBlockCodes(null);
+        }
+
         problemResponse.setRoles(userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, teacherId));
 
+        boolean canEditBlocks = checkCanEditBlocks(problemId);
+        problemResponse.setCanEditBlocks(canEditBlocks);
+
         return problemResponse;
+    }
+
+
+    private BlockCode mapToBlockCode(ProblemBlock block) {
+        BlockCode blockCode = new BlockCode();
+        blockCode.setId(String.valueOf(block.getId()));
+        blockCode.setCode(block.getSourceCode());
+        blockCode.setForStudent(block.getCompletedBy());
+        blockCode.setSeq(block.getSeq());
+        blockCode.setLanguage(block.getProgrammingLanguage());
+        return blockCode;
+    }
+
+    private boolean checkCanEditBlocks(String problemId) {
+        List<ContestProblem> contestProblems = contestProblemRepo.findAllByProblemId(problemId);
+
+        if (contestProblems.isEmpty()) {
+            return true;
+        }
+
+        for (ContestProblem cp : contestProblems) {
+            ContestEntity contest = contestRepo.findContestByContestId(cp.getContestId());
+            if (contest != null &&
+                    !ContestEntity.CONTEST_STATUS_COMPLETED.equals(contest.getStatusId()) &&
+                    !ContestEntity.CONTEST_STATUS_CLOSED.equals(contest.getStatusId()) &&
+                    !ContestEntity.CONTEST_STATUS_DISABLED.equals(contest.getStatusId())) {
+                return false;
+            }
+        }
+
+        boolean hasSubmissions = contestSubmissionRepo.existsByProblemId(problemId);
+
+        return !hasSubmissions;
     }
 
     @Transactional
