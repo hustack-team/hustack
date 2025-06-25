@@ -307,12 +307,10 @@ function ListProblemContent({ type }) {
         };
       }
 
-      // If no accepted files, return the current state
       if (!acceptedFiles || acceptedFiles.length === 0) {
         return newState;
       }
 
-      // Validate accepted files
       const validFiles = [];
       const invalidFiles = [];
 
@@ -331,21 +329,18 @@ function ListProblemContent({ type }) {
         }
       });
 
-      // Notify about invalid files
       invalidFiles.forEach(({ name, error }) => {
         errorNoti(error, 5000);
       });
 
-      // Update attachments with valid files
       const updatedAttachments = [...currentFiles, ...validFiles];
 
-      // Check if we exceed the maximum number of files
       if (updatedAttachments.length > MAX_FILES) {
         errorNoti(t("tooManyFiles", { maxFiles: MAX_FILES }), 5000);
         return {
           ...newState,
           errors: { ...newState.errors, attachments: t("tooManyFiles", { maxFiles: MAX_FILES }) },
-          attachments: currentFiles // Keep the current files
+          attachments: currentFiles 
         };
       }
 
@@ -359,7 +354,6 @@ function ListProblemContent({ type }) {
       setImportErrors((prev) => ({ ...prev, attachments: "" }));
     }
   };
-
 
   const handleRemoveAttachment = (index) => {
     setImportForm((prev) => {
@@ -420,13 +414,24 @@ function ListProblemContent({ type }) {
       problemDetailData.problemId = importForm.problemId;
       problemDetailData.problemName = importForm.problemName;
       problemDetailData.fileId = importForm.attachments.map((file) => file.name);
+
       if (problemDetailData.appearances == null) {
         problemDetailData.appearances = 0;
       }
+
       if (problemDetailData.isPublic !== undefined) {
         problemDetailData.isPublicProblem = problemDetailData.isPublic;
         delete problemDetailData.isPublic;
       }
+
+      if (!Array.isArray(problemDetailData.blockCodes)) {
+        problemDetailData.blockCodes = problemDetailData.blockCodes || [];
+      }
+
+      if (problemDetailData.categoryId == null) {
+        problemDetailData.categoryId = problemDetailData.categoryId || 0; 
+      }
+
     } catch (e) {
       console.error("JSON parsing error in submit:", e);
       setImportErrors((prev) => ({
@@ -569,7 +574,7 @@ function ListProblemContent({ type }) {
       "get",
       `/problems/${problem.problemId}/export/json`,
       (res) => {
-        saveFile(`${problem.problemId}.json`, res.data);
+        saveFile(`${problem.problemId}.zip`, res.data);
       },
       {
         onError: (e) => {
@@ -769,7 +774,6 @@ function ListProblemContent({ type }) {
       </Stack>
 
       <CustomizedDialogs
-
         open={openImportDialog}
         handleClose={handleCloseImportDialog}
         maxWidth="md"
@@ -863,7 +867,6 @@ function ListProblemContent({ type }) {
               )}
             </Grid>
 
-            {/* Container Tệp đính kèm - không cần mt vì container JSON đã có spacing bottom */}
             <Grid item xs={12}>
               <HustDropzoneArea
                 ref={dropzoneRef}
@@ -884,7 +887,6 @@ function ListProblemContent({ type }) {
               )}
             </Grid>
 
-            {/* Container danh sách files - không cần spacing vì đã có spacing từ Grid container */}
             {importForm.attachments.length > 0 && (
               <Grid item xs={12}>
                 <Stack spacing={1}>
@@ -913,7 +915,6 @@ function ListProblemContent({ type }) {
             )}
           </Grid>
         }
-
         actions={
           <Stack direction="row" spacing={2}>
             <TertiaryButton variant="outlined" onClick={handleCloseImportDialog} sx={{ textTransform: "none" }}>

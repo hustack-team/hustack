@@ -28,6 +28,5 @@ public class IEProblemProperties {
     public static class Import {
         long maxSizeBytes;
         int fileCount;
-        long maxSizeUnzip;
     }
 }
