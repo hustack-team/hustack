@@ -134,7 +134,7 @@ public class ContestProblemExportService {
         problemData.put("levelId", problem.getLevelId());
         problemData.put("categoryId", problem.getCategoryId());
         problemData.put("levelOrder", problem.getLevelOrder());
-        problemData.put("statusId", problem.getStatusId());
+        problemData.put("statusId", problem.getStatus());
         problemData.put("sampleTestCase", problem.getSampleTestCase());
         problemData.put("problemDescription", problem.getProblemDescription());
         problemData.put("correctSolutionLanguage", problem.getCorrectSolutionLanguage());

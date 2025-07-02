@@ -66,7 +66,7 @@ public class ModelCreateContestProblemResponse {
 
     List<TagEntity> tags;
 
-    String statusId;
+    String status;
 
     List<String> roles;
 
