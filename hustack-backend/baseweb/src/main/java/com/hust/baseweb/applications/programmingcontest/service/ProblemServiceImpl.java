@@ -777,6 +777,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
             problemResponse.setCategoryId(problemEntity.getCategoryId());
+            problemResponse.setStatus(problemEntity.getStatusId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {
