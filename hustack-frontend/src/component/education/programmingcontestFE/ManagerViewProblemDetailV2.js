@@ -342,7 +342,7 @@ function ManagerViewProblemDetailV2() {
         {[
           [t("problemName"), problemDetail.problemName],
           [t("level"), getLevels(t).find(item => item.value === problemDetail.levelId)?.label],
-          [t("status"), getStatuses(t).find(item => item.value === problemDetail.status)?.label],
+          [t("status"), getStatuses(t).find(item => item.value === problemDetail.statusId)?.label],
           [
             t("public", { ns: "common" }),
             problemDetail.public ? t("common:yes") : t("common:no"),

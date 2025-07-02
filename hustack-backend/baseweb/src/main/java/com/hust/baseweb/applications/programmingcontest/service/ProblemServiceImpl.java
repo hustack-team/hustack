@@ -502,7 +502,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemEntity.setIsPreloadCode(model.getIsPreloadCode());
             problemEntity.setPreloadCode(model.getPreloadCode());
             problemEntity.setSampleTestcase(model.getSampleTestCase());
-            // Set categoryId
+            problemEntity.setStatusId(model.getStatusId());
             problemEntity.setCategoryId(model.getCategoryId() != null ? model.getCategoryId() : 1); // Default to 1 if null
 
             if ("CUSTOM_EVALUATION".equals(model.getScoreEvaluationType())) {
@@ -777,6 +777,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setTags(problemEntity.getTags());
             problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
             problemResponse.setCategoryId(problemEntity.getCategoryId());
+            problemResponse.setStatusId(problemEntity.getStatusId());
             if (problemEntity.getAttachment() != null) {
                 String[] fileId = problemEntity.getAttachment().split(";", -1);
                 if (fileId.length != 0) {
@@ -940,7 +941,7 @@ public class ProblemServiceImpl implements ProblemService {
         problemResponse.setCreatedAt(problemEntity.getCreatedAt());
         problemResponse.setPublicProblem(problemEntity.isPublicProblem());
         problemResponse.setTags(problemEntity.getTags());
-        problemResponse.setStatus(problemEntity.getStatusId());
+        problemResponse.setStatusId(problemEntity.getStatusId());
         problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
 
         // Xử lý attachment

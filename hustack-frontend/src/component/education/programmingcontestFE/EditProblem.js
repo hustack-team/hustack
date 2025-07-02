@@ -525,7 +525,7 @@ function EditProblem() {
         setIsCustomEvaluated(data.scoreEvaluationType === CUSTOM_EVALUATION);
         setDescription(data.problemDescription);
         setSelectedTags(data.tags);
-        setStatus(data.status);
+        setStatus(data.statusId);
         setSampleTestCase(data.sampleTestCase);
         setIsOwner(data.roles?.includes("OWNER"));
         setCanEditBlocks(data.canEditBlocks || false);
