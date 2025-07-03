@@ -30,7 +30,6 @@ public class ContestSubmissionCommentService {
         }
 
         ContestSubmissionComment comment = new ContestSubmissionComment();
-        comment.setId(UUID.randomUUID());
         comment.setSubmissionId(submissionId);
         comment.setUserId(userId);
         comment.setComment(modelComment.getComment());

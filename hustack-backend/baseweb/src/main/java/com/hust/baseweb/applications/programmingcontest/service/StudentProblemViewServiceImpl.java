@@ -28,6 +28,7 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
     ContestService contestService;
     ContestSubmissionRepo contestSubmissionRepo;
     ProblemService problemService;
+    TestCaseRepo testCaseRepo;
 
     @Transactional(readOnly = true)
     public ModelStudentViewProblemDetail getProblemDetailForStudentView(String userId, String contestId, String problemId) {
@@ -122,10 +123,12 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
             response.setProblemName(contestProblem.getProblemRename());
             response.setProblemCode(contestProblem.getProblemRecode());
             response.setLevelId(problem.getLevelId());
-
             Integer blockProblem = problem.getCategoryId();
             int blockProblemValue = blockProblem != null ? blockProblem : 0;
             response.setBlockProblem(blockProblemValue);
+            List<TestCaseEntity> testCases = testCaseRepo.findByProblemId(problemId);
+            long totalPoint = testCases.stream().mapToLong(TestCaseEntity::getTestCasePoint).sum();
+            response.setMaxPoint(totalPoint);
 
             if (Integer.valueOf(1).equals(blockProblemValue)) {
                 List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
@@ -155,7 +158,6 @@ public class StudentProblemViewServiceImpl implements StudentProblemViewService 
             if (acceptedProblems.contains(problemId)) {
                 response.setAccepted(true);
             }
-
             responses.add(response);
         }
 
