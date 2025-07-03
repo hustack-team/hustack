@@ -48,7 +48,8 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
         List<ExamClassUserloginMap> examClass = new ArrayList<>();
         List<UserLogin> userLogins = new ArrayList<>();
 
-        for (ExamClassAccountDTO dto : users) {
+        for (int i = 0; i < users.size(); i++) {
+            ExamClassAccountDTO dto = users.get(i);
             String username = null;
             String password = null;
 
@@ -88,6 +89,7 @@ public class ExamClassUserloginMapServiceImpl implements ExamClassUserloginMapSe
             ecu.setRealUserLoginId(dto.getEmail());
             ecu.setStudentCode(dto.getStudentCode());
             ecu.setFullname(dto.getFullName());
+            ecu.setOrderIndex(i);
 
             if (attempt != maxRetries) {
                 ecu.setRandomUserLoginId(username);

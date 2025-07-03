@@ -42,4 +42,6 @@ public class ExamClassUserloginMap {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "order_index")
+    private Integer orderIndex;
 }
