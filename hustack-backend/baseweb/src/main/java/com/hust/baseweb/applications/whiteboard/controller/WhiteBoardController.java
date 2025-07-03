@@ -4,8 +4,11 @@ import com.hust.baseweb.applications.whiteboard.model.*;
 import com.hust.baseweb.applications.whiteboard.service.WhiteboardServiceImpl;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,12 +16,20 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @RestController
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class WhiteBoardController {
 
-    private UserService userService;
-    private WhiteboardServiceImpl whiteboardService;
+    UserService userService;
+
+    WhiteboardServiceImpl whiteboardService;
 
     @PostMapping("/whiteboards")
     public void createWhiteboard(
