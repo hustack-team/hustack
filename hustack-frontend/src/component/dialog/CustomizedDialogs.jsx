@@ -110,7 +110,6 @@ export default function CustomizedDialogs(props) {
     handleClose,
     actions,
     content,
-    showDividerUnderTitle,
   } = props;
 
   return (
@@ -129,7 +128,7 @@ export default function CustomizedDialogs(props) {
         >
           <strong>{title}</strong>
         </DialogTitle>
-        {showDividerUnderTitle && <Divider/>}
+        {contentTopDivider && <Divider/>}
         <DialogContent
           className={clsx(
             {

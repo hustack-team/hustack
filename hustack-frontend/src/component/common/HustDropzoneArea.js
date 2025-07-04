@@ -48,10 +48,10 @@ const HustDropzoneArea = React.forwardRef((props, ref) => {
     ...remainProps
   } = props;
 
-  const { t } = useTranslation("component/dropzone");
+  const { t } = useTranslation("common");
   const classes = useStyles();
 
-  let dropzoneText = t("dropzoneTextDefault");
+  let dropzoneText = t("dropzone.dropzoneTextDefault");
   const hasFileRestrictions = acceptedFiles && maxFileSize && filesLimit;
 
   if (hasFileRestrictions) {
@@ -59,7 +59,7 @@ const HustDropzoneArea = React.forwardRef((props, ref) => {
       .map((ext) => ext.replace(".", ""))
       .join(", ");
     const readableMaxSizeMB = Math.floor(maxFileSize / (1024 * 1024));
-    dropzoneText = t("dropzoneTextWithInfo", {
+    dropzoneText = t("dropzone.dropzoneTextWithInfo", {
       types: readableExtensions,
       maxSize: readableMaxSizeMB,
       maxFiles: filesLimit,
@@ -93,7 +93,7 @@ const HustDropzoneArea = React.forwardRef((props, ref) => {
         display="block"
         style={{ margin: "24px 0 8px 0px", width: "100%" }}
       >
-        {title ? title : t("title")}
+        {title ? title : t("dropzone.title")}
       </Typography>
       <DropzoneArea
         {...remainProps}
@@ -109,7 +109,7 @@ const HustDropzoneArea = React.forwardRef((props, ref) => {
         showPreviewsInDropzone={false}
         useChipsForPreview={!hideFileList}
         dropzoneText={dropzoneText}
-        previewText={t("previewText")}
+        previewText={t("dropzone.previewText")}
         previewChipProps={{
           variant: "outlined",
           color: "primary",
@@ -117,13 +117,13 @@ const HustDropzoneArea = React.forwardRef((props, ref) => {
           ...props.previewChipProps,
         }}
         getFileAddedMessage={(fileName) =>
-          t("getFileAddedMessage", { fileName })
+          t("dropzone.getFileAddedMessage", { fileName })
         }
         getFileRemovedMessage={(fileName) =>
-          t("getFileRemovedMessage", { fileName })
+          t("dropzone.getFileRemovedMessage", { fileName })
         }
         getFileLimitExceedMessage={(filesLimit) =>
-          t("getFileLimitExceedMessage", { filesLimit })
+          t("dropzone.getFileLimitExceedMessage", { filesLimit })
         }
         alertSnackbarProps={{
           anchorOrigin: { vertical: "bottom", horizontal: "right" },
