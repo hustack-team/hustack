@@ -91,7 +91,6 @@ const generateFileKey = (file) => {
 
 function ListProblemContent({type}) {
   const {keycloak} = useKeycloak();
-  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -109,17 +108,15 @@ function ListProblemContent({type}) {
   const [importErrors, setImportErrors] = useState({});
   const dropzoneRef = useRef(null);
 
-  const levels = getLevels(t);
-  const statuses = getStatuses(t);
 
   const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
   const handleChangePageSize = (newSize) => {
-    setPage(0);
+    setPage(0)
     setPageSize(newSize)
-  };
+  }
 
   const handleSelectLevels = (event) => {
     setFilter(prevFilter => ({...prevFilter, levelIds: event.target.value}));
@@ -130,11 +127,11 @@ function ListProblemContent({type}) {
   }
 
   const handleChangeProblemName = (event) => {
-    setFilter(prevFilter => ({...prevFilter, name: event.target.value }));
+    setFilter(prevFilter => ({...prevFilter, name: event.target.value}));
   }
 
   const handleChangeStatus = (event) => {
-    setFilter(prevFilter => ({...prevFilter, statuses: event.target.value }));
+    setFilter(prevFilter => ({...prevFilter, statuses: event.target.value}));
   }
 
   const resetFilter = () => {
@@ -513,8 +510,7 @@ function ListProblemContent({type}) {
     url += `&tagIds=${filter.tags.map(item => item.tagId)}`;
     url += `&statusIds=${filter.statuses}`;
 
-    request(
-      "get",
+    request("get",
       url,
       (res) => {
         setLoading(false);
@@ -532,10 +528,14 @@ function ListProblemContent({type}) {
       {
         onError: (e) => {
           setLoading(false);
-          errorNoti(t("common:error"), 3000)
+          errorNoti(t("common:error", 3000))
         }
       });
   }
+  
+  const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
+  const levels = getLevels(t);
+  const statuses = getStatuses(t);
 
   const onSingleDownload = async (problem) => {
     request("GET",
@@ -545,7 +545,7 @@ function ListProblemContent({type}) {
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error"), 3000);
+          errorNoti(t("common:error", 3000))
         },
       },
       {},
@@ -578,7 +578,7 @@ function ListProblemContent({type}) {
       render: (rowData) => (
         <Link
           to={{
-             pathname:
+            pathname:
               "/programming-contest/manager-view-problem-detail/" +
               encodeURIComponent(rowData["problemId"]),
           }}
@@ -588,7 +588,7 @@ function ListProblemContent({type}) {
             cursor: "pointer",
           }}
         >
-          {rowData.problemId}
+          {rowData["problemId"]}
         </Link>
       ),
     },
@@ -681,9 +681,7 @@ function ListProblemContent({type}) {
 
   return (
     <Paper elevation={1} sx={{padding: "16px 24px", borderRadius: 4}}>
-      <Typography variant="h6" sx={{marginBottom: "12px"}}>
-        {t("search")}
-      </Typography>
+      <Typography variant="h6" sx={{marginBottom: "12px"}}>{t("search")}</Typography>
       <Grid container spacing={3}>
         <Grid item xs={3}>
           <TextField
