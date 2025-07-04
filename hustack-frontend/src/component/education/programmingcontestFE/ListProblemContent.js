@@ -91,6 +91,7 @@ const generateFileKey = (file) => {
 
 function ListProblemContent({type}) {
   const {keycloak} = useKeycloak();
+
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -532,10 +533,10 @@ function ListProblemContent({type}) {
         }
       });
   }
-  
+
   const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
   const levels = getLevels(t);
-  const statuses = getStatuses(t);
+  const statuses = getStatuses(t)
 
   const onSingleDownload = async (problem) => {
     request("GET",
