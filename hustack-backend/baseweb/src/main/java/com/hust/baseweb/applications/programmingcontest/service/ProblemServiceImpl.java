@@ -571,7 +571,7 @@ public class ProblemServiceImpl implements ProblemService {
     ) throws Exception {
         ModelCreateContestProblemResponse problem = getContestProblem(problemId);
 
-        long maxSizeBytes = iEProblemProperties.getExport().getSizeWarningThreshold();
+        long maxSizeBytes = iEProblemProperties.getExportConfig().getSizeWarningThreshold();
         long totalSize = 0;
 
         Map<String, ByteArrayOutputStream> fileStreams = new HashMap<>();
@@ -625,8 +625,8 @@ public class ProblemServiceImpl implements ProblemService {
         MultipartFile[] files,
         String userId
     ) {
-        final long MAX_FILE_SIZE = iEProblemProperties.getImportProp().getMaxFileSize();
-        final int MAX_FILE_COUNT = iEProblemProperties.getImportProp().getMaxFileCount();
+        final long MAX_FILE_SIZE = iEProblemProperties.getImportConfig().getMaxFileSize();
+        final int MAX_FILE_COUNT = iEProblemProperties.getImportConfig().getMaxFileCount();
 
         try {
             if (problemRepo.existsByProblemId(model.getProblemId()) ||

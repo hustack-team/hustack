@@ -12,8 +12,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class IEProblemProperties {
 
-    Export export;
-    Import importProp;
+    Export exportConfig;
+    Import importConfig;
 
     @Getter
     @AllArgsConstructor
