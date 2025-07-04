@@ -38,17 +38,17 @@ const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf", ".docx", ".xlsx", "
 const JSON_MIME_TYPE = "application/json";
 const JSON_EXTENSION = ".json";
 
-const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []};
+const filterInitValue = {levelIds: [], tags: [], name: "", statuses: []}
 
 export const selectProps = (options) => ({
   multiple: true,
   renderValue: (selected) => (
-    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.5}}>
+    <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 0.5}}>
       {selected.map((value) => (
         <Chip
           size="small"
           key={value}
-          label={options.find((item) => item.value === value).label}
+          label={options.find(item => item.value === value).label}
           sx={{
             marginRight: "6px",
             marginBottom: "6px",
@@ -58,8 +58,8 @@ export const selectProps = (options) => ({
         />
       ))}
     </Box>
-  ),
-});
+  )
+})
 
 const getFileIcon = (fileName) => {
   const extension = fileName.split(".").pop().toLowerCase();
@@ -118,28 +118,28 @@ function ListProblemContent({type}) {
 
   const handleChangePageSize = (newSize) => {
     setPage(0);
-    setPageSize(newSize);
+    setPageSize(newSize)
   };
 
   const handleSelectLevels = (event) => {
-    setFilter((prevFilter) => ({...prevFilter, levelIds: event.target.value }));
+    setFilter(prevFilter => ({...prevFilter, levelIds: event.target.value}));
   };
 
   const handleSelectTags = (tags) => {
-    setFilter((prevFilter) => ({...prevFilter, tags }));
-  };
+    setFilter(prevFilter => ({...prevFilter, tags: tags}));
+  }
 
   const handleChangeProblemName = (event) => {
-    setFilter((prevFilter) => ({...prevFilter, name: event.target.value }));
-  };
+    setFilter(prevFilter => ({...prevFilter, name: event.target.value }));
+  }
 
   const handleChangeStatus = (event) => {
-    setFilter((prevFilter) => ({...prevFilter, statuses: event.target.value }));
-  };
+    setFilter(prevFilter => ({...prevFilter, statuses: event.target.value }));
+  }
 
   const resetFilter = () => {
-    setFilter(filterInitValue);
-  };
+    setFilter(filterInitValue)
+  }
 
   const hasSpecialCharacterProblemId = (value) => {
     return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(value);
@@ -497,49 +497,48 @@ function ListProblemContent({type}) {
     switch (type) {
       case 0:
         url = `/teacher/owned-problems?page=${page}&size=${pageSize}`;
-        break;
+        break
       case 1:
         url = `/teacher/shared-problems?page=${page}&size=${pageSize}`;
-        break;
+        break
       case 2:
         url = `/teacher/public-problems?page=${page}&size=${pageSize}`;
-        break;
+        break
     }
 
     if (filter.name) {
-      url += `&name=${encodeURIComponent(filter.name)}`;
+      url += `&name=${filter.name}`;
     }
-    url += `&levelIds=${filter.levelIds.join(",")}`;
-    url += `&tagIds=${filter.tags.map((item) => item.tagId).join(",")}`;
-    url += `&statusIds=${filter.statuses.join(",")}`;
+    url += `&levelIds=${filter.levelIds}`;
+    url += `&tagIds=${filter.tags.map(item => item.tagId)}`;
+    url += `&statusIds=${filter.statuses}`;
 
     request(
       "get",
       url,
       (res) => {
         setLoading(false);
-        const data = res.data;
-        const myProblems = data.content;
+
+        const data = res.data
+        const myProblems = data.content
 
         if (data.numberOfElements === 0 && data.number > 0) {
-          setPage(0);
+          setPage(0)
         } else {
           setProblems(myProblems);
-          setTotalCount(data.totalElements);
+          setTotalCount(data.totalElements)
         }
       },
       {
         onError: (e) => {
           setLoading(false);
-          errorNoti(t("common:error"), 3000);
-        },
-      }
-    );
-  };
+          errorNoti(t("common:error"), 3000)
+        }
+      });
+  }
 
   const onSingleDownload = async (problem) => {
-    request(
-      "get",
+    request("GET",
       `/problems/${problem.problemId}/export`,
       (res) => {
         saveFile(`${problem.problemId}.zip`, res.data);
@@ -579,7 +578,9 @@ function ListProblemContent({type}) {
       render: (rowData) => (
         <Link
           to={{
-            pathname: `/programming-contest/manager-view-problem-detail/${encodeURIComponent(rowData.problemId)}`,
+             pathname:
+              "/programming-contest/manager-view-problem-detail/" +
+              encodeURIComponent(rowData["problemId"]),
           }}
           style={{
             textDecoration: "none",
@@ -591,33 +592,33 @@ function ListProblemContent({type}) {
         </Link>
       ),
     },
-    {title: t("problemName"), field: "problemName", cellStyle: {minWidth: 300 }},
-    {title: t("common:createdBy"), field: "userId", cellStyle: {minWidth: 120 }},
+    {title: t("problemName"), field: "problemName", cellStyle: {minWidth: 300}},
+    {title: t("common:createdBy"), field: "userId", cellStyle: {minWidth: 120}},
     {
       title: t("level"),
       field: "levelId",
-      align: "center",
-      cellStyle: {minWidth: 120 },
+      align: 'center',
+      cellStyle: {minWidth: 120},
       render: (rowData) => (
-        <Typography component="span" variant="subtitle2" sx={{color: getColorLevel(rowData.levelId)}}>
-          {levels.find((item) => item.value === rowData.levelId)?.label || ""}
+        <Typography component="span" variant="subtitle2" sx={{color: getColorLevel(`${rowData.levelId}`)}}>
+          {`${levels.find(item => item.value === rowData.levelId)?.label || ""}`}
         </Typography>
       ),
     },
     {
       title: t("status"),
       field: "statusId",
-      align: "center",
+      align: 'center',
       cellStyle: {minWidth: 120},
       render: (rowData) => (
-        <Typography component="span" variant="subtitle2" sx={{color: getColorStatus(rowData.statusId)}}>
-          {statuses.find((item) => item.value === rowData.statusId)?.label || ""}
+        <Typography component="span" variant="subtitle2" sx={{color: getColorStatus(`${rowData.statusId}`)}}>
+          {`${statuses.find(item => item.value === rowData.statusId)?.label || ''}`}
         </Typography>
-      ),
+      )
     },
     {
       title: t("tag"),
-      field: "tags",
+      fields: "tags",
       render: (rowData) => (
         <Box>
           {rowData.tags?.length > 0 &&
@@ -640,15 +641,19 @@ function ListProblemContent({type}) {
     {
       title: t("appearances"),
       field: "appearances",
-      align: "right",
+      align: 'right',
       cellStyle: {minWidth: 200},
-      render: (rowData) => <span style={{marginLeft: "24px"}}>{rowData.appearances}</span>,
+      render: (rowData) => {
+        return (
+          <span style={{marginLeft: "24px"}}>{rowData.appearances}</span>
+        );
+      },
     },
     {
       title: t("common:createdTime"),
       field: "createdAt",
       cellStyle: {minWidth: 200},
-      render: (rowData) => toFormattedDateTime(rowData.createdAt),
+      render: (rowData) => toFormattedDateTime(rowData.createdAt)
     },
     {
       title: t("common:action"),
@@ -671,7 +676,7 @@ function ListProblemContent({type}) {
   ];
 
   useEffect(() => {
-    handleSearch();
+    handleSearch()
   }, [page, pageSize, type]);
 
   return (
@@ -682,7 +687,7 @@ function ListProblemContent({type}) {
       <Grid container spacing={3}>
         <Grid item xs={3}>
           <TextField
-            size="small"
+            size='small'
             fullWidth
             label={t("problemName")}
             value={filter.name}
@@ -696,13 +701,15 @@ function ListProblemContent({type}) {
             label={t("level")}
             options={levels}
             value={filter.levelIds}
-            sx={{minWidth: "unset", mr: "unset"}}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             SelectProps={selectProps(levels)}
-            onChange={handleSelectLevels}
+            onChange={(event) => {
+              handleSelectLevels(event);
+            }}
           />
         </Grid>
         <Grid item xs={3}>
-          <FilterByTag onSelect={handleSelectTags} value={filter.tags} />
+          <FilterByTag onSelect={handleSelectTags} value={filter.tags}/>
         </Grid>
         <Grid item xs={3}>
           <StyledSelect
@@ -711,17 +718,19 @@ function ListProblemContent({type}) {
             label={t("status")}
             options={statuses}
             value={filter.statuses}
-            sx={{minWidth: "unset", mr: "unset"}}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             SelectProps={selectProps(statuses)}
-            onChange={handleChangeStatus}
+            onChange={(event) => {
+              handleChangeStatus(event);
+            }}
           />
         </Grid>
       </Grid>
-      <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{mt: 3}}>
+      <Stack direction="row" justifyContent='flex-end' spacing={2} sx={{mt: 3}}>
         <TertiaryButton
           onClick={resetFilter}
           variant="outlined"
-          startIcon={<AutorenewIcon />}
+          startIcon={<AutorenewIcon/>}
           sx={{textTransform: "none"}}
         >
           {t("reset")}
@@ -729,16 +738,16 @@ function ListProblemContent({type}) {
         <PrimaryButton
           disabled={loading}
           onClick={handleSearch}
-          startIcon={<SearchIcon />}
+          startIcon={<SearchIcon/>}
           sx={{textTransform: "none"}}
         >
           {t("search")}
         </PrimaryButton>
       </Stack>
 
-      <Divider sx={{mt: 2, mb: 2}} />
+      <Divider sx={{mt: 2, mb: 2}}/>
 
-      <Stack direction="row" justifyContent="space-between" mb={1.5}>
+      <Stack direction="row" justifyContent='space-between' mb={1.5}>
         <Typography variant="h6">{t("problemList")}</Typography>
         <Stack direction="row" spacing={2}>
           <TertiaryButton
@@ -919,7 +928,13 @@ function ListProblemContent({type}) {
       />
 
       <StandardTable
-        columns={COLUMNS.filter((item) => type === 0 ? item.field !== "userId" : true)}
+        columns={COLUMNS.filter(item => {
+          if (type === 0) {
+            return item.field !== 'userId'
+          } else {
+            return true
+          }
+        })}
         data={problems}
         hideCommandBar
         hideToolBar
@@ -930,7 +945,7 @@ function ListProblemContent({type}) {
           sorting: false,
         }}
         components={{
-          Container: (props) => <Paper {...props} elevation={0} />,
+          Container: (props) => <Paper {...props} elevation={0}/>,
         }}
         isLoading={loading}
         page={page}
@@ -942,4 +957,4 @@ function ListProblemContent({type}) {
   );
 }
 
-export default ListProblemContent;
+export default ListProblemContent
