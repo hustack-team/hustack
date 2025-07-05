@@ -1,4 +1,4 @@
-import {GetApp} from "@material-ui/icons";
+import {GetApp, Photo} from "@material-ui/icons";
 import AddIcon from "@material-ui/icons/Add";
 import {Box, Chip, Divider, Grid, IconButton, Paper, Stack, TextField, Tooltip, Typography,} from "@mui/material";
 import {request, saveFile} from "api";
@@ -22,6 +22,13 @@ import {BsFiletypeJson} from "react-icons/bs";
 import {FaFileArchive, FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel, FaFilePowerpoint, FaTrash } from "react-icons/fa";
 import HustDropzoneArea from "component/common/HustDropzoneArea";
 import HustCodeEditor from "component/common/HustCodeEditor";
+import { ReactComponent as PhotoIcon } from "../../../assets/icons/photo.svg";
+import { ReactComponent as PdfIcon } from "../../../assets/icons/pdf.svg";
+import { ReactComponent as DocxIcon } from "../../../assets/icons/docx.svg";
+import { ReactComponent as XlsxIcon } from "../../../assets/icons/xlsx.svg";
+import { ReactComponent as PptxIcon } from "../../../assets/icons/pptx.svg";
+import { ReactComponent as ZipIcon } from "../../../assets/icons/zip.svg";
+import { ReactComponent as CodeIcon } from "../../../assets/icons/code.svg";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILES = 5;
@@ -62,24 +69,26 @@ export const selectProps = (options) => ({
 })
 
 const getFileIcon = (fileName) => {
-  const extension = fileName.split(".").pop().toLowerCase();
-  const iconProps = {size: 16, style: {marginRight: "8px", color: "#1976d2"}};
+  const extension = fileName?.split(".").pop()?.toLowerCase() || "";
+  const iconProps = { width: 32, height: 32, style: { marginRight: "8px", fill: "#1976d2" } };
 
   switch (extension) {
     case "jpg":
     case "jpeg":
     case "png":
-      return <FaFileImage {...iconProps} />;
+      return <PhotoIcon {...iconProps}  />;
     case "pdf":
-      return <FaFilePdf {...iconProps} />;
+      return <PdfIcon {...iconProps} />;
     case "docx":
-      return <FaFileWord {...iconProps} />;
+      return <DocxIcon {...iconProps} />;
     case "xlsx":
-      return <FaFileExcel {...iconProps} />;
+      return <XlsxIcon {...iconProps} />;
     case "pptx":
-      return <FaFilePowerpoint {...iconProps} />;
+      return <PptxIcon {...iconProps} />;
+    case "zip":
+      return <ZipIcon {...iconProps} />;
     default:
-      return <FaFile {...iconProps} />;
+      return <CodeIcon {...iconProps} />;
   }
 };
 
