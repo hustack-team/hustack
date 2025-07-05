@@ -28,6 +28,14 @@ public interface ProblemService {
 
     List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo();
 
+    void exportProblemJson(String problemId, OutputStream outputStream, String userId);
+
+    void importProblem(
+        ModelImportProblem model,
+        MultipartFile[] files,
+        String userId
+    );
+
     boolean removeUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
 
     Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception;
