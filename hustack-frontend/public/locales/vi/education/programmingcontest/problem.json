@@ -50,7 +50,7 @@
   "manageRole": "Phân quyền",
   "clone": "Tạo bản sao",
   "importProblem": "Nhập bài tập",
-  "import": "Nhập",
+  "import": "Nhập {{entity}}",
   "importing": "Đang nhập...",
   "importSuccess": "Bài tập đã nhập thành công",
   "onlyZipFilesAllowed": "Chỉ cho phép tệp ZIP",

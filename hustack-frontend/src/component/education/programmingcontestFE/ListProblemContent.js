@@ -117,6 +117,7 @@ function ListProblemContent({type}) {
   });
   const [importErrors, setImportErrors] = useState({});
   const dropzoneRef = useRef(null);
+  const lastErrorTimeRef = useRef(0);
 
 
   const handleChangePage = (newPage) => {
@@ -221,41 +222,42 @@ function ListProblemContent({type}) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    e.target.value = null;
+
     if (!isValidFile(file, true)) {
-      setImportErrors((prev) => ({
-        ...prev,
-        jsonFile: t("invalidJsonFormat"),
-      }));
+      setTimeout(() => errorNoti(t("invalidJsonFormat"), 5000), 1000);
+      handleImportFormChange("jsonFile", null);
+      handleImportFormChange("jsonContent", "");
       return;
     }
 
     if (!isValidFileSize(file)) {
-      setImportErrors((prev) => ({
-        ...prev,
-        jsonFile: file.size === 0
+      setTimeout(() => errorNoti(
+        file.size === 0
           ? t("fileEmpty", {file: file.name})
           : t("fileTooLarge", {maxSize: MAX_FILE_SIZE / (1024 * 1024)}),
-      }));
+        5000
+      ), 1000);
+      handleImportFormChange("jsonFile", null);
+      handleImportFormChange("jsonContent", "");
       return;
     }
 
     try {
       const jsonText = await readJsonFile(file);
       if (!isValidJson(jsonText)) {
-        setImportErrors((prev) => ({
-          ...prev,
-          jsonFile: t("invalidJsonContent"),
-        }));
+        setTimeout(() => errorNoti(t("invalidJsonContent"), 5000), 1000);
+        handleImportFormChange("jsonFile", null);
+        handleImportFormChange("jsonContent", "");
         return;
       }
       handleImportFormChange("jsonFile", file);
       handleImportFormChange("jsonContent", jsonText);
     } catch (error) {
       console.error("Error reading JSON file:", error);
-      setImportErrors((prev) => ({
-        ...prev,
-        jsonFile: t("errorReadingFile"),
-      }));
+      setTimeout(() => errorNoti(t("errorReadingFile"), 5000), 1000);
+      handleImportFormChange("jsonFile", null);
+      handleImportFormChange("jsonContent", "");
     }
   };
 
@@ -274,42 +276,29 @@ function ListProblemContent({type}) {
       const currentFiles = prev.attachments || [];
       const remainingSlots = MAX_FILES - currentFiles.length;
 
+      if (acceptedFiles.length > remainingSlots) {
+        if (acceptedFiles && acceptedFiles.length > 0) {
+          const now = Date.now();
+          if (now - lastErrorTimeRef.current > 1000) {
+            errorNoti(t('tooManyFiles', {maxFiles: MAX_FILES}), 4000);
+            lastErrorTimeRef.current = now;
+          }
+        }
+        return prev;
+      }
+
       const newState = {
         ...prev,
         errors: {...prev.errors, attachments: ""}
       };
 
-      // Handle rejected files
       if (rejectedFiles.length > 0) {
-        const errorMessages = rejectedFiles.map((rejected) => {
-          const file = rejected.file;
-          if (rejected.errors.some((err) => err.code === "file-too-large")) {
-            return t("fileTooLarge", {file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024)});
-          }
-          if (rejected.errors.some((err) => err.code === "file-invalid-type")) {
-            return t("invalidFileFormat", {file: file.name});
-          }
-          if (rejected.errors.some((err) => err.code === "too-many-files")) {
-            return t("tooManyFiles", {maxFiles: MAX_FILES});
-          }
-          if (rejected.errors.some((err) => err.code === "file-too-small")) {
-            return t("fileEmpty", {file: file.name });
-          }
-          return t("errorProcessingFile", {file: file.name});
-        });
-
-        return {
-          ...newState,
-          errors: {...newState.errors, attachments: errorMessages.join("; ")}
-        };
-      }
-
-      // If no accepted files, return the current state
-      if (!acceptedFiles || acceptedFiles.length === 0) {
         return newState;
       }
 
-      // Validate accepted files
+      if (!acceptedFiles || acceptedFiles.length === 0) {
+        return newState;
+      }
       const validFiles = [];
       const invalidFiles = [];
 
@@ -328,24 +317,7 @@ function ListProblemContent({type}) {
         }
       });
 
-      // Notify about invalid files
-      invalidFiles.forEach(({name, error}) => {
-        errorNoti(error, 5000);
-      });
-
-      // Update attachments with valid files
       const updatedAttachments = [...currentFiles, ...validFiles];
-
-      // Check if we exceed the maximum number of files
-      if (updatedAttachments.length > MAX_FILES) {
-        errorNoti(t("tooManyFiles", {maxFiles: MAX_FILES}), 5000);
-        return {
-          ...newState,
-          errors: {...newState.errors, attachments: t("tooManyFiles", {maxFiles: MAX_FILES})},
-          attachments: currentFiles // Keep the current files
-        };
-      }
-
       return {
         ...newState,
         attachments: updatedAttachments
@@ -356,7 +328,6 @@ function ListProblemContent({type}) {
       setImportErrors((prev) => ({...prev, attachments: ""}));
     }
   };
-
 
   const handleRemoveAttachment = (index) => {
     setImportForm((prev) => {
@@ -400,7 +371,7 @@ function ListProblemContent({type}) {
     }
 
     if (!isValid) {
-      setImportErrors(errors);
+      Object.values(errors).forEach(msg => errorNoti(msg, 4000));
     }
 
     return isValid;
@@ -472,9 +443,7 @@ function ListProblemContent({type}) {
             } else if (errorData.errors && Array.isArray(errorData.errors)) {
               errorMessage = errorData.errors.map((err) => t(err.message, {defaultValue: err.message})).join("; ");
             }
-            if (errorData.message && errorData.message.includes("Too many files")) {
-              errorMessage = t("tooManyFiles", {maxFiles: MAX_FILES});
-            }
+
             if (errorData.message && errorData.message.includes("size exceeds")) {
               errorMessage = t("fileTooLarge", {maxSize: MAX_FILE_SIZE / (1024 * 1024)});
             }
@@ -763,7 +732,7 @@ function ListProblemContent({type}) {
             onClick={handleOpenImportDialog}
             sx={{textTransform: "none"}}
           >
-            {t("import")}
+            {t("import", {entity: ""})}
           </TertiaryButton>
           <PrimaryButton
             startIcon={<AddIcon />}
@@ -784,74 +753,66 @@ function ListProblemContent({type}) {
         contentTopDivider={true}
         title={t("importProblem")}
         content={
-          <Grid container spacing={3}>
-            <Grid container item xs={12} spacing={2} mb={1}>
-              <Grid item xs={6}>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label={t("problemId")}
-                  type="text"
-                  fullWidth
-                  size="small"
-                  required
-                  variant="outlined"
-                  value={importForm.problemId}
-                  onChange={(e) => handleImportFormChange("problemId", e.target.value)}
-                  error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
-                  helperText={
-                    importErrors.problemId ||
-                    (hasSpecialCharacterProblemId(importForm.problemId) ? t("problemIdInvalid") : "")
-                  }
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  margin="dense"
-                  label={t("problemName")}
-                  type="text"
-                  fullWidth
-                  size="small"
-                  required
-                  variant="outlined"
-                  value={importForm.problemName}
-                  onChange={(e) => handleImportFormChange("problemName", e.target.value)}
-                  error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
-                  helperText={
-                    importErrors.problemName ||
-                    (hasSpecialCharacterProblemName(importForm.problemName) ? t("problemNameInvalid") : "")
-                  }
-                />
-              </Grid>
-            </Grid>
+          <Box>
+            {/* Block 1: Two input fields */}
+            <Stack direction="row" spacing={2} sx={{mb: 3}}>
+              <TextField
+                autoFocus
+                margin="dense"
+                label={t("problemId")}
+                type="text"
+                fullWidth
+                size="small"
+                required
+                variant="outlined"
+                value={importForm.problemId}
+                onChange={(e) => handleImportFormChange("problemId", e.target.value)}
+                error={!!importErrors.problemId || hasSpecialCharacterProblemId(importForm.problemId)}
+                helperText={
+                  importErrors.problemId ||
+                  (hasSpecialCharacterProblemId(importForm.problemId) ? t("problemIdInvalid") : "")
+                }
+              />
+              <TextField
+                margin="dense"
+                label={t("problemName")}
+                type="text"
+                fullWidth
+                size="small"
+                required
+                variant="outlined"
+                value={importForm.problemName}
+                onChange={(e) => handleImportFormChange("problemName", e.target.value)}
+                error={!!importErrors.problemName || hasSpecialCharacterProblemName(importForm.problemName)}
+                helperText={
+                  importErrors.problemName ||
+                  (hasSpecialCharacterProblemName(importForm.problemName) ? t("problemNameInvalid") : "")
+                }
+              />
+            </Stack>
 
-            <Grid item xs={12} sx={{mt: -1, mb: -5}}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={12} md={4}>
-                  <Typography variant="h6" component="span">
-                    {t("resourceFile")}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={12} md={8}>
-                  <Stack direction="row" spacing={2} justifyContent="flex-end">
-                    <TertiaryButton
-                      onClick={handleClearJson}
-                      disabled={!importForm.jsonFile}
-                      sx={{textTransform: "none"}}
-                      color="error"
-                    >
-                      {t("common:delete")}
-                    </TertiaryButton>
-                    <PrimaryButton variant="outlined" component="label" sx={{textTransform: "none"}}>
-                      {t("selectJsonFile")}
-                      <input type="file" hidden accept=".json" onChange={handleFileInputChange} />
-                    </PrimaryButton>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Grid>
-
-            <Grid item xs={12} sx={{mt: 2, mb: -3}}>
+            {/* Block 2: Resource file (JSON) */}
+            <Stack spacing={2} sx={{mb: 0}}>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Typography variant="h6" component="span" sx={{mb: 0, pb: 0, mt: 0, pt: 0, lineHeight: 1}}>
+                  {t("resourceFile")}
+                </Typography>
+                <Box sx={{flexGrow: 1}} />
+                <Stack direction="row" spacing={2}>
+                  <TertiaryButton
+                    onClick={handleClearJson}
+                    disabled={!importForm.jsonFile}
+                    sx={{textTransform: "none"}}
+                    color="error"
+                  >
+                    {t("common:delete")}
+                  </TertiaryButton>
+                  <PrimaryButton variant="outlined" component="label" sx={{textTransform: "none"}}>
+                    {t("selectJsonFile")}
+                    <input type="file" hidden accept=".json" onChange={handleFileInputChange} />
+                  </PrimaryButton>
+                </Stack>
+              </Stack>
               <HustCodeEditor
                 language="JSON"
                 hidePlaceholder
@@ -868,9 +829,10 @@ function ListProblemContent({type}) {
                   {importErrors.jsonFile}
                 </Typography>
               )}
-            </Grid>
+            </Stack>
 
-            <Grid item xs={12}>
+            {/* Block 3: Attachments */}
+            <Stack spacing={1.5} sx={{mt: 0, pt: 0}}>
               <HustDropzoneArea
                 ref={dropzoneRef}
                 key={`dropzone-${importForm.attachments.length}`}
@@ -882,17 +844,19 @@ function ListProblemContent({type}) {
                 hideFileList={true}
                 initialFiles={[]}
                 hideLogo={true}
+                showAlerts={false}
+                sx={{
+                  '& .MuiTypography-h6': { mb: 0, pb: 0, mt: 0, pt: 0, lineHeight: 1 },
+                  m: 0, p: 0
+                }}
               />
               {importErrors.attachments && (
                 <Typography color="error" variant="body2" sx={{mt: 1 }}>
                   {importErrors.attachments}
                 </Typography>
               )}
-            </Grid>
-
-            {importForm.attachments.length > 0 && (
-              <Grid item xs={12}>
-                <Stack spacing={1}>
+              {importForm.attachments.length > 0 && (
+                <Stack spacing={1} sx={{mt: 1, mt: '0px !important'}}>
                   {importForm.attachments.map((file, index) => (
                     <Box
                       key={generateFileKey(file)}
@@ -900,23 +864,37 @@ function ListProblemContent({type}) {
                         display: "flex",
                         alignItems: "center",
                         padding: "8px",
-                        borderRadius: "4px",
+                        borderRadius: "8px",
+                        backgroundColor: '#fafbfc',
                         "&:hover": {backgroundColor: "#f5f5f5"},
+                        justifyContent: "space-between",
                       }}
                     >
-                      {getFileIcon(file.name)}
-                      <Typography variant="body2" sx={{flexGrow: 1}}>
-                        {file.name}
-                      </Typography>
+                      <Box sx={{display: 'flex', alignItems: 'center', minWidth: 0, flex: 1}}>
+                        {getFileIcon(file.name)}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            flexGrow: 1,
+                            maxWidth: 240,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                          title={file.name}
+                        >
+                          {file.name}
+                        </Typography>
+                      </Box>
                       <IconButton size="small" color="error" onClick={() => handleRemoveAttachment(index)}>
                         <FaTrash />
                       </IconButton>
                     </Box>
                   ))}
                 </Stack>
-              </Grid>
-            )}
-          </Grid>
+              )}
+            </Stack>
+          </Box>
         }
 
         actions={
@@ -929,7 +907,7 @@ function ListProblemContent({type}) {
               disabled={loading}
               sx={{textTransform: "none"}}
             >
-              {loading ? t("importing") : t("import")}
+              {loading ? t("importing") : t("import", {entity: ""})}
             </PrimaryButton>
           </Stack>
         }

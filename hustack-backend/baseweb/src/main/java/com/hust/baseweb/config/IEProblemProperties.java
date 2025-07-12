@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 @AllArgsConstructor
 @ConfigurationProperties(prefix = "problem")
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class IEProblemProperties {
 
     Export exportConfig;
@@ -17,14 +17,14 @@ public class IEProblemProperties {
 
     @Getter
     @AllArgsConstructor
-    @FieldDefaults(level = AccessLevel.PRIVATE)
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     public static class Export {
         long sizeWarningThreshold;
     }
 
     @Getter
     @AllArgsConstructor
-    @FieldDefaults(level = AccessLevel.PRIVATE)
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     public static class Import {
         long maxFileSize;
         int maxFileCount;

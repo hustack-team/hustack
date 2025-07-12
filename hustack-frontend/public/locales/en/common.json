@@ -110,11 +110,11 @@
    "dropzone": {
     "title": "Attachment files",
     "dropzoneTextDefault": "Drag and drop files here or click to select files",
-    "dropzoneTextWithInfo": "Drag and drop files here or click to select files.\nSupported file formats: {{types}}.\n Maximum size: {{maxSize}}MB per file\nMaximum number of files: {{maxFiles}}",
+    "dropzoneTextWithInfo": "Drag and drop files here or click to select files\nSupported file formats: {{types}}\n Maximum size: {{maxSize}}MB per file\nMaximum number of files: {{maxFiles}}",
     "previewText": "Files:",
-    "getFileAddedMessage": "File {{fileName}} uploaded successfully",
-    "getFileRemovedMessage": "File {{fileName}} removed",
-    "getFileLimitExceedMessage": "Maximum number of files exceeded. You can upload up to {{filesLimit}} files"
+    "getFileAddedMessage": "The file {{fileName}} has been uploaded successfully",
+    "getFileRemovedMessage": "File {{fileName}} has been removed",
+    "getFileLimitExceedMessage": "Maximum number of files exceeded. You can upload up to {{filesLimit}} files only"
   }
 
 }

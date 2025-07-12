@@ -110,10 +110,10 @@
   "dropzone": {
     "title": "Tệp đính kèm",
     "dropzoneText": "Kéo thả tệp vào đây hoặc nhấn để chọn tệp",
-    "dropzoneTextWithInfo": "Kéo và thả tệp vào đây hoặc nhấn để chọn tệp.\nTệp định dạng: {{types}}.\nKích thước tối đa mỗi tệp: {{maxSize}}MB.\nSố tệp tối đa: {{maxFiles}}",
+    "dropzoneTextWithInfo": "Kéo và thả tệp vào đây hoặc nhấn để chọn tệp\nTệp định dạng: {{types}}\nKích thước tối đa mỗi tệp: {{maxSize}}MB\nSố tệp tối đa: {{maxFiles}}",
     "previewText": "Danh sách tệp tải lên:",
-    "getFileAddedMessage": "Tệp {{fileName}} tải lên thành công",
-    "getFileRemovedMessage": "Tệp {{fileName}} đã loại bỏ",
-    "getFileLimitExceedMessage": "Vượt quá số lượng tệp tối đa cho phép. Chỉ được phép tải lên tối đa {{filesLimit}} tệp"
+    "getFileAddedMessage": "Tệp {{fileName}} đã được tải lên thành công",
+    "getFileRemovedMessage": "Tệp {{fileName}} đã được xóa",
+    "getFileLimitExceedMessage": "Vượt quá số lượng tệp tối đa cho phép. Bạn chỉ được tải lên tối đa {{filesLimit}} tệp"
   }
 }
