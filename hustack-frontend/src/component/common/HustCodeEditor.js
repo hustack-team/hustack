@@ -13,6 +13,7 @@ const HustCodeEditor = (props) => {
     classRoot,
     title,
     placeholder = "Write your source code here",
+    hidePlaceholder = false,
     language,
     onChangeLanguage,
     listLanguagesAllowed,
@@ -20,6 +21,10 @@ const HustCodeEditor = (props) => {
     onChangeSourceCode,
     height = "420px",
     hideLanguagePicker,
+    readOnly,
+    theme = "monokai",
+    maxLines,
+    minLines,
     ...remainProps
   } = props;
 
@@ -40,21 +45,40 @@ const HustCodeEditor = (props) => {
   }
   return (
     <Box {...remainProps} className={`${classRoot}`} sx={{marginTop: "24px"}}>
-      <Box sx={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginBottom: "8px"}}>
-        <Typography variant="h6">{title}</Typography>
-        {language && !hideLanguagePicker && <HustCodeLanguagePicker listLanguagesAllowed={listLanguagesAllowed} language={language} onChangeLanguage={onChangeLanguage}/>}
-      </Box>
+{language && (
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: "-8px",
+    }}
+  >
+    <Typography variant="h6">{title}</Typography>
+    {!hideLanguagePicker && (
+      <HustCodeLanguagePicker
+        listLanguagesAllowed={listLanguagesAllowed}
+        language={language}
+        onChangeLanguage={onChangeLanguage}
+      />
+    )}
+  </Box>
+)}
+
 
       <AceEditor
         width="100%"
-        height={height}
+        height={maxLines || minLines ? undefined : height}
         style={{paddingTop: "6px"}}
-        placeholder={placeholder}
+        placeholder={hidePlaceholder ? "" : placeholder}
         mode={convertLanguageToEditorMode(language)}
-        theme="monokai"
+        theme={theme}
         onChange={onChangeSourceCode}
         fontSize={16}
-        value={sourceCode}/>
+        value={sourceCode}
+        maxLines={maxLines}
+        minLines={minLines}
+        readOnly={readOnly}/>
     </Box>
 
   );
