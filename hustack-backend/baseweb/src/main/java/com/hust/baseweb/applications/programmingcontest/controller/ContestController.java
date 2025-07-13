@@ -37,7 +37,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -204,6 +205,7 @@ public class ContestController {
         return ResponseEntity.ok().body("ok");
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/roles")
     public ResponseEntity<?> getListRolesContest() {
         List<String> L = UserRegistrationContestEntity.getListRoles();
@@ -225,6 +227,7 @@ public class ContestController {
         apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log", logM);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}")
     public ResponseEntity<?> getContestDetail(@PathVariable("contestId") String contestId, Principal principal) {
         log.info("getContestDetail constestid {}", contestId);
@@ -300,12 +303,12 @@ public class ContestController {
     }
 
 
-    @GetMapping("/contests/{contestId}/problems")
-    public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
-        ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
-        List<ProblemEntity> listProblem = contestEntity.getProblems();
-        return ResponseEntity.ok().body(listProblem);
-    }
+//    @GetMapping("/contests/{contestId}/problems")
+//    public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
+//        ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
+//        List<ProblemEntity> listProblem = contestEntity.getProblems();
+//        return ResponseEntity.ok().body(listProblem);
+//    }
 
     @Async
     public void logStudentGetDetailContest(String userId, String contestId) {
@@ -390,17 +393,17 @@ public class ContestController {
         return ResponseEntity.ok().body(resp);
     }
 
-    @PostMapping("contests/{contestId}/register-student")
-    public ResponseEntity<?> studentRegisterContest(@PathVariable("contestId") String contestId, Principal principal)
-        throws MiniLeetCodeException {
-        log.info("studentRegisterContest {}", contestId);
-        ModelStudentRegisterContestResponse resp = problemTestCaseService.studentRegisterContest(
-            contestId,
-            principal.getName());
-        return ResponseEntity.ok().body(resp);
-    }
+//    @PostMapping("contests/{contestId}/register-student")
+//    public ResponseEntity<?> studentRegisterContest(@PathVariable("contestId") String contestId, Principal principal)
+//        throws MiniLeetCodeException {
+//        log.info("studentRegisterContest {}", contestId);
+//        ModelStudentRegisterContestResponse resp = problemTestCaseService.studentRegisterContest(
+//            contestId,
+//            principal.getName());
+//        return ResponseEntity.ok().body(resp);
+//    }
 
-    //@Secured("ROLE_TEACHER")
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/registered-users")
     public ResponseEntity<?> getUserRegisterSuccessfulContest(
         @PathVariable("contestId") String contestId,
@@ -412,13 +415,14 @@ public class ContestController {
         return ResponseEntity.ok().body(resp);
     }
 
-    //@Secured("ROLE_TEACHER")
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/members")
     public ResponseEntity<?> getMembersOfContest(@PathVariable String contestId) {
         List<ContestMembers> res = problemTestCaseService.getListMemberOfContest(contestId);
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/group/members")
     public ResponseEntity<?> getMembersOfContestGroup(Principal principal, @PathVariable String contestId) {
         String userId = principal.getName();
@@ -522,16 +526,8 @@ public class ContestController {
 
     @GetMapping("/students/contests")
     public ResponseEntity<?> getContestRegisteredStudent(Principal principal) {
-        //logStudentGetHisContests(principal.getName());
-
-        ModelGetContestPageResponse res = problemTestCaseService.getRegisteredContestsByUser(principal.getName());
-        List<ModelGetContestResponse> filteredContests = res.getContests().stream()
-                                                            .filter(contest -> Arrays
-                                                                .asList("CREATED", "RUNNING", "COMPLETED")
-                                                                .contains(contest.getStatusId()))
-                                                            .collect(Collectors.toList());
-        res.setContests(filteredContests);
-        return ResponseEntity.ok().body(res);
+        logStudentGetHisContests(principal.getName());
+        return ResponseEntity.ok().body(problemTestCaseService.getRegisteredContestsByUser(principal.getName()));
     }
 
     @GetMapping("/contests/public")
@@ -540,23 +536,23 @@ public class ContestController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/students/not-registered-contests")
-    public ResponseEntity<?> getContestNotRegisteredByStudentPaging(
-        Pageable pageable, @Param("sortBy") String sortBy,
-        Principal principal
-    ) {
-        log.info("getContestRegisteredByStudentPaging sortBy {} pageable {}", sortBy, pageable);
-        if (sortBy != null) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortBy));
-        } else {
-            pageable = PageRequest.of(
-                pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by("startedAt").descending());
-        }
-        ModelGetContestPageResponse modelGetContestPageResponse = problemTestCaseService
-            .getNotRegisteredContestByUser(pageable, principal.getName());
-        return ResponseEntity.ok().body(modelGetContestPageResponse);
-    }
+//    @GetMapping("/students/not-registered-contests")
+//    public ResponseEntity<?> getContestNotRegisteredByStudentPaging(
+//        Pageable pageable, @Param("sortBy") String sortBy,
+//        Principal principal
+//    ) {
+//        log.info("getContestRegisteredByStudentPaging sortBy {} pageable {}", sortBy, pageable);
+//        if (sortBy != null) {
+//            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortBy));
+//        } else {
+//            pageable = PageRequest.of(
+//                pageable.getPageNumber(), pageable.getPageSize(),
+//                Sort.by("startedAt").descending());
+//        }
+//        ModelGetContestPageResponse modelGetContestPageResponse = problemTestCaseService
+//            .getNotRegisteredContestByUser(pageable, principal.getName());
+//        return ResponseEntity.ok().body(modelGetContestPageResponse);
+//    }
 
     @Secured("ROLE_TEACHER")
     @Deprecated
@@ -576,6 +572,7 @@ public class ContestController {
         return ResponseEntity.ok().body(null);
     }
 
+    @Secured("ROLE_TEACHER")
     @DeleteMapping("/contests/users")
     public ResponseEntity<?> deleteUserFromContest(@RequestBody ModelAddUserToContest modelAddUserToContest)
         throws MiniLeetCodeException {
@@ -761,7 +758,7 @@ public class ContestController {
         return ResponseEntity.ok().body(perms);
     }
 
-    @Secured("ROLE_TEACHER")
+    @Secured("ROLE_ADMIN")
     @PostMapping("/contests/switch-judge-mode")
     public ResponseEntity<?> switchAllContestJudgeMode(@RequestParam("mode") String judgeMode) {
 
@@ -867,6 +864,7 @@ public class ContestController {
         return ResponseEntity.ok().body(uploadedUsers);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/contests/students/upload-group-list")
     public ResponseEntity<?> uploadExcelStudentGroupListOfContest(
         Principal principal,
@@ -907,6 +905,7 @@ public class ContestController {
         return ResponseEntity.ok().body(uploadedUsers);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/users/{userLoginId}/contest-result")
     public ResponseEntity<?> getContestResultOnProblemOfAUser(
         @PathVariable("userLoginId") String userLoginId

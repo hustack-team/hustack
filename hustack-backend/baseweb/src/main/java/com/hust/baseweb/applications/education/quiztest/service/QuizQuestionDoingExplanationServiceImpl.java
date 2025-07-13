@@ -5,12 +5,12 @@ import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
 import com.hust.baseweb.applications.education.quiztest.entity.QuizQuestionDoingExplanation;
 import com.hust.baseweb.applications.education.quiztest.model.quizdoingexplanation.QuizDoingExplanationInputModel;
 import com.hust.baseweb.applications.education.quiztest.repo.QuizQuestionDoingExplanationRepo;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,7 +60,7 @@ public class QuizQuestionDoingExplanationServiceImpl implements QuizQuestionDoin
         MultipartFile attachment
     ) {
         QuizQuestionDoingExplanation updatedQuizDoingExplanation = quizDoingExplanationRepo.findById(explanationId)
-                                                                                           .orElseThrow(() -> new ResourceNotFoundException(
+                                                                                           .orElseThrow(() -> new EntityNotFoundException(
                                                                                                "Doesn't exist quiz doing explanation with id " +
                                                                                                explanationId));
         updatedQuizDoingExplanation.setSolutionExplanation(newSolutionExplanation);
@@ -71,7 +71,7 @@ public class QuizQuestionDoingExplanationServiceImpl implements QuizQuestionDoin
     @Override
     public void deleteExplanation(UUID explanationId) {
         QuizQuestionDoingExplanation updatedQuizDoingExplanation = quizDoingExplanationRepo.findById(explanationId)
-                                                                                           .orElseThrow(() -> new ResourceNotFoundException(
+                                                                                           .orElseThrow(() -> new EntityNotFoundException(
                                                                                                "Doesn't exist quiz doing explanation with id " +
                                                                                                explanationId));
         String attachmentStorageId = updatedQuizDoingExplanation.getAttachment();
