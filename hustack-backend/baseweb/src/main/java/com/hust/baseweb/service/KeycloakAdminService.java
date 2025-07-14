@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tika.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.GroupRepresentation;
@@ -51,30 +51,28 @@ public class KeycloakAdminService {
 
     public boolean createUser(UserRepresentation user, String password) {
         boolean result;
-
-        // Create user
         String realm = keycloakAdminProperties.getRealm();
-        Response response = keycloak.realm(realm).users().create(user);
-        if (response.getStatus() == 201) {
-            String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
 
-            // Set password
-            CredentialRepresentation credential = new CredentialRepresentation();
-            credential.setType(CredentialRepresentation.PASSWORD);
+        try (Response response = keycloak.realm(realm).users().create(user)) {
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
+
+                // Set password
+                CredentialRepresentation credential = new CredentialRepresentation();
+                credential.setType(CredentialRepresentation.PASSWORD);
 //                credential.setTemporary(true); // Require password change on first login
-            credential.setValue(password);
-            keycloak.realm(realm).users().get(userId).resetPassword(credential);
+                credential.setValue(password);
+                keycloak.realm(realm).users().get(userId).resetPassword(credential);
 
-            // Assign groups
-            String studentGroupId = getStudentGroupId();
-            keycloak.realm(realm).users().get(userId).joinGroup(studentGroupId);
+                // Assign groups
+                String studentGroupId = getStudentGroupId();
+                keycloak.realm(realm).users().get(userId).joinGroup(studentGroupId);
 
-            result = true;
-        } else {
-            result = false;
+                result = true;
+            } else {
+                result = false;
+            }
         }
-
-        response.close();
 
         return result;
     }
@@ -84,7 +82,7 @@ public class KeycloakAdminService {
             String realm = keycloakAdminProperties.getRealm();
             List<UserRepresentation> users = keycloak.realm(realm)
                                                      .users()
-                                                     .search(username, true);
+                                                     .searchByUsername(username, true);
 
             for (UserRepresentation user : users) {
                 if (username.equalsIgnoreCase(user.getUsername())) {
@@ -98,13 +96,22 @@ public class KeycloakAdminService {
         }
     }
 
-    public void resetPassword(String username, String newPassword) {
+    public void resetPassword(String username, String newPassword, boolean throwIfNotFound) {
         String realm = keycloakAdminProperties.getRealm();
         List<UserRepresentation> users = keycloak.realm(realm)
                                                  .users()
-                                                 .search(username, true);
+                                                 .searchByUsername(username, true);
         if (users.isEmpty()) {
-            throw new RuntimeException("User not found with username: " + username + " in realm: " + realm);
+            if (throwIfNotFound) {
+                throw new IllegalArgumentException("User with username: " + username + " not found in realm: " + realm);
+            } else {
+                log.info("User with username: {} not found in realm: {}", username, realm);
+                return;
+            }
+        }
+
+        if (users.size() > 1) {
+            log.warn("Multiple users found with username: {} in realm: {}. Using the first match", username, realm);
         }
 
         CredentialRepresentation credential = new CredentialRepresentation();
@@ -123,13 +130,61 @@ public class KeycloakAdminService {
         String realm = keycloakAdminProperties.getRealm();
         List<UserRepresentation> users = keycloak.realm(realm)
                                                  .users()
-                                                 .search(username, true);
+                                                 .searchByUsername(username, true);
+
         if (users.isEmpty()) {
-            log.info("User not found with username: {} in realm: {}", username, realm);
+            log.info("User with username: {} not found in realm: {}", username, realm);
             return;
+        }
+
+        if (users.size() > 1) {
+            log.warn("Multiple users found with username: {} in realm: {}. Using the first match", username, realm);
         }
 
         String userId = users.get(0).getId();
         keycloak.realm(realm).users().get(userId).logout();
+    }
+
+    public void deleteUserIfExists(String username) {
+        if (StringUtils.isBlank(username)) {
+            log.info("Username is blank, skip deleting user from Keycloak");
+            return;
+        }
+
+        String realm = keycloakAdminProperties.getRealm();
+        List<UserRepresentation> users = keycloak.realm(realm)
+                                                 .users()
+                                                 .searchByUsername(username, true);
+
+        if (users.isEmpty()) {
+            log.info("User with username: {} not found in realm: {}", username, realm);
+            return;
+        }
+
+        if (users.size() > 1) {
+            log.warn("Multiple users found with username: {} in realm: {}. Using the first match", username, realm);
+        }
+
+        String userId = users.get(0).getId();
+        try (Response response = keycloak.realm(realm).users().delete(userId)) {
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                String body;
+                try {
+                    body = response.readEntity(String.class);
+                } catch (Exception ignored) {
+                    body = "<unable to read response body>";
+                }
+
+                String message = String.format(
+                    "Failed to delete user %s from Keycloak. Status: %d %s. Response body: %s",
+                    username,
+                    response.getStatus(),
+                    response.getStatusInfo().getReasonPhrase(),
+                    body
+                );
+
+                throw new RuntimeException(message);
+            }
+        }
     }
 }

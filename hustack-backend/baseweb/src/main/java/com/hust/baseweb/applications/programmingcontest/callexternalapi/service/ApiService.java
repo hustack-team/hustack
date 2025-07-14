@@ -2,16 +2,22 @@ package com.hust.baseweb.applications.programmingcontest.callexternalapi.service
 
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.config.ClientCredential;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.model.LmsLogModelCreate;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
-import lombok.extern.log4j.Log4j2;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 //import openerp.openerpresourceserver.config.ClientCredential;
 
 @Service
@@ -99,13 +105,72 @@ public class ApiService {
                                .header("Authorization", "Bearer " + accessToken)
                                .body(BodyInserters.fromValue(model))
                                .retrieve()
-                               //.toEntity(responseType)
+
+                               // Xử lý lỗi 401
+                               .onStatus(
+                                   status -> status.value() == 401, response ->
+                                       response.bodyToMono(String.class).flatMap(body -> {
+                                           log.error("Unauthorized (401): {}", body);
+                                           return Mono.error(new RuntimeException("Unauthorized: " + body));
+                                       })
+                               )
+
+                               // Xử lý lỗi 403
+                               .onStatus(
+                                   status -> status.value() == 403, response ->
+                                       response.bodyToMono(String.class).flatMap(body -> {
+                                           log.error("Forbidden (403): {}", body);
+                                           return Mono.error(new RuntimeException("Forbidden: " + body));
+                                       })
+                               )
+
+                               // Xử lý lỗi 404
+                               .onStatus(
+                                   status -> status.value() == 404, response ->
+                                       response.bodyToMono(String.class).flatMap(body -> {
+                                           log.error("Not Found (404): {}", body);
+                                           return Mono.error(new RuntimeException("Not Found: " + body));
+                                       })
+                               )
+
+                               // Xử lý lỗi 422
+                               .onStatus(
+                                   status -> status.value() == 422, response ->
+                                       response.bodyToMono(String.class).flatMap(body -> {
+                                           log.error("Unprocessable Entity (422): {}", body);
+                                           return Mono.error(new RuntimeException("Unprocessable Entity: " + body));
+                                       })
+                               )
+
+                               // Xử lý lỗi 5xx khác
+                               .onStatus(
+                                   HttpStatusCode::is5xxServerError, response ->
+                                       response.bodyToMono(String.class).flatMap(body -> {
+                                           log.error("Server error (5xx): {}", body);
+                                           return Mono.error(new RuntimeException("Server error: " + body));
+                                       })
+                               )
+
                                .toEntity(Void.class)
-                               // .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(2))
-                               // .filter(RuntimeException.class::isInstance))
+
+                               // Timeout 2 giây
+                               .timeout(Duration.ofSeconds(2))
+
+                               // Retry khi bị timeout hoặc lỗi 5xx
+                               .retryWhen(
+                                   Retry.fixedDelay(3, Duration.ofSeconds(1))
+                                        .filter(throwable ->
+                                                    throwable instanceof TimeoutException ||
+                                                    throwable instanceof ConnectException ||
+                                                    throwable instanceof SocketTimeoutException ||
+                                                    (throwable instanceof WebClientResponseException wcre &&
+                                                     wcre.getStatusCode().is5xxServerError())
+                                        )
+                               )
                                .block();
-      }catch (Exception e){
-          e.printStackTrace();
+      } catch (Exception e) {
+          // Xử lý lỗi chung sau khi hết retry hoặc lỗi client (4xx)
+          log.error("Failed to send event: {} - {}", e.getClass().getSimpleName(), e.getMessage());
       }
        return null;
 

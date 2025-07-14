@@ -6,6 +6,10 @@ import com.hust.baseweb.applications.examclassandaccount.model.ModelCreateExamCl
 import com.hust.baseweb.applications.examclassandaccount.model.ModelRepsonseExamClassDetail;
 import com.hust.baseweb.applications.examclassandaccount.repo.ExamClassRepo;
 import com.hust.baseweb.applications.examclassandaccount.repo.ExamClassUserloginMapRepo;
+import com.hust.baseweb.applications.examclassandaccount.utils.ExamClassAuthorizationUtils;
+import com.hust.baseweb.dto.response.ApiResponse;
+import com.hust.baseweb.dto.response.ErrorCode;
+import com.hust.baseweb.dto.response.SuccessCode;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.KeycloakAdminService;
@@ -18,6 +22,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +51,11 @@ public class ExamClassServiceImpl implements ExamClassService {
 
     KeycloakAdminService keycloakService;
 
+    ExamClassAuthorizationUtils examClassAuthorizationUtils;
+
     @Override
     public List<ExamClass> getAllExamClass() {
-        List<ExamClass> res = examClassRepo.findAll();
-        return res;
+        return examClassRepo.findAll();
     }
 
     @Override
@@ -65,15 +71,19 @@ public class ExamClassServiceImpl implements ExamClassService {
     }
 
     @Override
-    public Object deleteAccounts(UUID examClassId) {
-        Map<String, Object> response = (Map<String, Object>) updateStatus(examClassId, false);
+    public Object deleteAccounts(String userId, UUID examClassId) {
+        examClassAuthorizationUtils.checkUserIsExamClassCreator(userId, examClassId);
+
+        Map<String, Object> response = (Map<String, Object>) updateStatus(userId, examClassId, false);
         int count = examClassUserloginMapRepo.deleteByExamClassIdAndStatusIsNot(examClassId, ExamClass.STATUS_ACTIVE);
         response.put("success", count);
         return response;
     }
 
     @Override
-    public ModelRepsonseExamClassDetail getExamClassDetail(UUID examClassId) {
+    public ModelRepsonseExamClassDetail getExamClassDetail(String userId, UUID examClassId) {
+        examClassAuthorizationUtils.checkUserIsExamClassCreator(userId, examClassId);
+
         ExamClass ec = examClassRepo
             .findById(examClassId)
             .orElseThrow(() -> new EntityNotFoundException("Exam class with ID " + examClassId + " not found"));
@@ -89,17 +99,22 @@ public class ExamClassServiceImpl implements ExamClassService {
     }
 
     /**
-     * @param examClassId
-     * @return
+     * @param userId      ID of the user requesting the export
+     * @param examClassId ID of the exam class to export
+     * @return PDF byte array
      */
     @Override
-    public byte[] exportExamClass(UUID examClassId) {
-        List<ExamClassUserloginMap> accounts = getExamClassDetail(examClassId).getAccounts();
+    public byte[] exportExamClass(String userId, UUID examClassId) {
+        examClassAuthorizationUtils.checkUserIsExamClassCreator(userId, examClassId);
+
+        List<ExamClassUserloginMap> accounts = getExamClassDetail(userId, examClassId).getAccounts();
         return exportPdf(accounts, "reports/exam-class-account_report.jasper", new HashMap<>());
     }
 
     @Override
-    public Object resetPassword(UUID examClassId) {
+    public Object resetPassword(String userId, UUID examClassId) {
+        examClassAuthorizationUtils.checkUserIsExamClassCreator(userId, examClassId);
+
         List<ExamClassUserloginMap> entities = new ArrayList<>();
         List<ExamClassUserloginMap> all = examClassUserloginMapRepo.findByExamClassId(examClassId);
         if (!CollectionUtils.isEmpty(all)) {
@@ -117,7 +132,7 @@ public class ExamClassServiceImpl implements ExamClassService {
             for (ExamClassUserloginMap e : entities) {
                 try {
                     String newPassword = generateRandomStringWithSpecialChars(12);
-                    keycloakService.resetPassword(e.getRandomUserLoginId(), newPassword);
+                    keycloakService.resetPassword(e.getRandomUserLoginId(), newPassword, true);
                     e.setPassword(newPassword);
                     updateSuccessful.add(e);
                     success++;
@@ -140,7 +155,9 @@ public class ExamClassServiceImpl implements ExamClassService {
     }
 
     @Override
-    public Object generateAccounts(UUID examClassId) {
+    public Object generateAccounts(String userId, UUID examClassId) {
+        examClassAuthorizationUtils.checkUserIsExamClassCreator(userId, examClassId);
+
         List<ExamClassUserloginMap> entities = new ArrayList<>();
         List<ExamClassUserloginMap> all = examClassUserloginMapRepo.findByExamClassId(examClassId);
         if (!CollectionUtils.isEmpty(all)) {
@@ -230,7 +247,9 @@ public class ExamClassServiceImpl implements ExamClassService {
     }
 
     @Override
-    public Object updateStatus(UUID examClassId, boolean enabled) {
+    public Object updateStatus(String userId, UUID examClassId, boolean enabled) {
+        examClassAuthorizationUtils.checkUserIsExamClassCreator(userId, examClassId);
+
         String currentStatus = enabled ? ExamClass.STATUS_DISABLE : ExamClass.STATUS_ACTIVE;
         List<ExamClassUserloginMap> data = examClassUserloginMapRepo.findByExamClassIdAndStatus(
             examClassId,
@@ -245,13 +264,15 @@ public class ExamClassServiceImpl implements ExamClassService {
 
             for (ExamClassUserloginMap e : data) {
                 try {
-                    keycloakService.updateEnabledUser(e.getRandomUserLoginId(), enabled);
-                    if (!enabled) { // log out all user's sessions after disabling the account
-                        keycloakService.logout(e.getRandomUserLoginId());
+                    if (!StringUtils.isBlank(e.getRandomUserLoginId())) {
+                        keycloakService.updateEnabledUser(e.getRandomUserLoginId(), enabled);
+                        if (!enabled) { // log out all user's sessions after disabling the account
+                            keycloakService.logout(e.getRandomUserLoginId());
+                        }
+                        e.setStatus(newStatus);
+                        updateSuccessful.add(e);
+                        success++;
                     }
-                    e.setStatus(newStatus);
-                    updateSuccessful.add(e);
-                    success++;
                 } catch (Exception ex) {
                     updateFailed.add(e);
                     fail++;
@@ -268,5 +289,91 @@ public class ExamClassServiceImpl implements ExamClassService {
         }
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Void> deleteAccount(String userId, UUID examClassId, UUID accountId) {
+        ExamClassUserloginMap account = examClassAuthorizationUtils.checkUserIsCreatorAndAccountExists(
+            userId,
+            examClassId,
+            accountId);
+
+        String keycloakUsername = account.getRandomUserLoginId();
+        try {
+            userLoginRepo.deleteById(keycloakUsername);
+            keycloakService.deleteUserIfExists(keycloakUsername);
+            examClassUserloginMapRepo.delete(account);
+
+            return ApiResponse.of(SuccessCode.ACCOUNT_DELETED);
+        } catch (DataIntegrityViolationException e) {
+            keycloakService.updateEnabledUser(keycloakUsername, false);
+            keycloakService.logout(keycloakUsername);
+
+            account.setStatus(ExamClass.STATUS_DISABLE);
+            examClassUserloginMapRepo.save(account);
+
+            UserLogin userLogin = userLoginRepo.findById(keycloakUsername).orElse(null);
+            if (userLogin != null) {
+                userLogin.setEnabled(false);
+                userLoginRepo.save(userLogin);
+            }
+
+            return ApiResponse.of(SuccessCode.ACCOUNT_DISABLED);
+        }
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Void> resetPasswordForAccount(String userId, UUID examClassId, UUID accountId) {
+        ExamClassUserloginMap account = examClassAuthorizationUtils.checkUserIsCreatorAndAccountExists(
+            userId,
+            examClassId,
+            accountId);
+
+        if (!StringUtils.isBlank(account.getRandomUserLoginId())) {
+            String newPassword = generateRandomStringWithSpecialChars(12);
+            keycloakService.resetPassword(account.getRandomUserLoginId(), newPassword, true);
+
+            account.setPassword(newPassword);
+            examClassUserloginMapRepo.save(account);
+
+            return ApiResponse.of(SuccessCode.PASSWORD_RESET_SUCCESS);
+        } else {
+            return ApiResponse.of(ErrorCode.ACCOUNT_NOT_GENERATED);
+        }
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Void> updateStatusForAccount(String userId, UUID examClassId, UUID accountId, boolean enabled) {
+        ExamClassUserloginMap account = examClassAuthorizationUtils.checkUserIsCreatorAndAccountExists(
+            userId,
+            examClassId,
+            accountId);
+
+        if (!StringUtils.isBlank(account.getRandomUserLoginId())) {
+            String newStatus = enabled ? ExamClass.STATUS_ACTIVE : ExamClass.STATUS_DISABLE;
+            keycloakService.updateEnabledUser(account.getRandomUserLoginId(), enabled);
+            if (!enabled) { // log out all user's sessions after disabling the account
+                keycloakService.logout(account.getRandomUserLoginId());
+            }
+
+            account.setStatus(newStatus);
+            examClassUserloginMapRepo.save(account);
+
+            UserLogin userLogin = userLoginRepo.findById(account.getRandomUserLoginId()).orElse(null);
+            if (userLogin != null) {
+                userLogin.setEnabled(enabled);
+                userLoginRepo.save(userLogin);
+            }
+
+            return ApiResponse.of(
+                SuccessCode.ACCOUNT_STATUS_UPDATED,
+                null,
+                "Account " + (enabled ? "enabled" : "disabled") + " successfully");
+        } else {
+            return ApiResponse.of(ErrorCode.ACCOUNT_NOT_GENERATED);
+        }
     }
 }

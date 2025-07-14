@@ -10,6 +10,9 @@ import com.hust.baseweb.applications.examclassandaccount.model.ModelCreateGenera
 import com.hust.baseweb.applications.examclassandaccount.repo.RandomGeneratedUserLoginRepo;
 import com.hust.baseweb.applications.examclassandaccount.service.ExamClassService;
 import com.hust.baseweb.applications.examclassandaccount.service.ExamClassUserloginMapService;
+import com.hust.baseweb.dto.response.ApiResponse;
+import com.hust.baseweb.dto.response.ErrorCode;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,6 +26,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -55,7 +59,7 @@ public class ExamClassAccountController {
         return ResponseEntity.ok().body(res);
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @PostMapping("/exam-classes")
     public ResponseEntity<?> createExamClass(Principal principal, @RequestBody ModelCreateExamClass m) {
         ExamClass ec = examClassService.createExamClass(principal.getName(), m);
@@ -77,7 +81,7 @@ public class ExamClassAccountController {
         return ResponseEntity.ok().body(u);
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @PostMapping(value = "/exam-classes/{examClassId}/accounts/import",
                  produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createExamAccountsMap(
@@ -138,46 +142,141 @@ public class ExamClassAccountController {
         }
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @DeleteMapping("/exam-classes/{examClassId}/accounts")
-    public ResponseEntity<?> clearAccountExamClass(@PathVariable UUID examClassId) {
-        return ResponseEntity.ok().body(examClassService.deleteAccounts(examClassId));
+    public ResponseEntity<?> clearAccountExamClass(
+        Principal principal,
+        @PathVariable UUID examClassId
+    ) {
+        return ResponseEntity.ok().body(examClassService.deleteAccounts(principal.getName(), examClassId));
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @GetMapping("/exam-classes/{examClassId}")
-    public ResponseEntity<?> getExamClassDetail(@PathVariable UUID examClassId) {
-        return ResponseEntity.ok().body(examClassService.getExamClassDetail(examClassId));
+    public ResponseEntity<?> getExamClassDetail(
+        Principal principal,
+        @PathVariable UUID examClassId
+    ) {
+        return ResponseEntity.ok().body(examClassService.getExamClassDetail(principal.getName(), examClassId));
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @GetMapping("/exam-classes/{examClassId}/accounts/export")
-    public ResponseEntity<?> exportExamClass(@PathVariable UUID examClassId) {
-        byte[] pdfBytes = examClassService.exportExamClass(examClassId);
+    public ResponseEntity<?> exportExamClass(
+        Principal principal,
+        @PathVariable UUID examClassId
+    ) {
+        byte[] pdfBytes = examClassService.exportExamClass(principal.getName(), examClassId);
         return ResponseEntity.ok()
                              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + examClassId + ".pdf")
                              .contentType(MediaType.APPLICATION_PDF)
                              .body(pdfBytes);
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @PatchMapping("/exam-classes/{examClassId}/accounts/reset-password")
-    public ResponseEntity<?> resetPassword(@PathVariable UUID examClassId) {
-        return ResponseEntity.ok().body(examClassService.resetPassword(examClassId));
+    public ResponseEntity<?> resetPassword(
+        Principal principal,
+        @PathVariable UUID examClassId
+    ) {
+        return ResponseEntity.ok().body(examClassService.resetPassword(principal.getName(), examClassId));
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @PostMapping("/exam-classes/{examClassId}/accounts")
-    public ResponseEntity<?> generateAccounts(@PathVariable UUID examClassId) {
-        return ResponseEntity.ok().body(examClassService.generateAccounts(examClassId));
+    public ResponseEntity<?> generateAccounts(
+        Principal principal,
+        @PathVariable UUID examClassId
+    ) {
+        return ResponseEntity.ok().body(examClassService.generateAccounts(principal.getName(), examClassId));
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured("ROLE_TEACHER")
     @PatchMapping("/exam-classes/{examClassId}/accounts")
     public ResponseEntity<?> updateStatus(
+        Principal principal,
         @PathVariable UUID examClassId,
         @RequestBody ExamClassAccountStatusUpdateRequestDTO dto
     ) {
-        return ResponseEntity.ok().body(examClassService.updateStatus(examClassId, dto.isEnabled()));
+        return ResponseEntity
+            .ok()
+            .body(examClassService.updateStatus(principal.getName(), examClassId, dto.isEnabled()));
+    }
+
+    /**
+     * Xóa một tài khoản cụ thể khỏi lớp thi.
+     *
+     * @param examClassId ID của lớp thi.
+     * @param accountId   ID của tài khoản ngẫu nhiên (randomUserLoginId).
+     */
+    @Secured("ROLE_TEACHER")
+    @DeleteMapping("/exam-classes/{examClassId}/accounts/{accountId}")
+    public ResponseEntity<?> deleteAccount(
+        Principal principal,
+        @PathVariable UUID examClassId,
+        @PathVariable UUID accountId
+    ) {
+        try {
+            return ResponseEntity
+                .ok()
+                .body(examClassService.deleteAccount(principal.getName(), examClassId, accountId));
+        } catch (EntityNotFoundException ignored) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.of(ErrorCode.ACCOUNT_NOT_FOUND_IN_EXAM_CLASS));
+        }
+    }
+
+    /**
+     * Reset mật khẩu cho một tài khoản cụ thể.
+     *
+     * @param examClassId ID của lớp thi.
+     * @param accountId   ID của tài khoản ngẫu nhiên (randomUserLoginId).
+     */
+    @Secured("ROLE_TEACHER")
+    @PatchMapping("/exam-classes/{examClassId}/accounts/{accountId}/reset-password")
+    public ResponseEntity<?> resetPasswordForAccount(
+        Principal principal,
+        @PathVariable UUID examClassId,
+        @PathVariable UUID accountId
+    ) {
+        try {
+            return ResponseEntity.ok().body(examClassService.resetPasswordForAccount(
+                principal.getName(),
+                examClassId,
+                accountId));
+        } catch (EntityNotFoundException ignored) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.of(ErrorCode.ACCOUNT_NOT_FOUND_IN_EXAM_CLASS));
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái (kích hoạt/vô hiệu hóa) cho một tài khoản cụ thể.
+     *
+     * @param examClassId ID của lớp thi.
+     * @param accountId   ID của tài khoản ngẫu nhiên (randomUserLoginId).
+     * @param dto         Đối tượng chứa trạng thái mới.
+     */
+    @Secured("ROLE_TEACHER")
+    @PatchMapping("/exam-classes/{examClassId}/accounts/{accountId}/status")
+    public ResponseEntity<?> updateStatusForAccount(
+        Principal principal,
+        @PathVariable UUID examClassId,
+        @PathVariable UUID accountId,
+        @RequestBody ExamClassAccountStatusUpdateRequestDTO dto
+    ) {
+        try {
+            return ResponseEntity.ok().body(examClassService.updateStatusForAccount(
+                principal.getName(),
+                examClassId,
+                accountId,
+                dto.isEnabled()));
+        } catch (EntityNotFoundException ignored) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.of(ErrorCode.ACCOUNT_NOT_FOUND_IN_EXAM_CLASS));
+        }
     }
 }

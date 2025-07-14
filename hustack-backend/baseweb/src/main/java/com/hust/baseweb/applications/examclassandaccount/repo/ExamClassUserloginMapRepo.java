@@ -17,4 +17,6 @@ public interface ExamClassUserloginMapRepo extends JpaRepository<ExamClassUserlo
     List<ExamClassUserloginMap> findByExamClassIdAndStatus(UUID examClassId, String status);
 
     int deleteByExamClassIdAndStatusIsNot(UUID examClassId, String status);
+
+    ExamClassUserloginMap findByExamClassIdAndId(UUID examClassId, UUID id);
 }
