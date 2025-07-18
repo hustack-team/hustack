@@ -73,13 +73,13 @@
   "errorReadingFile": "Lỗi khi đọc tệp",
   "fileEmpty": "Tệp {{file}} rỗng",
   "fileTooLarge": "Tệp {{file}} vượt quá {{maxSize}} MB",
-  "tooManyFiles": "Quá nhiều tệp (tối đa {{maxFiles}})",
+  "tooManyFiles": "Bạn chỉ được tải lên tối đa {{maxFiles}} tệp",
   "invalidFileFormat": "Định dạng tệp không hợp lệ: {{file}}",
   "failedToStoreFile": "Lưu tệp thất bại",
   "problemIdNameExists": "Mã bài hoặc tên bài đã tồn tại",
   "essentialInfoMissing": "Thiếu thông tin cần thiết",
   "dragOrClickToUpload": "Kéo thả tệp vào đây hoặc nhấn để chọn tệp",
-  "resourceFile": "Tệp tài nguyên *",
+  "resourceFile": "Tệp tài nguyên*",
   "selectJsonFile": "Chọn tệp JSON",
   "noFileSelected": "Chưa chọn tệp"
 }

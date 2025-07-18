@@ -19,7 +19,7 @@ import {useKeycloak} from "@react-keycloak/web";
 import {getLevels, getStatuses} from "./CreateProblem";
 import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 import {BsFiletypeJson} from "react-icons/bs";
-import {FaFileArchive, FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel, FaFilePowerpoint, FaTrash } from "react-icons/fa";
+import {FaFileArchive, FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel, FaFilePowerpoint, FaTrash, FaFileImport, FaFileExport } from "react-icons/fa";
 import HustDropzoneArea from "component/common/HustDropzoneArea";
 import HustCodeEditor from "component/common/HustCodeEditor";
 import { ReactComponent as PhotoIcon } from "../../../assets/icons/photo.svg";
@@ -97,6 +97,23 @@ const generateFileKey = (file) => {
   const uniqueId = fileIdCounter++;
   return `${file.name}-${file.size || uniqueId}-${file.lastModified || uniqueId}`;
 };
+
+// Thêm hàm xử lý clear null và sort key cho object JSON
+function cleanAndSortJson(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(cleanAndSortJson);
+  } else if (obj && typeof obj === 'object') {
+    const cleaned = {};
+    Object.keys(obj)
+      .filter(key => obj[key] !== null)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach(key => {
+        cleaned[key] = cleanAndSortJson(obj[key]);
+      });
+    return cleaned;
+  }
+  return obj;
+}
 
 function ListProblemContent({type}) {
   const {keycloak} = useKeycloak();
@@ -269,57 +286,47 @@ function ListProblemContent({type}) {
     }
   };
 
-  const handleAttachmentChange = (acceptedFiles, rejectedFiles = []) => {
-    console.log('handleAttachmentChange called:', {acceptedFiles, rejectedFiles});
-
+  const handleAttachmentChange = (acceptedFiles, rejectedFiles) => {
+    const rejected = Array.isArray(rejectedFiles) ? rejectedFiles : [];
     setImportForm((prev) => {
       const currentFiles = prev.attachments || [];
-      const remainingSlots = MAX_FILES - currentFiles.length;
-
-      if (acceptedFiles.length > remainingSlots) {
-        if (acceptedFiles && acceptedFiles.length > 0) {
-          const now = Date.now();
-          if (now - lastErrorTimeRef.current > 1000) {
-            errorNoti(t('tooManyFiles', {maxFiles: MAX_FILES}), 4000);
-            lastErrorTimeRef.current = now;
-          }
-        }
+      // Tổng số file sau khi add
+      const totalFiles = currentFiles.length + acceptedFiles.length + rejected.length;
+      if (totalFiles > MAX_FILES) {
+        errorNoti(t('tooManyFiles', {maxFiles: MAX_FILES}), 4000);
         return prev;
       }
+      const remainingSlots = MAX_FILES - currentFiles.length;
 
-      const newState = {
-        ...prev,
-        errors: {...prev.errors, attachments: ""}
-      };
-
-      if (rejectedFiles.length > 0) {
-        return newState;
-      }
-
-      if (!acceptedFiles || acceptedFiles.length === 0) {
-        return newState;
-      }
+      // Xử lý các file hợp lệ
       const validFiles = [];
-      const invalidFiles = [];
-
       acceptedFiles.forEach((file) => {
+        const extension = `.${file.name.split(".").pop().toLowerCase()}`;
         if (file.size > MAX_FILE_SIZE) {
-          invalidFiles.push({name: file.name, error: t("fileTooLarge", {file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024) }) });
+          errorNoti(t("fileTooLarge", {file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024)}), 4000);
         } else if (file.size === 0) {
-          invalidFiles.push({name: file.name, error: t("fileEmpty", {file: file.name})});
+          errorNoti(t("fileEmpty", {file: file.name}), 4000);
+        } else if (!ALLOWED_EXTENSIONS.includes(extension)) {
+          errorNoti(t("invalidFileFormat", {file: file.name}), 4000);
         } else {
-          const extension = `.${file.name.split(".").pop().toLowerCase()}`;
-          if (!ALLOWED_EXTENSIONS.includes(extension)) {
-            invalidFiles.push({name: file.name, error: t("invalidFileFormat", {file: file.name})});
-          } else {
-            validFiles.push(file);
-          }
+          validFiles.push(file);
+        }
+      });
+
+      // Xử lý các file bị reject (ưu tiên kiểm tra quá kích thước)
+      rejected.forEach((file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          errorNoti(t("fileTooLarge", {file: file.name, maxSize: MAX_FILE_SIZE / (1024 * 1024)}), 4000);
+        } else if (file.size === 0) {
+          errorNoti(t("fileEmpty", {file: file.name}), 4000);
+        } else {
+          errorNoti(t("invalidFileFormat", {file: file.name}), 4000);
         }
       });
 
       const updatedAttachments = [...currentFiles, ...validFiles];
       return {
-        ...newState,
+        ...prev,
         attachments: updatedAttachments
       };
     });
@@ -636,17 +643,19 @@ function ListProblemContent({type}) {
     },
     {
       title: t("common:action"),
-      cellStyle: {minWidth: 160},
+      cellStyle: {minWidth: 160, textAlign: "center"},
+      headerStyle: {textAlign: "center"},
+      sorting: false,
       render: (rowData) => (
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} justifyContent="center">
           <Tooltip title={t("export")}>
             <IconButton variant="contained" color="primary" onClick={() => onSingleDownload(rowData)}>
-              <FaFileArchive />
+              <FaFileExport style={{ color: '#1976d2' }} />
             </IconButton>
           </Tooltip>
           <Tooltip title={t("exportJson")}>
             <IconButton variant="contained" color="primary" onClick={() => onJsonExport(rowData)}>
-              <BsFiletypeJson />
+              <FaFileExport style={{ color: '#43a047' }} />
             </IconButton>
           </Tooltip>
         </Stack>
@@ -728,6 +737,7 @@ function ListProblemContent({type}) {
         <Typography variant="h6">{t("problemList")}</Typography>
         <Stack direction="row" spacing={2}>
           <TertiaryButton
+            startIcon={<FaFileImport />}
             variant="outlined"
             onClick={handleOpenImportDialog}
             sx={{textTransform: "none"}}
@@ -794,11 +804,11 @@ function ListProblemContent({type}) {
             {/* Block 2: Resource file (JSON) */}
             <Stack spacing={2} sx={{mb: 0}}>
               <Stack direction="row" alignItems="center" spacing={2}>
-                <Typography variant="h6" component="span" sx={{mb: 0, pb: 0, mt: 0, pt: 0, lineHeight: 1}}>
+                <Typography variant="h6" component="span" sx={{mb: 5, pb: 0, mt: 0, pt: 0, lineHeight: 1}}>
                   {t("resourceFile")}
                 </Typography>
                 <Box sx={{flexGrow: 1}} />
-                <Stack direction="row" spacing={2}>
+                <Stack direction="row" spacing={2} mt={2}>
                   <TertiaryButton
                     onClick={handleClearJson}
                     disabled={!importForm.jsonFile}
@@ -816,13 +826,22 @@ function ListProblemContent({type}) {
               <HustCodeEditor
                 language="JSON"
                 hidePlaceholder
-                sourceCode={importForm.jsonContent}
+                sourceCode={(() => {
+                  if (!importForm.jsonContent) return "";
+                  try {
+                    const parsed = JSON.parse(importForm.jsonContent);
+                    const cleaned = cleanAndSortJson(parsed);
+                    return JSON.stringify(cleaned, null, 2);
+                  } catch {
+                    return importForm.jsonContent;
+                  }
+                })()}
                 onChangeSourceCode={() => {}}
                 hideLanguagePicker={true}
                 readOnly={true}
                 theme="github"
-                maxLines={15}
-                minLines={15}
+                maxLines={14}
+                minLines={14}
               />
               {importErrors.jsonFile && (
                 <Typography color="error" variant="body2" sx={{mt: 1}}>
