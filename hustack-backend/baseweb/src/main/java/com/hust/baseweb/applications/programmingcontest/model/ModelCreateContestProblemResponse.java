@@ -36,7 +36,7 @@ public class ModelCreateContestProblemResponse {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
