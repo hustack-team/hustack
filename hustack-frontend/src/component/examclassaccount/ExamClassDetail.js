@@ -1,30 +1,30 @@
-import {useParams} from "react-router";
-import React, {useEffect, useRef, useState} from "react";
-import {request, saveFile} from "../../api";
-import {errorNoti, successNoti} from "../../utils/notification";
-import {LoadingButton} from "@mui/lab";
-import {Button, Chip, Divider, Grid, IconButton, Paper, Stack, Tooltip, Typography,} from "@mui/material";
-import StandardTable from "../table/StandardTable";
-import XLSX from "xlsx";
-import TertiaryButton from "../button/TertiaryButton";
-import CustomizedDialogs from "../dialog/CustomizedDialogs";
-import {makeStyles} from "@material-ui/core/styles";
-import withScreenSecurity from "../withScreenSecurity";
-import {ConfirmDeleteDialog} from "../dialog/ConfirmDeleteDialog";
-import {detail} from "../education/programmingcontestFE/ContestProblemSubmissionDetailViewedByManager";
-import {useTranslation} from "react-i18next";
-import ProgrammingContestLayout from "../education/programmingcontestFE/ProgrammingContestLayout";
-import {useHistory} from "react-router-dom";
-import {toFormattedDateTime} from "../../utils/dateutils";
-import {InputFileUpload} from "../education/programmingcontestFE/StudentViewProgrammingContestProblemDetailV2";
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import Box from "@mui/material/Box";
-import DeleteIcon from "@mui/icons-material/Delete";
-import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { makeStyles } from "@material-ui/core/styles";
 import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import DeleteIcon from "@mui/icons-material/Delete";
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 import LockResetIcon from '@mui/icons-material/LockReset';
+import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
+import { LoadingButton } from "@mui/lab";
+import { Button, Chip, Divider, Grid, IconButton, Paper, Stack, Tooltip, Typography, } from "@mui/material";
+import Box from "@mui/material/Box";
 import _ from "lodash";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
+import { useHistory } from "react-router-dom";
+import XLSX from "xlsx";
+import { request, saveFile } from "../../api";
+import { toFormattedDateTime } from "../../utils/dateutils";
+import { errorNoti, successNoti } from "../../utils/notification";
+import TertiaryButton from "../button/TertiaryButton";
+import { ConfirmDeleteDialog } from "../dialog/ConfirmDeleteDialog";
+import CustomizedDialogs from "../dialog/CustomizedDialogs";
+import { detail } from "../education/programmingcontestFE/ContestProblemSubmissionDetailViewedByManager";
+import ProgrammingContestLayout from "../education/programmingcontestFE/ProgrammingContestLayout";
+import { InputFileUpload } from "../education/programmingcontestFE/StudentViewProgrammingContestProblemDetailV2";
+import StandardTable from "../table/StandardTable";
+import withScreenSecurity from "../withScreenSecurity";
 
 const useStyles = makeStyles((theme) => ({
   btn: {width: 100},
@@ -100,7 +100,11 @@ function ExamClassDetail() {
       "POST",
       `/exam-classes/${examClassId}/accounts/${user.id}`,
       (res) => {
-        successNoti(t("common:generateAccountSuccess"));
+        if (res?.data?.success || res?.data?.message) {
+          successNoti(res.data.message || t("common:generateAccountSuccess"));
+        } else {
+          successNoti(t("common:generateAccountSuccess"));
+        }
         getExamClassDetail();
       },
       {
@@ -109,15 +113,31 @@ function ExamClassDetail() {
     );
   };
 
+  function handleAccountNotFound(t) {
+    return (e) => {
+      if (e?.response?.data?.code === 10002) {
+        errorNoti(t("common:accountNotFoundInExamClass"));
+      } else {
+        errorNoti(t("common:error"));
+      }
+    };
+  }
+
   const handleRegenerateSinglePassword = (user) => {
     request(
       "PATCH",
       `/exam-classes/${examClassId}/accounts/${user.id}/reset-password`,
       (res) => {
-        successNoti(t("common:regeneratePasswordSuccess"));
+        const code = res?.data?.code;
+        if (code === 1003) {
+          successNoti(t("common:regeneratePasswordSuccess"));
+        } else if (code === 10001) {
+          errorNoti(t("common:accountNotGenerated"));
+        }
         getExamClassDetail();
       },
       {
+        404: handleAccountNotFound(t),
         onError: (e) => errorNoti(t("common:error")),
       }
     );
@@ -126,12 +146,18 @@ function ExamClassDetail() {
   const handleUpdateSingleAccountStatus = (user, enabled) => {
     request(
       "PATCH",
-      `/exam-classes/${examClassId}/accounts/${user.id}`,
+      `/exam-classes/${examClassId}/accounts/${user.id}/status`,
       (res) => {
-        successNoti(enabled ? t("common:enableAccountSuccess") : t("common:disableAccountSuccess"));
+        const code = res?.data?.code;
+        if (code === 1004) {
+          successNoti(enabled ? t("common:enableAccountSuccess") : t("common:disableAccountSuccess"));
+        } else if (code === 10001) {
+          errorNoti(t("common:accountNotGenerated"));
+        }
         getExamClassDetail();
       },
       {
+        404: handleAccountNotFound(t),
         onError: (e) => errorNoti(t("common:error")),
       },
       {enabled: enabled}
@@ -146,10 +172,16 @@ function ExamClassDetail() {
       "DELETE",
       `/exam-classes/${examClassId}/accounts/${selectedUser.id}`,
       (res) => {
-        successNoti(t("common:deleteSuccess", {name: t("common:account")}));
+        const code = res?.data?.code;
+        if (code === 1001) {
+          successNoti(t("common:deleteSuccess", {name: t("common:account")}));
+        } else if (code === 1002) {
+          successNoti(t("common:accountDisabled"));
+        }
         getExamClassDetail();
       },
       {
+        404: handleAccountNotFound(t),
         onError: (e) => errorNoti(t("common:error")),
       }
     );

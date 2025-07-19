@@ -10,8 +10,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum ErrorCode implements BaseResponseCode {
 
-    ACCOUNT_NOT_GENERATED(10001, "error.account.not_generated", "Account has not been generated"),
-    ACCOUNT_NOT_FOUND_IN_EXAM_CLASS(10002, "error.account.not_found_in_exam_class", "Account not found in exam class"),
+    ACCOUNT_NOT_GENERATED(10001, "error.account.not_generated", "The account has not been generated yet"),
+    ACCOUNT_NOT_FOUND_IN_EXAM_CLASS(10002, "error.account.not_found_in_exam_class", "The account could not be found in this exam class"),
     ;
 
     int code;

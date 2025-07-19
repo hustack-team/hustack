@@ -132,5 +132,10 @@
   "disableAccountSuccess": "Account disabled successfully",
   "enableAccountSuccess": "Account enabled successfully",
   "generateAccountSuccess": "Account generated successfully",
-  "regeneratePasswordSuccess": "Password regenerated successfully"
+  "regeneratePasswordSuccess": "Password regenerated successfully",
+  "accountDeleted": "The account was deleted successfully",
+  "accountDisabled": "The account has been disabled and cannot be deleted because it has already been used",
+  "accountStatusUpdated": "The account status was updated successfully",
+  "accountNotGenerated": "The account has not been generated yet",
+  "accountNotFoundInExamClass": "The account could not be found in this exam class"
 }

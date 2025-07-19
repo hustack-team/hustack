@@ -132,5 +132,10 @@
   "disableAccountSuccess": "Vô hiệu hóa tài khoản thành công",
   "enableAccountSuccess": "Kích hoạt tài khoản thành công",
   "generateAccountSuccess": "Sinh tài khoản thành công",
-  "regeneratePasswordSuccess": "Sinh lại mật khẩu thành công"
+  "regeneratePasswordSuccess": "Sinh lại mật khẩu thành công",
+  "accountDeleted": "Xóa tài khoản thành công",
+  "accountDisabled": "Tài khoản đã bị vô hiệu hoá và không thể xoá do đã được sử dụng",
+  "accountStatusUpdated": "Cập nhật trạng thái tài khoản thành công",
+  "accountNotGenerated": "Tài khoản chưa được sinh",
+  "accountNotFoundInExamClass": "Không tìm thấy tài khoản trong lớp thi"
 }
