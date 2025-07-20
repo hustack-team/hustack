@@ -14,6 +14,7 @@ import {Delete} from "@material-ui/icons";
 import * as _ from "lodash";
 import MaterialTable from "material-table";
 import {useEffect, useReducer, useState} from "react";
+import {useTranslation} from "react-i18next";
 import {FcDocument} from "react-icons/fc";
 import SimpleBar from "simplebar-react";
 import {request} from "../../../api";
@@ -44,6 +45,7 @@ let count = 0;
 
 export default function QuizTestStudentList(props) {
   const classes = useStyles();
+  const {t} = useTranslation("common");
 
   const [filename, setFilename] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -415,7 +417,7 @@ export default function QuizTestStudentList(props) {
         }
         actions={
           <>
-            <TertiaryButton onClick={handleClose}>Huỷ</TertiaryButton>
+            <TertiaryButton color="inherit" onClick={handleClose}>{t('common:cancel')}</TertiaryButton>
             <PrimaryButton
               // className={classes.assignBtn}
               onClick={handleAssignGroup}

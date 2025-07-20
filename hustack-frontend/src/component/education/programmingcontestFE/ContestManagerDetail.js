@@ -1,20 +1,25 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { Grid, LinearProgress,
+import {
+  Button,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
-  DialogActions,TextField,
-  Typography,Button,
- } from "@mui/material";
-import { request } from "api";
+  DialogTitle,
+  Grid,
+  LinearProgress,
+  TextField,
+  Typography,
+} from "@mui/material";
+import {request} from "api";
 import PrimaryButton from "component/button/PrimaryButton";
 import HustContainerCard from "component/common/HustContainerCard";
 import _ from "lodash";
-import { useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
-import { localeOption } from "utils/NumberFormat";
-import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import {useEffect, useState} from "react";
+import {useHistory} from "react-router-dom";
+import {localeOption} from "utils/NumberFormat";
+import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import {useTranslation} from "react-i18next";
+import TertiaryButton from "../../button/TertiaryButton";
 
 export function ContestManagerDetail(props) {
   const contestId = props.contestId;
@@ -252,9 +257,9 @@ export function ContestManagerDetail(props) {
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloneDialogClose} color="primary">
-            Cancel
-          </Button>
+          <TertiaryButton color="inherit" onClick={handleCloneDialogClose}>
+            {t('common:cancel')}
+          </TertiaryButton>
           <Button onClick={handleClone} color="primary">
             Create
           </Button>

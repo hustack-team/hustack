@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
+import {useTranslation} from "react-i18next";
 import SimpleBar from "simplebar-react";
-import {Button, Checkbox, TextField, Tooltip, Typography} from "@material-ui/core/";
+import {TextField, Typography} from "@material-ui/core/";
 import {request} from "../../../../api";
 import {makeStyles} from "@material-ui/core/styles";
 import {errorNoti, successNoti} from "../../../../utils/notification";
@@ -25,6 +26,7 @@ const useStyles = makeStyles((theme) => ({
 export default function GenerateQuizTestGroupDialog(props) {
   const testId = props.testId;
   const classes = useStyles();
+  const {t} = useTranslation("common");
   const [generatedGroupsQuantity, setGeneratedGroupsQuantity] = useState(1);
 
   const handleChangeNumberGroups = (event) => {
@@ -71,7 +73,7 @@ export default function GenerateQuizTestGroupDialog(props) {
       }
       actions={
         <>
-          <TertiaryButton onClick={props.onClose}>Huỷ</TertiaryButton>
+                      <TertiaryButton color="inherit" onClick={props.onClose}>{t('common:cancel')}</TertiaryButton>
           <PrimaryButton onClick={generateQuizGroups}>Sinh đề</PrimaryButton>
         </>
       }

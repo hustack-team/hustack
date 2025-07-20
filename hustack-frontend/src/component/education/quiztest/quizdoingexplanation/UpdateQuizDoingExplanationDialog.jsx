@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useTranslation} from "react-i18next";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
 import FileUploader from "../../../common/uploader/FileUploader";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
@@ -10,6 +11,7 @@ import FilePreview from "../../../common/uploader/FilePreview";
 
 export default function UpdateQuizDoingExplanationDialog(props) {
   let solution = props.solution;
+  const {t} = useTranslation("common");
   const [solutionExplanation, setSolutionExplanation] = useState('');
   const [attachment, setAttachment] = useState();
 
@@ -65,7 +67,7 @@ export default function UpdateQuizDoingExplanationDialog(props) {
       }
       actions={
         <>
-          <TertiaryButton onClick={props.onClose}>Huỷ</TertiaryButton>
+          <TertiaryButton color="inherit" onClick={props.onClose}>{t('common:cancel')}</TertiaryButton>
           <PrimaryButton onClick={updateQuizDoingExplanation}>Cập nhật</PrimaryButton>
         </>
       }

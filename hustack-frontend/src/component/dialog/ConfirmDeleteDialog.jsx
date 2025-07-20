@@ -30,7 +30,6 @@ export const ConfirmDeleteDialog = ({open, handleClose, handleDelete, entity, na
       actions={
         <>
           <TertiaryButton
-            variant="outlined"
             color="inherit"
             onClick={handleClose}>
             {t('common:cancel')}
