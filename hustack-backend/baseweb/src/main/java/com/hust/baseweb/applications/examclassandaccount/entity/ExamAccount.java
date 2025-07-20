@@ -5,7 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -13,8 +19,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "exam_class_userlogin_map")
-public class ExamClassUserloginMap {
+@Table(name = "exam_account")
+@EntityListeners(AuditingEntityListener.class)
+public class ExamAccount {
 
     @Id
     @Column(name = "id")
@@ -44,4 +51,20 @@ public class ExamClassUserloginMap {
 
     @Column(name = "order_index")
     private Integer orderIndex;
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
+
+    @CreatedDate
+    @Column(name = "created_stamp")
+    private Date createdStamp;
+
+    @LastModifiedDate
+    @Column(name = "last_updated_stamp")
+    private Date lastUpdatedStamp;
 }

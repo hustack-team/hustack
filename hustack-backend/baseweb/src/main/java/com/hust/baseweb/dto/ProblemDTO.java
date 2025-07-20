@@ -1,4 +1,4 @@
-package com.hust.baseweb.model.dto;
+package com.hust.baseweb.dto;
 
 import com.hust.baseweb.applications.programmingcontest.entity.TagEntity;
 import lombok.AccessLevel;
