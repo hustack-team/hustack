@@ -9,7 +9,7 @@ import {
   Radio,
   RadioGroup
 } from "@mui/material";
-import {formatDateTime} from "../ultils/DateUltils";
+import {formatDateTime, getDiffMinutes} from "../ultils/DateUltils";
 import {request} from "../../../../api";
 import {toast} from "react-toastify";
 import {Scoreboard} from "@mui/icons-material";
@@ -29,6 +29,7 @@ import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "../../../button/PrimaryButton";
 import TertiaryButton from "../../../button/TertiaryButton";
+import TextEditor from "../ultils/component/TextEditor";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {minWidth: '90vw'},
@@ -46,9 +47,12 @@ function ExamMarking(props) {
   const [openFilePreviewDialog, setOpenFilePreviewDialog] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [examResultDetailsIdSelected, setExamResultDetailsIdSelected] = useState(null);
+  const [indexSelected, setIndexSelected] = useState(null);
   const [isComment, setIsComment] = useState(false);
   const [imageComment, setImageComment] = useState(null);
+  const [contentComment, setContentComment] = useState(null);
   const [commentFilePathDeletes, setCommentFilePathDeletes] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     let tmpDataAnswers = []
@@ -86,6 +90,14 @@ function ExamMarking(props) {
       setImageComment(null)
     }
   }, [imageComment]);
+
+  useEffect(() => {
+    if(contentComment){
+      setComment(comment.concat(contentComment))
+      setIsTyping(false)
+      setContentComment(null)
+    }
+  }, [contentComment]);
 
   const handleMarking = () => {
     const body = {
@@ -155,6 +167,7 @@ function ExamMarking(props) {
     if(!dataAnswers[index]?.commentFilePath?.includes(`${examResultDetailsId}_${getFileIdFromString(data)}`) &&
       !getFilenameFromFileNew(fileComments)?.includes(`${examResultDetailsId}_${getFileIdFromString(data)}`)){
       setExamResultDetailsIdSelected(examResultDetailsId)
+      setIndexSelected(index)
       setIsComment(isComment)
     }else{
       setIsComment(false)
@@ -165,13 +178,15 @@ function ExamMarking(props) {
     let tmpScore = 0;
     if(event.target.value === ''){
       dataAnswers[questionOrder-1].score = 0
+    }else if (event.target.value.endsWith(".")) {
+      dataAnswers[questionOrder - 1].score = event.target.value;
     }else{
-      dataAnswers[questionOrder-1].score = parseInt(event.target.value)
+      dataAnswers[questionOrder-1].score = parseFloat(event.target.value)
     }
 
     let totalScore = 0
     for(let item of dataAnswers){
-      totalScore += item?.score
+      totalScore += typeof item?.score === "number" ? item?.score : 0
     }
 
     setDataAnswers(dataAnswers)
@@ -191,8 +206,8 @@ function ExamMarking(props) {
     setOpen(false)
   }
 
-  const handleKeyPress = (event) => {
-    const regex = /^[0-9]+$/
+  const handleKeyPressNumber = (event) => {
+    const regex = /^[0-9.]+$/
     if (!regex.test(event.key)) {
       event.preventDefault();
     }
@@ -240,7 +255,17 @@ function ExamMarking(props) {
                 </div>
                 <div style={{display: "flex", alignItems: "center", marginBottom: '10px'}}>
                   <Timer/>
-                  <p style={{padding: 0, margin: 0}}><strong>Tổng thời gian làm: </strong> {data?.totalTime} (phút)</p>
+                  <p style={{padding: 0, margin: 0}}>
+                    <strong>Tổng thời gian làm: </strong>
+                    {getDiffMinutes(data?.startedAt, data?.submitedAt)} (phút)
+                    {
+                      data?.examTestExtraTime && (
+                        <span style={{fontStyle: 'italic'}}>
+                          (Mở thêm <strong>{data?.examTestExtraTime} phút</strong>)
+                        </span>
+                      )
+                    }
+                  </p>
                 </div>
                 <div style={{display: "flex", alignItems: "center", marginBottom: '10px'}}>
                   <AccessTime/>
@@ -303,7 +328,8 @@ function ExamMarking(props) {
                           <TextField
                             id={`scoreInput-${questionOrder}`}
                             label="Nhập điểm"
-                            onKeyPress={handleKeyPress}
+                            // onKeyPress={handleKeyPressNumber}
+                            type={'number'}
                             style={{width: "90px", marginLeft: "16px"}}
                             size="small"
                             value={dataAnswers[questionOrder - 1]?.score}
@@ -338,101 +364,31 @@ function ExamMarking(props) {
                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
                             <p style={{margin: 0, padding: 0, fontWeight: "bold"}}>Chọn các đáp án đúng trong các đáp án
                               sau:</p>
-                            <FormControlLabel
-                              label={
-                                <FormGroup row>
-                                  <Box display="flex" alignItems="center">
-                                    <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                    {value?.questionAnswer?.includes('1') && (
-                                      <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                  </Box>
-                                </FormGroup>
-                              }
-                              control={
-                                <Checkbox color="primary"
-                                          checked={value?.answer?.includes('1')}
-                                          disabled/>
-                              }
-                            />
                             {
-                              value?.questionNumberAnswer >= 2 && (
+                              Array.from({ length: value.questionNumberAnswer }, (_, index) => (
                                 <FormControlLabel
                                   label={
                                     <FormGroup row>
                                       <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                        {value?.questionAnswer?.includes('2') && (
+                                        <div>
+                                          <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                          {value.questionAnswers[index]?.file && (
+                                            <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt=""
+                                                 style={{maxHeight: "150px"}}/>
+                                          )}
+                                        </div>
+                                        {value?.questionAnswer?.includes(`${index+1}`) && (
                                           <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                       </Box>
                                     </FormGroup>
                                   }
                                   control={
                                     <Checkbox color="primary"
-                                              checked={value?.answer?.includes('2')}
+                                              checked={value?.answer?.includes(`${index+1}`)}
                                               disabled/>
                                   }
                                 />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 3 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                        {value?.questionAnswer?.includes('3') && (
-                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={
-                                    <Checkbox color="primary"
-                                              checked={value?.answer?.includes('3')}
-                                              disabled/>
-                                  }
-                                />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 4 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                        {value?.questionAnswer?.includes('4') && (
-                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={
-                                    <Checkbox color="primary"
-                                              checked={value?.answer?.includes('4')}
-                                              disabled/>
-                                  }
-                                />
-                              )
-                            }
-                            {
-                              value?.questionNumberAnswer >= 5 && (
-                                <FormControlLabel
-                                  label={
-                                    <FormGroup row>
-                                      <Box display="flex" alignItems="center">
-                                        <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                        {value?.questionAnswer?.includes('5') && (
-                                          <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                      </Box>
-                                    </FormGroup>
-                                  }
-                                  control={
-                                    <Checkbox color="primary"
-                                              checked={value?.answer?.includes('5')}
-                                              disabled/>
-                                  }
-                                />
-                              )
+                              ))
                             }
                           </Box>
                         )
@@ -445,111 +401,33 @@ function ExamMarking(props) {
                               aria-labelledby="demo-radio-buttons-group-label"
                               name="radio-buttons-group"
                             >
-                              <FormControlLabel
-                                value="1"
-                                control={
-                                  <Radio
-                                    checked={value?.answer?.includes('1')}
-                                    disabled
-                                  />
-                                }
-                                label={
-                                  <FormGroup row>
-                                    <Box display="flex" alignItems="center">
-                                      <span>{parseHTMLToString(value?.questionContentAnswer1)}</span>
-                                      {value?.questionAnswer?.includes('1') && (
-                                        <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                    </Box>
-                                  </FormGroup>
-                                }
-                              />
                               {
-                                value?.questionNumberAnswer >= 2 && (
+                                Array.from({ length: value.questionNumberAnswer }, (_, index) => (
                                   <FormControlLabel
-                                    value="2"
+                                    value={index+1}
                                     control={
                                       <Radio
-                                        checked={value?.answer?.includes('2')}
+                                        checked={value?.answer?.includes(`${index+1}`)}
                                         disabled
                                       />
                                     }
                                     label={
                                       <FormGroup row>
                                         <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer2)}</span>
-                                          {value?.questionAnswer?.includes('2') && (
+                                          <div>
+                                            <p>{parseHTMLToString(value.questionAnswers[index]?.content)}</p>
+                                            {value.questionAnswers[index]?.file && (
+                                              <img src={getFilePathFromString(value.questionAnswers[index]?.file)} alt=""
+                                                   style={{maxHeight: "150px"}}/>
+                                            )}
+                                          </div>
+                                          {value?.questionAnswer?.includes(`${index+1}`) && (
                                             <Check style={{marginLeft: 8, color: 'green'}}/>)}
                                         </Box>
                                       </FormGroup>
                                     }
                                   />
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 3 && (
-                                  <FormControlLabel
-                                    value="3"
-                                    control={
-                                      <Radio
-                                        checked={value?.answer?.includes('3')}
-                                        disabled
-                                      />
-                                    }
-                                    label={
-                                      <FormGroup row>
-                                        <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer3)}</span>
-                                          {value?.questionAnswer?.includes('3') && (
-                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                        </Box>
-                                      </FormGroup>
-                                    }
-                                  />
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 4 && (
-                                  <FormControlLabel
-                                    value="4"
-                                    control={
-                                      <Radio
-                                        checked={value?.answer?.includes('4')}
-                                        disabled
-                                      />
-                                    }
-                                    label={
-                                      <FormGroup row>
-                                        <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer4)}</span>
-                                          {value?.questionAnswer?.includes('4') && (
-                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                        </Box>
-                                      </FormGroup>
-                                    }
-                                  />
-                                )
-                              }
-                              {
-                                value?.questionNumberAnswer >= 5 && (
-                                  <FormControlLabel
-                                    value="5"
-                                    control={
-                                      <Radio
-                                        checked={value?.answer?.includes('5')}
-                                        disabled
-                                      />
-                                    }
-                                    label={
-                                      <FormGroup row>
-                                        <Box display="flex" alignItems="center">
-                                          <span>{parseHTMLToString(value?.questionContentAnswer5)}</span>
-                                          {value?.questionAnswer?.includes('5') && (
-                                            <Check style={{marginLeft: 8, color: 'green'}}/>)}
-                                        </Box>
-                                      </FormGroup>
-                                    }
-                                  />
-                                )
+                                ))
                               }
                             </RadioGroup>
                           </Box>
@@ -653,11 +531,14 @@ function ExamMarking(props) {
 
             <div>
               <h4 style={{marginBottom: 0, fontSize: '18px'}}>Nhận xét:</h4>
-              <RichTextEditor
+              <TextEditor
                 content={comment}
-                onContentChange={(value) =>
+                onContentChange={(value) => {
                   setComment(value)
+                  setIsTyping(true)
                 }
+                }
+                isTyping={isTyping}
               />
             </div>
           </div>
@@ -688,9 +569,11 @@ function ExamMarking(props) {
         setOpen={setOpenFilePreviewDialog}
         file={filePreview}
         examResultDetailsIdSelected={examResultDetailsIdSelected}
+        indexSelected={indexSelected}
         isComment={isComment}
         imageComment={imageComment}
         setImageComment={setImageComment}
+        setContentComment={setContentComment}
       >
       </QuestionFilePreview>
     </div>

@@ -1,33 +1,41 @@
 package com.hust.baseweb.applications.exam.model.response;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 
 import java.util.List;
 
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyExamDetailsRes {
 
-    private String examStudentId;
-    private String examId;
-    private String examAnswerStatus;
-    private String examCode;
-    private String examName;
-    private String examDescription;
-    private String startTime;
-    private String endTime;
-    private String examTestId;
-    private String examTestCode;
-    private String examTestName;
-    private String examResultId;
-    private Integer totalScore;
-    private Integer totalTime;
-    private String submitedAt;
-    private String answerFiles;
-    private String comment;
-    private List<MyExamQuestionDetailsRes> questionList;
+    String examStudentTestId;
+    String examId;
+    String examAnswerStatus;
+    String examCode;
+    String examName;
+    String examDescription;
+    Integer examMonitor;
+    Integer examBlockScreen;
+    String startTime;
+    String endTime;
+    String examTestId;
+    String examTestCode;
+    String examTestName;
+    Integer examTestDuration;
+    Integer examTestExtraTime;
+    String examResultId;
+    String startedAt;
+    Boolean submitAgain;
+    Float totalScore;
+    String submitedAt;
+    String answerFiles;
+    String comment;
+    List<MyExamQuestionDetailsRes> questionList;
 
     public MyExamDetailsRes(MyExamDetailsResDB myExamDetailsResDB,
                             List<MyExamQuestionDetailsRes> questionList,

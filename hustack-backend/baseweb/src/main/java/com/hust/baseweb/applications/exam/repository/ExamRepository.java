@@ -1,6 +1,7 @@
 package com.hust.baseweb.applications.exam.repository;
 
 import com.hust.baseweb.applications.exam.entity.ExamEntity;
+import com.hust.baseweb.applications.exam.model.response.ExamDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.ExamMarkingDetailsResDB;
 import com.hust.baseweb.applications.exam.model.response.MyExamDetailsResDB;
 import com.hust.baseweb.applications.exam.model.response.MyExamFilterRes;
@@ -71,66 +72,105 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
         @Param("keyword") String keyword
     );
 
+    @Query(value = "select  " +
+                   "    e.id, " +
+                   "    e.code, " +
+                   "    e.name, " +
+                   "    e.description, " +
+                   "    e.status, " +
+                   "    e.answer_status as answerStatus, " +
+                   "    e.score_status as scoreStatus, " +
+                   "    e.monitor as monitor, " +
+                   "    e.block_screen as blockScreen, " +
+                   "    e.start_time as startTime, " +
+                   "    e.end_time as endTime, " +
+                   "    COALESCE(json_agg(json_build_object('id', et.id, 'examExamTestId', eet.id, 'code', et.code, 'name', et.name, 'duration', et.duration, 'description', et.description)) FILTER (WHERE et.id IS NOT NULL), '[]') AS examTests  " +
+                   "from  " +
+                   "    exam e " +
+                   "left join exam_exam_test eet on " +
+                   "    eet.exam_id = e.id " +
+                   "left join exam_test et on " +
+                   "    eet.exam_test_id = et.id " +
+                   "where " +
+                   "    e.id = :id " +
+                   "group by  " +
+                   "    e.id, e.code, e.name, e.description, e.status,  " +
+                   "    e.answer_status, e.start_time, e.end_time", nativeQuery = true)
+    Optional<ExamDetailsRes> detailExamById(@Param("id") String id);
+
     Optional<ExamEntity> findByCode(String code);
 
+    @Query(value = "select " +
+                   "    e.* " +
+                   "from " +
+                   "    exam e " +
+                   "left join exam_exam_test eet on " +
+                   "    eet.exam_id = e.id " +
+                   "where " +
+                   "    eet.exam_test_id = :examTestId", nativeQuery = true)
     List<ExamEntity> findALlByExamTestId(String examTestId);
 
-    @Query(value = "select " +
-                   "    es.id as examStudentId, " +
+    @Query(value = "select  " +
                    "    e.id as examId, " +
                    "    e.code as examCode, " +
                    "    e.name as examName, " +
                    "    e.description as examDescription, " +
+                   "    e.monitor as examMonitor, " +
+                   "    e.block_screen as examBlockScreen, " +
                    "    e.start_time as startTime, " +
-                   "    e.end_time as endTime, " +
-                   "    et.id as examTestId, " +
-                   "    et.code as examTestCode, " +
-                   "    et.name as examTestName, " +
-                   "    er.id as examResultId, " +
-                   "    er.total_score as totalScore " +
+                   "    e.end_time as endTime " +
                    "from " +
                    "    exam_student es " +
+                   "left join exam_student_test est on " +
+                   "    est.exam_student_id = es.id " +
+                   "left join exam_exam_test eet on " +
+                   "    est.exam_exam_test_id = eet.id " +
                    "left join exam e on " +
-                   "    e.id = es.exam_id " +
-                   "left join exam_test et on " +
-                   "    et.id = es.exam_test_id " +
-                   "left join exam_result er on " +
-                   "    er.exam_student_id = es.id " +
+                   "    eet.exam_id = e.id " +
                    "where " +
                    "    es.code = :userLogin " +
-                   "    and e.status = 1  " +
-                   "and " +
-                   "    (:status is null " +
-                   "        or (:status = 0 and er.id is null and er.total_score is null) " +
-                   "        or (:status = 1 and er.id is not null and er.total_score is null) " +
-                   "        or (:status = 2 and er.id is not null and er.total_score is not null)) " +
-                   "and " +
-                   "    (:keyword is null or " +
-                   "    (lower(et.name) like CONCAT('%', lower(:keyword),'%')) or " +
-                   "    (lower(e.name) like CONCAT('%', lower(:keyword),'%'))) " +
-                   "order by e.start_time desc",
+                   "    and e.status = 1 " +
+                   "    and  " +
+                   "        (:keyword is null or  " +
+                   "        (lower(e.description) like CONCAT('%', lower(:keyword),'%')) or  " +
+                   "        (lower(e.name) like CONCAT('%', lower(:keyword),'%')))  " +
+                   "group by " +
+                   "    e.id, " +
+                   "    e.code, " +
+                   "    e.name, " +
+                   "    e.description, " +
+                   "    e.monitor, " +
+                   "    e.block_screen, " +
+                   "    e.start_time, " +
+                   "    e.end_time " +
+                   "order by " +
+                   "    e.start_time desc",
            countQuery = "select " +
                         "    count(1) " +
                         "from " +
                         "    exam_student es " +
+                        "left join exam_student_test est on " +
+                        "    est.exam_student_id = es.id " +
+                        "left join exam_exam_test eet on " +
+                        "    est.exam_exam_test_id = eet.id " +
                         "left join exam e on " +
-                        "    e.id = es.exam_id " +
-                        "left join exam_test et on " +
-                        "    et.id = es.exam_test_id " +
-                        "left join exam_result er on " +
-                        "    er.exam_student_id = es.id " +
+                        "    eet.exam_id = e.id " +
                         "where " +
                         "    es.code = :userLogin " +
-                        "    and e.status = 1  " +
-                        "and " +
-                        "    (:status is null " +
-                        "        or (:status = 0 and er.id is null and er.total_score is null) " +
-                        "        or (:status = 1 and er.id is not null and er.total_score is null) " +
-                        "        or (:status = 2 and er.id is not null and er.total_score is not null)) " +
-                        "and " +
-                        "    (:keyword is null or " +
-                        "    (lower(et.name) like CONCAT('%', lower(:keyword),'%')) or " +
-                        "    (lower(e.name) like CONCAT('%', lower(:keyword),'%'))) ",
+                        "    and e.status = 1 " +
+                        "    and  " +
+                        "        (:keyword is null or  " +
+                        "        (lower(e.description) like CONCAT('%', lower(:keyword),'%')) or  " +
+                        "        (lower(e.name) like CONCAT('%', lower(:keyword),'%')))  " +
+                        "group by " +
+                        "    e.id, " +
+                        "    e.code, " +
+                        "    e.name, " +
+                        "    e.description, " +
+                        "    e.monitor, " +
+                        "    e.block_screen, " +
+                        "    e.start_time, " +
+                        "    e.end_time ",
            nativeQuery = true)
     Page<MyExamFilterRes> filterMyExam(
         Pageable pageable,
@@ -140,66 +180,78 @@ public interface ExamRepository extends JpaRepository<ExamEntity, String> {
     );
 
     @Query(value = "select " +
-                   "    es.id as examStudentId, " +
+                   "    est.id as examStudentTestId, " +
                    "    e.id as examId, " +
                    "    e.code as examCode, " +
                    "    e.name as examName, " +
                    "    e.description as examDescription, " +
+                   "    e.monitor as examMonitor, " +
+                   "    e.block_screen as examBlockScreen, " +
                    "    e.start_time as startTime, " +
                    "    e.end_time as endTime, " +
                    "    et.id as examTestId, " +
                    "    et.code as examTestCode, " +
                    "    et.name as examTestName, " +
+                   "    et.duration as examTestDuration, " +
+                   "    er.extra_time as examTestExtraTime, " +
                    "    er.id as examResultId, " +
-                   "    er.total_score as totalScore, " +
-                   "    er.total_time as totalTime, " +
+                   "    er.started_at as startedAt, " +
+                   "    er.submit_again as submitAgain, " +
+                   "    case when e.score_status = 1 then er.total_score else null end as totalScore, " +
                    "    er.submited_at as submitedAt, " +
                    "    er.file_path as answerFiles, " +
                    "    er.comment as comment, " +
                    "    e.answer_status as examAnswerStatus " +
                    "from " +
                    "    exam_student es " +
+                   "left join exam_student_test est on " +
+                   "    est.exam_student_id = es.id " +
+                   "left join exam_exam_test eet on " +
+                   "    est.exam_exam_test_id = eet.id " +
                    "left join exam e on " +
-                   "    e.id = es.exam_id " +
+                   "    e.id = eet.exam_id " +
                    "left join exam_test et on " +
-                   "    et.id = es.exam_test_id " +
+                   "    et.id = eet.exam_test_id " +
                    "left join exam_result er on " +
-                   "    er.exam_student_id = es.id " +
+                   "    er.exam_student_test_id = est.id " +
                    "where " +
                    "    es.code = :userLogin " +
-                   "    and e.id = :examId " +
-                   "    and es.id = :examStudentId " +
+                   "    and est.id = :examStudentTestId " +
                    "    and e.status = 1 " +
                    "order by start_time desc",
            nativeQuery = true)
     Optional<MyExamDetailsResDB> detailsMyExam(
         @Param("userLogin") String userLogin,
-        @Param("examId") String examId,
-        @Param("examStudentId") String examStudentId
+        @Param("examStudentTestId") String examStudentTestId
     );
 
     @Query(value = "select " +
-                   "    es.exam_id as examId, " +
-                   "    es.exam_test_id as examTestId, " +
+                   "    eet.exam_id as examId, " +
+                   "    est.id as examStudentTestId, " +
                    "    es.id as examStudentId, " +
                    "    es.code as examStudentCode, " +
                    "    es.name as examStudentName, " +
                    "    es.email as examStudentEmail, " +
                    "    es.phone as examStudentPhone, " +
                    "    er.id as examResultId, " +
+                   "    er.extra_time as examTestExtraTime, " +
                    "    er.total_score as totalScore, " +
-                   "    er.total_time as totalTime, " +
+                   "    er.started_at as startedAt, " +
                    "    er.submited_at as submitedAt, " +
                    "    er.file_path as answerFiles, " +
                    "    er.comment as comment " +
                    "from " +
                    "    exam_student es " +
+                   "left join exam_student_test est on " +
+                   "    est.exam_student_id = es.id " +
+                   "left join exam_exam_test eet on " +
+                   "    est.exam_exam_test_id = eet.id " +
                    "left join exam_result er on " +
-                   "    er.exam_student_id = es.id " +
+                   "    er.exam_student_test_id = est.id " +
                    "where " +
-                   "    es.id = :examStudentId ",
+                   "    est.id = :examStudentTestId ",
            nativeQuery = true)
     Optional<ExamMarkingDetailsResDB> detailsExamMarking(
-        @Param("examStudentId") String examStudentId
+        @Param("examStudentTestId") String examStudentTestId
     );
 }

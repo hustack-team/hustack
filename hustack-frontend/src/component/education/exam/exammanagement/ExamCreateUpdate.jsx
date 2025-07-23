@@ -126,6 +126,43 @@ function ExamCreateUpdate(props) {
     }
   ]
 
+  const answerScoreList = [
+    {
+      value: 0,
+      name: 'Ẩn'
+    },
+    {
+      value: 1,
+      name: 'Công bố'
+    }
+  ]
+
+  const monitorList = [
+    {
+      value: 0,
+      name: 'Không giám sát'
+    },
+    {
+      value: 1,
+      name: 'Thao tác trình duyệt'
+    },
+    {
+      value: 2,
+      name: 'Thao tác trình duyệt + Camera'
+    }
+  ]
+
+  const blockScreenList = [
+    {
+      value: 0,
+      name: 'Không khoá'
+    },
+    {
+      value: 1,
+      name: 'Khoá'
+    },
+  ]
+
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
@@ -140,15 +177,27 @@ function ExamCreateUpdate(props) {
   const [name, setName] = useState(data?.name);
   const [status, setStatus] = useState(data?.status);
   const [answerStatus, setAnswerStatus] = useState(data?.answerStatus);
+  const [scoreStatus, setScoreStatus] = useState(data?.scoreStatus);
+  const [monitor, setMonitor] = useState(data?.monitor);
+  const [blockScreen, setBlockScreen] = useState(data?.blockScreen > 0 ? 1 : 0);
+  const [timeBlockScreen, setTimeBlockScreen] = useState(data?.blockScreen);
   const [description, setDescription] = useState(data?.description ? data?.description : '');
-  const [examTestId, setExamTestId] = useState(data?.examTestId);
   const [startTime, setStartTime] = useState(data?.startTime);
   const [endTime, setEndTime] = useState(data?.endTime);
   const [isLoading, setIsLoading] = useState(false);
   const [openSelectTestDialog, setOpenSelectTestDialog] = useState(false);
-  const [testList, setTestList] = useState(data?.examTests)
+  const [testList, setTestList] = useState(data?.examExamTests?.map(item => ({
+    id: item.examTestId,
+    code: item.examTestCode,
+    name: item.examTestName,
+    description: item.examTestDescription,
+    examId: item.examId,
+    examExamTestId: item.id,
+  })) || [])
   const [openTestDetailsDialog, setOpenTestDetailsDialog] = useState(false);
   const [testDetails, setTestDetails] = useState(null)
+  const [examExamTests, setExamExamTests] = useState([])
+  const [examExamTestDeletes, setExamExamTestDeletes] = useState([])
   const [examStudents, setExamStudents] = useState(data?.examStudents)
   const [examStudentDeletes, setExamStudentsDeletes] = useState([])
 
@@ -159,15 +208,21 @@ function ExamCreateUpdate(props) {
       description: description,
       status: status,
       answerStatus: answerStatus,
-      examTestId: examTestId,
+      scoreStatus,
+      monitor: monitor,
+      blockScreen: blockScreen === 0 ? 0 : +timeBlockScreen,
       startTime: formatDateTimeApi(startTime),
       endTime: formatDateTimeApi(endTime),
+      examExamTests: examExamTests,
+      examExamTestDeletes: examExamTestDeletes,
       examStudents: examStudents,
       examStudentDeletes: examStudentDeletes
     }
     if(!validateBody(body)){
       return
     }
+
+    // console.log('body',body)
 
     setIsLoading(true)
     request(
@@ -193,6 +248,18 @@ function ExamCreateUpdate(props) {
     );
   }
 
+  useEffect(() => {
+    getExamExamTests()
+  }, [testList]);
+
+  const getExamExamTests = () => {
+    setExamExamTests(testList.map(test => ({
+      id: test?.examExamTestId,
+      examId: test?.examId,
+      examTestId: test?.id
+    })))
+  }
+
   const validateBody = (body) => {
     if(body.code == null || body.code === ''){
       toast.error('Mã kỳ thi không được bỏ trống')
@@ -200,10 +267,6 @@ function ExamCreateUpdate(props) {
     }
     if(body.name == null || body.name === ''){
       toast.error('Tên kỳ thi không được bỏ trống')
-      return false
-    }
-    if(body.examTestId == null || body.examTestId === ''){
-      toast.error('Chọn đề thi cho kỳ thi')
       return false
     }
     if(body.startTime == null || body.startTime === ''){
@@ -225,10 +288,15 @@ function ExamCreateUpdate(props) {
   }
 
   const handleAddTestSubmit = (data) => {
-    // setTestList(testList.concat(data))
-    setTestList(data)
-    setExamTestId(data[0]?.id)
+    setTestList(testList.concat(data))
   };
+
+  const handleDeleteTest = (item) => {
+    setTestList(testList.filter(test => test.id !== item.id))
+    if(item?.examExamTestId){
+      setExamExamTestDeletes([...examExamTestDeletes, data?.examExamTests.find(examExamTest => examExamTest.examTestId === item.id)])
+    }
+  }
 
   const detailsTest = (id) =>{
     request(
@@ -305,7 +373,7 @@ function ExamCreateUpdate(props) {
             </Typography>
             <form className={classes.root} noValidate autoComplete="off">
               <div>
-                <div>
+                <div style={{width: '100%'}}>
                   <TextField
                     autoFocus
                     required
@@ -313,6 +381,7 @@ function ExamCreateUpdate(props) {
                     disabled={!isCreate}
                     id="examCode"
                     label="Mã kỳ thi"
+                    style={{width: '20%'}}
                     placeholder="Nhập mã kỳ thi"
                     value={code}
                     onChange={(event) => {
@@ -330,7 +399,7 @@ function ExamCreateUpdate(props) {
                     label="Tên kỳ thi"
                     placeholder="Nhập tên kỳ thi"
                     value={name}
-                    style={{width: '50%'}}
+                    style={{width: '45%'}}
                     onChange={(event) => {
                       setName(event.target.value);
                     }}
@@ -338,15 +407,13 @@ function ExamCreateUpdate(props) {
                       shrink: true,
                     }}
                   />
-                </div>
-
-                <div>
                   <TextField
                     required
                     autoFocus
                     id="Examstatus"
                     select
                     label="Trạng thái"
+                    style={{width: '20%'}}
                     value={status}
                     onChange={(event) => {
                       setStatus(event.target.value);
@@ -360,13 +427,16 @@ function ExamCreateUpdate(props) {
                       })
                     }
                   </TextField>
+                </div>
 
+                <div>
                   <TextField
                     required
                     autoFocus
                     id="ExamAnswerstatus"
                     select
                     label="Trạng thái đáp án"
+                    style={{width: '20%'}}
                     value={answerStatus}
                     onChange={(event) => {
                       setAnswerStatus(event.target.value);
@@ -380,7 +450,26 @@ function ExamCreateUpdate(props) {
                       })
                     }
                   </TextField>
-
+                  <TextField
+                    required
+                    autoFocus
+                    id="ExamScorestatus"
+                    select
+                    label="Trạng thái điểm"
+                    value={scoreStatus}
+                    style={{width: '20%'}}
+                    onChange={(event) => {
+                      setScoreStatus(event.target.value);
+                    }}
+                  >
+                    {
+                      answerScoreList.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
                   <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
                     <DateTimePicker
                       label="Thời gian bắt đầu"
@@ -401,21 +490,75 @@ function ExamCreateUpdate(props) {
                 </div>
 
                 <div>
+                  <TextField
+                    required
+                    autoFocus
+                    id="ExamMonitor"
+                    select
+                    label="Hình thức giám sát"
+                    value={monitor}
+                    onChange={(event) => {
+                      setMonitor(event.target.value);
+                    }}
+                  >
+                    {
+                      monitorList.map(item => {
+                        return (
+                          <MenuItem value={item.value}>{item.name}</MenuItem>
+                        )
+                      })
+                    }
+                  </TextField>
+
                   {
-                    testList.length < 1 ?
-                      (
-                        <PrimaryButton
-                          variant="contained"
-                          color="primary"
-                          onClick={() => setOpenSelectTestDialog(true)}
-                          startIcon={<AddCircleIcon/>}
-                          style={{marginRight: 16, width: '200px'}}
-                        >
-                          Chọn đề thi
-                        </PrimaryButton>
-                      )
-                      :
-                      (
+                    (monitor === 1 || monitor === 2) && (
+                      <TextField
+                        required
+                        autoFocus
+                        id="ExamBlockScreen"
+                        select
+                        label="Khoá màn hình khi vi phạm"
+                        value={blockScreen}
+                        onChange={(event) => {
+                          setBlockScreen(event.target.value);
+                        }}
+                      >
+                        {
+                          blockScreenList.map(item => {
+                            return (
+                              <MenuItem value={item.value}>{item.name}</MenuItem>
+                            )
+                          })
+                        }
+                      </TextField>
+                    )
+                  }
+
+                  {
+                    ((monitor === 1 || monitor === 2) && blockScreen === 1) && (
+                      <TextField
+                        autoFocus
+                        required
+                        id="ExamTimeBlockScreen"
+                        label="Thời gian khoá(giây)"
+                        placeholder="Nhập số giây khoá"
+                        type={"number"}
+                        value={timeBlockScreen}
+                        onChange={(event) => {
+                          setTimeBlockScreen(event.target.value);
+                        }}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    )
+                  }
+                </div>
+
+                <div>
+                  {
+                    testList.map(test => {
+                      return (
                         <div style={{
                           border: '2px solid #f5f5f5',
                           display: 'flex',
@@ -435,10 +578,10 @@ function ExamCreateUpdate(props) {
                                  msUserSelect: "none"
                                }}>
                             <div style={{display: 'flex'}}>
-                              <span style={{fontStyle: 'italic', marginRight: '5px'}}>({testList[0]?.code})</span>
-                              <span style={{display: "block", fontWeight: 'bold'}}>{testList[0]?.name}</span>
+                              <span style={{fontStyle: 'italic', marginRight: '5px'}}>({test?.code})</span>
+                              <span style={{display: "block", fontWeight: 'bold'}}>{test?.name}</span>
                             </div>
-                            <p>{parseHTMLToString(testList[0]?.description)}</p>
+                            <p>{parseHTMLToString(test?.description)}</p>
                           </Box>
 
                           <Box display="flex" justifyContent='space-between' width="110px">
@@ -452,7 +595,7 @@ function ExamCreateUpdate(props) {
                                 fontWeight: 'bold'
                               }}
                               onClick={(event) => {
-                                handleOpenPopupDetails(testList[0])
+                                handleOpenPopupDetails(test)
                                 event.preventDefault()
                                 event.stopPropagation()
                               }}>
@@ -469,7 +612,7 @@ function ExamCreateUpdate(props) {
                                 fontWeight: 'bold'
                               }}
                               onClick={(event) => {
-                                setTestList([])
+                                handleDeleteTest(test)
                                 event.preventDefault()
                                 event.stopPropagation()
                               }}>
@@ -478,8 +621,17 @@ function ExamCreateUpdate(props) {
                           </Box>
                         </div>
                       )
+                    })
                   }
-
+                  <PrimaryButton
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setOpenSelectTestDialog(true)}
+                    startIcon={<AddCircleIcon/>}
+                    style={{marginRight: 16, width: '200px'}}
+                  >
+                    Chọn đề thi
+                  </PrimaryButton>
                 </div>
 
                 <div>

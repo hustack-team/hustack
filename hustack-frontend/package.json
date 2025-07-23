@@ -34,6 +34,7 @@
     "draftjs-to-html": "^0.9.1",
     "erp-hust": "^0.0.14",
     "event-source-polyfill": "^1.0.24",
+    "face-api.js": "^0.22.2",
     "file-saver": "^2.0.5",
     "framer-motion": "^2.9.5",
     "html-react-parser": "^0.14.0",
