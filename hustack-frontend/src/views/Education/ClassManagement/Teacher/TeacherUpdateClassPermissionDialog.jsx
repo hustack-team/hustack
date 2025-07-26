@@ -1,4 +1,5 @@
 import {Button, Dialog, DialogContent, DialogTitle, MenuItem, TextField,} from "@material-ui/core";
+import TertiaryButton from "../../../../component/button/TertiaryButton";
 import React, {useEffect, useState} from "react";
 import {request} from "../../../../api";
 
@@ -78,7 +79,7 @@ export default function TClassUpdatePopup(props) {
           <Button onClick={() => updateStatus("HIDDEN")}>Hide</Button>
           <Button onClick={() => updateStatus("OPEN")}>Open</Button>
           <Button onClick={() => performUpdateRole()}>Save</Button>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <TertiaryButton color="inherit" onClick={() => setOpen(false)}>Cancel</TertiaryButton>
         </div>
       </DialogContent>
     </Dialog>

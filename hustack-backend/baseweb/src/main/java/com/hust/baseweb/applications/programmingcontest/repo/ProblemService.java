@@ -4,15 +4,14 @@ import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
+import com.hust.baseweb.dto.ProblemDTO;
 import com.hust.baseweb.model.ProblemFilter;
-import com.hust.baseweb.model.dto.ProblemDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public interface ProblemService {
     ProblemEntity createContestProblem(String userID, ModelCreateContestProblem dto, MultipartFile[] files);

@@ -22,6 +22,7 @@ import {useTranslation} from "react-i18next";
 import {mapLanguageToDisplayName} from "./Constant";
 import {RejudgeButton} from "./RejudgeButton";
 import InsertCommentRoundedIcon from '@mui/icons-material/InsertCommentRounded';
+import TertiaryButton from "../../button/TertiaryButton";
 
 export const detail = (key, value, sx, helpText) => (
   <>
@@ -387,7 +388,7 @@ function ContestProblemSubmissionDetailViewedByManager({screenAuthorization}) {
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDialog}>Cancel</Button>
+              <TertiaryButton color="inherit" onClick={handleCloseDialog}>Cancel</TertiaryButton>
               <Button onClick={handleSaveComment}>Save Comment</Button>
             </DialogActions>
           </Dialog>

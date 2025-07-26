@@ -14,12 +14,15 @@ import com.hust.baseweb.applications.education.quiztest.service.EduQuizTestGroup
 import com.hust.baseweb.applications.education.quiztest.service.EduTestQuizGroupParticipationAssignmentService;
 import com.hust.baseweb.applications.education.quiztest.service.QuizTestService;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,19 +31,30 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-module-quiz-test",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor = @__(@Autowired))
-@CrossOrigin
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EduQuizTestGroupController {
 
-    private EduQuizTestGroupService eduQuizTestGroupService;
-    private UserService userService;
-    private EduTestQuizParticipantRepo eduTestQuizParticipationRepo;
-    private EduTestQuizGroupParticipationAssignmentService eduTestQuizGroupParticipationAssignmentService;
-    private QuizTestService quizTestService;
+    EduQuizTestGroupService eduQuizTestGroupService;
 
+    UserService userService;
+
+    EduTestQuizParticipantRepo eduTestQuizParticipationRepo;
+
+    EduTestQuizGroupParticipationAssignmentService eduTestQuizGroupParticipationAssignmentService;
+
+    QuizTestService quizTestService;
+
+    @Secured("ROLE_TEACHER")
     @PostMapping("/generate-quiz-test-group")
     public ResponseEntity<?> generateQuizTestGroup(
         Principal principal, @RequestBody
@@ -52,6 +66,7 @@ public class EduQuizTestGroupController {
         return ResponseEntity.ok().body(eduTestQuizGroups);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-quiz-test-participation-group-question/{testID}")
     public ResponseEntity<?> getAllTestGroupQuestionByUser(Principal principal, @PathVariable String testID) {
         List<QuizTestGroupParticipantAssignmentOutputModel> quizTestGroupParticipantAssignmentOutputModels
@@ -70,12 +85,14 @@ public class EduQuizTestGroupController {
         return ResponseEntity.ok().body(retList);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-quiz-test-group-with-questions-detail/{testID}")
     public ResponseEntity<?> getAllTestGroupWithQuestionsDetail(Principal principal, @PathVariable String testID) {
         List<QuizGroupTestDetailModel> res = eduQuizTestGroupService.getQuizTestGroupWithQuestionsDetail(testID);
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-quiz-questions-assigned-to-participant/{testID}/{participantId}")
     public ResponseEntity<?> getQuizQuestionsAssignedToParticipant(
         Principal principal,
@@ -259,6 +276,7 @@ public class EduQuizTestGroupController {
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-quiz-test-group-participants/{testId}")
     public ResponseEntity<?> getQuizTestGroupParticipants(Principal principal, @PathVariable String testId) {
         log.info("getQuizTestGroupParticipants, testId = " + testId);

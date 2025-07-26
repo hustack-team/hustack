@@ -1,20 +1,22 @@
 import React, {useState} from "react";
 import {useHistory, useParams} from "react-router-dom";
-import {Button, Grid, TextField} from "@mui/material";
+import {Grid, TextField} from "@mui/material";
 import {request} from "../../../api";
-import QuizViewForCheckCode from "./QuizViewForCheckCode";
-import { LoadingButton } from "@mui/lab";
+import {LoadingButton} from "@mui/lab";
+import ProgrammingContestLayout from "../programmingcontestFE/ProgrammingContestLayout";
+import Box from "@mui/material/Box";
+import {errorNoti} from "../../../utils/notification";
+import {useTranslation} from "react-i18next";
 
 export default function StudentQuizDetailCheckAndConfirmGroupCode() {
-  const { testId } = useParams();
+  const {testId} = useParams();
   const history = useHistory();
+  const {t} = useTranslation(["common"]);
   const [groupCode, setGroupCode] = useState("");
-  const checkState = useState([]);
-  const [questions, setQuestions] = useState([]);
-  const [quizGroupTestDetail, setQuizGroupTestDetail] = useState({});
-  const [messageRequest, setMessageRequest] = useState(false);
+
   const [requestFailed, setRequestFailed] = useState(false);
   const [loading, setLoading] = useState(false);
+
   function onConfirmCode() {
     setLoading(true);
     request(
@@ -27,7 +29,10 @@ export default function StudentQuizDetailCheckAndConfirmGroupCode() {
         //setOpen(false);
       },
       {
-        401: () => {},
+        onError: e => {
+          setLoading(false);
+          errorNoti(t("common:error", 3000))
+        },
         406: () => {
           //setMessageRequest("Time Out!");
           setRequestFailed(true);
@@ -36,114 +41,40 @@ export default function StudentQuizDetailCheckAndConfirmGroupCode() {
     );
   }
 
-  function onCheckCode() {
-    request(
-      "get",
-      "/check-questions-of-group/" + testId + "/" + groupCode,
-      (res) => {
-        const {
-          listQuestion,
-          participationExecutionChoice,
-          ...quizGroupTestDetail
-        } = res.data;
-
-        setQuestions(listQuestion);
-        setQuizGroupTestDetail(quizGroupTestDetail);
-
-        //setViewTypeId(quizGroupTestDetail.viewTypeId);
-
-        // Restore test result
-        // TODO: optimize code
-        const chkState = [];
-
-        listQuestion.forEach((question) => {
-          const choices = {};
-          const choseAnswers =
-            participationExecutionChoice[question.questionId];
-
-          question.quizChoiceAnswerList.forEach((ans) => {
-            choices[ans.choiceAnswerId] = false;
-          });
-
-          choices.submitted = false;
-          if (choseAnswers) {
-            choseAnswers.forEach((choseAnsId) => {
-              choices[choseAnsId] = true;
-            });
-
-            choices.submitted = true;
-            choices["lastSubmittedAnswers"] = choseAnswers;
-          } else {
-            choices["lastSubmittedAnswers"] = [];
-          }
-
-          chkState.push(choices);
-        });
-
-        checkState.set(chkState);
-      },
-      {
-        401: () => {},
-        406: () => {
-          setMessageRequest("Time Out!");
-          //setRequestFailed(true);
-        },
-      }
-    );
+  const handleExit = () => {
+    history.push(`/edu/class/student/quiztest/detail/${testId}`);
   }
 
   return (
-    <div>
-      <div>
-        <TextField
-          autoFocus
-          id="Code"
-          label="Code"
-          placeholder="Code"
-          onChange={(event) => {
-            setGroupCode(event.target.value);
-          }}
-          value={groupCode}
-        />
-        {/*
-        <Button onClick={onCheckCode}>Check Out</Button>
-         */}
-      </div>
-      <div>
+    <ProgrammingContestLayout onBack={handleExit}>
+      <Grid container spacing={2} mt={0}>
+        <Grid item xs={3}>
+          <TextField
+            fullWidth
+            size='small'
+            autoFocus
+            required
+            id="Code"
+            label="Code"
+            value={groupCode}
+            placeholder="Code"
+            onChange={(event) => {
+              setGroupCode(event.target.value);
+            }}
+          />
+        </Grid>
+      </Grid>
+
+      <Box width="100%" sx={{mt: "20px"}}>
         <LoadingButton
-          //variant="contained"
-          //color="light"
-          //style={{ marginLeft: "45px" }}
           variant="contained"
-                  color="primary"
           onClick={onConfirmCode}
           loading={loading}
-                  style={{
-                    textTransform: "none",
-                    width: 100,
-                  }}
+          sx={{textTransform: "none",}}
         >
-          CONFIRM
+          Confirm
         </LoadingButton>
-      </div>
-      <Grid container spacing={3}>
-        {quizGroupTestDetail.quizGroupId ? (
-          questions != null ? (
-            questions.map((question, idx) => (
-              <QuizViewForCheckCode
-                key={question.questionId}
-                question={question}
-                choseAnswers={checkState[idx]}
-                order={idx}
-              />
-            ))
-          ) : (
-            <p style={{ justifyContent: "center" }}> Questions not available</p>
-          )
-        ) : (
-          <p style={{ justifyContent: "center" }}> </p>
-        )}
-      </Grid>
-    </div>
+      </Box>
+    </ProgrammingContestLayout>
   );
 }

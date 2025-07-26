@@ -9,8 +9,9 @@ import {Button, Divider, Grid, LinearProgress, Switch} from "@mui/material";
 import StandardTable from "../table/StandardTable";
 import {getColorSuccess} from "../education/programmingcontestFE/lib";
 import Box from "@mui/material/Box";
-import {defaultDatetimeFormat, toFormattedDateTime} from "../../utils/dateutils";
+import {defaultDatetimeFormat} from "../../utils/dateutils";
 import Typography from "@mui/material/Typography";
+import withScreenSecurity from "../withScreenSecurity";
 
 function UploadUser() {
   const fileInputRef = useRef(null);
@@ -290,4 +291,6 @@ function UploadUser() {
   )
 }
 
-export default UploadUser;
+
+const screenName = "SCR_UPLOAD_USER";
+export default withScreenSecurity(UploadUser, screenName, true);

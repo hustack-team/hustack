@@ -1,19 +1,20 @@
 import AddIcon from "@material-ui/icons/Add";
 import {
   Box,
-  LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
   TextField,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { request } from "../../../api";
-import { toFormattedDateTime } from "../../../utils/dateutils";
+import TertiaryButton from "../../../button/TertiaryButton";
+import {useEffect, useState} from "react";
+import {request} from "../../../api";
+import {toFormattedDateTime} from "../../../utils/dateutils";
 import StandardTable from "../../table/StandardTable";
-import { successNoti } from "utils/notification";
+import {successNoti} from "utils/notification";
 
 export default function ContestLibraryList() {
   const [libraries, setLibraries] = useState([]);
@@ -244,7 +245,7 @@ export default function ContestLibraryList() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <TertiaryButton color="inherit" onClick={handleCloseDialog}>Cancel</TertiaryButton>
           <Button onClick={handleSaveLibrary}>Save</Button>
         </DialogActions>
       </Dialog>
@@ -262,7 +263,7 @@ export default function ContestLibraryList() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseEditDialog}>Cancel</Button>
+          <TertiaryButton color="inherit" onClick={handleCloseEditDialog}>Cancel</TertiaryButton>
           <Button onClick={handleSaveEdit}>Save</Button>
         </DialogActions>
       </Dialog>

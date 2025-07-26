@@ -5,27 +5,37 @@ import com.hust.baseweb.applications.education.thesisdefensejury.entity.TraningP
 import com.hust.baseweb.applications.education.thesisdefensejury.models.Response;
 import com.hust.baseweb.applications.education.thesisdefensejury.models.TranningProgramIM;
 import com.hust.baseweb.applications.education.thesisdefensejury.service.TranningProgramService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TraningProgramController {
 
-    private final TranningProgramService tranningProgramService;
+    TranningProgramService tranningProgramService;
 
     @GetMapping("/program_tranings")
     public ResponseEntity<?> getAllTranningProgram(Pageable pageable) {

@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {useTranslation} from "react-i18next";
 import RichTextEditor from "../../../common/editor/RichTextEditor";
 import FileUploader from "../../../common/uploader/FileUploader";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
@@ -8,6 +9,7 @@ import {errorNoti, successNoti} from "../../../../utils/notification";
 import {request} from "../../../../api";
 
 export default function CreateQuizDoingExplanationDialog(props) {
+  const {t} = useTranslation("common");
   const [solutionExplanation, setSolutionExplanation] = useState('');
   const [attachment, setAttachment] = useState();
 
@@ -50,7 +52,7 @@ export default function CreateQuizDoingExplanationDialog(props) {
       }
       actions={
         <>
-          <TertiaryButton onClick={props.onClose}>Huỷ</TertiaryButton>
+          <TertiaryButton color="inherit" onClick={props.onClose}>{t('common:cancel')}</TertiaryButton>
           <PrimaryButton onClick={createQuizDoingExplanation}>Thêm</PrimaryButton>
         </>
       }

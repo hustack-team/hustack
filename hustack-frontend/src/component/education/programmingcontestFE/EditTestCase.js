@@ -494,8 +494,12 @@ function EditTestCase(props) {
         </Stack>
       </form>
 
-      <Divider sx={{mt: 2, mb: 2}}/>
-      <TestCaseExecutionResult uploadResult={uploadResult}/>
+      {uploadResult && (
+        <>
+          <Divider sx={{mt: 2, mb: 2}}/>
+          <TestCaseExecutionResult uploadResult={uploadResult}/>
+        </>
+      )}
     </ProgrammingContestLayout>
   );
 }

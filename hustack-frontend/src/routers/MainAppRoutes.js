@@ -14,7 +14,6 @@ import ThesisRoutes from "./ThesisRoutes";
 import WhiteBoardRoute from "./WhiteBoardRoute";
 import UploadUser from "../component/userlogin/UploadUser";
 import ExamClassList from "../component/examclassaccount/ExamClassList";
-import ExamClassCreate from "../component/examclassaccount/ExamClassCreate";
 import ExamClassDetail from "../component/examclassaccount/ExamClassDetail";
 import UploadGeneratedUser from "../component/examclassaccount/UploadGeneratedUser";
 
@@ -83,11 +82,6 @@ function MainAppRoute(props) {
             component={ExamClassList}
             exact
             path={`/exam-class/list`}
-          />
-          <PrivateRoute
-            component={ExamClassCreate}
-            exact
-            path={`/exam-class/create`}
           />
           <PrivateRoute
             component={ExamClassDetail}

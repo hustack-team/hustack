@@ -1,29 +1,21 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hust.baseweb.applications.contentmanager.model.ContentHeaderModel;
-import com.hust.baseweb.applications.contentmanager.model.ContentModel;
 import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
-import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputStreamUtils;
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
 import com.hust.baseweb.applications.programmingcontest.utils.DateTimeUtils;
 import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritycheckingalgorithms.CodeSimilarityCheck;
 import com.hust.baseweb.entity.UserLogin;
-import com.hust.baseweb.model.ProblemFilter;
-import com.hust.baseweb.model.ProblemProjection;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.model.TestCaseFilter;
-import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
@@ -32,32 +24,20 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.model.enums.CompressionMethod;
-import net.lingala.zip4j.model.enums.EncryptionMethod;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import vn.edu.hust.soict.judge0client.config.Judge0Config;
 import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
 import vn.edu.hust.soict.judge0client.service.Judge0Service;
 import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
-import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1404,41 +1384,42 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     // TODO: try approach one join query
     @Override
+    @Transactional(readOnly = true)
     public ModelGetContestPageResponse getRegisteredContestsByUser(String userId) {
         List<UserRegistrationContestEntity> registrations = userRegistrationContestRepo
-            .findAllByUserIdAndRoleIdAndStatus(
+            .findByUserIdAndRoleIdAndStatus(
                 userId,
                 UserRegistrationContestEntity.ROLE_PARTICIPANT,
                 UserRegistrationContestEntity.STATUS_SUCCESSFUL);
 
-        List<ModelGetContestResponse> res = new ArrayList<>();
+        List<ModelGetContestResponse> contests = new ArrayList<>();
         if (registrations != null) {
             Set<String> contestIds = registrations
                 .stream()
                 .map(UserRegistrationContestEntity::getContestId)
                 .collect(Collectors.toSet());
 
-            List<ContestEntity> contests = contestRepo.findByContestIdInAndStatusIdNot(
-                contestIds,
-                ContestEntity.CONTEST_STATUS_DISABLED);
-
-            res = contests.stream()
-                          .map(contest -> ModelGetContestResponse.builder()
-                                                                 .contestId(contest.getContestId())
-                                                                 .contestName(contest.getContestName())
-                                                                 .contestTime(contest.getContestSolvingTime())
-                                                                 .countDown(contest.getCountDown())
-                                                                 .startAt(contest.getStartedAt())
-                                                                 .statusId(contest.getStatusId())
-                                                                 .userId(contest.getUserId())
-                                                                 .createdAt(contest.getCreatedAt())
-                                                                 .build())
-                          .collect(Collectors.toList());
+            contests = contestRepo
+                .findByContestIdInAndStatusIdIn(
+                    contestIds,
+                    List.of("CREATED", "RUNNING", "COMPLETED"),
+                    Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(contest -> ModelGetContestResponse.builder()
+                                                       .contestId(contest.getContestId())
+                                                       .contestName(contest.getContestName())
+                                                       .contestTime(contest.getContestSolvingTime())
+                                                       .countDown(contest.getCountDown())
+                                                       .startAt(contest.getStartedAt())
+                                                       .statusId(contest.getStatusId())
+                                                       .userId(contest.getUserId())
+                                                       .createdAt(contest.getCreatedAt())
+                                                       .build())
+                .collect(Collectors.toList());
         }
 
-        Collections.reverse(res);
         return ModelGetContestPageResponse.builder()
-                                          .contests(res)
+                                          .contests(contests)
                                           .build();
     }
 

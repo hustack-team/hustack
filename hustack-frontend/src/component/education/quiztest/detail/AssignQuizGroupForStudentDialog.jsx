@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useTranslation} from "react-i18next";
 import SimpleBar from "simplebar-react";
 import {FcDocument} from "react-icons/fc";
 import CustomizedDialogs from "../../../dialog/CustomizedDialogs";
@@ -39,6 +40,7 @@ const useStyles = makeStyles(theme => ({
 
 export default function AssignQuizGroupForStudentDialog(props) {
   const classes = useStyles();
+  const {t} = useTranslation("common");
   const assignedStudent = props.assignedStudent;
   const quizGroups = props.quizGroups;
 
@@ -110,7 +112,7 @@ export default function AssignQuizGroupForStudentDialog(props) {
       }
       actions={
         <>
-          <TertiaryButton onClick={props.onClose}>Huỷ</TertiaryButton>
+          <TertiaryButton color="inherit" onClick={props.onClose}>{t('common:cancel')}</TertiaryButton>
           <PrimaryButton onClick={assignQuizGroupForStudent}>Lưu</PrimaryButton>
         </>
       }

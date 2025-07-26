@@ -1,16 +1,20 @@
 package com.hust.baseweb.applications.examclassandaccount.model;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ModelCreateExamClass {
-    private String name;
-    private String description;
-    private String executeDate;
+
+    String name;
+
+    String description;
+
+    String executeDate;
 }
