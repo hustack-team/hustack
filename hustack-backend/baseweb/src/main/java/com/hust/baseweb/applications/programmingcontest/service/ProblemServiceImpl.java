@@ -97,12 +97,15 @@ public class ProblemServiceImpl implements ProblemService {
 
     ObjectMapper objectMapper;
 
+    ProblemBlockService problemBlockService;
+    ProblemBlockRepo problemBlockRepo;
+
     @Override
     @Transactional
     public ProblemEntity createContestProblem(
-        String createdBy,
-        ModelCreateContestProblem dto,
-        MultipartFile[] files
+            String createdBy,
+            ModelCreateContestProblem dto,
+            MultipartFile[] files
     ) {
         String problemId = dto.getProblemId().trim();
 
@@ -110,11 +113,12 @@ public class ProblemServiceImpl implements ProblemService {
             throw new DuplicateKeyException("Problem ID already exist");
         }
 
+        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
-                                                .map(Arrays::asList)
-                                                .orElseGet(Collections::emptyList);
+                .map(Arrays::asList)
+                .orElseGet(Collections::emptyList);
 
         fileArray.forEach((file) -> {
             ContentModel model = new ContentModel(fileId[fileArray.indexOf(file)], file);
@@ -133,46 +137,48 @@ public class ProblemServiceImpl implements ProblemService {
         });
 
         ProblemEntity problem = ProblemEntity.builder()
-                                             .problemId(problemId)
-                                             .problemName(dto.getProblemName())
-                                             .problemDescription(dto.getProblemDescription())
-                                             .memoryLimit(dto.getMemoryLimit())
-//                                                   .timeLimit(dto.getTimeLimitCPP()) //TODO: remove this after moving all to lms
-                                             .timeLimitCPP(dto.getTimeLimitCPP())
-                                             .timeLimitJAVA(dto.getTimeLimitJAVA())
-                                             .timeLimitPYTHON(dto.getTimeLimitPYTHON())
-                                             .levelId(dto.getLevelId())
-                                             .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
-                                             .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
-                                             .solution(dto.getSolution())
-                                             .isPreloadCode(dto.getIsPreloadCode())
-                                             .preloadCode(dto.getPreloadCode())
-                                             .solutionCheckerSourceCode(dto.getSolutionChecker())
-                                             .solutionCheckerSourceLanguage(dto.getSolutionCheckerLanguage())
-                                             .scoreEvaluationType(dto.getScoreEvaluationType() != null
-                                                                      ? dto.getScoreEvaluationType()
-                                                                      : Constants.ProblemResultEvaluationType.NORMAL.getValue())
-                                             .isPublicProblem(dto.getIsPublic())
-                                             .levelOrder(constants.getMapLevelOrder().get(dto.getLevelId()))
-                                             .attachment(String.join(";", attachmentId))
-                                             .statusId(dto.getStatus().toString())
-                                             .sampleTestcase(dto.getSampleTestCase())
-                                             .build();
+                .problemId(problemId)
+                .problemName(dto.getProblemName())
+                .problemDescription(dto.getProblemDescription())
+                .memoryLimit(dto.getMemoryLimit())
+                .timeLimitCPP(dto.getTimeLimitCPP())
+                .timeLimitJAVA(dto.getTimeLimitJAVA())
+                .timeLimitPYTHON(dto.getTimeLimitPYTHON())
+                .levelId(dto.getLevelId())
+                .categoryId(dto.getCategoryId())
+                .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
+                .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
+                .solution(dto.getSolution())
+                .isPreloadCode(dto.getIsPreloadCode())
+                .preloadCode(dto.getPreloadCode())
+                .solutionCheckerSourceCode(dto.getSolutionChecker())
+                .solutionCheckerSourceLanguage(dto.getSolutionCheckerLanguage())
+                .scoreEvaluationType(dto.getScoreEvaluationType() != null
+                        ? dto.getScoreEvaluationType()
+                        : Constants.ProblemResultEvaluationType.NORMAL.getValue())
+                .isPublicProblem(dto.getIsPublic())
+                .levelOrder(constants.getMapLevelOrder().get(dto.getLevelId()))
+                .attachment(String.join(";", attachmentId))
+                .statusId(dto.getStatus().toString())
+                .sampleTestcase(dto.getSampleTestCase())
+                .build();
         problem = problemCacheService.saveProblemWithCache(problem);
 
+        if (dto.getCategoryId() != null && Integer.valueOf(1).equals(dto.getCategoryId()) && dto.getBlockCodes() != null) {
+            problemBlockService.createProblemBlocks(problemId, dto.getBlockCodes());
+        }
 
         List<ProblemTag> problemTags = Arrays.stream(dto.getTagIds())
-                                             .map(tagId -> ProblemTag.builder()
-                                                                     .id(new ProblemTagId(tagId, problemId))
-                                                                     .build())
-                                             .collect(Collectors.toList());
+                .map(tagId -> ProblemTag.builder()
+                        .id(new ProblemTagId(tagId, problemId))
+                        .build())
+                .collect(Collectors.toList());
         problemTagRepo.saveAll(problemTags);
 
-        // grant role owner, manager, view to current user and admin
         List<String> roleIds = Arrays.asList(
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR,
-            UserContestProblemRole.ROLE_VIEWER
+                UserContestProblemRole.ROLE_OWNER,
+                UserContestProblemRole.ROLE_EDITOR,
+                UserContestProblemRole.ROLE_VIEWER
         );
         List<UserContestProblemRole> roles = new ArrayList<>();
         List<String> users = new ArrayList<>();
@@ -183,23 +189,19 @@ public class ProblemServiceImpl implements ProblemService {
         for (String user : users) {
             for (String roleId : roleIds) {
                 UserContestProblemRole role = new UserContestProblemRole();
-
                 role.setProblemId(problem.getProblemId());
                 role.setUserId(user);
                 role.setRoleId(roleId);
-
                 roles.add(role);
             }
         }
-
         userContestProblemRoleRepo.saveAll(roles);
 
-        // push notification to admin
         notificationsService.create(
-            createdBy,
-            "admin",
-            createdBy + " has created a contest problem ID " + problem.getProblemId(),
-            "");
+                createdBy,
+                "admin",
+                createdBy + " has created a contest problem ID " + problem.getProblemId(),
+                "");
 
         return problem;
     }
@@ -207,19 +209,20 @@ public class ProblemServiceImpl implements ProblemService {
     @Transactional
     @Override
     public ProblemEntity updateContestProblem(
-        String problemId,
-        String userId,
-        ModelUpdateContestProblem dto,
-        MultipartFile[] files
+            String problemId,
+            String userId,
+            ModelUpdateContestProblem dto,
+            MultipartFile[] files
     ) throws Exception {
+        // Kiểm tra quyền chỉnh sửa
         List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(
-            problemId,
-            userId);
+                problemId,
+                userId);
 
         boolean hasPermission = false;
         for (UserContestProblemRole role : roles) {
             if (role.getRoleId().equals(UserContestProblemRole.ROLE_EDITOR) ||
-                role.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)) {
+                    role.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)) {
                 hasPermission = true;
                 break;
             }
@@ -230,23 +233,18 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         ProblemEntity problem = problemRepo
-            .findById(problemId)
-            .orElseThrow(() -> new EntityNotFoundException("Problem ID not found"));
+                .findById(problemId)
+                .orElseThrow(() -> new EntityNotFoundException("Problem ID not found"));
         if (!userId.equals(problem.getCreatedBy())
-            &&
-            !userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
-                problemId,
-                userId,
-                UserContestProblemRole.ROLE_EDITOR)) {
+                &&
+                !userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
+                        problemId,
+                        userId,
+                        UserContestProblemRole.ROLE_EDITOR)) {
             throw new MiniLeetCodeException("permission denied", 403);
         }
 
-        // problem há been created, admin is shared edit role, but cannot perform the edit
-        //if (!userId.equals(problem.getUserId())
-        //    && !problem.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
-        //    throw new MiniLeetCodeException("Problem is not opened for edit", 400);
-        //}
-
+        // Xử lý tag
         List<TagEntity> tags = new ArrayList<>();
         Integer[] tagIds = dto.getTagIds();
         for (Integer tagId : tagIds) {
@@ -254,12 +252,13 @@ public class ProblemServiceImpl implements ProblemService {
             tags.add(tag);
         }
 
+        // Xử lý file đính kèm
         List<String> attachmentId = new ArrayList<>();
         attachmentId.add(problem.getAttachment());
         String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
-                                                .map(Arrays::asList)
-                                                .orElseGet(Collections::emptyList);
+                .map(Arrays::asList)
+                .orElseGet(Collections::emptyList);
 
         List<String> removedFilesId = dto.getRemovedFilesId();
         if (problem.getAttachment() != null && !problem.getAttachment().isEmpty()) {
@@ -297,9 +296,9 @@ public class ProblemServiceImpl implements ProblemService {
         problem.setProblemDescription(dto.getProblemDescription());
         problem.setLevelId(dto.getLevelId());
         problem.setSolution(dto.getSolution());
+//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setIsPreloadCode(dto.getIsPreloadCode());
         problem.setPreloadCode(dto.getPreloadCode());
-//        problem.setTimeLimit(dto.getTimeLimit());
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
         problem.setTimeLimitJAVA(dto.getTimeLimitJAVA());
         problem.setTimeLimitPYTHON(dto.getTimeLimitPYTHON());
@@ -314,12 +313,44 @@ public class ProblemServiceImpl implements ProblemService {
         problem.setTags(tags);
         problem.setSampleTestcase(dto.getSampleTestCase());
 
+        Integer oldCategoryId = problem.getCategoryId();
+        Integer newCategoryId = dto.getCategoryId();
+        if (Integer.valueOf(1).equals(oldCategoryId) && Integer.valueOf(0).equals(newCategoryId)) {
+            problemBlockRepo.deleteByProblemId(problemId);
+        }
+        problem.setCategoryId(newCategoryId);
+
         if (userId.equals(problem.getCreatedBy())) {
             problem.setStatusId(dto.getStatus().toString());
         }
 
+        if (dto.getBlockCodes() != null && !dto.getBlockCodes().isEmpty()) {
+            problemBlockRepo.deleteByProblemId(problemId);
+
+            List<ProblemBlock> problemBlocks = new ArrayList<>();
+            Map<String, List<ModelUpdateContestProblem.BlockCode>> blocksByLanguage =
+                    dto.getBlockCodes().stream()
+                            .collect(Collectors.groupingBy(ModelUpdateContestProblem.BlockCode::getLanguage));
+
+            for (List<ModelUpdateContestProblem.BlockCode> blockCodes : blocksByLanguage.values()) {
+                for (int i = 0; i < blockCodes.size(); i++) {
+                    ModelUpdateContestProblem.BlockCode blockCode = blockCodes.get(i);
+                    ProblemBlock problemBlock = ProblemBlock.builder()
+                            .problemId(problemId)
+                            .seq(i + 1)
+                            .sourceCode(blockCode.getCode())
+                            .programmingLanguage(blockCode.getLanguage())
+                            .completedBy(Integer.valueOf(1).equals(blockCode.getForStudent()) ? 1 : 0)
+                            .build();
+                    problemBlocks.add(problemBlock);
+                }
+            }
+            problemBlockRepo.saveAll(problemBlocks);
+        }
+
         return problemCacheService.saveProblemWithCache(problem);
     }
+
 
     @Transactional(readOnly = true)
     @Override
@@ -337,7 +368,7 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         Map<String, Long> mapProblemToMaxSubmissionPoint = submittedProblems.stream()
-                                                                            .collect(Collectors.toMap(ModelProblemMaxSubmissionPoint::getProblemId, ModelProblemMaxSubmissionPoint::getMaxPoint));
+                .collect(Collectors.toMap(ModelProblemMaxSubmissionPoint::getProblemId, ModelProblemMaxSubmissionPoint::getMaxPoint));
 
         Map<String, Long> mProblem2MaxPoint = calculateMaxPointForProblems(contest, contestId);
 
@@ -346,9 +377,9 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         Map<String, ContestProblem> problemId2ContestProblem = contestProblemRepo
-            .findByContestIdAndProblemIdIn(contestId, problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet()))
-            .stream()
-            .collect(Collectors.toMap(ContestProblem::getProblemId, cp -> cp));
+                .findByContestIdAndProblemIdIn(contestId, problems.stream().map(ProblemEntity::getProblemId).collect(Collectors.toSet()))
+                .stream()
+                .collect(Collectors.toMap(ContestProblem::getProblemId, cp -> cp));
 
         List<ModelStudentOverviewProblem> responses = new ArrayList<>();
 
@@ -564,16 +595,14 @@ public class ProblemServiceImpl implements ProblemService {
 //        if (!hasPermission) {
 //            throw new MiniLeetCodeException("You don't have permission to view this problem", 403);
 //        }
-
         ProblemEntity problemEntity = problemRepo.findByProblemId(problemId);
         if (problemEntity == null) {
             throw new MiniLeetCodeException("Problem not found", 404);
         }
 
         if (problemEntity.isPublicProblem() != true) {
-
             List<UserContestProblemRole> ucpr = userContestProblemRoleRepo
-                .findAllByProblemIdAndUserId(problemEntity.getProblemId(), teacherId);
+                    .findAllByProblemIdAndUserId(problemEntity.getProblemId(), teacherId);
 
             boolean ok = true;
             if (!problemEntity.getCreatedBy().equals(teacherId)) {
@@ -588,7 +617,7 @@ public class ProblemServiceImpl implements ProblemService {
                         }
                     }
                     if (!owner && problemEntity.getStatusId() != null &&
-                        !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
+                            !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
                         ok = false;
                     }
                 }
@@ -598,24 +627,18 @@ public class ProblemServiceImpl implements ProblemService {
                 throw new MiniLeetCodeException("Problem is not open or you do not have permission", 400);
             }
         }
-        /*
-        if (!problemEntity.getUserId().equals(teacherId) &&
-            !problemEntity.getStatusId().equals(ProblemEntity.PROBLEM_STATUS_OPEN)) {
-            throw new MiniLeetCodeException("Problem is not open", 400);
-        }
-        */
 
         ModelCreateContestProblemResponse problemResponse = new ModelCreateContestProblemResponse();
         problemResponse.setProblemId(problemEntity.getProblemId());
         problemResponse.setProblemName(problemEntity.getProblemName());
         problemResponse.setProblemDescription(problemEntity.getProblemDescription());
         problemResponse.setUserId(problemEntity.getCreatedBy());
-//        problemResponse.setTimeLimit(problemEntity.getTimeLimit());
         problemResponse.setTimeLimitCPP(problemEntity.getTimeLimitCPP());
         problemResponse.setTimeLimitJAVA(problemEntity.getTimeLimitJAVA());
         problemResponse.setTimeLimitPYTHON(problemEntity.getTimeLimitPYTHON());
         problemResponse.setMemoryLimit(problemEntity.getMemoryLimit());
         problemResponse.setLevelId(problemEntity.getLevelId());
+        problemResponse.setCategoryId(problemEntity.getCategoryId());
         problemResponse.setCorrectSolutionSourceCode(problemEntity.getCorrectSolutionSourceCode());
         problemResponse.setCorrectSolutionLanguage(problemEntity.getCorrectSolutionLanguage());
         problemResponse.setSolutionCheckerSourceCode(problemEntity.getSolutionCheckerSourceCode());
@@ -631,6 +654,7 @@ public class ProblemServiceImpl implements ProblemService {
         problemResponse.setStatus(problemEntity.getStatusId());
         problemResponse.setSampleTestCase(problemEntity.getSampleTestcase());
 
+        // Xử lý attachment
         if (problemEntity.getAttachment() != null) {
             String[] fileId = problemEntity.getAttachment().split(";", -1);
             if (fileId.length != 0) {
@@ -659,9 +683,55 @@ public class ProblemServiceImpl implements ProblemService {
             problemResponse.setAttachmentNames(null);
         }
 
+        List<ProblemBlock> problemBlocks = problemBlockRepo.findByProblemId(problemId);
+        if (problemBlocks != null && !problemBlocks.isEmpty()) {
+            List<BlockCode> blockCodes = problemBlocks.stream()
+                    .map(this::mapToBlockCode)
+                    .collect(Collectors.toList());
+            problemResponse.setBlockCodes(blockCodes);
+        } else {
+            problemResponse.setBlockCodes(null);
+        }
+
         problemResponse.setRoles(userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, teacherId));
 
+        boolean canEditBlocks = checkCanEditBlocks(problemId);
+        problemResponse.setCanEditBlocks(canEditBlocks);
+
         return problemResponse;
+    }
+
+
+    private BlockCode mapToBlockCode(ProblemBlock block) {
+        BlockCode blockCode = new BlockCode();
+        blockCode.setId(String.valueOf(block.getId()));
+        blockCode.setCode(block.getSourceCode());
+        blockCode.setForStudent(block.getCompletedBy());
+        blockCode.setSeq(block.getSeq());
+        blockCode.setLanguage(block.getProgrammingLanguage());
+        return blockCode;
+    }
+
+    private boolean checkCanEditBlocks(String problemId) {
+        List<ContestProblem> contestProblems = contestProblemRepo.findAllByProblemId(problemId);
+
+        if (contestProblems.isEmpty()) {
+            return true;
+        }
+
+        for (ContestProblem cp : contestProblems) {
+            ContestEntity contest = contestRepo.findContestByContestId(cp.getContestId());
+            if (contest != null &&
+                    !ContestEntity.CONTEST_STATUS_COMPLETED.equals(contest.getStatusId()) &&
+                    !ContestEntity.CONTEST_STATUS_CLOSED.equals(contest.getStatusId()) &&
+                    !ContestEntity.CONTEST_STATUS_DISABLED.equals(contest.getStatusId())) {
+                return false;
+            }
+        }
+
+        boolean hasSubmissions = contestSubmissionRepo.existsByProblemId(problemId);
+
+        return !hasSubmissions;
     }
 
     @Transactional
