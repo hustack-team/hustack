@@ -12,6 +12,9 @@ public interface ContestRepo extends JpaRepository<ContestEntity, String> {
 
     ContestEntity findContestByContestId(String contestId);
 
+    @Query("select c.statusId from ContestEntity c where c.contestId = ?1")
+    String findContestStatusById(String contestId);
+
     List<ContestEntity> findByContestIdInAndStatusIdNot(Set<String> ids, String statusId);
 
     @Modifying

@@ -83,6 +83,10 @@ public class ContestProblemPermissionUtil {
     ) {
         checkContestAccess(userId, contestId);
         checkProblemInContest(contestId, problemId);
+
+        if (ContestEntity.CONTEST_STATUS_OPEN.equals(contestRepo.findContestStatusById(contestId))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Problem access not allowed when contest is OPEN");
+        }
     }
 
     public void checkUserHasAnyRoleInContest(String userId, String contestId, Set<String> requiredRoles) {
