@@ -2,7 +2,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import {Box, Chip, LinearProgress, Paper, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {useTranslation} from "react-i18next";
-import {Link, useParams} from "react-router-dom";
+import {Link, useHistory, useParams} from "react-router-dom";
 import {localeOption} from "utils/NumberFormat";
 import {request} from "../../../api";
 import StandardTable from "../../table/StandardTable";
@@ -14,6 +14,7 @@ import {MTableToolbar} from "material-table";
 export default function StudentViewProblemList() {
   const {t} = useTranslation(["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
   const levels = getLevels(t);
+  const history = useHistory();
 
   const {contestId} = useParams();
   const [problems, setProblems] = useState([]);
@@ -138,12 +139,16 @@ export default function StudentViewProblemList() {
         );
         setTotalSubmittedPoints(totalSubmitted);
         setTotalMaxPoints(totalMax);
-        setLoading(false); // Tắt loading sau khi đã tính toán xong dữ liệu
+        setLoading(false);
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error"), 3000);
-          setLoading(false); // Tắt loading khi có lỗi
+          if (e.response && e.response.status === 403) {
+            history.push("/programming-contest/student-list-contest-registered");
+          } else {
+            errorNoti(t("common:error"), 3000);
+          }
+          setLoading(false);
         }
       }
     );

@@ -132,7 +132,7 @@ function EditProblem() {
     console.log('handleDeleteImageAttachment called with fileId:', fileId);
     const fileToDelete = fetchedImageArray.find(file => file.id === fileId);
     console.log('fileToDelete:', fileToDelete);
-    
+
     // Only handle existing files from API
     if (fileToDelete) {
       setFetchedImageArray(
@@ -319,7 +319,9 @@ function EditProblem() {
       {
         onError: (e) => {
           setLoading(false);
-          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
+          if (!(e.response && e.response.status === 403)) {
+            errorNoti(t("common:error"), 3000);
+          }
         },
       },
       formData,
@@ -1072,18 +1074,18 @@ function EditProblem() {
         )}
 
         {/* File Attachments */}
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{mt: 2}}>
           <Typography variant="body1" sx={{mb: 1, fontWeight: 500}}>
             Tệp đính kèm
           </Typography>
-          <HustDropzoneArea 
+          <HustDropzoneArea
             hideTitle={true}
             showPreviews={true}
             showPreviewsInDropzone={false}
             useChipsForPreview={true}
             onChangeAttachment={(files) => handleAttachmentFiles(files)}
           />
-          
+
           {/* Display existing files from API */}
           {fetchedImageArray.length > 0 && (
             <Stack spacing={0.5} sx={{mt: 1}}>
