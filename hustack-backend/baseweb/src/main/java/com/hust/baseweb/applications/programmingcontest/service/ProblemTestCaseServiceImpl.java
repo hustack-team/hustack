@@ -9,6 +9,7 @@ import com.hust.baseweb.applications.programmingcontest.model.externalapi.Contes
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
+import com.hust.baseweb.applications.programmingcontest.utils.ContestProblemPermissionUtil;
 import com.hust.baseweb.applications.programmingcontest.utils.DateTimeUtils;
 import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritycheckingalgorithms.CodeSimilarityCheck;
 import com.hust.baseweb.entity.UserLogin;
@@ -107,6 +108,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     Judge0Service judge0Service;
 
     Judge0Utils judge0Utils;
+
+    ContestProblemPermissionUtil contestProblemPermissionUtil;
 
     private float getTimeLimitByLanguage(ProblemEntity problem, String language) {
         float timeLimit;
@@ -1829,6 +1832,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         String contestId
     ) {
         //log.info("findContestSubmissionByUserLoginIdAndContestIdPaging, user = " + userLoginId + " contestId = " + contestId);
+
+        contestProblemPermissionUtil.checkContestAccess(userLoginId, contestId);
+        ContestEntity contest = contestRepo.findContestByContestId(contestId);
+        if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+            return Page.empty(pageable);
+        }
+        
         return contestSubmissionPagingAndSortingRepo.findAllByUserIdAndContestId(pageable, userLoginId, contestId)
                                                     .map(contestSubmissionEntity -> ContestSubmission
                                                         .builder()
@@ -1858,7 +1868,13 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         String problemId
     ) {
         //log.info("findContestSubmissionByUserLoginIdAndContestIdPaging, user = " + userLoginId + " contestId = " + contestId);
+
+        contestProblemPermissionUtil.checkContestAccess(userLoginId, contestId);
         ContestEntity contest = contestRepo.findContestByContestId(contestId);
+        if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+            return Page.empty(pageable);
+        }
+        
         Integer allowParticipantPinSubmission = contest != null ? contest.getAllowParticipantPinSubmission() : 0;
         return contestSubmissionPagingAndSortingRepo
             .findAllByUserIdAndContestIdAndProblemId(pageable, userLoginId, contestId, problemId)

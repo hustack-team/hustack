@@ -959,6 +959,10 @@ public class ProblemServiceImpl implements ProblemService {
             problemId);
 
         ContestEntity contest = contestRepo.findContestByContestId(contestId);
+        if (ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+            return null;
+        }
+        
         ContestProblem contestProblem = contestProblemRepo.findByContestIdAndProblemId(contestId, problemId);
         ModelCreateContestProblemResponse problemDetail = getProblemDetail(problemId);
         ProblemDetailForParticipantDTO response = new ProblemDetailForParticipantDTO();
@@ -987,6 +991,10 @@ public class ProblemServiceImpl implements ProblemService {
     public List<ModelStudentOverviewProblem> getListProblemsInContestForParticipant(String userId, String contestId) {
         contestProblemPermissionUtil.checkContestAccess(userId, contestId);
         ContestEntity contest = contestService.findContest(contestId);
+        if (ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
+            return new ArrayList<>();
+        }
+        
         List<ProblemEntity> problems = contest.getProblems();
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsInContestOfUser(contestId, userId);
 
