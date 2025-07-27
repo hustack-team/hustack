@@ -64,15 +64,4 @@ public class ModelUpdateContestProblem {
     int forStudent;
 
     List<BlockCode> blockCodes;
-
-    @Data
-    @ToString
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class BlockCode {
-        String id;
-        String code;
-        int forStudent;
-        int seq;
-        String language;
-    }
 }

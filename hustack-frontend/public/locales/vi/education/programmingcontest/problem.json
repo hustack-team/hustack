@@ -47,16 +47,14 @@
   "viewProblem": "Xem thông tin Bài tập",
   "validateSubmit": {
     "warningCheckSolutionCompile": "Bạn chưa hoàn thành bước \"Biên dịch\"",
-    "missingField": "Trường {{fieldName}} không được bỏ trống"
+    "missingField": "Trường {{fieldName}} không được bỏ trống",
+    "noBlockCodesAdded": "Chưa có khối mã nào được thêm. Vui lòng thêm ít nhất một khối mã cho bài tập dạng khối."
   },
   "generalInfo": "Thông tin chung",
   "problemBlock": "Bài tập ghép khối",
   "addProblemBlock": "Thêm khối mã",
   "listProblemBlock": "Danh sách khối mã",
   "blocks": "Khối thứ ",
-  "noBlockCodes": "Không có khối mã",
-  "forTeacher": "Dành cho giáo viên",
-  "forStudent": "Dành cho sinh viên",
   "forStudentBlock": "Khối mã dành cho sinh viên",
   "forTeacherBlock": "Khối mã dành cho giáo viên",
   "manageRole": "Phân quyền",

@@ -1,29 +1,19 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hust.baseweb.applications.contentmanager.model.ContentHeaderModel;
-import com.hust.baseweb.applications.contentmanager.model.ContentModel;
-import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
-import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputStreamUtils;
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.service.helper.cache.ProblemTestCaseServiceCache;
 import com.hust.baseweb.applications.programmingcontest.utils.ComputerLanguage;
 import com.hust.baseweb.applications.programmingcontest.utils.DateTimeUtils;
 import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritycheckingalgorithms.CodeSimilarityCheck;
 import com.hust.baseweb.entity.UserLogin;
-import com.hust.baseweb.model.ProblemFilter;
-import com.hust.baseweb.model.ProblemProjection;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.model.TestCaseFilter;
-import com.hust.baseweb.model.dto.ProblemDTO;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
@@ -32,32 +22,20 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.model.enums.CompressionMethod;
-import net.lingala.zip4j.model.enums.EncryptionMethod;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import vn.edu.hust.soict.judge0client.config.Judge0Config;
 import vn.edu.hust.soict.judge0client.entity.Judge0Submission;
 import vn.edu.hust.soict.judge0client.service.Judge0Service;
 import vn.edu.hust.soict.judge0client.utils.Judge0Utils;
 
-import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,16 +55,14 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     public static final Integer MAX_SUBMISSIONS_CHECK_SIMILARITY = 1000;
 
     ProblemRepo problemRepo;
+
     TeacherGroupRelationRepository teacherGroupRelationRepository;
-    ProblemTestCaseServiceCache problemTestCaseServiceCache;
 
     TestCaseRepo testCaseRepo;
 
     UserLoginRepo userLoginRepo;
 
     ContestRepo contestRepo;
-
-    Constants constants;
 
     ContestPagingAndSortingRepo contestPagingAndSortingRepo;
 
@@ -116,10 +92,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     TagRepo tagRepo;
 
-    MongoContentService mongoContentService;
-
-    ProblemCacheService problemCacheService;
-
     ContestService contestService;
 
     TestCaseService testCaseService;
@@ -128,17 +100,11 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     ProblemTestCaseServiceCache cacheService;
 
-    ContestProblemExportService exporter;
-
     ContestUserParticipantGroupRepo contestUserParticipantGroupRepo;
 
     UserRegistrationContestService userRegistrationContestService;
 
     Judge0Service judge0Service;
-
-    ProblemTagRepo problemTagRepo;
-
-    ObjectMapper objectMapper;
 
     Judge0Utils judge0Utils;
 
@@ -237,7 +203,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 throw new Exception("Language not supported");
         }
 
-        // Thực tế chỉ cần biên dịch, không cần chạy nên thiết lập giới hạn thời gian đủ nhỏ
+        // Actually only need to compile, not run, so set time limit small enough
         String sourceCode = modelCheckCompile.getSource();
         Judge0Config.ServerConfig serverConfig = judge0Utils.getServerConfig(languageId, sourceCode);
         Judge0Submission submission = Judge0Submission.builder()
@@ -465,7 +431,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         log.info("updateContest, languages = " + modelUpdateContest.getLanguagesAllowed());
         List<UserRegistrationContestEntity> L = userRegistrationContestRepo
-            .findUserRegistrationContestEntityByContestIdAndUserIdAndStatus(
+            .findByContestIdAndUserIdAndStatus(
                 contestId,
                 userName,
                 UserRegistrationContestEntity.STATUS_SUCCESSFUL);
@@ -579,7 +545,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     @Override
     public ModelGetContestDetailResponse getContestDetailByContestIdAndTeacher(String contestId, String userName) {
         List<UserRegistrationContestEntity> lc = userRegistrationContestRepo
-            .findUserRegistrationContestEntityByContestIdAndUserIdAndStatus(
+            .findByContestIdAndUserIdAndStatus(
                 contestId,
                 userName,
                 Constants.RegistrationType.SUCCESSFUL.getValue());
@@ -1468,7 +1434,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                         problemIds.add(cp.getProblemId());
 
                         double coefficient = 1.0;
-                        if (contest.getCanEditCoefficientPoint() != null && Integer.valueOf(1).equals(contest.getCanEditCoefficientPoint())) {
+                        if (contest.getCanEditCoefficientPoint() != null
+                            && Integer.valueOf(1).equals(contest.getCanEditCoefficientPoint())) {
                             coefficient = cp.getCoefficientPoint() != null ? cp.getCoefficientPoint() : 1.0;
                         }
 
@@ -1524,7 +1491,8 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
             List<ModelSubmissionInfoRanking> submissionsByUser = new ArrayList<>();
 
-            boolean allowPinSubmission = contest != null && Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission());
+            boolean allowPinSubmission = contest != null &&
+                                         Integer.valueOf(1).equals(contest.getAllowParticipantPinSubmission());
 
             switch (getPointForRankingType) {
                 case HIGHEST:
@@ -2604,7 +2572,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 //                                                      .wallTimeLimit((float) (timeLimit * 1.0 + 10.0))
 //                                                      .memoryLimit((float) memoryLimit * 1024)
 //                                                      .stackLimit(judge0Config.getSubmission().getMaxStackLimit())
-//                                                      .maxProcessesAndOrThreads(2 + (languageId != 62 ? 0 : judge0Config.getSubmission().getJavaMaxProcessesAndOrThreadsExtra())) // OK, chấm output thì không cần đa luồng, trừ Java
+//                                                      .maxProcessesAndOrThreads(2 + (languageId != 62 ? 0 : judge0Config.getSubmission().getJavaMaxProcessesAndOrThreadsExtra())) // OK, for output checking no need multi-threading, except Java
 //                                                      .enablePerProcessAndThreadTimeLimit(false)
 //                                                      .enablePerProcessAndThreadMemoryLimit(false)
 //                                                      .maxFileSize(judge0Config.getSubmission().getMaxMaxFileSize())
@@ -2711,7 +2679,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                 compilerOptions = "-std=c++17 -w -O2 -lm -fmax-errors=3 -march=native -s -Wl,-z,stack-size=268435456";
                 break;
             case JAVA:
-                languageId = 62; // Xem xét JAVA_OPTS giới hạn bộ nhớ nhưng có vẻ không cần thiết lắm với Judge0
+                languageId = 62; // Consider JAVA_OPTS memory limit but seems not necessary with Judge0
                 break;
             case PYTHON3:
                 languageId = 71;
@@ -3083,8 +3051,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return Judge0Submission.getSubmissionDetailsAfterExecution(output);
     }
 
-
-
     private void updateMaxPoint(
         ContestSubmissionEntity s,
         HashMap<String, List<ModelUserJudgedProblemSubmissionResponse>> mUserId2Submission,
@@ -3171,7 +3137,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
     @Override
     public ModelGetRolesOfUserInContestResponse getRolesOfUserInContest(String userId, String contestId) {
         List<UserRegistrationContestEntity> lst = userRegistrationContestRepo
-            .findUserRegistrationContestEntityByContestIdAndUserIdAndStatus(
+            .findByContestIdAndUserIdAndStatus(
                 contestId,
                 userId,
                 UserRegistrationContestEntity.STATUS_SUCCESSFUL);
@@ -3259,8 +3225,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return false;
     }
 
-
-
     @Override
     public List<TagEntity> getAllTags() {
         return tagRepo.findAll(Sort.by(Sort.Direction.ASC, "name"));
@@ -3311,14 +3275,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         cacheService.flushAllCache();
     }
 
-
-
-
-
-
-
-
-
     @Override
     public List<ContestProblemModelResponse> extApiGetAllProblems(String userID) {
         List<ProblemEntity> problems = problemRepo.findAll();
@@ -3329,8 +3285,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         }
         return res;
     }
-
-
 
     @Override
     public ModelGetContestPageResponse getAllPublicContests() {
@@ -3357,9 +3311,4 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
                                           .count(count)
                                           .build();
     }
-
-
-
-
-
 }

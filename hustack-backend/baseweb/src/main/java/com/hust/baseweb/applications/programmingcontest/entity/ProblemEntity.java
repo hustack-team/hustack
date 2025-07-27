@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -22,10 +23,13 @@ import java.util.List;
 @Table(name = "contest_problem_new")
 @EntityListeners(AuditingEntityListener.class)
 public class ProblemEntity implements Serializable {
+
     private static final long serialVersionUID = 3487495895819800L;
+
     public static final String PROBLEM_STATUS_OPEN = "OPEN";
+
     public static final String PROBLEM_STATUS_HIDDEN = "HIDDEN";
-    public static final String PROBLEM_CATEGORY_MULTI_BLOCK = "MULTI_BLOCK";
+
     @Id
     @Column(name = "problem_id")
     private String problemId;
@@ -118,6 +122,10 @@ public class ProblemEntity implements Serializable {
     @CreatedDate
     @Column(name = "created_stamp")
     private Date createdAt;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    String lastModifiedBy;
 
     @LastModifiedDate
     private Date lastUpdatedStamp;

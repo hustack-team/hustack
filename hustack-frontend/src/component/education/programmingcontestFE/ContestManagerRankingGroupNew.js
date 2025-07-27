@@ -1,10 +1,10 @@
-import { Box, LinearProgress } from "@mui/material";
+import {Box, LinearProgress} from "@mui/material";
 import Button from "@mui/material/Button";
-import { useEffect, useState } from "react";
-import { localeOption } from "utils/NumberFormat";
+import {useEffect, useState} from "react";
+import {localeOption} from "utils/NumberFormat";
 import XLSX from "xlsx";
-import { request } from "../../../api";
-import { successNoti } from "../../../utils/notification";
+import {request} from "../../../api";
+import {successNoti} from "../../../utils/notification";
 import HustContainerCard from "../../common/HustContainerCard";
 import StandardTable from "../../table/StandardTable";
 
@@ -23,7 +23,7 @@ export default function ContestManagerRankingGroupNew(props) {
           contestId +
           "/ranking"
       )
-      .then(() => successNoti("URL copied to clipboard", 1000));
+              .then(() => successNoti(t("common:urlCopiedToClipboard"), 1000));
   };
   const downloadHandler = (event) => {
     if (ranking.length === 0) {

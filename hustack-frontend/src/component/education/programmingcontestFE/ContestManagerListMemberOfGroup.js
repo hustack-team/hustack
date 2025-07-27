@@ -1,11 +1,11 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { Button, IconButton, LinearProgress } from "@mui/material";
+import {Button, IconButton, LinearProgress} from "@mui/material";
 import StandardTable from "component/table/StandardTable";
-import { useEffect, useState } from "react";
-import { toFormattedDateTime } from "utils/dateutils";
-import { errorNoti, successNoti } from "utils/notification";
-import { request } from "../../../api";
+import {useEffect, useState} from "react";
+import {toFormattedDateTime} from "utils/dateutils";
+import {errorNoti, successNoti} from "utils/notification";
+import {request} from "../../../api";
 import HustContainerCard from "../../common/HustContainerCard";
 import UpdatePermissionMemberOfContestDialog from "./UpdatePermissionMemberOfContestDialog";
 import UploadUserToContestGroupDialog from "./UploadUserToContestGroupDialog";
@@ -69,14 +69,14 @@ export default function ContestManagerListMemberOfGroup(props) {
       "delete",
       "/contests/group/members",
       (res) => {
-        successNoti("Participant removed successfully");
+        successNoti(t("common:participantRemovedSuccessfully"));
         setIsProcessing(false);
         getMembersOfContest();
       },
       {
         onError: () => {
           setIsProcessing(false);
-          errorNoti("An error happened");
+          errorNoti(t("common:error"));
         },
         401: () => {},
       },
@@ -112,7 +112,7 @@ export default function ContestManagerListMemberOfGroup(props) {
       "put",
       "/contests/permissions",
       (res) => {
-        successNoti("Updated Successfully");
+        successNoti(t("common:updatedSuccessfully"));
         setIsProcessing(false);
         setOpenUpdateMemberDialog(false);
         getMembersOfContest();
@@ -120,7 +120,7 @@ export default function ContestManagerListMemberOfGroup(props) {
       {
         onError: () => {
           setIsProcessing(false);
-          errorNoti("An error happened");
+          errorNoti(t("common:error"));
         },
         401: () => {},
       },

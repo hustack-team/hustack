@@ -47,16 +47,14 @@
   "viewProblem": "View Problem information",
   "validateSubmit": {
     "warningCheckSolutionCompile": "You have not completed the \"Compilation\" step",
-    "missingField": "Missing required field: {{fieldName}}"
+    "missingField": "Missing required field: {{fieldName}}",
+    "noBlockCodesAdded": "No block codes have been added. Please add at least one block code for block-based problems."
   },
   "generalInfo": "General information",
   "problemBlock": "Block Problems",
   "listProblemBlock": "List Block codes",
   "addProblemBlock": "Add Block code",
   "blocks": "Block ",
-  "noBlockCodes": "No block code available",
-  "forTeacher": "For Teacher",
-  "forStudent": "For Student",
   "forStudentBlock": "Block for Student ",
   "forTeacherBlock": "Block for Teacher ",
   "manageRole": "Manage Role",

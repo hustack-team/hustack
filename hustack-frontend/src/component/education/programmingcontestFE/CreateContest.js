@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import DateFnsUtils from "@date-io/date-fns";
-import { MuiPickersUtilsProvider } from "@material-ui/pickers";
-import { LoadingButton } from "@mui/lab";
-import { Grid, InputAdornment } from "@mui/material";
+import {MuiPickersUtilsProvider} from "@material-ui/pickers";
+import {LoadingButton} from "@mui/lab";
+import {Grid, InputAdornment} from "@mui/material";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
-import { request } from "api";
+import {request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import { useHistory } from "react-router-dom";
-import { errorNoti, successNoti } from "utils/notification";
+import {useHistory} from "react-router-dom";
+import {errorNoti, successNoti} from "utils/notification";
 import HustContainerCard from "../../common/HustContainerCard";
-import { sleep } from "./lib";
+import {sleep} from "./lib";
 
 function CreateContest(props) {
   const history = useHistory();
@@ -49,7 +49,7 @@ function CreateContest(props) {
       "post",
       "/contests",
       (res) => {
-        successNoti("Contest created successfully");
+        successNoti(t("common:contestCreatedSuccessfully"));
         sleep(1000).then(() => {
           history.push("/programming-contest/contest-manager/" + res.data.contestId);
         });

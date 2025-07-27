@@ -19,9 +19,6 @@ public interface ProblemRepo extends JpaRepository<ProblemEntity, String>, JpaSp
     @Query("SELECT p FROM ProblemEntity p LEFT JOIN FETCH p.tags WHERE p.problemId = (:problemId)")
     ProblemEntity findByProblemIdWithTagFetched(@Param("problemId") String problemId);
 
-    @Query("select p from ProblemEntity p where p.problemId in :problemIds")
-    List<ProblemEntity> getAllProblemWithArray(@Param("problemIds") List<String> problemIds);
-
     // @Query(
     //     nativeQuery = true,
     //     value = 
@@ -31,6 +28,7 @@ public interface ProblemRepo extends JpaRepository<ProblemEntity, String>, JpaSp
            + "p.problemId, p.problemName, p.levelId, p.problemDescription"
            + ") from ProblemEntity p")
     List<ModelProblemGeneralInfo> getAllProblemGeneralInformation();
+
     @Query("select new com.hust.baseweb.applications.programmingcontest.model.ModelProblemGeneralInfo("
            + "p.problemId, p.problemName, p.levelId, p.problemDescription"
            + ") from ProblemEntity p where p.statusId = 'OPEN'")
@@ -39,6 +37,8 @@ public interface ProblemRepo extends JpaRepository<ProblemEntity, String>, JpaSp
     boolean existsByProblemId(String problemId);
 
     boolean existsByProblemName(String problemName);
+
+    boolean existsByProblemIdOrProblemName(String problemId, String problemName);
 
     @Query(value = "with filteredProblemIds as (select   " +
                    "    distinct p.problem_id  " +

@@ -1,110 +1,73 @@
-import { makeStyles } from "@material-ui/core/styles";
-import { LoadingButton } from "@mui/lab";
+import {LoadingButton} from "@mui/lab";
 import {
   Box,
   Checkbox,
+  Collapse,
   FormControlLabel,
   Grid,
+  IconButton,
   InputAdornment,
   Stack,
   TextField,
+  Tooltip,
   Typography,
-  Tabs,
-  Tab,
-  Button,
-  IconButton,
-  Collapse,
 } from "@mui/material";
-import { extractErrorMessage, request } from "api";
+import {debounce} from "lodash";
+import {extractErrorMessage, request, saveFile} from "../../../api";
 import withScreenSecurity from "component/withScreenSecurity";
-import React, { useEffect, useState, useCallback } from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import {useTranslation} from "react-i18next";
+import {useParams} from "react-router";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import { randomImageName } from "utils/FileUpload/covert";
-import { errorNoti, successNoti } from "utils/notification";
-import HustCodeEditor from "../../common/HustCodeEditor";
 import HustDropzoneArea from "../../common/HustDropzoneArea";
+import {errorNoti, successNoti} from "utils/notification";
+import HustCodeEditor from "../../common/HustCodeEditor";
+import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import { CompileStatus } from "./CompileStatus";
-import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, NORMAL_EVALUATION } from "./Constant";
+import {CompileStatus} from "./CompileStatus";
+import {
+  COMPUTER_LANGUAGES,
+  CUSTOM_EVALUATION,
+  mapLanguageToCodeBlockLanguage,
+  mapLanguageToDisplayName,
+  NORMAL_EVALUATION
+} from "./Constant";
 import ListTestCase from "./ListTestCase";
 import ModelAddNewTag from "./ModelAddNewTag";
-import { getAllTags } from "./service/TagService";
+import {getAllTags} from "./service/TagService";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import { useHistory } from "react-router-dom";
+import {useHistory} from "react-router-dom";
 import StyledSelect from "../../select/StyledSelect";
-import { getLevels, getPublicOptions, getStatuses } from "./CreateProblem";
+import {getLevels, getPublicOptions, getStatuses} from "./CreateProblem";
 import FilterByTag from "../../table/FilterByTag";
 import TertiaryButton from "../../button/TertiaryButton";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-
-const useStyles = makeStyles((theme) => ({
-  description: {
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(3),
-  },
-  blockCodeContainer: {
-    display: "flex",
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-  codeEditorWrapper: {
-    width: "75%",
-  },
-  blockCodeControls: {
-    width: "25%",
-    paddingLeft: theme.spacing(1),
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    gap: theme.spacing(1),
-  },
-  disabledBlock: {
-    opacity: 0.6,
-    pointerEvents: "none",
-  },
-  controlButtons: {
-    display: "flex",
-    gap: theme.spacing(0.5),
-  },
-  expandIcon: {
-    transition: theme.transitions.create('transform', {
-      duration: theme.transitions.duration.shortest,
-    }),
-  },
-  expandIconOpen: {
-    transform: 'rotate(180deg)',
-  },
-}));
+import {v4 as uuidv4} from 'uuid';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import {AntTab, AntTabs} from "component/tab";
+import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
+import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
+import ArticleRoundedIcon from '@mui/icons-material/ArticleRounded';
+import {dracula, github} from 'react-code-blocks';
+import {grey} from '@mui/material/colors';
+import RotatingIconButton from "../../common/RotatingIconButton";
 
 const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
   label: key,
   value: COMPUTER_LANGUAGES[key],
 }));
 
-// Custom debounce function
-const debounce = (func, wait) => {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
 
 function EditProblem() {
   const history = useHistory();
-  const { problemId } = useParams();
-  const classes = useStyles();
-  const { t } = useTranslation([
+  const {problemId} = useParams();
+  const {t} = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
@@ -134,22 +97,25 @@ function EditProblem() {
   const [compileMessage, setCompileMessage] = useState("");
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [dropzoneFiles, setDropzoneFiles] = useState([]);
   const [removedFilesId, setRemovedFileIds] = useState([]);
   const [status, setStatus] = useState('');
   const [isOwner, setIsOwner] = useState(false);
   const [sampleTestCase, setSampleTestCase] = useState(null);
   const [problem, setProblem] = useState({});
-  const [canEditBlocks, setCanEditBlocks] = useState(false);
+  const [canEditBlocks, setCanEditBlocks] = useState(undefined);
   const [loading, setLoading] = useState(false);
   const [openModalAddNewTag, setOpenModalAddNewTag] = useState(false);
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState(
-    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
+    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({value}) => [value, []]))
   );
   const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [isBlockCodesExpanded, setIsBlockCodesExpanded] = useState(false);
+  const [rotationCount, setRotationCount] = useState(0);
+  const [blockDisplayMode, setBlockDisplayMode] = useState("individual");
 
   const handleGetTagsSuccess = (res) => setTags(res.data);
 
@@ -158,14 +124,39 @@ function EditProblem() {
   };
 
   const handleAttachmentFiles = (files) => {
+    console.log('handleAttachmentFiles called with:', files);
     setAttachmentFiles(files);
   };
 
   const handleDeleteImageAttachment = async (fileId) => {
-    setFetchedImageArray(
-      fetchedImageArray.filter((file) => file.fileName !== fileId)
+    console.log('handleDeleteImageAttachment called with fileId:', fileId);
+    const fileToDelete = fetchedImageArray.find(file => file.id === fileId);
+    console.log('fileToDelete:', fileToDelete);
+    
+    // Only handle existing files from API
+    if (fileToDelete) {
+      setFetchedImageArray(
+        fetchedImageArray.filter((file) => file.id !== fileId)
+      );
+      setRemovedFileIds([...removedFilesId, fileToDelete.id]); // Gửi fileId thay vì fileName
+    }
+  };
+
+  const handleDownloadFile = (file) => {
+    request(
+      "GET",
+      `/problems/${problemId}/attachments/${file.id}`,
+      (res) => {
+        const fileName = file.fileName || file.id;
+        saveFile(fileName, res.data);
+      },
+      {
+        403: () => errorNoti(t('common:noPermissionToDownload')),
+        onError: () => errorNoti(t('common:error')),
+      },
+      null,
+      {responseType: "blob"}
     );
-    setRemovedFileIds([...removedFilesId, fileId]);
   };
 
   const checkCompile = () => {
@@ -198,13 +189,13 @@ function EditProblem() {
   const validateSubmit = () => {
     if (problemName === "") {
       errorNoti(
-        t("validation:missingField", { fieldName: t("problemName") }),
+        t("validation:missingField", {fieldName: t("problemName")}),
         3000
       );
       return false;
     }
     if (timeLimitCPP < 1 || timeLimitJAVA < 1 || timeLimitPYTHON < 1 ||
-        timeLimitCPP > 300 || timeLimitJAVA > 300 || timeLimitPYTHON > 300) {
+      timeLimitCPP > 300 || timeLimitJAVA > 300 || timeLimitPYTHON > 300) {
       errorNoti(
         t("validation:numberBetween", {
           fieldName: t("timeLimit"),
@@ -231,7 +222,7 @@ function EditProblem() {
       return false;
     }
     if (isProblemBlock && Object.values(blockCodes).every((blocks) => blocks.length === 0)) {
-      errorNoti(t("validateSubmit.noBlockCodesAdded"), 5000);
+      errorNoti(t("common:noBlockCodesAdded"), 5000);
       return false;
     }
     return true;
@@ -240,11 +231,14 @@ function EditProblem() {
   const handleCopyAllCode = async () => {
     const blocks = blockCodes[selectedLanguage] || [];
     if (blocks.length === 0) {
-      errorNoti(t("noBlockCodesToCopy"), 3000);
+      errorNoti(t("common:noBlockCodesToCopy"), 3000);
       return;
     }
-    const allCode = blocks.map(block => block.code).join('\n\n');
-    await navigator.clipboard.writeText(allCode);
+    const allCode = blocks.map(block => block.code).join('\n');
+    await navigator.clipboard.writeText(allCode).then(() => {
+      successNoti(t('common:copySuccess'), 2000);
+    });
+    ;
   };
 
   function handleSubmit() {
@@ -253,27 +247,13 @@ function EditProblem() {
     setLoading(true);
     const tagIds = selectedTags.map((tag) => tag.tagId);
 
-    let fileId = [];
-    if (attachmentFiles.length > 0) {
-      fileId = attachmentFiles.map((file) => {
-        if (typeof file.name !== "undefined") {
-          return file.name;
-        }
-        if (typeof file.fileName !== "undefined") {
-          return file.fileName;
-        }
-        return file.id;
-      });
-    }
-
     let formattedBlockCodes = [];
     if (isProblemBlock) {
       formattedBlockCodes = Object.keys(blockCodes)
         .filter((language) => blockCodes[language].length > 0)
         .flatMap((language) =>
           blockCodes[language].map((block
-
-, index) => ({
+            , index) => ({
             id: block.id || `${language}_${index}`,
             code: block.code,
             forStudent: block.forStudent ? 1 : 0,
@@ -282,6 +262,12 @@ function EditProblem() {
           }))
         );
     }
+
+    // Get new files (without id) and removed file ids
+    const newFiles = attachmentFiles;
+    const removedFileIds = removedFilesId;
+    // Backend sẽ tự động tạo unique filename, không cần UUID ở frontend
+    const fileIds = newFiles.map((file) => file.name);
 
     const body = {
       problemName: problemName,
@@ -299,20 +285,20 @@ function EditProblem() {
       solutionChecker: solutionChecker,
       solutionCheckerLanguage: solutionCheckerLanguage,
       isPublic: isPublic === 'Y',
-      fileId: fileId,
-      removedFilesId: removedFilesId,
+      removedFilesId: removedFileIds,
+      fileId: fileIds, // Add fileId array
       scoreEvaluationType: isCustomEvaluated ? CUSTOM_EVALUATION : NORMAL_EVALUATION,
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
-      categoryId: isProblemBlock ? 1 : 0, 
-      blockCodes: isProblemBlock ? formattedBlockCodes : [], 
+      categoryId: isProblemBlock ? 1 : 0,
+      blockCodes: isProblemBlock ? formattedBlockCodes : [],
     };
 
     const formData = new FormData();
-    formData.append("dto", new Blob([JSON.stringify(body)], { type: 'application/json' }));
+    formData.append("dto", new Blob([JSON.stringify(body)], {type: 'application/json'}));
 
-    for (const file of attachmentFiles) {
+    for (const file of newFiles) {
       formData.append("files", file);
     }
 
@@ -327,7 +313,7 @@ function EditProblem() {
       "/problems/" + problemId,
       (res) => {
         setLoading(false);
-        successNoti(t("common:editSuccess", { name: t("problem") }), 3000);
+        successNoti(t("common:editSuccess", {name: t("problem")}), 3000);
         history.push("/programming-contest/manager-view-problem-detail/" + problemId);
       },
       {
@@ -355,7 +341,7 @@ function EditProblem() {
 
   const handleDeleteBlock = (index) => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     setBlockCodes((prev) => ({
@@ -366,7 +352,7 @@ function EditProblem() {
 
   const handleMoveUp = useCallback((index) => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     if (index === 0) return;
@@ -375,15 +361,15 @@ function EditProblem() {
       [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
       const updatedBlocks = newBlocks.map((block, i) => ({
         ...block,
-        seq: i + 1, 
+        seq: i + 1,
       }));
-      return { ...prev, [selectedLanguage]: updatedBlocks };
+      return {...prev, [selectedLanguage]: updatedBlocks};
     });
   }, [canEditBlocks, selectedLanguage]);
 
   const handleMoveDown = useCallback((index) => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     if (index === blockCodes[selectedLanguage].length - 1) return;
@@ -392,58 +378,62 @@ function EditProblem() {
       [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
       const updatedBlocks = newBlocks.map((block, i) => ({
         ...block,
-        seq: i + 1, 
+        seq: i + 1,
       }));
-      return { ...prev, [selectedLanguage]: updatedBlocks };
+      return {...prev, [selectedLanguage]: updatedBlocks};
     });
   }, [canEditBlocks, selectedLanguage, blockCodes]);
 
-  const debouncedMoveUp = useCallback(debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
-  const debouncedMoveDown = useCallback(debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
+  // Create stable debounced functions
+  const debouncedMoveUp = useMemo(() => debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
+  const debouncedMoveDown = useMemo(() => debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
+  const debouncedSolutionCodeChange = useMemo(() => debounce((code) => setCodeSolution(code), 300), []);
+  const debouncedPreloadCodeChange = useMemo(() => debounce((code) => setPreloadCode(code), 300), []);
+  const debouncedCheckerCodeChange = useMemo(() => debounce((code) => setSolutionChecker(code), 300), []);
 
   const handleInsertAbove = (index) => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
       newBlocks.splice(index, 0, {
-        code: "// Write your code here",
+        code: null,
         forStudent: 0,
         seq: index,
         id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
       });
       return {
         ...prev,
-        [selectedLanguage]: newBlocks.map((block, i) => ({ ...block, seq: i + 1 })),
+        [selectedLanguage]: newBlocks.map((block, i) => ({...block, seq: i + 1})),
       };
     });
   };
 
   const handleInsertBelow = (index) => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
       newBlocks.splice(index + 1, 0, {
-        code: "// Write your code here",
+        code: null,
         forStudent: 0,
         seq: index + 2,
         id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
       });
       return {
         ...prev,
-        [selectedLanguage]: newBlocks.map((block, i) => ({ ...block, seq: i + 1 })),
+        [selectedLanguage]: newBlocks.map((block, i) => ({...block, seq: i + 1})),
       };
     });
   };
 
   const handleAddBlock = () => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     try {
@@ -453,7 +443,7 @@ function EditProblem() {
         [language]: [
           ...(prev[language] || []),
           {
-            code: "// Write your code here",
+            code: null,
             forStudent: 0,
             seq: prev[language].length + 1,
             id: `${language}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
@@ -462,32 +452,62 @@ function EditProblem() {
       }));
     } catch (error) {
       console.error("Error adding block code:", error);
-      errorNoti(t("Failed to add block code"), 3000);
+      errorNoti(t("common:failedToAddBlockCode"), 3000);
     }
   };
 
   // Memoized handler for code changes
   const handleCodeChange = useCallback((newCode, index) => {
     if (!canEditBlocks) {
-      errorNoti(t("noPermissionToEditBlocks"), 3000);
+      errorNoti(t("common:noPermissionToEditBlocks"), 3000);
       return;
     }
     try {
       setBlockCodes((prev) => ({
         ...prev,
         [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-          i === index ? { ...b, code: newCode } : b
+          i === index ? {...b, code: newCode} : b
         ),
       }));
     } catch (error) {
       console.error("Error updating code:", error);
-      errorNoti(t("Failed to update code"), 3000);
+      errorNoti(t("common:failedToUpdateCode"), 3000);
     }
   }, [canEditBlocks, selectedLanguage, t]);
 
+  // Debounced version of handleCodeChange
+  const debouncedCodeChange = useMemo(() => debounce((newCode, index) => handleCodeChange(newCode, index), 300), [handleCodeChange]);
+
   // Handle isProblemBlock checkbox change
   const handleProblemBlockChange = () => {
-    setIsProblemBlock((prev) => !prev);
+    setIsProblemBlock((prev) => {
+      const newValue = !prev;
+      // If enabling problem block, select first language with block codes or CPP17 as default
+      if (newValue && !prev) {
+        const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
+          blockCodes[lang.value] && blockCodes[lang.value].length > 0
+        );
+        setSelectedLanguage(firstLanguageWithBlocks ? firstLanguageWithBlocks.value : COMPUTER_LANGUAGES.CPP17);
+      }
+      // If disabling problem block, reset to CPP17
+      if (!newValue && prev) {
+        setSelectedLanguage(COMPUTER_LANGUAGES.CPP17);
+      }
+      return newValue;
+    });
+  };
+
+  const handleToggleBlockDisplayMode = () => {
+    setBlockDisplayMode((prev) => (prev === "individual" ? "combined" : "individual"));
+  };
+
+  const getCombinedBlockCode = () => {
+    if (!blockCodes[selectedLanguage]) return "";
+
+    return blockCodes[selectedLanguage]
+      .sort((a, b) => a.seq - b.seq)
+      .map(block => block.code)
+      .join("\n");
   };
 
   useEffect(() => {
@@ -498,15 +518,21 @@ function EditProblem() {
         const data = res.data;
         setProblem(data);
 
-        if (data.attachment && data.attachment.length !== 0) {
-          const newFileURLArray = data.attachment.map((url) => ({
-            id: randomImageName(),
-            content: url,
+        if (data.attachments && data.attachments.length !== 0) {
+          setFetchedImageArray(data.attachments);
+        }
+
+        // Convert attachments to dropzone format
+        if (data.attachments && data.attachments.length > 0) {
+          const dropzoneFileObjects = data.attachments.map(attachment => ({
+            name: attachment.fileName,
+            id: attachment.id,
+            // Create a mock File object for dropzone
+            size: 0,
+            type: 'application/octet-stream',
+            lastModified: Date.now(),
           }));
-          newFileURLArray.forEach((file, idx) => {
-            file.fileName = data.attachmentNames[idx];
-          });
-          setFetchedImageArray(newFileURLArray);
+          setDropzoneFiles(dropzoneFileObjects);
         }
 
         setProblemName(data.problemName);
@@ -531,9 +557,33 @@ function EditProblem() {
         setCanEditBlocks(data.canEditBlocks || false);
         setIsProblemBlock(data.categoryId > 0); // Initialize based on categoryId
 
+        // If in view mode (canEditBlocks = false), select first language with block codes
+        if (!(data.canEditBlocks || false) && data.categoryId > 0) {
+          const newBlockCodes = Object.fromEntries(
+            PROGRAMMING_LANGUAGES.map(({value}) => [value, []])
+          );
+          data.blockCodes.forEach((block) => {
+            if (newBlockCodes[block.language]) {
+              newBlockCodes[block.language].push({
+                id: block.id,
+                code: block.code,
+                forStudent: block.forStudent,
+                seq: block.seq,
+              });
+            }
+          });
+
+          const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
+            newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
+          );
+          if (firstLanguageWithBlocks) {
+            setSelectedLanguage(firstLanguageWithBlocks.value);
+          }
+        }
+
         if (data.categoryId > 0) {
           const newBlockCodes = Object.fromEntries(
-            PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
+            PROGRAMMING_LANGUAGES.map(({value}) => [value, []])
           );
           data.blockCodes.forEach((block) => {
             if (newBlockCodes[block.language]) {
@@ -546,6 +596,12 @@ function EditProblem() {
             }
           });
           setBlockCodes(newBlockCodes);
+
+          // Select first language with block codes, or CPP17 as default
+          const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
+            newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
+          );
+          setSelectedLanguage(firstLanguageWithBlocks ? firstLanguageWithBlocks.value : COMPUTER_LANGUAGES.CPP17);
         }
       },
       {
@@ -560,8 +616,29 @@ function EditProblem() {
     getAllTags(handleGetTagsSuccess);
   }, []);
 
+  // Select appropriate tab when canEditBlocks changes
+  useEffect(() => {
+    if (canEditBlocks !== undefined && isProblemBlock) {
+      if (canEditBlocks) {
+        // In edit mode, select first language with block codes or CPP17 as default
+        const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
+          blockCodes[lang.value] && blockCodes[lang.value].length > 0
+        );
+        setSelectedLanguage(firstLanguageWithBlocks ? firstLanguageWithBlocks.value : COMPUTER_LANGUAGES.CPP17);
+      } else {
+        // In view mode, select first language with block codes
+        const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
+          blockCodes[lang.value] && blockCodes[lang.value].length > 0
+        );
+        if (firstLanguageWithBlocks) {
+          setSelectedLanguage(firstLanguageWithBlocks.value);
+        }
+      }
+    }
+  }, [canEditBlocks, isProblemBlock]);
+
   return (
-    <ProgrammingContestLayout title={t("common:edit", { name: t("problem") })} onBack={handleBackToList}>
+    <ProgrammingContestLayout title={t("common:edit", {name: t("problem")})} onBack={handleBackToList}>
       <Typography variant="h6">
         {t("generalInfo")}
       </Typography>
@@ -589,7 +666,7 @@ function EditProblem() {
             label={t("level")}
             options={levels}
             value={levelId}
-            sx={{ minWidth: 'unset', mr: 'unset' }}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             onChange={(event) => {
               setLevelId(event.target.value);
             }}
@@ -604,7 +681,7 @@ function EditProblem() {
             label={t("status")}
             options={statuses}
             value={status}
-            sx={{ minWidth: 'unset', mr: 'unset' }}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             onChange={(event) => {
               setStatus(event.target.value);
             }}
@@ -619,7 +696,7 @@ function EditProblem() {
             key={t("common:public")}
             label={t("common:public")}
             options={publicOptions}
-            sx={{ minWidth: 'unset', mr: 'unset' }}
+            sx={{minWidth: 'unset', mr: 'unset'}}
             value={isPublic}
             onChange={(event) => {
               setIsPublic(event.target.value);
@@ -700,34 +777,22 @@ function EditProblem() {
         </Grid>
 
         <Grid item xs={9}>
-          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags} />
+          <FilterByTag limitTags={3} tags={tags} onSelect={handleSelectTags} value={selectedTags}/>
         </Grid>
         <Grid item xs={3}>
           <TertiaryButton
-            startIcon={<AddIcon />}
+            startIcon={<AddIcon/>}
             onClick={() => setOpenModalAddNewTag(true)}
           >
-            {t("common:add", { name: t('tag') })}
+            {t("common:add", {name: t('tag')})}
           </TertiaryButton>
-        </Grid>
-        <Grid item xs={3}>
-          <FormControlLabel
-            label={t("problemBlock")}
-            control={
-              <Checkbox
-                checked={isProblemBlock}
-                onChange={handleProblemBlockChange} // Use custom handler
-                disabled={!canEditBlocks}
-              />
-            }
-          />
         </Grid>
       </Grid>
 
-      <Box className={classes.description}>
+      <Box sx={{mt: 3, mb: 2}}>
         <Typography
           variant="h6"
-          sx={{ marginTop: "8px", marginBottom: "8px" }}
+          sx={{marginTop: "8px", marginBottom: "8px"}}
         >
           {t("problemDescription")}
         </Typography>
@@ -735,160 +800,309 @@ function EditProblem() {
           content={description}
           onContentChange={(text) => setDescription(text)}
         />
-        <HustCodeEditor
-          title={t("sampleTestCase")}
-          placeholder={null}
-          sourceCode={sampleTestCase}
-          onChangeSourceCode={(code) => {
-            setSampleTestCase(code);
-          }}
+        <FormControlLabel
+          label={t("problemBlock") + (!canEditBlocks ? " " + t("common:alreadyUsed") : "")}
+          control={
+            <Checkbox
+              checked={isProblemBlock}
+              onChange={handleProblemBlockChange}
+              disabled={!canEditBlocks}
+            />
+          }
+          sx={{mt: 1}}
         />
-
-        <HustDropzoneArea
-          onChangeAttachment={(files) => handleAttachmentFiles(files)}
-        />
-        {isProblemBlock && (
-          <>
-            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
-              <IconButton
-                onClick={() => setIsBlockCodesExpanded(!isBlockCodesExpanded)}
-                aria-expanded={isBlockCodesExpanded}
-                aria-label={t("common:toggleBlockCodes")}
-                style={{ color: '#00bcd4' }}
-                size="small"
-              >
-                <ExpandMoreIcon
-                  className={`${classes.expandIcon} ${isBlockCodesExpanded ? classes.expandIconOpen : ''}`}
-                />
-              </IconButton>
-              <Typography variant="body1">
-                {t("common:toggleBlockCodes")}
+        {isProblemBlock && canEditBlocks !== undefined && (
+          <Box sx={{mt: -3}}>
+            <Box sx={{display: 'flex', alignItems: 'center', marginTop: '24px'}}>
+              <Typography variant="body1" sx={{ml: 0}}>
+                {t("common:blockCode")}
               </Typography>
+              <RotatingIconButton
+                onClick={() => {
+                  setRotationCount(rotationCount + 1);
+                  setIsBlockCodesExpanded(!isBlockCodesExpanded);
+                }}
+                aria-expanded={isBlockCodesExpanded}
+                aria-label={t("common:blockCode")}
+                color="primary"
+                size="small"
+                rotation={rotationCount * 180}
+                sx={{ml: 1}}
+              >
+                <ArrowDropDownIcon/>
+              </RotatingIconButton>
+              {!canEditBlocks && isBlockCodesExpanded && (
+                <Box sx={{display: 'flex', alignItems: 'center', ml: 'auto', gap: 1}}>
+                  <Tooltip title={t("common:listBlockLayout")}>
+                    <IconButton
+                      onClick={() => setBlockDisplayMode("individual")}
+                      color={blockDisplayMode === "individual" ? "primary" : "default"}
+                      size="small"
+                    >
+                      <FormatListBulletedRoundedIcon/>
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={t("common:combinedBlockLayout")}>
+                    <IconButton
+                      onClick={() => setBlockDisplayMode("combined")}
+                      color={blockDisplayMode === "combined" ? "primary" : "default"}
+                      size="small"
+                    >
+                      <ArticleRoundedIcon/>
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
             </Box>
             <Collapse in={isBlockCodesExpanded}>
-              <Tabs value={selectedLanguage} onChange={handleTabChange} sx={{ marginTop: "12px" }}>
-                {PROGRAMMING_LANGUAGES.map((lang) => (
-                  <Tab key={lang.value} label={lang.label} value={lang.value} />
+              <AntTabs value={selectedLanguage} onChange={handleTabChange} sx={{marginBottom: "12px"}}>
+                {(canEditBlocks ? PROGRAMMING_LANGUAGES : PROGRAMMING_LANGUAGES.filter(lang =>
+                  blockCodes[lang.value] && blockCodes[lang.value].length > 0
+                )).map((lang) => (
+                  <AntTab key={lang.value} label={mapLanguageToDisplayName(lang.value)} value={lang.value}
+                          sx={{textTransform: 'none'}}/>
                 ))}
-              </Tabs>
-              
-              <Box className={!canEditBlocks ? classes.disabledBlock : undefined}>
-                {blockCodes[selectedLanguage].map((block, index) => (
-                  <Box className={classes.blockCodeContainer} key={block.id || index}>
-                    <Box className={classes.codeEditorWrapper}>
-                      <HustCodeEditor
-                        sourceCode={block.code || ""}
-                        onChangeSourceCode={(newCode) => handleCodeChange(newCode, index)}
-                        language={selectedLanguage}
-                        height="300px"
-                        readOnly={!canEditBlocks}
-                        hideProgrammingLanguage={1}
-                        blockEditor={1}
-                        isStudentBlock={block.forStudent}
-                      />
-                    </Box>
-                    <Box className={classes.blockCodeControls}>
-                      <StyledSelect
-                        size="small"
-                        value={block.forStudent ? "student" : "teacher"}
-                        onChange={(event) => {
-                          if (!canEditBlocks) {
-                            errorNoti(t("noPermissionToEditBlocks"), 3000);
-                            return;
-                          }
-                          setBlockCodes((prev) => ({
-                            ...prev,
-                            [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                              i === index ? { ...b, forStudent: event.target.value === "student" } : b
-                            ),
-                          }));
+              </AntTabs>
+
+
+              {blockDisplayMode === "individual" ? (
+                (blockCodes[selectedLanguage] && blockCodes[selectedLanguage].length > 0) ? (
+                  blockCodes[selectedLanguage].map((block, index) => (
+                    <Box
+                      key={block.id || index}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 2,
+                        mb: canEditBlocks ? (index !== blockCodes[selectedLanguage].length - 1 ? 1.5 : 0) : (index === blockCodes[selectedLanguage].length - 1 ? 0 : 1),
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: '48px',
+                          minWidth: '48px',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
+                          pt: canEditBlocks ? 0 : '14px',
                         }}
-                        options={[
-                          { label: t("forTeacher"), value: "teacher" },
-                          { label: t("forStudent"), value: "student" },
-                        ]}
-                        sx={{ width: "250px", mt: 5 }}
-                        disabled={!canEditBlocks}
-                      />
-                      <Box className={classes.controlButtons} sx={{ mt: 1 }}>
-                        <IconButton
-                          onClick={() => debouncedMoveUp(index)}
-                          disabled={!canEditBlocks || index === 0}
-                          title={t("moveUp", { ns: "common" })}
-                          size="small"
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: 'text.secondary',
+                            fontWeight: 500,
+                          }}
                         >
-                          <ArrowUpwardIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => debouncedMoveDown(index)}
-                          disabled={!canEditBlocks || index === blockCodes[selectedLanguage].length - 1}
-                          title={t("moveDown", { ns: "common" })}
-                          size="small"
-                        >
-                          <ArrowDownwardIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleInsertAbove(index)}
-                          disabled={!canEditBlocks}
-                          title={t("insertAbove", { ns: "common" })}
-                          size="small"
-                        >
-                          <AddCircleOutlineIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleInsertBelow(index)}
-                          disabled={!canEditBlocks}
-                          title={t("insertBelow", { ns: "common" })}
-                          size="small"
-                        >
-                          <AddCircleOutlineIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleDeleteBlock(index)}
-                          disabled={!canEditBlocks}
-                          title={t("delete", { ns: "common" })}
-                          size="small"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                          {block.seq || index + 1}
+                        </Typography>
                       </Box>
+                      <Box sx={{flex: 1}}>
+                        {canEditBlocks ? (
+                          <HustCodeEditor
+                            key={(block.id || uuidv4()) + '_' + block.forStudent}
+                            sourceCode={block.code || ""}
+                            onChangeSourceCode={(newCode) => debouncedCodeChange(newCode, index)}
+                            language={selectedLanguage}
+                            height="300px"
+                            readOnly={!canEditBlocks}
+                            hideProgrammingLanguage={1}
+                            theme={block.forStudent ? "github" : "monokai"}
+                            minLines={5}
+                          />
+                        ) : (
+                          <>
+                            <Typography
+                              sx={{
+                                position: 'absolute',
+                                top: '8px',
+                                right: '8px',
+                                fontSize: '0.875rem',
+                                color: 'text.secondary',
+                              }}
+                            >
+                              {block.forStudent ? t("common:forStudent") : t("common:forTeacher")}
+                            </Typography>
+                            <Box sx={block.forStudent ? {border: `1px solid ${grey[900]}`, borderRadius: 1} : {}}>
+                              <HustCopyCodeBlock
+                                text={block.code}
+                                language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                                showLineNumbers
+                                isStudentBlock={block.forStudent}
+                                theme={block.forStudent ? github : dracula}
+                              />
+                            </Box>
+                          </>
+                        )}
+                      </Box>
+                      {canEditBlocks && (
+                        <Box
+                          sx={{
+                            width: '200px',
+                            minWidth: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignSelf: 'center',
+                            gap: 1,
+                            pl: 0
+                          }}
+                        >
+                          <StyledSelect
+                            size="small"
+                            value={block.forStudent ? "student" : "teacher"}
+                            onChange={(event) => {
+                              if (!canEditBlocks) {
+                                errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+                                return;
+                              }
+                              setBlockCodes((prev) => ({
+                                ...prev,
+                                [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                                  i === index ? {...b, forStudent: event.target.value === "student"} : b
+                                ),
+                              }));
+                            }}
+                            options={[
+                              {label: t("common:forTeacher"), value: "teacher"},
+                              {label: t("common:forStudent"), value: "student"},
+                            ]}
+                            sx={{width: "100%"}}
+                            disabled={!canEditBlocks}
+                          />
+                          <Box sx={{
+                            display: 'flex',
+                            gap: 0.5,
+                            justifyContent: 'center',
+                            width: '100%',
+                            alignItems: 'center'
+                          }}>
+                            <Tooltip title={t('common:moveUp')} placement="bottom">
+                              <IconButton
+                                onClick={() => debouncedMoveUp(index)}
+                                disabled={!canEditBlocks || index === 0}
+                                title={t("common:moveUp")}
+                                size="small"
+                                color="primary"
+                              >
+                                <ArrowUpwardIcon fontSize="small"/>
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t('common:moveDown')} placement="bottom">
+                              <IconButton
+                                onClick={() => debouncedMoveDown(index)}
+                                disabled={!canEditBlocks || index === blockCodes[selectedLanguage].length - 1}
+                                title={t("common:moveDown")}
+                                size="small"
+                                color="primary"
+                              >
+                                <ArrowDownwardIcon fontSize="small"/>
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t('common:insertAbove')} placement="bottom">
+                              <IconButton
+                                onClick={() => handleInsertAbove(index)}
+                                disabled={!canEditBlocks}
+                                title={t("common:insertAbove")}
+                                size="small"
+                                color="success"
+                              >
+                                <KeyboardDoubleArrowUpIcon fontSize="small"/>
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t('common:insertBelow')} placement="bottom">
+                              <IconButton
+                                onClick={() => handleInsertBelow(index)}
+                                disabled={!canEditBlocks}
+                                title={t("common:insertBelow")}
+                                size="small"
+                                color="success"
+                              >
+                                <KeyboardDoubleArrowDownIcon fontSize="small"/>
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t('common:delete')} placement="bottom">
+                              <IconButton
+                                onClick={() => handleDeleteBlock(index)}
+                                disabled={!canEditBlocks}
+                                title={t("common:delete")}
+                                size="small"
+                                color="error"
+                              >
+                                <DeleteIcon fontSize="small"/>
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </Box>
+                      )}
                     </Box>
-                  </Box>
-                ))}
-              </Box>
+                  ))
+                ) : null
+              ) : (
+                <Box>
+                  <HustCopyCodeBlock
+                    text={getCombinedBlockCode()}
+                    language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                    showLineNumbers
+                  />
+                </Box>
+              )}
             </Collapse>
-            <Stack direction="row" spacing={2} sx={{ marginTop: "12px" }}>
-              <Button
-                variant="outlined"
-                onClick={handleAddBlock}
-                disabled={!canEditBlocks}
-              >
-                {t("addProblemBlock")}
-              </Button>
-              <TertiaryButton
-                variant="outlined"
-                startIcon={<ContentCopyIcon />}
-                onClick={handleCopyAllCode}
-                disabled={!(blockCodes[selectedLanguage]?.length > 0)}
-              >
-                {t("common:copyAllCode")}
-              </TertiaryButton>
-            </Stack>
-          </>
+            {canEditBlocks && (
+              <Stack direction="row" spacing={2} sx={{marginTop: "12px"}}>
+                <TertiaryButton
+                  variant="outlined"
+                  startIcon={<AddIcon/>}
+                  onClick={handleAddBlock}
+                  disabled={!canEditBlocks}
+                >
+                  {t("addProblemBlock")}
+                </TertiaryButton>
+                <TertiaryButton
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon/>}
+                  onClick={handleCopyAllCode}
+                  disabled={!(blockCodes[selectedLanguage]?.length > 0)}
+                >
+                  {t("common:copyCode")}
+                </TertiaryButton>
+              </Stack>
+            )}
+          </Box>
         )}
+
+        {/* File Attachments */}
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="body1" sx={{mb: 1, fontWeight: 500}}>
+            Tệp đính kèm
+          </Typography>
+          <HustDropzoneArea 
+            hideTitle={true}
+            showPreviews={true}
+            showPreviewsInDropzone={false}
+            useChipsForPreview={true}
+            onChangeAttachment={(files) => handleAttachmentFiles(files)}
+          />
+          
+          {/* Display existing files from API */}
+          {fetchedImageArray.length > 0 && (
+            <Stack spacing={0.5} sx={{mt: 1}}>
+              {fetchedImageArray.map((file) => (
+                <FileUploadZone
+                  key={file.id}
+                  file={file}
+                  removable={true}
+                  downloadable={true}
+                  onDownload={handleDownloadFile}
+                  onRemove={() => handleDeleteImageAttachment(file.id)}
+                />
+              ))}
+            </Stack>
+          )}
+        </Box>
       </Box>
 
-      {fetchedImageArray.length !== 0 &&
-        fetchedImageArray.map((file) => (
-          <FileUploadZone
-            key={file.id}
-            file={file}
-            removable={true}
-            onRemove={() => handleDeleteImageAttachment(file.fileName)}
-          />
-        ))}
-
-      <Box sx={{ marginTop: "32px" }} />
+      <Box sx={{mt: 3}}/>
       <HustCodeEditor
         title={t("solutionSourceCode") + " *"}
         language={languageSolution}
@@ -896,16 +1110,14 @@ function EditProblem() {
           setLanguageSolution(event.target.value);
         }}
         sourceCode={codeSolution}
-        onChangeSourceCode={(code) => {
-          setCodeSolution(code);
-        }}
+        onChangeSourceCode={debouncedSolutionCodeChange}
       />
 
       <LoadingButton
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{ margin: "12px 0", textTransform: 'none' }}
+        sx={{margin: "12px 0", textTransform: 'none'}}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -916,7 +1128,7 @@ function EditProblem() {
         detail={compileMessage}
       />
 
-      <Box sx={{ marginTop: "12px" }}>
+      <Box sx={{marginTop: "12px"}}>
         <FormControlLabel
           label={t("isPreloadCode")}
           control={
@@ -930,16 +1142,14 @@ function EditProblem() {
           <HustCodeEditor
             title={t("preloadCode")}
             sourceCode={preloadCode}
-            onChangeSourceCode={(code) => {
-              setPreloadCode(code);
-            }}
+            onChangeSourceCode={debouncedPreloadCodeChange}
             height="280px"
             placeholder="Write the initial code segment that provided to the participants here"
           />
         )}
       </Box>
 
-      <Box sx={{ marginTop: "12px" }}>
+      <Box sx={{marginTop: "12px"}}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
@@ -961,15 +1171,13 @@ function EditProblem() {
               setSolutionCheckerLanguage(event.target.value);
             }}
             sourceCode={solutionChecker}
-            onChangeSourceCode={(code) => {
-              setSolutionChecker(code);
-            }}
+            onChangeSourceCode={debouncedCheckerCodeChange}
             placeholder={t("checkerSourceCodePlaceholder")}
           />
         )}
       </Box>
 
-      <ListTestCase />
+      <ListTestCase/>
 
       <Stack direction="row" spacing={2} mt={2}>
         <TertiaryButton variant="outlined" onClick={handleExit}>
@@ -979,16 +1187,16 @@ function EditProblem() {
           variant="contained"
           loading={loading}
           onClick={handleSubmit}
-          sx={{ textTransform: 'capitalize' }}
+          sx={{textTransform: 'capitalize'}}
         >
-          {t("save", { ns: "common" })}
+          {t("save", {ns: "common"})}
         </LoadingButton>
       </Stack>
 
       <ModelAddNewTag
         isOpen={openModalAddNewTag}
         handleSuccess={() => {
-          successNoti(t("common:addSuccess", { name: t('tag') }), 3000);
+          successNoti(t("common:addSuccess", {name: t('tag')}), 3000);
           getAllTags(handleGetTagsSuccess);
         }}
         handleClose={() => setOpenModalAddNewTag(false)}

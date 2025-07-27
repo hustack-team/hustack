@@ -1,44 +1,37 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useHistory, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import React, {useEffect, useMemo, useState} from "react";
+import {useHistory, useParams} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 import {
-  Box,
-  Divider,
-  Grid,
-  TextField,
-  Typography,
   Autocomplete,
+  Avatar,
+  Box,
+  Grid,
+  IconButton,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Avatar,
-  Popper,
-  IconButton,
-  Stack,
   Paper,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { autocompleteClasses } from "@mui/material/Autocomplete";
-import { styled } from "@mui/material/styles";
-import { debounce } from "@mui/material/utils";
-import { LoadingButton } from "@mui/lab";
-import { request } from "api";
-import { errorNoti, successNoti } from "utils/notification";
-import { sleep } from "./lib";
+import {debounce} from "lodash";
+import {LoadingButton} from "@mui/lab";
+import {request} from "api";
+import {errorNoti, successNoti} from "utils/notification";
+import {sleep} from "./lib";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
-import StyledSelect from "../../select/StyledSelect";
 import StandardTable from "component/table/StandardTable";
 import TertiaryButton from "../../button/TertiaryButton";
 import withScreenSecurity from "../../withScreenSecurity";
-import { isEmpty, trim } from "lodash";
 import PrimaryButton from "component/button/PrimaryButton";
 import AddIcon from "@material-ui/icons/Add";
 import LinearProgress from '@mui/material/LinearProgress';
 import Tooltip from '@mui/material/Tooltip';
-import { textAlign, width } from "@mui/system";
-import { makeStyles } from "@material-ui/core";
-import { stringAvatar, StyledAutocompletePopper } from "./AddMember2Contest";
-import { stringToColor } from "./GroupManager";
+import {makeStyles} from "@material-ui/core";
+import {stringAvatar, StyledAutocompletePopper} from "./AddMember2Contest";
+import {stringToColor} from "./GroupManager";
 
 const useStyles = makeStyles((theme) => ({
   description: {

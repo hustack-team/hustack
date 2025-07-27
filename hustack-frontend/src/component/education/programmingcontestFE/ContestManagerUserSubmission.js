@@ -1,5 +1,5 @@
 import {LoadingButton} from "@mui/lab";
-import {Divider, Grid, IconButton, Paper, Stack, TextField, Tooltip, Typography} from "@mui/material";
+import {Divider, Grid, Paper, Stack, TextField, Tooltip, Typography} from "@mui/material";
 import {request, saveFile} from "api";
 import HustModal from "component/common/HustModal";
 import StandardTable from "component/table/StandardTable";
@@ -16,8 +16,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import PrimaryButton from "../../button/PrimaryButton";
 import SearchIcon from "@mui/icons-material/Search";
 import {localeOption} from "../../../utils/NumberFormat";
-import {RiCodeSSlashLine} from "react-icons/ri";
-import CheckIcon from "@mui/icons-material/Check"; 
+import CheckIcon from "@mui/icons-material/Check";
 
 const filterInitValue = {
   userId: "",
@@ -67,7 +66,7 @@ export default function ContestManagerUserSubmission(props) {
       "/submissions/" + contestId + "/batch-evaluation",
       (res) => {
         handleLoadingStateChange('rejudging', false);
-        successNoti("Submissions will be rejudged", 3000);
+        successNoti(t("common:submissionsWillBeRejudged"), 3000);
       },
       {
         onError: (e) => {
@@ -91,7 +90,7 @@ export default function ContestManagerUserSubmission(props) {
       "/submissions/" + contestId + "/batch-non-evaluated-evaluation",
       (res) => {
         handleLoadingStateChange('judging', false);
-        successNoti("Submissions will be judged", 3000);
+        successNoti(t("common:submissionsWillBeJudged"), 3000);
       },
       {
         onError: (e) => {

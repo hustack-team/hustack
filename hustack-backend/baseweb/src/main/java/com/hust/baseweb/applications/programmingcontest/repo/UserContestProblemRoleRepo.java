@@ -11,8 +11,6 @@ import java.util.UUID;
 
 public interface UserContestProblemRoleRepo extends JpaRepository<UserContestProblemRole, UUID> {
 
-    List<UserContestProblemRole> findAllByProblemId(String problemId);
-
     List<UserContestProblemRole> findAllByProblemIdAndUserId(String problemId, String userId);
 
     List<UserContestProblemRole> findAllByProblemIdAndUserIdAndRoleId(String problemId, String userId, String roleId);
@@ -25,7 +23,19 @@ public interface UserContestProblemRoleRepo extends JpaRepository<UserContestPro
 
     boolean existsByProblemIdAndUserIdAndRoleId(String problemId, String userId, String roleId);
 
-    @Query(value = "SELECT role_id FROM user_contest_problem_role WHERE problem_id = ?1 AND user_id = ?2", nativeQuery = true)
+    @Query("SELECT CASE WHEN COUNT(upr) > 0 THEN true ELSE false END " +
+           "FROM UserContestProblemRole upr " +
+           "WHERE upr.problemId = :problemId " +
+           "AND upr.userId = :userId " +
+           "AND upr.roleId IN :roleIds")
+    boolean existsByProblemIdAndUserIdAndRoleIdIn(
+        @Param("problemId") String problemId,
+        @Param("userId") String userId,
+        @Param("roleIds") List<String> roleIds
+    );
+
+    @Query(value = "SELECT role_id FROM user_contest_problem_role WHERE problem_id = ?1 AND user_id = ?2",
+           nativeQuery = true)
     List<String> getRolesByProblemIdAndUserId(String problemId, String userId);
 
     @Query("SELECT new com.hust.baseweb.applications.programmingcontest.model.ModelResponseUserProblemRole(" +

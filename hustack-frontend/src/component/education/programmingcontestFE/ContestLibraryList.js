@@ -1,19 +1,19 @@
 import AddIcon from "@material-ui/icons/Add";
 import {
   Box,
-  LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
   TextField,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { request } from "../../../api";
-import { toFormattedDateTime } from "../../../utils/dateutils";
+import {useEffect, useState} from "react";
+import {request} from "../../../api";
+import {toFormattedDateTime} from "../../../utils/dateutils";
 import StandardTable from "../../table/StandardTable";
-import { successNoti } from "utils/notification";
+import {successNoti} from "utils/notification";
 
 export default function ContestLibraryList() {
   const [libraries, setLibraries] = useState([]);
@@ -66,14 +66,14 @@ export default function ContestLibraryList() {
   const handleDeleteLibrary = (id) => {
     request("delete", `/code-library/delete-library/${id}`)
       .then(() => {
-        successNoti("Library deleted successfully");
+        successNoti(t("common:libraryDeletedSuccessfully"));
         setLibraries((prevLibraries) =>
           prevLibraries.filter((library) => library.id !== id)
         );
       })
       .catch((error) => {
         console.error("Error deleting library:", error);
-        errorNoti("Failed to delete library");
+        errorNoti(t("common:deleteLibraryFailed"));
       });
   };
   
@@ -138,12 +138,12 @@ export default function ContestLibraryList() {
     };
 
     request("post", "/code-library/create-library", (res) => {
-      successNoti("Library created successfully");
+              successNoti(t("common:libraryCreatedSuccessfully"));
       setLibraries([...libraries, res.data]);
       handleCloseDialog();
     }, {}, libraryData).catch((error) => {
       console.error("Error creating library:", error);
-      errorNoti("Failed to create library");
+              errorNoti(t("common:createLibraryFailed"));
     });
   };
 
@@ -175,7 +175,7 @@ export default function ContestLibraryList() {
     console.log("Updating library with data:", updatedLibrary);
   
     request("put", `/code-library/edit-library/${currentLibrary.id}`, (res) => {
-      successNoti("Library updated successfully");
+              successNoti(t("common:libraryUpdatedSuccessfully"));
       
       setLibraries((prevLibraries) =>
         prevLibraries.map((lib) =>
@@ -186,7 +186,7 @@ export default function ContestLibraryList() {
       handleCloseEditDialog();
     }, {}, updatedLibrary).catch((error) => {
       console.error("Error updating library:", error.response ? error.response.data : error);
-      errorNoti("Failed to update library");
+              errorNoti(t("common:updateLibraryFailed"));
     });
   };
 

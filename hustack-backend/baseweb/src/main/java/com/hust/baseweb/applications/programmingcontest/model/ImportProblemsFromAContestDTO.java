@@ -10,12 +10,10 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ModelUserProblemRole {
+public class ImportProblemsFromAContestDTO {
 
-    String userId;
+    String contestId;
 
-    String problemId;
-
-    String roleId;
+    String fromContestId;
 
 }

@@ -137,7 +137,7 @@ function EditContest() {
       "put",
       "/contests/" + contestId,
       () => {
-        successNoti("Contest updated", 3000);
+        successNoti(t("common:contestUpdated"), 3000);
         // getContestInfo();
       },
       {

@@ -1,17 +1,16 @@
-import { Box, LinearProgress, Tooltip } from "@mui/material";
+import {Box, LinearProgress, Tooltip} from "@mui/material";
 import PrimaryButton from "component/button/PrimaryButton";
 import TertiaryButton from "component/button/TertiaryButton";
-import { MTableToolbar } from "material-table";
-import { useEffect, useState } from "react";
-import { localeOption } from "utils/NumberFormat";
+import {MTableToolbar} from "material-table";
+import {useEffect, useState} from "react";
+import {localeOption} from "utils/NumberFormat";
 import XLSX from "xlsx";
-import { request } from "../../../api";
-import { successNoti } from "../../../utils/notification";
+import {request} from "../../../api";
+import {successNoti} from "../../../utils/notification";
 import HustContainerCard from "../../common/HustContainerCard";
 import StandardTable from "../../table/StandardTable";
 
-import { makeStyles } from "@material-ui/core/styles";
-import ContestManagerRankingPercentageNew from "./ContestManagerRankingPercentageNew";
+import {makeStyles} from "@material-ui/core/styles";
 
 const useStyles = makeStyles({
   actions: {
@@ -37,7 +36,7 @@ export default function ContestManagerRankingNew(props) {
           contestId +
           "/ranking"
       )
-      .then(() => successNoti("URL copied to clipboard", 1000));
+              .then(() => successNoti(t("common:urlCopiedToClipboard"), 1000));
   };
   const downloadHandler = (event) => {
     if (ranking.length === 0) {

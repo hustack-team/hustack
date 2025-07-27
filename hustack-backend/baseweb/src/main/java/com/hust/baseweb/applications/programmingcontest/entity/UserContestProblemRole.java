@@ -2,14 +2,14 @@ package com.hust.baseweb.applications.programmingcontest.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 
@@ -21,44 +21,43 @@ import java.util.UUID;
 @Builder
 @Table(name = "user_contest_problem_role")
 @EntityListeners(AuditingEntityListener.class)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserContestProblemRole {
 
     public static final String ROLE_EDITOR = "EDITOR";
-    public static final String ROLE_VIEWER = "VIEWER";
-    public static final String ROLE_OWNER = "OWNER";
 
-    public static List<String> getListRoles() {
-        List<String> L = new ArrayList();
-        L.add(ROLE_EDITOR);
-        L.add(ROLE_VIEWER);
-        L.add(ROLE_OWNER);
-        return L;
-    }
+    public static final String ROLE_VIEWER = "VIEWER";
+
+    public static final String ROLE_OWNER = "OWNER";
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    UUID id;
 
     @Column(name = "user_id")
-    private String userId;
+    String userId;
 
     @Column(name = "problem_id")
-    private String problemId;
+    String problemId;
 
     @Column(name = "role_id")
-    private String roleId;
+    String roleId;
+
+    @CreatedBy
+    @Column(name = "created_by")
+    String createdBy;
 
     @LastModifiedBy
     @Column(name = "update_by_user_id")
-    private String updateByUserId;
+    String lastModifiedBy;
 
     @CreatedDate
     @Column(name = "created_stamp")
-    private Date createdStamp;
+    Date createdDate;
 
     @LastModifiedDate
     @Column(name = "last_updated_stamp")
-    private Date lastUpdated;
+    Date lastModifiedDate;
 
 }

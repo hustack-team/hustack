@@ -59,26 +59,30 @@ export default function ContestsUsingAProblem(props) {
 
   return (
     <>
-      <Stack direction="row" justifyContent='space-between'>
-        <Typography variant="h6" sx={{mb: 1.5}}>
-          {t("education/programmingcontest/problem:contestUsingProblem")}
-        </Typography>
-      </Stack>
-      <StandardTable
-        columns={columns}
-        data={contests}
-        hideCommandBar
-        hideToolBar
-        options={{
-          selection: false,
-          pageSize: 5,
-          search: false,
-          sorting: true,
-        }}
-        components={{
-          Container: (props) => <Paper {...props} elevation={0}/>,
-        }}
-      />
+      {contests.length > 0 && (
+        <>
+          <Stack direction="row" justifyContent='space-between'>
+            <Typography variant="h6" sx={{mb: 1.5}}>
+              {t("education/programmingcontest/problem:contestUsingProblem")}
+            </Typography>
+          </Stack>
+          <StandardTable
+            columns={columns}
+            data={contests}
+            hideCommandBar
+            hideToolBar
+            options={{
+              selection: false,
+              pageSize: 5,
+              search: false,
+              sorting: true,
+            }}
+            components={{
+              Container: (props) => <Paper {...props} elevation={0}/>,
+            }}
+          />
+        </>
+      )}
     </>
   );
 }

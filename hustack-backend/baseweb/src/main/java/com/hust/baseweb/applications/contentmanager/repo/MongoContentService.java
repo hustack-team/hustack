@@ -10,11 +10,13 @@ import java.util.List;
 
 public interface MongoContentService {
 
-    public ObjectId storeFileToGridFs(ContentModel contentModel) throws IOException;
+    ObjectId storeFileToGridFs(ContentModel contentModel) throws IOException;
 
-    public GridFsResource getById(String id);
+    GridFsResource getById(String id);
 
-    public void deleteFilesById(String id);
+    void deleteFilesById(String id);
 
     List<String> storeFiles(MultipartFile[] files);
+
+    String getOriginalFileName(GridFsResource content);
 }

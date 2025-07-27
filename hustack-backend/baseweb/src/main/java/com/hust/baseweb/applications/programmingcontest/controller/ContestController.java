@@ -4,15 +4,19 @@ import com.google.gson.Gson;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.model.LmsLogModelCreate;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.ApiService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
-import com.hust.baseweb.applications.programmingcontest.entity.*;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.UserRegistrationContestEntity;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.*;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemService;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
-import com.hust.baseweb.applications.programmingcontest.service.StudentProblemViewServiceImpl;
 import com.hust.baseweb.model.SubmissionFilter;
-import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -39,7 +43,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -48,15 +54,18 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestController {
 
-    StudentProblemViewServiceImpl studentProblemViewServiceImpl;
-    TestCaseRepo testCaseRepo;
-    ProblemTestCaseService problemTestCaseService;
-    ContestRepo contestRepo;
-    ContestSubmissionRepo contestSubmissionRepo;
-    UserService userService;
-    ProblemRepo problemRepo;
-    ContestService contestService;
     ProblemService problemService;
+
+    ProblemTestCaseService problemTestCaseService;
+
+    ContestRepo contestRepo;
+
+    ContestSubmissionRepo contestSubmissionRepo;
+
+    ProblemRepo problemRepo;
+
+    ContestService contestService;
+
     ApiService apiService;
 
     @Secured("ROLE_TEACHER")
@@ -136,10 +145,15 @@ public class ContestController {
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/contests/import-problems")
-    public ResponseEntity<?> importProblemsFromAContest(@RequestBody ModelImportProblemsFromAContestInput input) {
+    public ResponseEntity<?> importProblemsFromAContest(
+        Principal principal,
+        @RequestBody ImportProblemsFromAContestDTO input
+    ) {
 
         try {
-            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(input);
+            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(
+                principal.getName(),
+                input);
             return ResponseEntity.ok().body(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -256,13 +270,13 @@ public class ContestController {
 
 
     @GetMapping("/contests/{contestId}/problems/{problemId}")
-    public ResponseEntity<?> getProblemDetailInContestViewByStudent(
+    public ResponseEntity<?> getProblemDetailInContestForParticipant(
         Principal principal,
         @PathVariable("problemId") String problemId,
         @PathVariable("contestId") String contestId
     ) {
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
-        ModelStudentViewProblemDetail result = studentProblemViewServiceImpl.getProblemDetailForStudentView(
+        ProblemDetailForParticipantDTO result = problemService.getProblemDetailForParticipant(
             principal.getName(), contestId, problemId
         );
         if (result == null) {
@@ -270,6 +284,7 @@ public class ContestController {
         }
         return ResponseEntity.ok().body(result);
     }
+
     @GetMapping("/contests/{contestId}/problems")
     public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
         ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
@@ -302,7 +317,7 @@ public class ContestController {
         logStudentGetDetailContest(userId, contestId);
 
         List<ModelStudentOverviewProblem> responses =
-            studentProblemViewServiceImpl.getStudentOverviewProblems(userId, contestId);
+            problemService.getListProblemsInContestForParticipant(userId, contestId);
 
         return ResponseEntity.ok().body(responses);
     }
@@ -657,8 +672,7 @@ public class ContestController {
                 problemId);
         return ResponseEntity.ok().body(page);
     }
-    
-    
+
     @Async
     protected void logGetSubmissionsOfContest(String userId, String contestId) {
         if (true) {

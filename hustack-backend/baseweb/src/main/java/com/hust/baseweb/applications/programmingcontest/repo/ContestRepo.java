@@ -4,7 +4,6 @@ import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Set;
@@ -15,8 +14,6 @@ public interface ContestRepo extends JpaRepository<ContestEntity, String> {
 
     List<ContestEntity> findByContestIdInAndStatusIdNot(Set<String> ids, String statusId);
 
-    ContestEntity findContestEntityByContestIdAndUserId(String contestId, String userId);
-
     @Modifying
     @Query(value = "update contest_new " +
                    "set judge_mode = :judgeMode ",
@@ -25,8 +22,5 @@ public interface ContestRepo extends JpaRepository<ContestEntity, String> {
     void switchAllContestToJudgeMode(String judgeMode);
 
     List<ContestEntity> findByContestPublicTrue();
-
-    @Query("SELECT c.contestId FROM ContestEntity c JOIN c.problems p WHERE p.problemId = :problemId")
-    List<String> findContestIdsByProblemId(@Param("problemId") String problemId);
 
 }

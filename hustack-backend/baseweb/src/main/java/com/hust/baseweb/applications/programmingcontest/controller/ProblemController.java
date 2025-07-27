@@ -10,14 +10,10 @@ import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.GetSubmissionsOfParticipantModelInput;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
-import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemService;
-import com.hust.baseweb.applications.programmingcontest.repo.TestCaseRepo;
-import com.hust.baseweb.applications.programmingcontest.repo.UserContestProblemRoleRepo;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.TestCaseFilter;
-import com.hust.baseweb.service.UserService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -55,13 +51,14 @@ public class ProblemController {
     ProblemService problemService;
 
     @Secured("ROLE_TEACHER")
-    @PostMapping(value = "/problems", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/problems",
+                 produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createProblem(
         Principal principal,
         @RequestPart("dto") ModelCreateContestProblem dto,
         @RequestPart(value = "files", required = false) MultipartFile[] files
     ) {
-        return ResponseEntity.ok().body(problemService.createContestProblem(principal.getName(), dto, files));
+        return ResponseEntity.ok().body(problemService.createProblem(principal.getName(), dto, files));
     }
 
     @Secured("ROLE_TEACHER")
@@ -80,8 +77,10 @@ public class ProblemController {
     }
 
     @Async
-    public void logManagerGetProblemDetail(String userId, String problemId){
-        if(true)return;
+    public void logManagerGetProblemDetail(String userId, String problemId) {
+        if (true) {
+            return;
+        }
         LmsLogModelCreate logM = new LmsLogModelCreate();
         logM.setUserId(userId);
         log.info("logManagerGetProblemDetail, userId = " + logM.getUserId());
@@ -90,7 +89,7 @@ public class ProblemController {
 
         logM.setActionType("MANAGER_VIEW_PROBLEM_DETAIL");
         logM.setDescription("a manager view problem detail");
-        apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log",logM);
+        apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log", logM);
     }
 
     @Secured("ROLE_TEACHER")
@@ -101,9 +100,9 @@ public class ProblemController {
     ) throws Exception {
         try {
 
-            logManagerGetProblemDetail(teacher.getName(),problemId);
+            logManagerGetProblemDetail(teacher.getName(), problemId);
 
-            ModelCreateContestProblemResponse problemResponse = problemService.getContestProblemDetailByIdAndTeacher(
+            ModelCreateContestProblemResponse problemResponse = problemService.getProblemDetailForManager(
                 problemId,
                 teacher.getName());
             return ResponseEntity.status(200).body(problemResponse);
@@ -113,14 +112,15 @@ public class ProblemController {
     }
 
     @Secured("ROLE_TEACHER")
-    @PutMapping(value = "/problems/{problemId}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PutMapping(value = "/problems/{problemId}",
+                produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateProblem(
         Principal principal,
         @PathVariable("problemId") String problemId,
         @RequestPart("dto") ModelUpdateContestProblem dto,
         @RequestPart(value = "files", required = false) MultipartFile[] files
-    ) throws Exception {
-        return ResponseEntity.ok().body(problemService.updateContestProblem(
+    ) {
+        return ResponseEntity.ok().body(problemService.editProblem(
             problemId,
             principal.getName(),
             dto,
@@ -156,7 +156,10 @@ public class ProblemController {
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/problems/{problemId}/testcases")
-    public ResponseEntity<?> getTestCaseListByProblem(@PathVariable("problemId") String problemId, TestCaseFilter filter) {
+    public ResponseEntity<?> getTestCaseListByProblem(
+        @PathVariable("problemId") String problemId,
+        TestCaseFilter filter
+    ) {
         return ResponseEntity.ok().body(problemTestCaseService.getTestCaseByProblem(problemId, filter));
     }
 
@@ -177,8 +180,8 @@ public class ProblemController {
     }
 
     @GetMapping("/problems/{problemId}/users/role")
-    public ResponseEntity<?> getUserContestProblemRoles(@PathVariable String problemId) {
-        List<ModelResponseUserProblemRole> res = problemService.getUserProblemRoles(problemId);
+    public ResponseEntity<?> getUserContestProblemRoles(Principal principal, @PathVariable String problemId) {
+        List<ModelResponseUserProblemRole> res = problemService.getUserProblemRoles(problemId, principal.getName());
         return ResponseEntity.ok().body(res);
     }
 
@@ -201,14 +204,18 @@ public class ProblemController {
     public ResponseEntity<?> removeContestProblemRole(Principal principal, @RequestBody ModelUserProblemRole input) {
         try {
             //log.info("removeContestProblemRole, remove user " + input.getUserId() + " with role " + input.getRoleId() + " from the problem " + input.getProblemId());
-            if(principal.getName().equals(input.getUserId())){// current userlogin cannot remove himself from the problem
+            if (principal
+                .getName()
+                .equals(input.getUserId())) {// current userlogin cannot remove himself from the problem
                 return ResponseEntity.ok().body(false);
             }
-            if(input.getRoleId().equals(UserContestProblemRole.ROLE_OWNER)){// cannot remove user who is the owner of the problem
+            if (input
+                .getRoleId()
+                .equals(UserContestProblemRole.ROLE_OWNER)) {// cannot remove user who is the owner of the problem
                 return ResponseEntity.ok().body(false);
             }
 
-            boolean ok = problemService.removeUserProblemRole(principal.getName(), input);
+            boolean ok = problemService.removeAUserProblemRole(principal.getName(), input);
             return ResponseEntity.ok().body(ok);
         } catch (Exception e) {
             if (e instanceof MiniLeetCodeException) {
@@ -236,7 +243,10 @@ public class ProblemController {
     }
 
     @PostMapping(value = "/teachers/problems/clone")
-    public ResponseEntity<?> cloneProblem(Principal principal, @RequestBody ModelCloneProblem cloneRequest) throws MiniLeetCodeException {
+    public ResponseEntity<?> cloneProblem(
+        Principal principal,
+        @RequestBody CloneProblemDTO cloneRequest
+    ) throws MiniLeetCodeException {
         return ResponseEntity.ok().body(problemService.cloneProblem(principal.getName(), cloneRequest));
     }
 
@@ -252,7 +262,6 @@ public class ProblemController {
     }
 
     /**
-     *
      * @param owner
      * @param filter
      * @return
@@ -264,7 +273,6 @@ public class ProblemController {
     }
 
     /**
-     *
      * @param owner
      * @param filter
      * @return
@@ -283,16 +291,65 @@ public class ProblemController {
 
     //@Secured("ROLE_EXT_DATA_QUERY")
     @GetMapping("/extapi/all-problems")
-    public ResponseEntity<?> extGetAllProblems(Principal principal){
+    public ResponseEntity<?> extGetAllProblems(Principal principal) {
         List<ContestProblemModelResponse> problems = problemTestCaseService.extApiGetAllProblems(principal.getName());
         return ResponseEntity.ok().body(problems);
     }
 
     @PostMapping("extapi/get-submissions-of-participant")
-    public ResponseEntity<?> getSubmissionOf(Principal principal, @RequestBody GetSubmissionsOfParticipantModelInput I){
+    public ResponseEntity<?> getSubmissionOf(@RequestBody GetSubmissionsOfParticipantModelInput I) {
         String participantId = I.getParticipantId();
         List<SubmissionModelResponse> res = problemService.extApiGetSubmissions(participantId);
         return ResponseEntity.ok().body(res);
+    }
+
+    @Secured("ROLE_STUDENT")
+    @GetMapping("/contests/{contestId}/problems/{problemId}/attachments/{fileId}")
+    public ResponseEntity<byte[]> downloadProblemAttachment(
+        Principal principal,
+        @PathVariable String contestId,
+        @PathVariable String problemId,
+        @PathVariable String fileId
+    ) {
+        AttachmentMetadata attachment = problemService.downloadProblemAttachment(
+            principal.getName(),
+            contestId,
+            problemId,
+            fileId);
+        return ResponseEntity.ok()
+                             .header(
+                                 HttpHeaders.CONTENT_DISPOSITION,
+                                 "attachment; filename=\"" + attachment.getFileName() + "\"")
+                             .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                             .body(attachment.getContent());
+    }
+
+    @Secured("ROLE_TEACHER")
+    @GetMapping("/problems/{problemId}/attachments/{fileId}")
+    public ResponseEntity<byte[]> downloadProblemAttachmentForTeacher(
+        Principal principal,
+        @PathVariable String problemId,
+        @PathVariable String fileId
+    ) {
+        AttachmentMetadata attachment = problemService.downloadProblemAttachmentForTeacher(
+            principal.getName(),
+            problemId,
+            fileId);
+        return ResponseEntity.ok()
+                             .header(
+                                 HttpHeaders.CONTENT_DISPOSITION,
+                                 "attachment; filename=\"" + attachment.getFileName() + "\"")
+                             .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                             .body(attachment.getContent());
+    }
+
+    @Secured("ROLE_TEACHER")
+    @PostMapping("/problems/import-from-contest")
+    public ResponseEntity<?> importProblemsFromAContest(
+        Principal principal, @RequestBody
+        ImportProblemsFromAContestDTO I
+    ) {
+        return ResponseEntity.ok().body(problemService.importProblemsFromAContest(principal.getName(), I));
     }
 
 //    @GetMapping("/grant-owner-role-problem-to-admin")

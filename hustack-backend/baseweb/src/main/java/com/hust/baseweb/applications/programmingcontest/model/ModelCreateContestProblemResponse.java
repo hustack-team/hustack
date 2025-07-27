@@ -60,9 +60,7 @@ public class ModelCreateContestProblemResponse {
 
     boolean isPublicProblem;
 
-    List<byte[]> attachment;
-
-    List<String> attachmentNames;
+    List<AttachmentMetadata> attachments;
 
     List<TagEntity> tags;
 

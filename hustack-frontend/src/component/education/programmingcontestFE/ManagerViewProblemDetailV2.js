@@ -1,77 +1,55 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { makeStyles } from "@material-ui/core/styles";
+
 import {
   Box,
   Button,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
+  IconButton,
   LinearProgress,
   Stack,
   TextField,
+  Tooltip,
   Typography,
-  Tab,
-  IconButton,
-  Collapse,
-  FormControlLabel,
-  Switch,
 } from "@mui/material";
-import { request } from "api";
+import {request, saveFile} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import {useTranslation} from "react-i18next";
+import {useHistory, useParams} from "react-router-dom";
 import FileUploadZone from "utils/FileUpload/FileUploadZone";
-import { randomImageName } from "utils/FileUpload/covert";
-import { PROBLEM_ROLE, PROBLEM_STATUS } from "utils/constants";
+import {PROBLEM_ROLE, PROBLEM_STATUS} from "utils/constants";
 import RichTextEditor from "../../common/editor/RichTextEditor";
-import { COMPUTER_LANGUAGES, CUSTOM_EVALUATION, mapLanguageToCodeBlockLanguage } from "./Constant";
+import {
+  COMPUTER_LANGUAGES,
+  CUSTOM_EVALUATION,
+  mapLanguageToCodeBlockLanguage,
+  mapLanguageToDisplayName
+} from "./Constant";
 import ContestsUsingAProblem from "./ContestsUsingAProblem";
 import ListTestCase from "./ListTestCase";
-import { localeOption } from "utils/NumberFormat";
-import { detail } from "./ContestProblemSubmissionDetailViewedByManager";
+import {localeOption} from "utils/NumberFormat";
+import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { getLevels, getStatuses } from "./CreateProblem";
+import {getLevels, getStatuses} from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
-import { StyledTabs } from "component/tab";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {AntTab, AntTabs} from "component/tab";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
+import ArticleRoundedIcon from '@mui/icons-material/ArticleRounded';
+import {dracula, github} from 'react-code-blocks';
+import {grey} from '@mui/material/colors';
+import RotatingIconButton from "../../common/RotatingIconButton";
+import {errorNoti} from "utils/notification";
 
-const useStyles = makeStyles((theme) => ({
-  blockCode: {
-    border: '2px solid black',
-    padding: theme.spacing(2),
-    marginTop: theme.spacing(2),
-    position: 'relative',
-  },
-  blockCodeStudent: {
-    border: '2px solid #4CAF50',
-    padding: theme.spacing(2),
-    marginTop: theme.spacing(2),
-    position: 'relative',
-    backgroundColor: '#E8F5E9',
-  },
-  forStudentLabel: {
-    position: 'absolute',
-    top: theme.spacing(1),
-    right: theme.spacing(1),
-    fontSize: '0.875rem',
-    color: theme.palette.text.secondary,
-  },
-  expandIcon: {
-    transition: theme.transitions.create('transform', {
-      duration: theme.transitions.duration.shortest,
-    }),
-  },
-  expandIconOpen: {
-    transform: 'rotate(180deg)',
-  },
-}));
 
 const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
   label: key,
@@ -79,11 +57,10 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 }));
 
 function ManagerViewProblemDetailV2() {
-  const { problemId } = useParams();
+  const {problemId} = useParams();
   const history = useHistory();
-  const classes = useStyles();
 
-  const { t } = useTranslation([
+  const {t} = useTranslation([
     "education/programmingcontest/problem",
     "common",
     "validation",
@@ -119,11 +96,12 @@ function ManagerViewProblemDetailV2() {
     categoryId: 0,
   });
   const [blockCodes, setBlockCodes] = useState(
-    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({ value }) => [value, []]))
+    Object.fromEntries(PROGRAMMING_LANGUAGES.map(({value}) => [value, []]))
   );
   const [selectedLanguage, setSelectedLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [isBlockCodesExpanded, setIsBlockCodesExpanded] = useState(false);
   const [blockDisplayMode, setBlockDisplayMode] = useState("individual");
+  const [rotationCount, setRotationCount] = useState(0);
 
   const handleExit = () => {
     history.push(`/programming-contest/list-problems`);
@@ -134,15 +112,8 @@ function ManagerViewProblemDetailV2() {
       setLoading(false);
       const data = res.data;
 
-      if (data.attachment && data.attachment.length !== 0) {
-        const newFileURLArray = data.attachment.map((url) => ({
-          id: randomImageName(),
-          content: url,
-        }));
-        newFileURLArray.forEach((file, idx) => {
-          file.fileName = data.attachmentNames[idx];
-        });
-        setFetchedImageArray(newFileURLArray);
+      if (data.attachments && data.attachments.length !== 0) {
+        setFetchedImageArray(data.attachments);
       }
 
       setProblemDetail({
@@ -156,7 +127,7 @@ function ManagerViewProblemDetailV2() {
 
       if (data.categoryId > 0) {
         const newBlockCodes = Object.fromEntries(
-          PROGRAMMING_LANGUAGES.map(({ value }) => [value, []])
+          PROGRAMMING_LANGUAGES.map(({value}) => [value, []])
         );
         data.blockCodes.forEach((block) => {
           if (newBlockCodes[block.language]) {
@@ -172,6 +143,14 @@ function ManagerViewProblemDetailV2() {
           newBlockCodes[lang].sort((a, b) => a.seq - b.seq);
         });
         setBlockCodes(newBlockCodes);
+        
+        // Select first language with block codes
+        const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang => 
+          newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
+        );
+        if (firstLanguageWithBlocks) {
+          setSelectedLanguage(firstLanguageWithBlocks.value);
+        }
       }
     });
   }, [problemId]);
@@ -197,11 +176,11 @@ function ManagerViewProblemDetailV2() {
 
   const handleClone = () => {
     if (hasSpecialCharacterProblemId()) {
-      setErrorMessage("Problem ID can only contain letters, numbers, underscores, and hyphens.");
+      setErrorMessage(t("common:invalidCharactersInProblemId"));
       return;
     }
     if (hasSpecialCharacterProblemName()) {
-      setErrorMessage("Problem Name can only contain letters and numbers.");
+      setErrorMessage(t("common:invalidCharactersInProblemName"));
       return;
     }
 
@@ -220,17 +199,17 @@ function ManagerViewProblemDetailV2() {
       },
       {
         onError: (error) => {
-          setErrorMessage("Failed to clone the problem. Please try again.");
+          setErrorMessage(t("common:cloneProblemFailed"));
           console.error("Error cloning problem:", error);
         },
         400: (error) => {
-          setErrorMessage("Invalid request. Please check your input.");
+          setErrorMessage(t("common:invalidInput"));
         },
         404: (error) => {
-          setErrorMessage("Original problem not found.");
+          setErrorMessage(t("common:problemNotFound"));
         },
         500: (error) => {
-          setErrorMessage("Original problem already exists.");
+          setErrorMessage(t("common:problemAlreadyExists"));
         },
       },
       cloneRequest
@@ -247,10 +226,24 @@ function ManagerViewProblemDetailV2() {
 
   const getCombinedBlockCode = () => {
     const blocks = blockCodes[selectedLanguage] || [];
-    if (blocks.length === 0) return "// No blocks available";
-    return blocks
-      .map((block, index) => `// --- Block ${block.seq} (${block.forStudent ? t("forStudent") : t("forTeacher")}) ---\n${block.code}`)
-      .join("\n\n");
+    return blocks.map((block, index) => `// Block ${index + 1}\n${block.code}`).join('\n\n');
+  };
+
+  const handleDownloadFile = (file) => {
+    request(
+      "GET",
+      `/problems/${problemId}/attachments/${file.id}`,
+      (res) => {
+        const fileName = file.fileName || file.id;
+        saveFile(fileName, res.data);
+      },
+      {
+        403: () => errorNoti(t('common:noPermissionToDownload')),
+        onError: () => errorNoti(t('common:error')),
+      },
+      null,
+      {responseType: "blob"}
+    );
   };
 
   return (
@@ -268,9 +261,9 @@ function ManagerViewProblemDetailV2() {
               onClick={() => {
                 history.push("/programming-contest/edit-problem/" + problemId);
               }}
-              startIcon={<EditIcon />}
+              startIcon={<EditIcon/>}
             >
-              {t("common:edit", { name: '' })}
+              {t("common:edit", {name: ''})}
             </PrimaryButton>
           )}
           {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
@@ -279,7 +272,7 @@ function ManagerViewProblemDetailV2() {
             <TertiaryButton
               variant="outlined"
               onClick={handleCloneDialogOpen}
-              startIcon={<ContentCopyIcon />}
+              startIcon={<ContentCopyIcon/>}
             >
               {t("clone")}
             </TertiaryButton>
@@ -313,7 +306,7 @@ function ManagerViewProblemDetailV2() {
             value={newProblemId}
             onChange={(e) => setNewProblemId(e.target.value)}
             error={hasSpecialCharacterProblemId()}
-            helperText={hasSpecialCharacterProblemId() ? "Invalid characters in Problem ID." : ""}
+            helperText={hasSpecialCharacterProblemId() ? t("common:invalidCharactersInProblemId") : ""}
           />
           <TextField
             margin="dense"
@@ -337,14 +330,14 @@ function ManagerViewProblemDetailV2() {
         </DialogActions>
       </Dialog>
 
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress/>}
       <Grid container spacing={2} display={loading ? "none" : ""}>
         {[
           [t("problemName"), problemDetail.problemName],
           [t("level"), getLevels(t).find(item => item.value === problemDetail.levelId)?.label],
           [t("status"), getStatuses(t).find(item => item.value === problemDetail.status)?.label],
           [
-            t("public", { ns: "common" }),
+            t("public", {ns: "common"}),
             problemDetail.public ? t("common:yes") : t("common:no"),
           ],
           [
@@ -387,90 +380,125 @@ function ManagerViewProblemDetailV2() {
         ))}
       </Grid>
 
-      <Box sx={{ marginTop: "24px", marginBottom: "24px" }}>
-        <Typography variant="h6" sx={{ marginBottom: "8px" }}>
+      <Box sx={{marginTop: 3, mb: 2}}>
+        <Typography variant="h6" sx={{mb: 1}}>
           {t("common:description")}
         </Typography>
-        <RichTextEditor
-          toolbarHidden
-          content={problemDetail.description}
-          readOnly
-          editorStyle={{ editor: {} }}
-        />
+        {problemDetail.description && problemDetail.description.trim() !== '' && (
+          <RichTextEditor
+            toolbarHidden
+            content={problemDetail.description}
+            readOnly
+            editorStyle={{editor: {}}}
+          />
+        )}
       </Box>
 
-      {problemDetail.sampleTestCase && (
-        <HustCopyCodeBlock title={t("sampleTestCase")} text={problemDetail.sampleTestCase} />
-      )}
-
-      {fetchedImageArray.length !== 0 &&
-        fetchedImageArray.map((file) => (
-          <FileUploadZone key={file.id} file={file} removable={false} />
-        ))}
-
-      {problemDetail.categoryId > 0 && (
-        <Box sx={{ marginTop: "24px" }}>
-          <Typography variant="h6" sx={{ marginBottom: "8px" }}>
-            {t("listProblemBlock")}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
-            <IconButton
-              onClick={() => setIsBlockCodesExpanded(!isBlockCodesExpanded)}
+      {problemDetail.categoryId === 1 && (
+        <>
+          <Box sx={{display: 'flex', alignItems: 'center', marginTop: 2}}>
+            <Typography variant="body1" sx={{ml: 0, fontWeight: 500}}>
+              {t("common:blockCode")}
+            </Typography>
+            <RotatingIconButton
+              onClick={() => {
+                setRotationCount(rotationCount + 1);
+                setIsBlockCodesExpanded(!isBlockCodesExpanded);
+              }}
               aria-expanded={isBlockCodesExpanded}
-              aria-label={t("common:toggleBlockCodes")}
-              style={{ color: '#00bcd4' }}
+              aria-label={t("common:blockCode")}
+              color="primary"
               size="small"
+              rotation={rotationCount * 180}
+              sx={{ml: 1}}
             >
-              <ExpandMoreIcon
-                className={`${classes.expandIcon} ${isBlockCodesExpanded ? classes.expandIconOpen : ""}`}
-              />
-            </IconButton>
-            <Typography variant="body1">{t("common:toggleBlockCodes")}</Typography>
+              <ArrowDropDownIcon />
+            </RotatingIconButton>
+            {isBlockCodesExpanded && (
+              <Box sx={{display: 'flex', alignItems: 'center', ml: 'auto', gap: 1}}>
+                <Tooltip title={t("common:listBlockLayout")}>
+                  <IconButton
+                    onClick={() => setBlockDisplayMode("individual")}
+                    color={blockDisplayMode === "individual" ? "primary" : "default"}
+                    size="small"
+                  >
+                    <FormatListBulletedRoundedIcon/>
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t("common:combinedBlockLayout")}>
+                  <IconButton
+                    onClick={() => setBlockDisplayMode("combined")}
+                    color={blockDisplayMode === "combined" ? "primary" : "default"}
+                    size="small"
+                  >
+                    <ArticleRoundedIcon/>
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
           </Box>
           <Collapse in={isBlockCodesExpanded}>
-            <Box sx={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={blockDisplayMode === "combined"}
-                    onChange={handleToggleBlockDisplayMode}
-                  />
-                }
-                label={
-                  blockDisplayMode === "combined"
-                    ? t("common:individualBlocks")
-                    : t("common:combinedBlock")
-                }
-              />
-            </Box>
-            <StyledTabs
-              value={selectedLanguage}
-              onChange={handleTabChange}
-              sx={{ marginBottom: "12px" }}
-            >
-            {PROGRAMMING_LANGUAGES.filter(lang => 
-              blockCodes[lang.value] && blockCodes[lang.value].length > 0
-            ).map((lang) => (
-              <Tab key={lang.value} label={lang.label} value={lang.value} />
-            ))}
-            </StyledTabs>
+            <AntTabs value={selectedLanguage} onChange={handleTabChange} sx={{marginBottom: "12px"}}>
+              {PROGRAMMING_LANGUAGES.filter(lang =>
+                blockCodes[lang.value] && blockCodes[lang.value].length > 0
+              ).map((lang) => (
+                <AntTab key={lang.value} label={mapLanguageToDisplayName(lang.value)} value={lang.value} sx={{textTransform: 'none'}}/>
+              ))}
+            </AntTabs>
             {blockDisplayMode === "individual" ? (
               blockCodes[selectedLanguage].length > 0 ? (
                 blockCodes[selectedLanguage].map((block, index) => (
                   <Box
                     key={block.id || index}
-                    className={block.forStudent ? classes.blockCodeStudent : classes.blockCode}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 2,
+                      mb: index === blockCodes[selectedLanguage].length - 1 ? 0 : 1,
+                    }}
                   >
-                    <Typography className={classes.forStudentLabel}>
-                      {block.forStudent ? t("forStudent") : t("forTeacher")}
-                    </Typography>
-                    <HustCopyCodeBlock
-                      title={`${t("blocks")} ${block.seq}`}
-                      text={block.code}
-                      language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
-                      showLineNumbers
-                      isStudentBlock={block.forStudent}
-                    />
+                    <Box
+                      sx={{
+                        width: '48px',
+                        minWidth: '48px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'flex-start',
+                        pt: '14px',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'text.secondary',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {block.seq}
+                      </Typography>
+                    </Box>
+                    <Box sx={{flex: 1}}>
+                      <Typography
+                        sx={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          fontSize: '0.875rem',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        {block.forStudent ? t("common:forStudent") : t("common:forTeacher")}
+                      </Typography>
+                      <Box sx={block.forStudent ? {border: `1px solid ${grey[900]}`, borderRadius: 1} : {}}>
+                        <HustCopyCodeBlock
+                          text={block.code}
+                          language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                          showLineNumbers
+                          isStudentBlock={block.forStudent}
+                          theme={block.forStudent ? github : dracula}
+                        />
+                      </Box>
+                    </Box>
                   </Box>
                 ))
               ) : (
@@ -484,21 +512,45 @@ function ManagerViewProblemDetailV2() {
               />
             )}
           </Collapse>
+        </>
+      )}
+
+      {problemDetail.sampleTestCase && (
+        <Box sx={{mt: 2}}>
+          <Typography variant="body1" sx={{mb: 1, fontWeight: 500}}>
+            {t("sampleTestCase")}
+          </Typography>
+          <HustCopyCodeBlock text={problemDetail.sampleTestCase}/>
         </Box>
       )}
 
-      <Box sx={{ marginTop: "28px" }} />
+      {fetchedImageArray.length !== 0 && (
+        <Box sx={{mt: 2}}>
+          <Typography variant="body1" sx={{mb: 1, fontWeight: 500}}>
+            {t("common:attachments")}
+          </Typography>
+          {fetchedImageArray.map((file) => (
+            <FileUploadZone key={file.id} file={file} removable={false} onDownload={handleDownloadFile}/>
+          ))}
+        </Box>
+      )}
+
+      <Box sx={{mt: 3}}/>
+      <Typography variant="h6" sx={{mb: 1}}>
+        {t("solutionSourceCode")}
+      </Typography>
       <HustCopyCodeBlock
-        title={t("solutionSourceCode")}
         language={mapLanguageToCodeBlockLanguage(problemDetail.correctSolutionLanguage)}
         text={problemDetail.correctSolutionSourceCode}
         showLineNumbers
       />
 
       {problemDetail.isPreloadCode && (
-        <Box sx={{ marginTop: "12px" }}>
+        <Box sx={{marginTop: "12px"}}>
+          <Typography variant="h6" sx={{mb: 1}}>
+            {t("preloadCode")}
+          </Typography>
           <HustCopyCodeBlock
-            title={t("preloadCode")}
             text={problemDetail.preloadCode}
             showLineNumbers
           />
@@ -506,9 +558,11 @@ function ManagerViewProblemDetailV2() {
       )}
 
       {problemDetail.isCustomEvaluated && (
-        <Box sx={{ marginTop: "24px" }}>
+        <Box sx={{marginTop: "24px"}}>
+          <Typography variant="h6" sx={{mb: 1}}>
+            {t("checkerSourceCode")}
+          </Typography>
           <HustCopyCodeBlock
-            title={t("checkerSourceCode")}
             language={mapLanguageToCodeBlockLanguage(problemDetail.solutionCheckerSourceLanguage)}
             text={problemDetail.solutionCheckerSourceCode}
             showLineNumbers
@@ -516,10 +570,10 @@ function ManagerViewProblemDetailV2() {
         </Box>
       )}
 
-      <ListTestCase mode={2} />
+      <ListTestCase mode={2}/>
 
-      <Box sx={{ height: "36px" }}></Box>
-      <ContestsUsingAProblem problemId={problemId} />
+      <Box sx={{height: "36px"}}></Box>
+      <ContestsUsingAProblem problemId={problemId}/>
     </ProgrammingContestLayout>
   );
 }

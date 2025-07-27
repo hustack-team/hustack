@@ -1,38 +1,30 @@
-import SearchIcon from "@mui/icons-material/Search";
-import { Button, InputBase, Tooltip } from "@mui/material";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import { request } from "api";
-import StandardTable from "component/table/StandardTable";
-import withScreenSecurity from "component/withScreenSecurity";
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { PROBLEM_ROLE } from "utils/constants";
-import { errorNoti, successNoti } from "utils/notification";
-import { Search, SearchIconWrapper } from "./lib";
 import {
   Autocomplete,
   Avatar,
+  IconButton,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Popper,
   Stack,
   TextField,
-  IconButton,
+  Tooltip
 } from "@mui/material";
+import Box from "@mui/material/Box";
+import {request} from "api";
+import StandardTable from "component/table/StandardTable";
+import withScreenSecurity from "component/withScreenSecurity";
+import {useEffect, useMemo, useState} from "react";
+import {useParams} from "react-router-dom";
+import {PROBLEM_ROLE} from "utils/constants";
+import {errorNoti, successNoti} from "utils/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { autocompleteClasses } from "@mui/material/Autocomplete";
-import { styled } from "@mui/material/styles";
-import { debounce } from "@mui/material/utils";
-import { makeStyles } from "@material-ui/core/styles";
+import {debounce, isEmpty, trim} from "lodash";
+import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "component/button/PrimaryButton";
 import StyledSelect from "component/select/StyledSelect";
-import { Group } from "@mui/icons-material";
-import { isEmpty, trim } from "lodash";
-import { stringAvatar, StyledAutocompletePopper } from "./AddMember2Contest";
-import { useTranslation } from "react-i18next";
+import {Group} from "@mui/icons-material";
+import {stringAvatar, StyledAutocompletePopper} from "./AddMember2Contest";
+import {useTranslation} from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   btn: { margin: "4px 8px" },
@@ -147,7 +139,7 @@ function UserContestProblemRole() {
       },
       {
         500: () => {
-          errorNoti("Server error", 3000);
+          errorNoti(t("common:serverError"), 3000);
         },
       },
       body
@@ -186,7 +178,7 @@ function UserContestProblemRole() {
           if (groupIds.length > 0) {
             errorNoti(t("common:addGroupRoleError", { message: err?.response?.data?.message || t("common:unknownError") }), 3000);
           } else {
-            errorNoti("Bad request: " + (err?.response?.data?.message || "Unknown error"), 3000);
+            errorNoti(t("common:badRequest") + ": " + (err?.response?.data?.message || t("common:unknownError")), 3000);
           }
         },
         500: () => {

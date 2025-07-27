@@ -16,8 +16,12 @@ const useStyles = makeStyles((theme) => ({
 const HustDropzoneArea = (props) => {
   const {
     title,
+    hideTitle = false,
     onChangeAttachment,
     classRoot,
+    showPreviews = true,
+    showPreviewsInDropzone = false,
+    useChipsForPreview = true,
     ...remainProps
   } = props;
 
@@ -27,20 +31,22 @@ const HustDropzoneArea = (props) => {
 
   return (
     <Box className={`${classRoot}`}>
-      <Typography
-        variant="h6"
-        display="block"
-        style={{margin: "24px 0 8px 0px", width: "100%"}}
-      >
-        {title ? title : t("title")}
-      </Typography>
+      {!hideTitle && (
+        <Typography
+          variant="h6"
+          display="block"
+          style={{margin: "24px 0 8px 0px", width: "100%"}}
+        >
+          {title || t("title")}
+        </Typography>
+      )}
       <DropzoneArea
         {...remainProps}
         dropzoneClass={classes.dropzone}
         filesLimit={10}
-        showPreviews={true}
-        showPreviewsInDropzone={false}
-        useChipsForPreview
+        showPreviews={showPreviews}
+        showPreviewsInDropzone={showPreviewsInDropzone}
+        useChipsForPreview={useChipsForPreview}
         dropzoneText={t("dropzoneText")}
         previewText={t("previewText")}
         previewChipProps={{

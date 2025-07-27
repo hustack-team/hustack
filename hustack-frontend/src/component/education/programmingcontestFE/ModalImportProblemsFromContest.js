@@ -1,13 +1,15 @@
-import { LoadingButton } from "@mui/lab";
-import { Box, TextField } from "@mui/material";
-import { request } from "api";
+import {LoadingButton} from "@mui/lab";
+import {Box, TextField} from "@mui/material";
+import {request} from "api";
 import HustModal from "component/common/HustModal";
-import React, { useState } from "react";
-import { errorNoti } from "utils/notification";
+import React, {useState} from "react";
+import {errorNoti} from "utils/notification";
 import StandardTable from "../../table/StandardTable";
+import {useTranslation} from "react-i18next";
 
 const ModalImportProblemsFromContest = (props) => {
   const { contestId, isOpen, handleClose } = props;
+  const { t } = useTranslation();
 
   const [fromContestId, setFromContestId] = useState("");
   const [importedProblems, setImportedProblems] = useState([]);
@@ -32,7 +34,7 @@ const ModalImportProblemsFromContest = (props) => {
       },
       {
         onError: (err) => {
-          errorNoti("An error happened", 5000);
+          errorNoti(t("common:error"), 5000);
         },
       },
       body
@@ -61,7 +63,7 @@ const ModalImportProblemsFromContest = (props) => {
 
   return (
     <HustModal
-      title={"Import all Problems from Contest"}
+      title={t("common:importProblemsFromContest")}
       open={isOpen}
       onClose={handleClose}
       isLoading={loading}
@@ -80,16 +82,12 @@ const ModalImportProblemsFromContest = (props) => {
           size="small"
           value={fromContestId}
           id="importFromContestId"
-          label="Contest ID"
+          label={t("common:contestId")}
           onChange={(event) => {
             setFromContestId(event.target.value);
           }}
           error={isValidContestId()}
-          helperText={
-            isValidContestId()
-              ? "Contest ID must not contain special characters including %^/\\|.?;[]"
-              : ""
-          }
+          helperText={isValidContestId() ? t("common:invalidContestId") : ""}
           sx={{ width: "75%", mr: 2 }}
         />
         <LoadingButton
@@ -99,18 +97,13 @@ const ModalImportProblemsFromContest = (props) => {
           onClick={handleImportProblems}
           disabled={isValidContestId()}
         >
-          Import
+          {t("common:import")}
         </LoadingButton>
       </Box>
       {importedProblems.length > 0 && (
         <StandardTable
           title={
-            importedProblems.filter(
-              (problem) => problem.status === "SUCCESSFUL"
-            ).length +
-            "/" +
-            importedProblems.length +
-            " Successful"
+            `${importedProblems.filter((problem) => problem.status === "SUCCESSFUL").length}/${importedProblems.length} ${t("common:successful")}`
           }
           columns={columns}
           data={importedProblems}

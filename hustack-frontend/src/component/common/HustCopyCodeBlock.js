@@ -8,6 +8,7 @@ const HustCopyBlock = (props) => {
     showLineNumbers = false,
     wrapLines = true,
     title,
+    theme = dracula,
     ...remainProps
   } = props;
 
@@ -22,7 +23,7 @@ const HustCopyBlock = (props) => {
         codeBlock
         text={text || " "}
         showLineNumbers={showLineNumbers}
-        theme={dracula}
+        theme={theme}
         wrapLines={wrapLines}
         {...remainProps}
         customStyle={{

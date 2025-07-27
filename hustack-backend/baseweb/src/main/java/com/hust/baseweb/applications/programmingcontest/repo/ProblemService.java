@@ -12,48 +12,53 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public interface ProblemService {
-    ProblemEntity createContestProblem(String userID, ModelCreateContestProblem dto, MultipartFile[] files);
 
-    ProblemEntity updateContestProblem(
+    ProblemEntity createProblem(String userID, ModelCreateContestProblem dto, MultipartFile[] files);
+
+    ProblemEntity editProblem(
         String problemId,
         String userId,
         ModelUpdateContestProblem dto,
         MultipartFile[] files
-    ) throws Exception;
-
-    List<ModelStudentOverviewProblem> getStudentContestProblems(String userId, String contestId);
+    );
 
     List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo();
 
-    boolean removeUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
+    boolean removeAUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
 
     Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception;
 
     Page<ProblemDTO> getProblems(String ownerId, ProblemFilter filter, Boolean isPublic);
 
-    ProblemEntity cloneProblem(String userId, ModelCloneProblem cloneRequest) throws MiniLeetCodeException;
+    ProblemEntity cloneProblem(String userId, CloneProblemDTO cloneRequest) throws MiniLeetCodeException;
 
     Page<ProblemDTO> getPublicProblems(String userId, ProblemFilter filter);
 
     List<SubmissionModelResponse> extApiGetSubmissions(String participantId);
 
-    List<ProblemEntity> getAllProblems(String userId);
-
     Page<ProblemDTO> getSharedProblems(String userId, ProblemFilter filter);
 
-    List<ModelImportProblemFromContestResponse> importProblemsFromAContest(ModelImportProblemsFromAContestInput I);
+    List<ModelImportProblemFromContestResponse> importProblemsFromAContest(
+        String userId,
+        ImportProblemsFromAContestDTO I
+    );
 
-    ModelCreateContestProblemResponse getContestProblemDetailByIdAndTeacher(
+    ModelCreateContestProblemResponse getProblemDetailForManager(
         String problemId,
-        String teacherId
+        String userId
     ) throws Exception;
 
     void exportProblem(String id, OutputStream outputStream);
 
-    List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId);
+    List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId, String userId);
 
-    ModelCreateContestProblemResponse getContestProblem(String problemId) throws Exception;
+    ProblemDetailForParticipantDTO getProblemDetailForParticipant(String userId, String contestId, String problemId);
+
+    List<ModelStudentOverviewProblem> getListProblemsInContestForParticipant(String userId, String contestId);
+
+    AttachmentMetadata downloadProblemAttachment(String userId, String contestId, String problemId, String fileId);
+
+    AttachmentMetadata downloadProblemAttachmentForTeacher(String userId, String problemId, String fileId);
 }
