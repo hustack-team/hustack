@@ -1362,41 +1362,27 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         return res;
     }
 
-    // TODO: try approach one join query
     @Override
-    public ModelGetContestPageResponse getRegisteredContestsByUser(String userId) {
-        List<UserRegistrationContestEntity> registrations = userRegistrationContestRepo
-            .findAllByUserIdAndRoleIdAndStatus(
+    public ModelGetContestPageResponse getRegisteredContestsForParticipant(String userId) {
+        List<ContestEntity> contests = userRegistrationContestRepo
+            .findRegisteredContestsForParticipant(
                 userId,
                 UserRegistrationContestEntity.ROLE_PARTICIPANT,
                 UserRegistrationContestEntity.STATUS_SUCCESSFUL);
 
-        List<ModelGetContestResponse> res = new ArrayList<>();
-        if (registrations != null) {
-            Set<String> contestIds = registrations
-                .stream()
-                .map(UserRegistrationContestEntity::getContestId)
-                .collect(Collectors.toSet());
+        List<ModelGetContestResponse> res = contests.stream()
+                                                    .map(contest -> ModelGetContestResponse.builder()
+                                                                                           .contestId(contest.getContestId())
+                                                                                           .contestName(contest.getContestName())
+                                                                                           .contestTime(contest.getContestSolvingTime())
+                                                                                           .countDown(contest.getCountDown())
+                                                                                           .startAt(contest.getStartedAt())
+                                                                                           .statusId(contest.getStatusId())
+                                                                                           .userId(contest.getUserId())
+                                                                                           .createdAt(contest.getCreatedAt())
+                                                                                           .build())
+                                                    .collect(Collectors.toList());
 
-            List<ContestEntity> contests = contestRepo.findByContestIdInAndStatusIdNot(
-                contestIds,
-                ContestEntity.CONTEST_STATUS_DISABLED);
-
-            res = contests.stream()
-                          .map(contest -> ModelGetContestResponse.builder()
-                                                                 .contestId(contest.getContestId())
-                                                                 .contestName(contest.getContestName())
-                                                                 .contestTime(contest.getContestSolvingTime())
-                                                                 .countDown(contest.getCountDown())
-                                                                 .startAt(contest.getStartedAt())
-                                                                 .statusId(contest.getStatusId())
-                                                                 .userId(contest.getUserId())
-                                                                 .createdAt(contest.getCreatedAt())
-                                                                 .build())
-                          .collect(Collectors.toList());
-        }
-
-        Collections.reverse(res);
         return ModelGetContestPageResponse.builder()
                                           .contests(res)
                                           .build();
@@ -3288,27 +3274,45 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 
     @Override
     public ModelGetContestPageResponse getAllPublicContests() {
-        List<ContestEntity> publicContestEntities = contestRepo.findByContestPublicTrue();
-
-        List<ModelGetContestResponse> publicContests = publicContestEntities.stream()
-                                                                            .map(contest -> ModelGetContestResponse
-                                                                                .builder()
-                                                                                .contestId(contest.getContestId())
-                                                                                .contestName(contest.getContestName())
-                                                                                .contestTime(contest.getContestSolvingTime())
-                                                                                .countDown(contest.getCountDown())
-                                                                                .startAt(contest.getStartedAt())
-                                                                                .statusId(contest.getStatusId())
-                                                                                .userId(contest.getUserId())
-                                                                                .createdAt(contest.getCreatedAt())
-                                                                                .build())
-                                                                            .collect(Collectors.toList());
-
-        long count = publicContests.size();
+        List<ModelGetContestResponse> publicContests = contestRepo.findByContestPublicTrue()
+                                                                  .stream()
+                                                                  .map(contest -> ModelGetContestResponse
+                                                                      .builder()
+                                                                      .contestId(contest.getContestId())
+                                                                      .contestName(contest.getContestName())
+//                                                                                .contestTime(contest.getContestSolvingTime())
+//                                                                                .countDown(contest.getCountDown())
+//                                                                                .startAt(contest.getStartedAt())
+                                                                      .statusId(contest.getStatusId())
+                                                                      .userId(contest.getUserId())
+                                                                      .createdAt(contest.getCreatedAt())
+                                                                      .build())
+                                                                  .collect(Collectors.toList());
 
         return ModelGetContestPageResponse.builder()
                                           .contests(publicContests)
-                                          .count(count)
+                                          .build();
+    }
+
+    @Override
+    public ModelGetContestPageResponse getAllPublicContestsForParticipant() {
+        List<ModelGetContestResponse> publicContests = contestRepo.findPublicContestsForParticipant()
+                                                                  .stream()
+                                                                  .map(contest -> ModelGetContestResponse
+                                                                      .builder()
+                                                                      .contestId(contest.getContestId())
+                                                                      .contestName(contest.getContestName())
+//                                                                                .contestTime(contest.getContestSolvingTime())
+//                                                                                .countDown(contest.getCountDown())
+//                                                                                .startAt(contest.getStartedAt())
+                                                                      .statusId(contest.getStatusId())
+                                                                      .userId(contest.getUserId())
+//                                                                                .createdAt(contest.getCreatedAt())
+                                                                      .build())
+                                                                  .collect(Collectors.toList());
+
+        return ModelGetContestPageResponse.builder()
+                                          .contests(publicContests)
                                           .build();
     }
 }

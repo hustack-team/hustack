@@ -44,7 +44,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -507,43 +506,46 @@ public class ContestController {
         apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log", logM);
     }
 
+    @Secured("ROLE_STUDENT")
     @GetMapping("/students/contests")
-    public ResponseEntity<?> getContestRegisteredStudent(Principal principal) {
+    public ResponseEntity<?> getRegisteredContestsForParticipant(Principal principal) {
         //logStudentGetHisContests(principal.getName());
 
-        ModelGetContestPageResponse res = problemTestCaseService.getRegisteredContestsByUser(principal.getName());
-        List<ModelGetContestResponse> filteredContests = res.getContests().stream()
-                                                            .filter(contest -> Arrays
-                                                                .asList("CREATED", "RUNNING", "COMPLETED")
-                                                                .contains(contest.getStatusId()))
-                                                            .collect(Collectors.toList());
-        res.setContests(filteredContests);
+        ModelGetContestPageResponse res = problemTestCaseService.getRegisteredContestsForParticipant(principal.getName());
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/public")
     public ResponseEntity<ModelGetContestPageResponse> getAllPublicContests() {
         ModelGetContestPageResponse response = problemTestCaseService.getAllPublicContests();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/students/not-registered-contests")
-    public ResponseEntity<?> getContestNotRegisteredByStudentPaging(
-        Pageable pageable, @Param("sortBy") String sortBy,
-        Principal principal
-    ) {
-        log.info("getContestRegisteredByStudentPaging sortBy {} pageable {}", sortBy, pageable);
-        if (sortBy != null) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortBy));
-        } else {
-            pageable = PageRequest.of(
-                pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by("startedAt").descending());
-        }
-        ModelGetContestPageResponse modelGetContestPageResponse = problemTestCaseService
-            .getNotRegisteredContestByUser(pageable, principal.getName());
-        return ResponseEntity.ok().body(modelGetContestPageResponse);
+    @Secured("ROLE_STUDENT")
+    @GetMapping("/students/contests/public")
+    public ResponseEntity<ModelGetContestPageResponse> getPublicContestsForStudents() {
+        ModelGetContestPageResponse response = problemTestCaseService.getAllPublicContestsForParticipant();
+        return ResponseEntity.ok(response);
     }
+
+//    @GetMapping("/students/not-registered-contests")
+//    public ResponseEntity<?> getContestNotRegisteredByStudentPaging(
+//        Pageable pageable, @Param("sortBy") String sortBy,
+//        Principal principal
+//    ) {
+//        log.info("getContestRegisteredByStudentPaging sortBy {} pageable {}", sortBy, pageable);
+//        if (sortBy != null) {
+//            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortBy));
+//        } else {
+//            pageable = PageRequest.of(
+//                pageable.getPageNumber(), pageable.getPageSize(),
+//                Sort.by("startedAt").descending());
+//        }
+//        ModelGetContestPageResponse modelGetContestPageResponse = problemTestCaseService
+//            .getNotRegisteredContestByUser(pageable, principal.getName());
+//        return ResponseEntity.ok().body(modelGetContestPageResponse);
+//    }
 
     @Secured("ROLE_TEACHER")
     @Deprecated
@@ -853,6 +855,7 @@ public class ContestController {
         return ResponseEntity.ok().body(uploadedUsers);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/contests/students/upload-group-list")
     public ResponseEntity<?> uploadExcelStudentGroupListOfContest(
         Principal principal,

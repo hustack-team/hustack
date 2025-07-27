@@ -5,18 +5,12 @@ import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
-import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.model.TestCaseFilter;
-import com.hust.baseweb.model.dto.ProblemDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface ProblemTestCaseService {
@@ -107,7 +101,7 @@ public interface ProblemTestCaseService {
 
     List<ModelMemberOfContestResponse> getPendingRegisteredUsersOfContest(String contestId);
 
-    ModelGetContestPageResponse getRegisteredContestsByUser(String userName);
+    ModelGetContestPageResponse getRegisteredContestsForParticipant(String userName);
 
     ModelGetContestPageResponse getNotRegisteredContestByUser(Pageable pageable, String userName);
 
@@ -243,4 +237,6 @@ public interface ProblemTestCaseService {
     List<ContestProblemModelResponse> extApiGetAllProblems(String userID);
 
     ModelGetContestPageResponse getAllPublicContests();
+
+    ModelGetContestPageResponse getAllPublicContestsForParticipant();
 }

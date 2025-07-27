@@ -1,5 +1,6 @@
 package com.hust.baseweb.applications.programmingcontest.repo;
 
+import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.UserRegistrationContestEntity;
 import com.hust.baseweb.applications.programmingcontest.model.ContestMembers;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -85,5 +86,14 @@ public interface UserRegistrationContestRepo extends JpaRepository<UserRegistrat
                    "and status = ?2",
            nativeQuery = true)
     List<String> getAllUserIdsInContest(String contestId, String status);
+
+    @Query("select c from ContestEntity c " +
+           "inner join UserRegistrationContestEntity urcn on c.contestId = urcn.contestId " +
+           "where urcn.userId = ?1 " +
+           "and urcn.roleId = ?2 " +
+           "and urcn.status = ?3 " +
+           "and c.statusId in ('OPEN', 'RUNNING', 'COMPLETED') " +
+           "order by c.createdAt desc")
+    List<ContestEntity> findRegisteredContestsForParticipant(String userId, String roleId, String status);
 
 }

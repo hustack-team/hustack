@@ -23,4 +23,11 @@ public interface ContestRepo extends JpaRepository<ContestEntity, String> {
 
     List<ContestEntity> findByContestPublicTrue();
 
+    @Query(value = "select * from contest_new " +
+                   "where contest_public = true " +
+                   "and status_id in ('RUNNING', 'COMPLETED') " +
+                   "order by created_at desc",
+           nativeQuery = true)
+    List<ContestEntity> findPublicContestsForParticipant();
+
 }
