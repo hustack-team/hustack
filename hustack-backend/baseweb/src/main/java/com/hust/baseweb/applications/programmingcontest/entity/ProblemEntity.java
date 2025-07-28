@@ -55,7 +55,7 @@ public class ProblemEntity implements Serializable {
     private String levelId;
 
     @Column(name = "category_id")
-    private String categoryId;
+    private Integer categoryId;
 
     @Column(name = "correct_solution_source_code")
     private String correctSolutionSourceCode;

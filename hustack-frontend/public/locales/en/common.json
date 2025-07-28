@@ -106,5 +106,15 @@
   "canEditCoefficientPointToolTip": "If Yes, allows setting a score weight for each problem. If No, all problems have the same score weight of 1.0",
   "scoreCoefficientInput": "Enter a positive integer from 1 to 100 (default is 1)",
   "testCaseCount": "Test Cases",
-  "totalTestCasePoint": "Total Test Cases Points"
+  "totalTestCasePoint": "Total Test Cases Points",
+   "dropzone": {
+    "title": "Attachment files",
+    "dropzoneTextDefault": "Drag and drop files here or click to select files",
+    "dropzoneTextWithInfo": "Drag and drop files here or click to select files\nSupported file formats: {{types}}\n Maximum size: {{maxSize}}MB per file\nMaximum number of files: {{maxFiles}}",
+    "previewText": "Files:",
+    "getFileAddedMessage": "The file {{fileName}} has been uploaded successfully",
+    "getFileRemovedMessage": "File {{fileName}} has been removed",
+    "getFileLimitExceedMessage": "Maximum number of files exceeded. You can upload up to {{filesLimit}} files only"
+  }
+
 }
