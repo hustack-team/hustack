@@ -43,9 +43,8 @@ public class ModelUpdateContestProblem {
 
     String solution;
 
-    Boolean isPreloadCode;
-
-    String preloadCode;
+    // Boolean isPreloadCode; // Preload Code functionality - DISABLED
+    // String preloadCode; // Preload Code functionality - DISABLED
 
     Boolean isPublic;
 

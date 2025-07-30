@@ -176,9 +176,9 @@ function UserContestProblemRole() {
       {
         400: (err) => {
           if (groupIds.length > 0) {
-            errorNoti(t("common:addGroupRoleError", { message: err?.response?.data?.message || t("common:unknownError") }), 3000);
+            errorNoti(t("common:addGroupRoleError", { message: err?.response?.data?.message || t("common:error") }), 3000);
           } else {
-            errorNoti(t("common:badRequest") + ": " + (err?.response?.data?.message || t("common:unknownError")), 3000);
+            errorNoti(t("common:badRequest") + ": " + (err?.response?.data?.message || t("common:error")), 3000);
           }
         },
         500: () => {

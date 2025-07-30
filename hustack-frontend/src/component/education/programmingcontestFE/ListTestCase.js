@@ -420,7 +420,7 @@ export default function ListTestCase({mode}) {
   }, [page, pageSize]);
 
   return (
-    <Box sx={{marginTop: "36px"}}>
+    <>
       <Stack direction="row" justifyContent='space-between' mb={1.5}>
         <Typography variant="h6">{t("Test Case")}</Typography>
 
@@ -487,6 +487,6 @@ export default function ListTestCase({mode}) {
                            entity='test case'
                            name={selectedTestCase?.description}
       />
-    </Box>
+    </>
   );
 }

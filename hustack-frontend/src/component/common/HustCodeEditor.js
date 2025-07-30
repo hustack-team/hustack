@@ -30,6 +30,7 @@ const HustCodeEditor = (props) => {
   const {
     classRoot,
     title,
+    customTitle,
     placeholder,
     language,
     onChangeLanguage,
@@ -46,9 +47,9 @@ const HustCodeEditor = (props) => {
 
   return (
     <Box {...remainProps} className={`${classRoot}`}>
-      {hideProgrammingLanguage !== 1 && (
-        <Box sx={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginBottom: "8px"}}>
-          <Typography variant="h6">{title}</Typography>
+      {hideProgrammingLanguage !== 1 && (title || customTitle || (!hideLanguagePicker && language)) && (
+        <Box sx={{display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: "8px"}}>
+          {customTitle ? customTitle : (title && <Typography variant="h6">{title}</Typography>)}
           {language && !hideLanguagePicker && (
             <HustCodeLanguagePicker
               listLanguagesAllowed={listLanguagesAllowed}

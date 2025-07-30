@@ -85,8 +85,8 @@ function EditProblem() {
   const [memoryLimit, setMemoryLimit] = useState('');
   const [levelId, setLevelId] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
-  const [isPreloadCode, setIsPreloadCode] = useState(false);
-  const [preloadCode, setPreloadCode] = useState("");
+  // const [isPreloadCode, setIsPreloadCode] = useState(false); // Preload Code functionality - DISABLED
+  // const [preloadCode, setPreloadCode] = useState(""); // Preload Code functionality - DISABLED
   const [solutionCheckerLanguage, setSolutionCheckerLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [solutionChecker, setSolutionChecker] = useState("");
   const [isCustomEvaluated, setIsCustomEvaluated] = useState(false);
@@ -280,8 +280,8 @@ function EditProblem() {
       correctSolutionLanguage: languageSolution,
       solution: solution,
       correctSolutionSourceCode: codeSolution,
-      isPreloadCode: isPreloadCode,
-      preloadCode: preloadCode,
+      // isPreloadCode: isPreloadCode, // Preload Code functionality - DISABLED
+      // preloadCode: preloadCode, // Preload Code functionality - DISABLED
       solutionChecker: solutionChecker,
       solutionCheckerLanguage: solutionCheckerLanguage,
       isPublic: isPublic === 'Y',
@@ -390,7 +390,7 @@ function EditProblem() {
   const debouncedMoveUp = useMemo(() => debounce((index) => handleMoveUp(index), 300), [handleMoveUp]);
   const debouncedMoveDown = useMemo(() => debounce((index) => handleMoveDown(index), 300), [handleMoveDown]);
   const debouncedSolutionCodeChange = useMemo(() => debounce((code) => setCodeSolution(code), 300), []);
-  const debouncedPreloadCodeChange = useMemo(() => debounce((code) => setPreloadCode(code), 300), []);
+  // const debouncedPreloadCodeChange = useMemo(() => debounce((code) => setPreloadCode(code), 300), []); // Preload Code functionality - DISABLED
   const debouncedCheckerCodeChange = useMemo(() => debounce((code) => setSolutionChecker(code), 300), []);
 
   const handleInsertAbove = (index) => {
@@ -546,8 +546,8 @@ function EditProblem() {
         setIsPublic(data.publicProblem ? 'Y' : 'N');
         setLanguageSolution(data.correctSolutionLanguage);
         setCodeSolution(data.correctSolutionSourceCode);
-        setIsPreloadCode(data.isPreloadCode);
-        setPreloadCode(data.preloadCode);
+        // setIsPreloadCode(data.isPreloadCode); // Preload Code functionality - DISABLED
+        // setPreloadCode(data.preloadCode); // Preload Code functionality - DISABLED
         setSolutionCheckerLanguage(data.solutionCheckerSourceLanguage);
         setSolutionChecker(data.solutionCheckerSourceCode || "");
         setIsCustomEvaluated(data.scoreEvaluationType === CUSTOM_EVALUATION);
@@ -796,7 +796,7 @@ function EditProblem() {
           variant="h6"
           sx={{marginTop: "8px", marginBottom: "8px"}}
         >
-          {t("problemDescription")}
+          {t("common:description")}
         </Typography>
         <RichTextEditor
           content={description}
@@ -814,8 +814,8 @@ function EditProblem() {
           sx={{mt: 1}}
         />
         {isProblemBlock && canEditBlocks !== undefined && (
-          <Box sx={{mt: -3}}>
-            <Box sx={{display: 'flex', alignItems: 'center', marginTop: '24px'}}>
+          <Box sx={{mt: 1}}>
+            <Box sx={{display: 'flex', alignItems: 'center'}}>
               <Typography variant="body1" sx={{ml: 0}}>
                 {t("common:blockCode")}
               </Typography>
@@ -1051,57 +1051,73 @@ function EditProblem() {
               )}
             </Collapse>
             {canEditBlocks && (
-              <Stack direction="row" spacing={2} sx={{marginTop: "12px"}}>
-                <TertiaryButton
-                  variant="outlined"
-                  startIcon={<AddIcon/>}
-                  onClick={handleAddBlock}
-                  disabled={!canEditBlocks}
-                >
-                  {t("addProblemBlock")}
-                </TertiaryButton>
-                <TertiaryButton
-                  variant="outlined"
-                  startIcon={<ContentCopyIcon/>}
-                  onClick={handleCopyAllCode}
-                  disabled={!(blockCodes[selectedLanguage]?.length > 0)}
-                >
-                  {t("common:copyCode")}
-                </TertiaryButton>
-              </Stack>
+              <>
+                <Box sx={{display: 'flex', alignItems: 'center', mt: 2, gap: 2}}>
+                  <Box sx={{width: '48px', minWidth: '48px'}}/>
+                  <Typography variant="body2" color="warning.main" sx={{ml: 0}}>
+                    {t('common:blockCodeAutoRemoveNote')}
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={2} sx={{mt: 2}}>
+                  <TertiaryButton
+                    variant="outlined"
+                    startIcon={<AddIcon/>}
+                    onClick={handleAddBlock}
+                    disabled={!canEditBlocks}
+                  >
+                    {t("addProblemBlock")}
+                  </TertiaryButton>
+                  <TertiaryButton
+                    variant="outlined"
+                    startIcon={<ContentCopyIcon/>}
+                    onClick={handleCopyAllCode}
+                    disabled={!(blockCodes[selectedLanguage]?.length > 0)}
+                  >
+                    {t("common:copyCode")}
+                  </TertiaryButton>
+                </Stack>
+              </>
             )}
           </Box>
         )}
 
-        {/* File Attachments */}
-        <Box sx={{mt: 2}}>
-          <Typography variant="body1" sx={{mb: 1, fontWeight: 500}}>
-            Tệp đính kèm
-          </Typography>
-          <HustDropzoneArea
-            hideTitle={true}
-            showPreviews={true}
-            showPreviewsInDropzone={false}
-            useChipsForPreview={true}
-            onChangeAttachment={(files) => handleAttachmentFiles(files)}
-          />
+        {/* Sample Testcase */}
+        <Typography variant="body1" sx={{mb: 1, mt: 2}}>{t('common:sampleTestcase')}</Typography>
+        <HustCodeEditor
+          hideProgrammingLanguage={1}
+          placeholder={null}
+          sourceCode={sampleTestCase}
+          onChangeSourceCode={(code) => {
+            setSampleTestCase(code);
+          }}
+          minLines={15}
+        />
 
-          {/* Display existing files from API */}
-          {fetchedImageArray.length > 0 && (
-            <Stack spacing={0.5} sx={{mt: 1}}>
-              {fetchedImageArray.map((file) => (
-                <FileUploadZone
-                  key={file.id}
-                  file={file}
-                  removable={true}
-                  downloadable={true}
-                  onDownload={handleDownloadFile}
-                  onRemove={() => handleDeleteImageAttachment(file.id)}
-                />
-              ))}
-            </Stack>
-          )}
-        </Box>
+        {/* File Attachments */}
+        <Typography variant="body1" sx={{mb: 1, mt: 2}}>{t('common:attachments')}</Typography>
+        <HustDropzoneArea
+          hideTitle={true}
+          showPreviews={true}
+          showPreviewsInDropzone={false}
+          useChipsForPreview={true}
+          onChangeAttachment={(files) => handleAttachmentFiles(files)}
+        />
+
+        {/* Display existing files from API */}
+        {fetchedImageArray.length > 0 && (
+          <Stack spacing={0.5} sx={{mt: 1}}>
+            {fetchedImageArray.map((file) => (
+              <FileUploadZone
+                key={file.id}
+                file={file}
+                removable={true}
+                downloadable={true}
+                onDownload={handleDownloadFile}
+                onRemove={() => handleDeleteImageAttachment(file.id)}
+              />
+            ))}
+          </Stack>
+        )}
       </Box>
 
       <Box sx={{mt: 3}}/>
@@ -1113,13 +1129,14 @@ function EditProblem() {
         }}
         sourceCode={codeSolution}
         onChangeSourceCode={debouncedSolutionCodeChange}
+        minLines={15}
       />
 
       <LoadingButton
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{margin: "12px 0", textTransform: 'none'}}
+        sx={{mt: 1.5, textTransform: 'none'}}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -1130,6 +1147,7 @@ function EditProblem() {
         detail={compileMessage}
       />
 
+      {/* Preload Code functionality - DISABLED
       <Box sx={{marginTop: "12px"}}>
         <FormControlLabel
           label={t("isPreloadCode")}
@@ -1150,8 +1168,9 @@ function EditProblem() {
           />
         )}
       </Box>
+      */}
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{mt: 2, mb: 3}}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
@@ -1161,28 +1180,28 @@ function EditProblem() {
             />
           }
         />
-        <Typography variant="body2" color="gray">
+        <Typography variant="body2" color="gray" sx={{mb: 1}}>
           {t("customEvaluationNote1")}
         </Typography>
 
         {isCustomEvaluated && (
           <HustCodeEditor
-            title={t("checkerSourceCode")}
+            customTitle={<Typography variant="body1">{t("checkerSourceCode")}</Typography>}
             language={solutionCheckerLanguage}
             onChangeLanguage={(event) => {
               setSolutionCheckerLanguage(event.target.value);
             }}
             sourceCode={solutionChecker}
             onChangeSourceCode={debouncedCheckerCodeChange}
-            placeholder={t("checkerSourceCodePlaceholder")}
+            minLines={15}
           />
         )}
       </Box>
 
       <ListTestCase/>
 
-      <Stack direction="row" spacing={2} mt={2}>
-        <TertiaryButton variant="outlined" onClick={handleExit}>
+      <Stack direction="row" spacing={2} sx={{mt: 3}}>
+        <TertiaryButton color='inherit' onClick={handleExit}>
           {t("common:exit")}
         </TertiaryButton>
         <LoadingButton

@@ -1,7 +1,9 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
 import com.hust.baseweb.applications.programmingcontest.entity.ProblemStatus;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
@@ -41,9 +43,8 @@ public class ModelCreateContestProblem {
 
     String solution;
 
-    Boolean isPreloadCode;
-
-    String preloadCode;
+    // Boolean isPreloadCode; // Preload Code functionality - DISABLED
+    // String preloadCode; // Preload Code functionality - DISABLED
 
     Boolean isPublic;
 

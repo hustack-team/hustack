@@ -138,8 +138,8 @@ public class ProblemServiceImpl implements ProblemService {
                                              .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
                                              .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
                                              .solution(dto.getSolution())
-                                             .isPreloadCode(dto.getIsPreloadCode())
-                                             .preloadCode(dto.getPreloadCode())
+                                             // .isPreloadCode(dto.getIsPreloadCode()) // Preload Code functionality - DISABLED
+                                             // .preloadCode(dto.getPreloadCode()) // Preload Code functionality - DISABLED
                                              .solutionCheckerSourceCode(dto.getSolutionChecker())
                                              .solutionCheckerSourceLanguage(dto.getSolutionCheckerLanguage())
                                              .scoreEvaluationType(dto.getScoreEvaluationType() != null
@@ -311,8 +311,8 @@ public class ProblemServiceImpl implements ProblemService {
         problem.setLevelId(dto.getLevelId());
         problem.setSolution(dto.getSolution());
 //        problem.setTimeLimit(dto.getTimeLimit());
-        problem.setIsPreloadCode(dto.getIsPreloadCode());
-        problem.setPreloadCode(dto.getPreloadCode());
+        // problem.setIsPreloadCode(dto.getIsPreloadCode()); // Preload Code functionality - DISABLED
+        // problem.setPreloadCode(dto.getPreloadCode()); // Preload Code functionality - DISABLED
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
         problem.setTimeLimitJAVA(dto.getTimeLimitJAVA());
         problem.setTimeLimitPYTHON(dto.getTimeLimitPYTHON());
@@ -924,9 +924,15 @@ public class ProblemServiceImpl implements ProblemService {
             return new ArrayList<>();
         }
 
+        // Filter out empty creator blocks
+        List<BlockCode> filteredBlockCodes = blockCodes.stream()
+                                                       .filter(bc -> Integer.valueOf(1).equals(bc.getForStudent()) ||
+                                                                     !StringUtils.isBlank(bc.getCode()))
+                                                       .toList();
+
         List<ProblemBlock> problemBlocks = new ArrayList<>();
-        Map<String, List<BlockCode>> blocksByLanguage = blockCodes.stream()
-                                                                  .collect(Collectors.groupingBy(BlockCode::getLanguage));
+        Map<String, List<BlockCode>> blocksByLanguage = filteredBlockCodes.stream()
+                                                                          .collect(Collectors.groupingBy(BlockCode::getLanguage));
         for (List<BlockCode> blocks : blocksByLanguage.values()) {
             for (int i = 0; i < blocks.size(); i++) {
                 BlockCode blockCode = blocks.get(i);
@@ -962,7 +968,7 @@ public class ProblemServiceImpl implements ProblemService {
         if (ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
             return null;
         }
-        
+
         ContestProblem contestProblem = contestProblemRepo.findByContestIdAndProblemId(contestId, problemId);
         ModelCreateContestProblemResponse problemDetail = getProblemDetail(problemId);
         ProblemDetailForParticipantDTO response = new ProblemDetailForParticipantDTO();
@@ -994,7 +1000,7 @@ public class ProblemServiceImpl implements ProblemService {
         if (ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
             return new ArrayList<>();
         }
-        
+
         List<ProblemEntity> problems = contest.getProblems();
         List<String> acceptedProblems = contestSubmissionRepo.findAcceptedProblemsInContestOfUser(contestId, userId);
 

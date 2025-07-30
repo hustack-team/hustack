@@ -86,8 +86,6 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
   value: COMPUTER_LANGUAGES[key],
 }));
 
-
-
 function CreateProblem() {
   const history = useHistory();
 
@@ -108,8 +106,8 @@ function CreateProblem() {
   const [description, setDescription] = useState("");
   const [solution, setSolution] = useState("");
   const [codeSolution, setCodeSolution] = useState("");
-  const [isPreloadCode, setIsPreloadCode] = useState(false);
-  const [preloadCode, setPreloadCode] = useState("");
+  // const [isPreloadCode, setIsPreloadCode] = useState(false); // Preload Code functionality - DISABLED
+  // const [preloadCode, setPreloadCode] = useState(""); // Preload Code functionality - DISABLED
   const [languageSolution, setLanguageSolution] = useState(COMPUTER_LANGUAGES.CPP17);
   const [solutionChecker, setSolutionChecker] = useState("");
   const [solutionCheckerLanguage, setSolutionCheckerLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
@@ -264,8 +262,8 @@ function CreateProblem() {
       correctSolutionLanguage: languageSolution,
       solution: solution,
       correctSolutionSourceCode: codeSolution,
-      isPreloadCode: isPreloadCode,
-      preloadCode: preloadCode,
+      // isPreloadCode: isPreloadCode, // Preload Code functionality - DISABLED
+      // preloadCode: preloadCode, // Preload Code functionality - DISABLED
       solutionChecker: solutionChecker,
       solutionCheckerLanguage: solutionCheckerLanguage,
       isPublic: isPublic === 'Y',
@@ -422,6 +420,8 @@ function CreateProblem() {
   useEffect(() => {
     getAllTags(handleGetTagsSuccess);
   }, []);
+
+  const canEditBlocks = isProblemBlock && blockCodes[selectedLanguage].length > 0;
 
   return (
     <ProgrammingContestLayout title={t("common:create", {name: t("problem")})} onBack={handleExit}>
@@ -599,20 +599,20 @@ function CreateProblem() {
       {/*  </Typography>*/}
       {/*</Link>*/}
 
-              <Box sx={{mt: 3, mb: 3}}>
+      <Box sx={{mt: 3, mb: 3}}>
         <Typography variant="h6" sx={{marginTop: "8px", marginBottom: "8px"}}>
-          {t("problemDescription")}
+          {t("common:description")}
         </Typography>
         <RichTextEditor content={description} onContentChange={text => setDescription(text)}/>
         <FormControlLabel
           label={t("problemBlock")}
           control={<Checkbox checked={isProblemBlock} onChange={() => setIsProblemBlock(!isProblemBlock)}/>}
-          sx={{mt: 1}}
+          sx={{mt: 2}}
         />
         {isProblemBlock && (
-          <Box sx={{mt: -3}}>
-            <Box sx={{display: 'flex', alignItems: 'center', marginTop: '24px'}}>
-              <Typography variant="h6" sx={{ml: 0}}>
+          <Box sx={{mt: 1}}>
+            <Box sx={{display: 'flex', alignItems: 'center'}}>
+              <Typography variant="body1" sx={{ml: 0}}>
                 {t("common:blockCode")}
               </Typography>
               <RotatingIconButton
@@ -625,8 +625,9 @@ function CreateProblem() {
                 color="primary"
                 size="small"
                 rotation={rotationCount * 180}
+                sx={{ml: 1}}
               >
-                <ArrowDropDownIcon />
+                <ArrowDropDownIcon/>
               </RotatingIconButton>
             </Box>
             <Collapse in={isBlockCodesExpanded}>
@@ -697,8 +698,8 @@ function CreateProblem() {
                           height="300px"
                         />
                       </Box>
-                      <Box 
-                                                sx={{
+                      <Box
+                        sx={{
                           width: '200px',
                           minWidth: '200px',
                           display: 'flex',
@@ -725,7 +726,13 @@ function CreateProblem() {
                           ]}
                           sx={{width: "100%"}}
                         />
-                        <Box sx={{display: 'flex', gap: 0.5, justifyContent: 'center', width: '100%', alignItems: 'center'}}>
+                        <Box sx={{
+                          display: 'flex',
+                          gap: 0.5,
+                          justifyContent: 'center',
+                          width: '100%',
+                          alignItems: 'center'
+                        }}>
                           <Tooltip title={t('common:moveUp')} placement="bottom">
                             <IconButton
                               onClick={() => debouncedMoveUp(index)}
@@ -782,7 +789,15 @@ function CreateProblem() {
                       </Box>
                     </Box>
                   ))}
-                  <Stack direction="row" spacing={2} sx={{marginTop: '16px'}}>
+                  {canEditBlocks && (
+                    <Box sx={{display: 'flex', alignItems: 'center', mt: 2, gap: 2}}>
+                      <Box sx={{width: '48px', minWidth: '48px'}}/>
+                      <Typography variant="body2" color="warning.main" sx={{ml: 0}}>
+                        {t('common:blockCodeAutoRemoveNote')}
+                      </Typography>
+                    </Box>
+                  )}
+                  <Stack direction="row" spacing={2} sx={{mt: 2}}>
                     <TertiaryButton
                       variant="outlined"
                       startIcon={<AddIcon/>}
@@ -804,16 +819,23 @@ function CreateProblem() {
             </Collapse>
           </Box>
         )}
+        <Typography variant="body1" sx={{mb: 1, mt: 2}}>{t('common:sampleTestcase')}</Typography>
         <HustCodeEditor
-          title={t("sampleTestCase")}
+          hideProgrammingLanguage={1}
           placeholder={null}
           sourceCode={sampleTestCase}
           onChangeSourceCode={(code) => {
             setSampleTestCase(code);
           }}
-          sx={{marginTop: isProblemBlock ? '24px' : '24px'}}
+          minLines={15}
         />
-        <HustDropzoneArea onChangeAttachment={(files) => handleAttachmentFiles(files)}/>
+
+        {/* File Attachments */}
+        <Typography variant="body1" sx={{mb: 1, mt: 2}}>{t('common:attachments')}</Typography>
+        <HustDropzoneArea
+          hideTitle={true}
+          onChangeAttachment={(files) => handleAttachmentFiles(files)}
+        />
       </Box>
 
       <HustCodeEditor
@@ -826,12 +848,13 @@ function CreateProblem() {
         onChangeSourceCode={(code) => {
           setCodeSolution(code);
         }}
+        minLines={15}
       />
       <LoadingButton
         variant="outlined"
         loading={loading}
         onClick={checkCompile}
-        sx={{margin: "12px 0", textTransform: 'none'}}
+        sx={{mt: 1.5, textTransform: 'none'}}
       >
         {t("checkSolutionCompile")}
       </LoadingButton>
@@ -841,6 +864,7 @@ function CreateProblem() {
         detail={compileMessage}
       />
 
+      {/* Preload Code functionality - DISABLED
       <Box sx={{marginTop: "12px"}}>
         <FormControlLabel
           label={t("isPreloadCode")}
@@ -863,8 +887,9 @@ function CreateProblem() {
           />
         }
       </Box>
+      */}
 
-      <Box sx={{marginTop: "12px"}}>
+      <Box sx={{mt: 2}}>
         <FormControlLabel
           label={t("isCustomEvaluated")}
           control={
@@ -874,11 +899,11 @@ function CreateProblem() {
             />
           }
         />
-        <Typography variant="body2" color="gray">{t("customEvaluationNote1")}</Typography>
+        <Typography variant="body2" color="gray" sx={{mb: 1}}>{t("customEvaluationNote1")}</Typography>
 
-        {isCustomEvaluated &&
+        {isCustomEvaluated && (
           <HustCodeEditor
-            title={t("checkerSourceCode")}
+            customTitle={<Typography variant="body1">{t("checkerSourceCode")}</Typography>}
             language={solutionCheckerLanguage}
             onChangeLanguage={(event) => {
               setSolutionCheckerLanguage(event.target.value);
@@ -887,12 +912,12 @@ function CreateProblem() {
             onChangeSourceCode={(code) => {
               setSolutionChecker(code);
             }}
-            placeholder={t("checkerSourceCodePlaceholder")}
+            minLines={15}
           />
-        }
+        )}
       </Box>
 
-      <Box width="100%" sx={{marginTop: "20px"}}>
+      <Box width="100%" sx={{mt: 2}}>
         <LoadingButton
           variant="contained"
           loading={loading}

@@ -143,9 +143,9 @@ function ManagerViewProblemDetailV2() {
           newBlockCodes[lang].sort((a, b) => a.seq - b.seq);
         });
         setBlockCodes(newBlockCodes);
-        
+
         // Select first language with block codes
-        const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang => 
+        const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
           newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
         );
         if (firstLanguageWithBlocks) {
@@ -412,7 +412,7 @@ function ManagerViewProblemDetailV2() {
               rotation={rotationCount * 180}
               sx={{ml: 1}}
             >
-              <ArrowDropDownIcon />
+              <ArrowDropDownIcon/>
             </RotatingIconButton>
             {isBlockCodesExpanded && (
               <Box sx={{display: 'flex', alignItems: 'center', ml: 'auto', gap: 1}}>
@@ -442,7 +442,8 @@ function ManagerViewProblemDetailV2() {
               {PROGRAMMING_LANGUAGES.filter(lang =>
                 blockCodes[lang.value] && blockCodes[lang.value].length > 0
               ).map((lang) => (
-                <AntTab key={lang.value} label={mapLanguageToDisplayName(lang.value)} value={lang.value} sx={{textTransform: 'none'}}/>
+                <AntTab key={lang.value} label={mapLanguageToDisplayName(lang.value)} value={lang.value}
+                        sx={{textTransform: 'none'}}/>
               ))}
             </AntTabs>
             {blockDisplayMode === "individual" ? (
@@ -535,8 +536,7 @@ function ManagerViewProblemDetailV2() {
         </Box>
       )}
 
-      <Box sx={{mt: 3}}/>
-      <Typography variant="h6" sx={{mb: 1}}>
+      <Typography variant="h6" sx={{mb: 1, mt: 3}}>
         {t("solutionSourceCode")}
       </Typography>
       <HustCopyCodeBlock
@@ -570,9 +570,10 @@ function ManagerViewProblemDetailV2() {
         </Box>
       )}
 
+      <Box sx={{mt: 3}}/>
       <ListTestCase mode={2}/>
 
-      <Box sx={{height: "36px"}}></Box>
+      <Box sx={{mt: 3}}/>
       <ContestsUsingAProblem problemId={problemId}/>
     </ProgrammingContestLayout>
   );
