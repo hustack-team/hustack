@@ -129,26 +129,25 @@ export function extractErrorMessage(e) {
 }
 
 export const saveFile = (fileName, data) => {
-    let blob = new Blob([data]);
+  let blob = new Blob([data]);
 
-    //IE11 support
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, fileName);
-    } else {
-      let link = window.document.createElement("a");
+  //IE11 support
+  if (window.navigator.msSaveOrOpenBlob) {
+    window.navigator.msSaveBlob(blob, fileName);
+  } else {
+    let link = window.document.createElement("a");
 
-      link.href = window.URL.createObjectURL(blob);
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-      // other browsers
-      // Second approach but cannot specify saved name!
-      // let file = new File([data], fileName, { type: "application/zip" });
-      // let exportUrl = URL.createObjectURL(file);
-      // window.location.assign(exportUrl);
-      // URL.revokeObjectURL(exportUrl);
-    }
+    // other browsers
+    // Second approach but cannot specify saved name!
+    // let file = new File([data], fileName, { type: "application/zip" });
+    // let exportUrl = URL.createObjectURL(file);
+    // window.location.assign(exportUrl);
+    // URL.revokeObjectURL(exportUrl);
   }
-;
+};

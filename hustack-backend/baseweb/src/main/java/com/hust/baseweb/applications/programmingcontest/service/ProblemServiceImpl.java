@@ -346,7 +346,6 @@ public class ProblemServiceImpl implements ProblemService {
         response.setProblemName(problem.getProblemName());
         response.setProblemDescription(problem.getProblemDescription());
         response.setUserId(problem.getCreatedBy());
-//            response.setTimeLimit(problem.getTimeLimit());
         response.setTimeLimitCPP(problem.getTimeLimitCPP());
         response.setTimeLimitJAVA(problem.getTimeLimitJAVA());
         response.setTimeLimitPYTHON(problem.getTimeLimitPYTHON());
