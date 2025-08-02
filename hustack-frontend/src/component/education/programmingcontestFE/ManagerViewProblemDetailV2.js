@@ -1,21 +1,8 @@
 import EditIcon from "@mui/icons-material/Edit";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import SecurityIcon from '@mui/icons-material/Security';
 
-import {
-  Box,
-  Button,
-  Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  IconButton,
-  LinearProgress,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import {Box, Collapse, Grid, IconButton, LinearProgress, Stack, TextField, Tooltip, Typography,} from "@mui/material";
 import {request, saveFile} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
 import {useEffect, useState} from "react";
@@ -38,9 +25,6 @@ import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import {getLevels, getStatuses} from "./CreateProblem";
-import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
 import {AntTab, AntTabs} from "component/tab";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
@@ -49,7 +33,18 @@ import {dracula, github} from 'react-code-blocks';
 import {grey} from '@mui/material/colors';
 import RotatingIconButton from "../../common/RotatingIconButton";
 import {errorNoti} from "utils/notification";
+import {getLevels, getStatuses} from "./CreateProblem";
+import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
+import CustomizedDialogs from "../../dialog/CustomizedDialogs";
+import {makeStyles} from "@material-ui/core/styles";
+import {useForm} from "react-hook-form";
 
+
+const useStyles = makeStyles((theme) => ({
+  dialogContent: {
+    minWidth: 500
+  },
+}));
 
 const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
   label: key,
@@ -57,6 +52,7 @@ const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
 }));
 
 function ManagerViewProblemDetailV2() {
+  const classes = useStyles();
   const {problemId} = useParams();
   const history = useHistory();
 
@@ -68,10 +64,20 @@ function ManagerViewProblemDetailV2() {
 
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
   const [openCloneDialog, setOpenCloneDialog] = useState(false);
-  const [newProblemId, setNewProblemId] = useState("");
-  const [newProblemName, setNewProblemName] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    errors
+  } = useForm({
+    defaultValues: {
+      problemId: "",
+      problemName: "",
+    },
+  });
 
   const [problemDetail, setProblemDetail] = useState({
     problemName: "",
@@ -123,6 +129,8 @@ function ManagerViewProblemDetailV2() {
         isCustomEvaluated: data.scoreEvaluationType === CUSTOM_EVALUATION,
         description: data.problemDescription,
         categoryId: data.categoryId || 0,
+        // Ensure roles is always an array
+        roles: data.roles || [],
       });
 
       if (data.categoryId > 0) {
@@ -152,15 +160,20 @@ function ManagerViewProblemDetailV2() {
           setSelectedLanguage(firstLanguageWithBlocks.value);
         }
       }
+    }, {
+      onError: (e) => {
+        setLoading(false);
+        errorNoti(t("common:error"), 3000);
+      },
     });
   }, [problemId]);
 
-  const hasSpecialCharacterProblemId = () => {
-    return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(newProblemId);
+  const hasSpecialCharacterProblemId = (value) => {
+    return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(value);
   };
 
-  const hasSpecialCharacterProblemName = () => {
-    return !new RegExp(/^[0-9a-zA-Z ]*$/).test(newProblemName);
+  const hasSpecialCharacterProblemName = (value) => {
+    return !new RegExp(/^[0-9a-zA-Z ]*$/).test(value);
   };
 
   const handleCloneDialogOpen = () => {
@@ -169,25 +182,14 @@ function ManagerViewProblemDetailV2() {
 
   const handleCloneDialogClose = () => {
     setOpenCloneDialog(false);
-    setNewProblemId("");
-    setNewProblemName("");
-    setErrorMessage("");
+    reset();
   };
 
-  const handleClone = () => {
-    if (hasSpecialCharacterProblemId()) {
-      setErrorMessage(t("common:invalidCharactersInProblemId"));
-      return;
-    }
-    if (hasSpecialCharacterProblemName()) {
-      setErrorMessage(t("common:invalidCharactersInProblemName"));
-      return;
-    }
-
-    const cloneRequest = {
+  const onSubmit = (data) => {
+    const body = {
       oldProblemId: problemId,
-      newProblemId: newProblemId,
-      newProblemName: newProblemName,
+      newProblemId: data.problemId,
+      newProblemName: data.problemName,
     };
 
     request(
@@ -199,20 +201,23 @@ function ManagerViewProblemDetailV2() {
       },
       {
         onError: (error) => {
-          setErrorMessage(t("common:cloneProblemFailed"));
-          console.error("Error cloning problem:", error);
+          if (error?.response?.status !== 400 && 
+              error?.response?.status !== 404 && 
+              error?.response?.status !== 409) {
+            errorNoti(t("common:error"), 3000);
+          }
         },
         400: (error) => {
-          setErrorMessage(t("common:invalidInput"));
+          errorNoti(t("common:invalidInput"), 3000);
         },
         404: (error) => {
-          setErrorMessage(t("common:problemNotFound"));
+          errorNoti(t("common:problemNotFound"), 3000);
         },
-        500: (error) => {
-          setErrorMessage(t("common:problemAlreadyExists"));
+        409: (error) => {
+          errorNoti(t("common:problemAlreadyExists"), 3000);
         },
       },
-      cloneRequest
+      body
     );
   };
 
@@ -246,6 +251,28 @@ function ManagerViewProblemDetailV2() {
     );
   };
 
+  const canEdit = problemDetail.roles.includes(PROBLEM_ROLE.OWNER) ||
+    problemDetail.roles.includes(PROBLEM_ROLE.EDITOR);
+
+  const canClone = (() => {
+    const isOpen = problemDetail.status === PROBLEM_STATUS.OPEN;
+    const isPublic = problemDetail.public;
+    if (isOpen && isPublic) return true;
+
+    const isOwner = problemDetail.roles.includes(PROBLEM_ROLE.OWNER);
+    if (isOwner) return true;
+
+    const isEditor = problemDetail.roles.includes(PROBLEM_ROLE.EDITOR);
+    const isViewer = problemDetail.roles.includes(PROBLEM_ROLE.VIEWER);
+    if (isOpen && (isEditor || isViewer)) return true;
+
+    if (!isOpen && isEditor) return true;
+
+    return false;
+  })();
+
+  const canManageRole = problemDetail.roles.includes(PROBLEM_ROLE.OWNER);
+
   return (
     <ProgrammingContestLayout title={t("viewProblem")} onBack={handleExit}>
       <Stack direction="row" spacing={2} mb={1.5} justifyContent="space-between">
@@ -254,9 +281,7 @@ function ManagerViewProblemDetailV2() {
         </Typography>
 
         <Stack direction="row" spacing={2}>
-          {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
-            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) || problemDetail.status !== PROBLEM_STATUS.OPEN)
-          ) ? null : (
+          {canEdit && (
             <PrimaryButton
               onClick={() => {
                 history.push("/programming-contest/edit-problem/" + problemId);
@@ -266,9 +291,7 @@ function ManagerViewProblemDetailV2() {
               {t("common:edit", {name: ''})}
             </PrimaryButton>
           )}
-          {(!problemDetail.roles.includes(PROBLEM_ROLE.OWNER) &&
-            (!problemDetail.roles.includes(PROBLEM_ROLE.EDITOR) ||
-              problemDetail.status !== PROBLEM_STATUS.OPEN)) ? null : (
+          {canClone && (
             <TertiaryButton
               variant="outlined"
               onClick={handleCloneDialogOpen}
@@ -277,7 +300,7 @@ function ManagerViewProblemDetailV2() {
               {t("clone")}
             </TertiaryButton>
           )}
-          {problemDetail.roles.includes(PROBLEM_ROLE.OWNER) && (
+          {canManageRole && (
             <TertiaryButton
               variant="outlined"
               onClick={() => {
@@ -286,6 +309,7 @@ function ManagerViewProblemDetailV2() {
                   problemId
                 );
               }}
+              startIcon={<SecurityIcon/>}
             >
               {t("manageRole")}
             </TertiaryButton>
@@ -293,42 +317,84 @@ function ManagerViewProblemDetailV2() {
         </Stack>
       </Stack>
 
-      <Dialog open={openCloneDialog} onClose={handleCloneDialogClose}>
-        <DialogTitle>{"Clone Problem"}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="New Problem ID"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newProblemId}
-            onChange={(e) => setNewProblemId(e.target.value)}
-            error={hasSpecialCharacterProblemId()}
-            helperText={hasSpecialCharacterProblemId() ? t("common:invalidCharactersInProblemId") : ""}
-          />
-          <TextField
-            margin="dense"
-            label="New Problem Name"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newProblemName}
-            onChange={(e) => setNewProblemName(e.target.value)}
-            helperText={""}
-          />
-          {errorMessage && <Typography color="error">{errorMessage}</Typography>}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloneDialogClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleClone} color="primary">
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <CustomizedDialogs
+        open={openCloneDialog}
+        handleClose={handleCloneDialogClose}
+        title={t("clone")}
+        contentTopDivider
+        content={
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Stack spacing={2}>
+              <TextField
+                autoFocus
+                label={t("problemId") + " *"}
+                name={'problemId'}
+                fullWidth
+                size='small'
+                variant="outlined"
+                value={watch("problemId")}
+                error={!!errors.problemId}
+                helperText={errors.problemId?.message || ""}
+                inputRef={register({
+                  required: t("validation:required"),
+                  maxLength: {
+                    value: 100,
+                    message: t("validation:maxLength", {max: 100})
+                  },
+                  validate: (value) => {
+                    const testValue = value || "";
+                    if (hasSpecialCharacterProblemId(testValue)) {
+                      return t("common:invalidCharactersInProblemId");
+                    }
+                    return true;
+                  }
+                })}
+              />
+              <TextField
+                label={t("problemName") + " *"}
+                name={'problemName'}
+                fullWidth
+                size='small'
+                variant="outlined"
+                value={watch("problemName")}
+                error={!!errors.problemName}
+                helperText={errors.problemName?.message || ""}
+                inputRef={register({
+                  required: t("validation:required"),
+                  maxLength: {
+                    value: 100,
+                    message: t("validation:maxLength", {max: 100})
+                  },
+                  validate: (value) => {
+                    const testValue = value || "";
+                    if (hasSpecialCharacterProblemName(testValue)) {
+                      return t("common:invalidCharactersInProblemName");
+                    }
+                    return true;
+                  }
+                })}
+              />
+            </Stack>
+
+            <Stack direction="row" spacing={2} justifyContent="center" sx={{mt: 3}}>
+              <TertiaryButton
+                color={'inherit'}
+                onClick={handleCloneDialogClose}
+              >
+                {t("common:cancel")}
+              </TertiaryButton>
+              <PrimaryButton
+                type="submit"
+              >
+                {t("common:clone")}
+              </PrimaryButton>
+            </Stack>
+          </form>
+        }
+        classNames={{
+          content: classes.dialogContent
+        }}
+      />
 
       {loading && <LinearProgress/>}
       <Grid container spacing={2} display={loading ? "none" : ""}>
@@ -571,7 +637,7 @@ function ManagerViewProblemDetailV2() {
       )}
 
       <Box sx={{mt: 3}}/>
-      <ListTestCase mode={2}/>
+      <ListTestCase mode={2} hideWhenEmpty={true}/>
 
       <Box sx={{mt: 3}}/>
       <ContestsUsingAProblem problemId={problemId}/>

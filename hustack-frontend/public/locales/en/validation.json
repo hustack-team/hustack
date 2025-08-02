@@ -1,11 +1,12 @@
 {
+  "fieldLength": "{{fieldName}} must have less than {{min}} characters",
+  "maxLength": "Maximum {{max}} characters",
   "missingField": "Missing required field: {{fieldName}}",
   "numberBetween": "{{fieldName}} must be between {{min}} and {{max}}",
   "numberMustGreaterThan": "{{fieldName}} must be greater than {{min}}",
   "numberMustNotGreaterThan": "{{fieldName}} must be less than or equal to {{min}}",
-  "numberMustSmallerThan": "{{fieldName}} must be smaller than {{min}}",
   "numberMustNotSmallerThan": "{{fieldName}} must be greater or equal to than {{min}}",
-  "fieldLength": "{{fieldName}} must have less than {{min}} characters",
-  "wrongFormat": "Invalid format: {{fieldName}} ",
-  "required": "Required"
+  "numberMustSmallerThan": "{{fieldName}} must be smaller than {{min}}",
+  "required": "Required",
+  "wrongFormat": "Invalid format: {{fieldName}} "
 }

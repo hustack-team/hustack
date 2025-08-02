@@ -6,7 +6,6 @@ import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeEx
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
 import com.hust.baseweb.model.SubmissionFilter;
-import com.hust.baseweb.model.TestCaseFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -42,13 +41,11 @@ public interface ProblemTestCaseService {
 
     ModelGetContestDetailResponse getContestDetailByContestIdAndTeacher(String contestId, String userName);
 
-
     List<SubmissionDetailByTestcaseOM> getSubmissionDetailByTestcase(UUID submissionId, UUID testcaseId);
 
     ContestSubmissionEntity teacherDisableSubmission(String userId, UUID submissionId);
 
     ContestSubmissionEntity teacherEnableSubmission(String userId, UUID submissionId);
-
 
     List<SubmissionDetailByTestcaseOM> getParticipantSubmissionDetailByTestCase(
         String userId, UUID submissionId
@@ -118,8 +115,6 @@ public interface ProblemTestCaseService {
 
 //    Page<ProblemEntity> getPublicProblemPaging(Pageable pageable);
 
-    Page<ModelGetTestCaseDetail> getTestCaseByProblem(String problemId, TestCaseFilter filter);
-
     TestCaseDetailProjection getTestCaseDetail(UUID testCaseId);
 
 //    void editTestCase(UUID testCaseId, ModelSaveTestcase modelSaveTestcase) throws MiniLeetCodeException;
@@ -138,9 +133,6 @@ public interface ProblemTestCaseService {
         String contestId,
         SubmissionFilter filter
     );
-
-
-
 
     Page<ContestSubmission> findContestGroupSubmissionByContestIdPaging(
         Pageable pageable,
@@ -220,7 +212,6 @@ public interface ProblemTestCaseService {
     boolean removeMemberFromContest(UUID id);
 
     boolean removeMemberFromContestGroup(String contestId, String userId, String participantId);
-
 
     boolean updatePermissionMemberToContest(String userId, ModelUpdatePermissionMemberToContestInput input);
 

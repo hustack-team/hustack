@@ -103,6 +103,7 @@ function EditProblem() {
   const [removedFilesId, setRemovedFileIds] = useState([]);
   const [status, setStatus] = useState('');
   const [isOwner, setIsOwner] = useState(false);
+  const [isEditor, setIsEditor] = useState(false);
   const [sampleTestCase, setSampleTestCase] = useState(null);
   const [problem, setProblem] = useState({});
   const [canEditBlocks, setCanEditBlocks] = useState(undefined);
@@ -151,8 +152,13 @@ function EditProblem() {
         saveFile(fileName, res.data);
       },
       {
-        403: () => errorNoti(t('common:noPermissionToDownload')),
-        onError: () => errorNoti(t('common:error')),
+        onError: (e) => {
+          if (e.response && e.response.status === 403) {
+            history.push("/programming-contest/list-problems");
+          } else {
+            errorNoti(t("common:error"), 3000);
+          }
+        },
       },
       null,
       {responseType: "blob"}
@@ -319,7 +325,9 @@ function EditProblem() {
       {
         onError: (e) => {
           setLoading(false);
-          if (!(e.response && e.response.status === 403)) {
+          if (e.response && e.response.status === 403) {
+            history.push("/programming-contest/list-problems");
+          } else {
             errorNoti(t("common:error"), 3000);
           }
         },
@@ -556,6 +564,7 @@ function EditProblem() {
         setStatus(data.status);
         setSampleTestCase(data.sampleTestCase);
         setIsOwner(data.roles?.includes("OWNER"));
+        setIsEditor(data.roles?.includes("EDITOR"));
         setCanEditBlocks(data.canEditBlocks || false);
         setIsProblemBlock(data.categoryId > 0); // Initialize based on categoryId
 
@@ -608,7 +617,11 @@ function EditProblem() {
       },
       {
         onError: (e) => {
-          errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
+          if (e.response && e.response.status === 403) {
+            history.push("/programming-contest/list-problems");
+          } else {
+            errorNoti(extractErrorMessage(e) || t("common:error"), 3000);
+          }
         },
       }
     );
@@ -687,7 +700,7 @@ function EditProblem() {
             onChange={(event) => {
               setStatus(event.target.value);
             }}
-            disabled={!isOwner}
+            disabled={isEditor && !isOwner}
           />
         </Grid>
 
@@ -703,6 +716,7 @@ function EditProblem() {
             onChange={(event) => {
               setIsPublic(event.target.value);
             }}
+            disabled={isEditor && !isOwner}
           />
         </Grid>
 

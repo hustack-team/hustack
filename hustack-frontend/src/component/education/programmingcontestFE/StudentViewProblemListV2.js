@@ -143,12 +143,13 @@ export default function StudentViewProblemList() {
       },
       {
         onError: (e) => {
+          setLoading(false);
+
           if (e.response && e.response.status === 403) {
             history.push("/programming-contest/student-list-contest-registered");
           } else {
             errorNoti(t("common:error"), 3000);
           }
-          setLoading(false);
         }
       }
     );

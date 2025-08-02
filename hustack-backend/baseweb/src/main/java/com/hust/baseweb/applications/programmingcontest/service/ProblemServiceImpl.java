@@ -8,14 +8,17 @@ import com.hust.baseweb.applications.education.classmanagement.utils.ZipOutputSt
 import com.hust.baseweb.applications.notifications.service.NotificationsService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.*;
-import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import com.hust.baseweb.applications.programmingcontest.utils.ContestProblemPermissionUtil;
+import com.hust.baseweb.applications.programmingcontest.utils.ProblemPermissionUtil;
 import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.ProblemProjection;
+import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.model.dto.ProblemDTO;
+import com.hust.baseweb.service.UserService;
+import com.hust.baseweb.utils.CommonUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.hust.baseweb.applications.programmingcontest.entity.UserRegistrationContestEntity.ROLE_MANAGER;
@@ -61,11 +63,11 @@ public class ProblemServiceImpl implements ProblemService {
 
     ContestRepo contestRepo;
 
-    Constants constants;
-
     ContestSubmissionRepo contestSubmissionRepo;
 
     NotificationsService notificationsService;
+
+    UserService userService;
 
     ContestSubmissionPagingAndSortingRepo contestSubmissionPagingAndSortingRepo;
 
@@ -91,11 +93,13 @@ public class ProblemServiceImpl implements ProblemService {
 
     ContestProblemPermissionUtil contestProblemPermissionUtil;
 
+    ProblemPermissionUtil problemPermissionUtil;
+
     @Override
     @Transactional
     public ProblemEntity createProblem(
         String createdBy,
-        ModelCreateContestProblem dto,
+        CreateProblemDTO dto,
         MultipartFile[] files
     ) {
         String problemId = dto.getProblemId().trim();
@@ -104,7 +108,6 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         List<String> attachmentId = new ArrayList<>();
-        String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
@@ -137,7 +140,6 @@ public class ProblemServiceImpl implements ProblemService {
                                              .categoryId(dto.getCategoryId())
                                              .correctSolutionLanguage(dto.getCorrectSolutionLanguage())
                                              .correctSolutionSourceCode(dto.getCorrectSolutionSourceCode())
-                                             .solution(dto.getSolution())
                                              // .isPreloadCode(dto.getIsPreloadCode()) // Preload Code functionality - DISABLED
                                              // .preloadCode(dto.getPreloadCode()) // Preload Code functionality - DISABLED
                                              .solutionCheckerSourceCode(dto.getSolutionChecker())
@@ -146,7 +148,6 @@ public class ProblemServiceImpl implements ProblemService {
                                                                       ? dto.getScoreEvaluationType()
                                                                       : Constants.ProblemResultEvaluationType.NORMAL.getValue())
                                              .isPublicProblem(dto.getIsPublic())
-                                             .levelOrder(constants.getMapLevelOrder().get(dto.getLevelId()))
                                              .attachment(String.join(";", attachmentId))
                                              .statusId(dto.getStatus().toString())
                                              .sampleTestcase(dto.getSampleTestCase())
@@ -164,28 +165,8 @@ public class ProblemServiceImpl implements ProblemService {
             createProblemBlocks(problemId, dto.getBlockCodes());
         }
 
-        List<UserContestProblemRole> roles = new ArrayList<>();
-        List<String> users = new ArrayList<>();
-        users.add(createdBy);
-        if (!"admin".equals(createdBy)) {
-            users.add("admin");
-        }
-
-        List<String> roleIds = new ArrayList<>(List.of(
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR,
-            UserContestProblemRole.ROLE_VIEWER
-        ));
-        for (String user : users) {
-            for (String roleId : roleIds) {
-                UserContestProblemRole role = new UserContestProblemRole();
-                role.setProblemId(problem.getProblemId());
-                role.setUserId(user);
-                role.setRoleId(roleId);
-                roles.add(role);
-            }
-        }
-        userContestProblemRoleRepo.saveAll(roles);
+        grantRoles(problem.getProblemId(), createdBy, List.of(UserContestProblemRole.ROLE_OWNER));
+        grantRoles(problem.getProblemId(), "admin", List.of(UserContestProblemRole.ROLE_EDITOR));
 
         notificationsService.create(
             createdBy,
@@ -198,40 +179,21 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Transactional
     @Override
-    public ProblemEntity editProblem(
+    public void editProblem(
         String problemId,
         String userId,
-        ModelUpdateContestProblem dto,
+        EditProblemDTO dto,
         MultipartFile[] files
     ) {
+        boolean hasEditPermission = problemPermissionUtil.checkEditProblemPermission(problemId, userId);
+        if (!hasEditPermission) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You need to be granted permission to perform this action");
+        }
+
         ProblemEntity problem = problemRepo.findById(problemId)
                                            .orElseThrow(() -> new EntityNotFoundException("Problem not found"));
-
-        List<UserContestProblemRole> roles = userContestProblemRoleRepo.findAllByProblemIdAndUserId(problemId, userId);
-        boolean hasPermission = false;
-        boolean isAuthor = userId.equals(problem.getCreatedBy());
-
-        if (isAuthor) {
-            boolean hasOwnerRole = roles.stream()
-                                        .anyMatch(role -> UserContestProblemRole.ROLE_OWNER.equals(role.getRoleId()));
-
-            if (!hasOwnerRole) {
-                log.warn("Author {} does not have ROLE_OWNER for problem {}", userId, problemId);
-            }
-
-            hasPermission = hasOwnerRole;
-        } else {
-            for (UserContestProblemRole role : roles) {
-                if (UserContestProblemRole.ROLE_EDITOR.equals(role.getRoleId())) {
-                    hasPermission = true;
-                    break;
-                }
-            }
-        }
-
-        if (!hasPermission) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No permission");
-        }
 
         Integer oldCategoryId = problem.getCategoryId();
         Integer newCategoryId = dto.getCategoryId();
@@ -250,7 +212,6 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         List<String> attachmentId = new ArrayList<>();
-        String[] fileId = dto.getFileId();
         List<MultipartFile> fileArray = Optional.ofNullable(files)
                                                 .map(Arrays::asList)
                                                 .orElseGet(Collections::emptyList);
@@ -308,31 +269,33 @@ public class ProblemServiceImpl implements ProblemService {
 
         problem.setProblemName(dto.getProblemName());
         problem.setProblemDescription(dto.getProblemDescription());
-        problem.setLevelId(dto.getLevelId());
-        problem.setSolution(dto.getSolution());
-//        problem.setTimeLimit(dto.getTimeLimit());
-        // problem.setIsPreloadCode(dto.getIsPreloadCode()); // Preload Code functionality - DISABLED
-        // problem.setPreloadCode(dto.getPreloadCode()); // Preload Code functionality - DISABLED
         problem.setTimeLimitCPP(dto.getTimeLimitCPP());
         problem.setTimeLimitJAVA(dto.getTimeLimitJAVA());
         problem.setTimeLimitPYTHON(dto.getTimeLimitPYTHON());
         problem.setMemoryLimit(dto.getMemoryLimit());
-        problem.setCorrectSolutionLanguage(dto.getCorrectSolutionLanguage());
+        problem.setLevelId(dto.getLevelId());
+        problem.setCategoryId(newCategoryId);
         problem.setCorrectSolutionSourceCode(dto.getCorrectSolutionSourceCode());
+        problem.setCorrectSolutionLanguage(dto.getCorrectSolutionLanguage());
         problem.setSolutionCheckerSourceCode(dto.getSolutionChecker());
         problem.setSolutionCheckerSourceLanguage(dto.getSolutionCheckerLanguage());
-        problem.setScoreEvaluationType(dto.getScoreEvaluationType());
-        problem.setPublicProblem(dto.getIsPublic());
         problem.setAttachment(String.join(";", attachmentId));
+        problem.setScoreEvaluationType(dto.getScoreEvaluationType());
+        // problem.setIsPreloadCode(dto.getIsPreloadCode()); // Preload Code functionality - DISABLED
+        // problem.setPreloadCode(dto.getPreloadCode()); // Preload Code functionality - DISABLED
         problem.setTags(tags);
         problem.setSampleTestcase(dto.getSampleTestCase());
-        problem.setCategoryId(newCategoryId);
 
-        if (isAuthor) {
+        boolean isCreator = userId.equals(problem.getCreatedBy());
+        boolean isOwner = userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
+            problemId, userId, UserContestProblemRole.ROLE_OWNER);
+
+        if (isCreator || isOwner) {
             problem.setStatusId(dto.getStatus().toString());
+            problem.setPublicProblem(dto.getIsPublic());
         }
 
-        return problemCacheService.saveProblemWithCache(problem);
+        problemCacheService.saveProblemWithCache(problem);
     }
 
     private Map<String, Long> calculateMaxPointForProblemsInContest(String contestId) {
@@ -395,10 +358,8 @@ public class ProblemServiceImpl implements ProblemService {
         response.setSolutionCheckerSourceCode(problem.getSolutionCheckerSourceCode());
         response.setSolutionCheckerSourceLanguage(problem.getSolutionCheckerSourceLanguage());
         response.setScoreEvaluationType(problem.getScoreEvaluationType());
-        response.setSolution(problem.getSolution());
         response.setIsPreloadCode(problem.getIsPreloadCode());
         response.setPreloadCode(problem.getPreloadCode());
-        response.setLevelOrder(problem.getLevelOrder());
         response.setCreatedAt(problem.getCreatedAt());
         response.setPublicProblem(problem.isPublicProblem());
         response.setTags(problem.getTags());
@@ -441,7 +402,14 @@ public class ProblemServiceImpl implements ProblemService {
     }
 
     @Transactional(readOnly = true)
-    public void exportProblem(String problemId, OutputStream outputStream) {
+    public void exportProblem(String problemId, String userId, OutputStream outputStream) {
+        boolean hasViewPermission = problemPermissionUtil.checkViewProblemPermission(problemId, userId);
+        if (!hasViewPermission) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You need to be granted permission to perform this action");
+        }
+
         try {
             ModelCreateContestProblemResponse problem = getProblemDetail(problemId);
             if (problem != null) {
@@ -499,35 +467,21 @@ public class ProblemServiceImpl implements ProblemService {
     @Transactional(readOnly = true)
     @Override
     public ModelCreateContestProblemResponse getProblemDetailForManager(String problemId, String userId) {
-        ProblemEntity problem = problemRepo.findByProblemId(problemId);
-        if (problem == null) {
-            throw new EntityNotFoundException("Problem not found");
+        boolean hasViewPermission = problemPermissionUtil.checkViewProblemPermission(problemId, userId);
+        if (!hasViewPermission) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You need to be granted permission to perform this action");
         }
 
-        List<String> allowedRoles = new ArrayList<>(List.of(
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR
-        ));
-        if (ProblemEntity.PROBLEM_STATUS_HIDDEN.equals(problem.getStatusId())) {
-        } else if (ProblemEntity.PROBLEM_STATUS_OPEN.equals(problem.getStatusId())) {
-            allowedRoles.add(UserContestProblemRole.ROLE_VIEWER);
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to view this problem");
-        }
-
-        List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, userId);
-        boolean hasPermission = !CollectionUtils.isEmpty(roles) && roles.stream().anyMatch(allowedRoles::contains);
-        if (!hasPermission) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to view this problem");
-        }
-
+        List<String> userRoles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, userId);
         ModelCreateContestProblemResponse problemDetail = getProblemDetail(problemId);
-        problemDetail.setRoles(roles);
+
+        problemDetail.setRoles(userRoles);
         problemDetail.setCanEditBlocks(canEditBlocksOfProblem(problemId));
 
         return problemDetail;
     }
-
 
     private BlockCode mapToBlockCode(ProblemBlock block) {
         BlockCode blockCode = new BlockCode();
@@ -539,6 +493,38 @@ public class ProblemServiceImpl implements ProblemService {
         blockCode.setLanguage(block.getProgrammingLanguage());
 
         return blockCode;
+    }
+
+    /**
+     * Filter block codes based on contest allowed languages
+     *
+     * @param blockCodes       List of all block codes from problem
+     * @param allowedLanguages List of languages allowed in contest (null = allow all, empty = allow none)
+     * @return Filtered list of block codes that match contest allowed languages
+     */
+    private List<BlockCode> filterBlockCodesByContestLanguages(
+        List<BlockCode> blockCodes,
+        List<String> allowedLanguages
+    ) {
+        if (CollectionUtils.isEmpty(blockCodes)) {
+            return new ArrayList<>();
+        }
+
+        // If allowedLanguages is null, allow all languages (return all block codes)
+        if (allowedLanguages == null) {
+            return blockCodes;
+        }
+
+        // If allowedLanguages is empty, allow no languages (return an empty list)
+        if (allowedLanguages.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Set<String> allowedLanguagesSet = new HashSet<>(allowedLanguages);
+
+        return blockCodes.stream()
+                         .filter(block -> allowedLanguagesSet.contains(block.getLanguage()))
+                         .collect(Collectors.toList());
     }
 
     private boolean canEditBlockProblem(String problemId) {
@@ -661,11 +647,8 @@ public class ProblemServiceImpl implements ProblemService {
         boolean isSharedProblems
     ) {
         Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
-
         String name = StringUtils.isNotBlank(filter.getName()) ? filter.getName().trim() : null;
-
         normalizeFilter(filter);
-
         Page<ProblemProjection> problems = isSharedProblems
             ? problemRepo.findAllSharedProblemsBy(
             userId,
@@ -683,7 +666,27 @@ public class ProblemServiceImpl implements ProblemService {
                 isPublic,
                 pageable);
 
-        return problems.map(this::convertToProblemDTO);
+        List<String> problemIds = problems.getContent().stream()
+                                          .map(ProblemProjection::getProblemId)
+                                          .collect(Collectors.toList());
+
+        final Map<String, List<String>> problemRolesMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(problemIds)) {
+            List<Object[]> rolesData = userContestProblemRoleRepo.findRolesByProblemIdsAndUserId(problemIds, userId);
+            problemRolesMap.putAll(rolesData.stream()
+                                            .collect(Collectors.groupingBy(
+                                                row -> (String) row[0],
+                                                Collectors.mapping(row -> (String) row[1], Collectors.toList())
+                                            )));
+        }
+
+        List<ProblemDTO> dtos = problems.getContent().stream()
+                                        .map(item -> convertToProblemDTO(
+                                            item,
+                                            problemRolesMap.getOrDefault(item.getProblemId(), new ArrayList<>())))
+                                        .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, problems.getPageable(), problems.getTotalElements());
     }
 
     private void normalizeFilter(ProblemFilter filter) {
@@ -698,15 +701,20 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-    private ProblemDTO convertToProblemDTO(ProblemProjection item) {
+    private ProblemDTO convertToProblemDTO(ProblemProjection item, List<String> userRoles) {
         ProblemDTO dto = objectMapper.convertValue(item, ProblemDTO.class);
         try {
             dto.setTags(objectMapper.readValue(
-                item.getJsonTags(), new TypeReference<List<TagEntity>>() {
+                item.getJsonTags(), new TypeReference<>() {
                 }));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        // Set canEdit based on user roles
+        dto.setCanEdit(userRoles.contains(UserContestProblemRole.ROLE_OWNER) ||
+                       userRoles.contains(UserContestProblemRole.ROLE_EDITOR));
+
         return dto;
     }
 
@@ -729,28 +737,18 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Transactional
     @Override
-    public ProblemEntity cloneProblem(String userId, CloneProblemDTO cloneRequest) throws MiniLeetCodeException {
+    public void cloneProblem(String userId, CloneProblemDTO cloneRequest) {
+        boolean hasClonePermission = problemPermissionUtil.checkViewProblemPermission(
+            cloneRequest.getOldProblemId(),
+            userId);
+        if (!hasClonePermission) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You need to be granted permission to perform this action");
+        }
+
         ProblemEntity originalProblem = problemRepo.findById(cloneRequest.getOldProblemId())
                                                    .orElseThrow(() -> new EntityNotFoundException("Problem not found"));
-
-        List<String> allowedCloneRoles = new ArrayList<>(List.of(
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR
-        ));
-        if (ProblemEntity.PROBLEM_STATUS_HIDDEN.equals(originalProblem.getStatusId())) {
-        } else if (ProblemEntity.PROBLEM_STATUS_OPEN.equals(originalProblem.getStatusId())) {
-            allowedCloneRoles.add(UserContestProblemRole.ROLE_VIEWER);
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to clone this problem");
-        }
-
-        boolean hasClonePermission = userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleIdIn(
-            cloneRequest.getOldProblemId(),
-            userId,
-            allowedCloneRoles);
-        if (!hasClonePermission) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to clone this problem");
-        }
 
         if (problemRepo.existsByProblemIdOrProblemName(
             cloneRequest.getNewProblemId(),
@@ -772,13 +770,10 @@ public class ProblemServiceImpl implements ProblemService {
         newProblem.setPublicProblem(originalProblem.isPublicProblem());
         newProblem.setTags(originalProblem.getTags());
         newProblem.setCreatedBy(userId);
-//        newProblem.setTimeLimit(originalProblem.getTimeLimit());
         newProblem.setLevelId(originalProblem.getLevelId());
         newProblem.setCategoryId(originalProblem.getCategoryId());
         newProblem.setSolutionCheckerSourceCode(originalProblem.getSolutionCheckerSourceCode());
         newProblem.setSolutionCheckerSourceLanguage(originalProblem.getSolutionCheckerSourceLanguage());
-        newProblem.setSolution(originalProblem.getSolution());
-        newProblem.setLevelOrder(originalProblem.getLevelOrder());
         newProblem.setAttachment(originalProblem.getAttachment());
         newProblem.setScoreEvaluationType(originalProblem.getScoreEvaluationType());
         newProblem.setPreloadCode(originalProblem.getPreloadCode());
@@ -803,120 +798,217 @@ public class ProblemServiceImpl implements ProblemService {
             testCaseRepo.save(newTestCase);
         }
 
-        grantRoles(newProblem.getProblemId(), userId);
-        grantRoles(newProblem.getProblemId(), "admin");
+        grantRoles(newProblem.getProblemId(), userId, List.of(UserContestProblemRole.ROLE_OWNER));
+        grantRoles(newProblem.getProblemId(), "admin", List.of(UserContestProblemRole.ROLE_EDITOR));
 
         notificationsService.create(
             userId, "admin",
             userId + " has cloned a contest problem ID " + newProblem.getProblemId(),
             "/programming-contest/manager-view-problem-detail/" + newProblem.getProblemId()
         );
-
-        return newProblem;
     }
 
-    private void grantRoles(String problemId, String userId) {
-        String[] roles = {
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR,
-            UserContestProblemRole.ROLE_VIEWER};
+    private void grantRoles(String problemId, String userId, List<String> roleIds) {
+        List<UserContestProblemRole> rolesToSave = new ArrayList<>();
+        for (String roleId : roleIds) {
+            UserContestProblemRole role = new UserContestProblemRole();
 
-        List<UserContestProblemRole> toSave = new ArrayList<>();
-        for (String roleId : roles) {
-            UserContestProblemRole upr = new UserContestProblemRole();
+            role.setProblemId(problemId);
+            role.setUserId(userId);
+            role.setRoleId(roleId);
 
-            upr.setProblemId(problemId);
-            upr.setUserId(userId);
-            upr.setRoleId(roleId);
-
-            toSave.add(upr);
+            rolesToSave.add(role);
         }
-        userContestProblemRoleRepo.saveAll(toSave);
+
+        userContestProblemRoleRepo.saveAll(rolesToSave);
     }
 
+    @Override
     @Transactional(readOnly = true)
-    @Override
-    public List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId, String userId) {
-        checkProblemOwnerPermission(problemId, userId);
-        return userContestProblemRoleRepo.findAllByProblemIdWithFullName(problemId);
+    public List<UserProblemRoleDTO> getProblemPermissions(String problemId, String userId) {
+        problemPermissionUtil.checkProblemOwnerPermission(problemId, userId);
+        List<UserProblemRoleDTO> allRoles = userContestProblemRoleRepo.findAllByProblemIdWithFullName(problemId);
+
+        Map<String, List<UserProblemRoleDTO>> userRolesMap = allRoles.stream()
+                                                                     .collect(Collectors.groupingBy(UserProblemRoleDTO::getUserLoginId));
+
+        List<UserProblemRoleDTO> result = new ArrayList<>();
+        for (List<UserProblemRoleDTO> userRoles : userRolesMap.values()) {
+            UserProblemRoleDTO highestRoleRecord = findHighestRole(userRoles);
+            result.add(highestRoleRecord);
+        }
+
+        return result;
     }
 
-    @Transactional
-    @Override
-    public Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception {
-        checkProblemOwnerPermission(input.getProblemId(), userName);
+    /**
+     * Find the record with the highest role from a list of user role records
+     * Priority: OWNER > EDITOR > VIEWER
+     *
+     * @param userRoles List of user role records
+     * @return The record with the highest role
+     */
+    private UserProblemRoleDTO findHighestRole(List<UserProblemRoleDTO> userRoles) {
+        if (CollectionUtils.isEmpty(userRoles)) {
+            return null;
+        }
 
-        List<String> userIds = input.getUserIds() != null ? input.getUserIds() : new ArrayList<>();
-        List<String> groupUserIds = new ArrayList<>();
-        if (input.getGroupIds() != null && !input.getGroupIds().isEmpty()) {
-            groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(input.getGroupIds());
+        Map<String, Integer> rolePriority = Map.of(
+            UserContestProblemRole.ROLE_OWNER, 3,
+            UserContestProblemRole.ROLE_EDITOR, 2,
+            UserContestProblemRole.ROLE_VIEWER, 1
+        );
+
+        // Find record with the highest priority
+        return userRoles.stream()
+                        .max(Comparator.comparing(role -> rolePriority.getOrDefault(role.getRoleId(), 0)))
+                        .orElse(userRoles.get(0));
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> grantProblemPermission(String userName, GrantProblemPermissionDTO dto) {
+        validateRoleId(dto.getRoleId());
+        problemPermissionUtil.checkProblemOwnerPermission(dto.getProblemId(), userName);
+
+        List<String> userIds = CollectionUtils.isEmpty(dto.getUserIds()) ? new ArrayList<>() : dto.getUserIds();
+        Set<String> groupUserIds = new HashSet<>();
+        if (!CollectionUtils.isEmpty(dto.getGroupIds())) {
+            groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(dto.getGroupIds());
         }
 
         Set<String> allUserIds = new HashSet<>();
         allUserIds.addAll(userIds);
         allUserIds.addAll(groupUserIds);
 
-        boolean success = true;
+        if (CollectionUtils.isEmpty(allUserIds)) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("addedUsers", new ArrayList<>());
+            response.put("skippedUsers", new ArrayList<>());
+
+            return response;
+        }
+
+        List<UserContestProblemRole> allExistingRoles = userContestProblemRoleRepo
+            .findAllByProblemIdAndUserIdsIn(dto.getProblemId(), new ArrayList<>(allUserIds));
+        Map<String, List<String>> userRolesMap = allExistingRoles.stream()
+                                                                 .collect(Collectors.groupingBy(
+                                                                     UserContestProblemRole::getUserId,
+                                                                     Collectors.mapping(
+                                                                         UserContestProblemRole::getRoleId,
+                                                                         Collectors.toList())
+                                                                 ));
+        Map<String, List<UserContestProblemRole>> userRoleEntitiesMap = allExistingRoles.stream()
+                                                                                        .collect(Collectors.groupingBy(
+                                                                                            UserContestProblemRole::getUserId));
+
         List<String> addedUsers = new ArrayList<>();
         List<String> skippedUsers = new ArrayList<>();
+        List<UserContestProblemRole> toSave = new ArrayList<>();
+        List<UserContestProblemRole> toDelete = new ArrayList<>();
+
         for (String userId : allUserIds) {
-            List<UserContestProblemRole> L = userContestProblemRoleRepo.findAllByProblemIdAndUserIdAndRoleId(
-                input.getProblemId(),
-                userId,
-                input.getRoleId());
-            if (L != null && !L.isEmpty()) {
-                success = false;
+            List<String> existingRoles = userRolesMap.getOrDefault(userId, new ArrayList<>());
+
+            // User already has the OWNER role
+            if (existingRoles.contains(UserContestProblemRole.ROLE_OWNER)) {
                 skippedUsers.add(userId);
                 continue;
             }
-            UserContestProblemRole e = new UserContestProblemRole();
 
-            e.setUserId(userId);
-            e.setProblemId(input.getProblemId());
-            e.setRoleId(input.getRoleId());
+            // User already has the role to be granted
+            if (existingRoles.contains(dto.getRoleId())) {
+                skippedUsers.add(userId);
+                continue;
+            }
 
-            userContestProblemRoleRepo.save(e);
+            // User has different roles (excluding OWNER) -> delete existing roles and grant new role
+            if (!existingRoles.isEmpty()) {
+                List<UserContestProblemRole> existingRoleEntities = userRoleEntitiesMap.getOrDefault(
+                    userId,
+                    new ArrayList<>());
+                List<UserContestProblemRole> nonOwnerRoles = existingRoleEntities.stream()
+                                                                                 .filter(role -> !UserContestProblemRole.ROLE_OWNER.equals(
+                                                                                     role.getRoleId()))
+                                                                                 .toList();
+                toDelete.addAll(nonOwnerRoles);
+            }
+
+            UserContestProblemRole newRole = new UserContestProblemRole();
+
+            newRole.setUserId(userId);
+            newRole.setProblemId(dto.getProblemId());
+            newRole.setRoleId(dto.getRoleId());
+
+            toSave.add(newRole);
             addedUsers.add(userId);
         }
 
+        if (!CollectionUtils.isEmpty(toDelete)) {
+            userContestProblemRoleRepo.deleteAll(toDelete);
+        }
+
+        if (!CollectionUtils.isEmpty(toSave)) {
+            userContestProblemRoleRepo.saveAll(toSave);
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("success", success);
+        response.put("success", CollectionUtils.isEmpty(skippedUsers));
         response.put("addedUsers", addedUsers);
         response.put("skippedUsers", skippedUsers);
+
+        // Send notifications asynchronously after transaction commits
+        if (!CollectionUtils.isEmpty(addedUsers)) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    sendPermissionGrantNotifications(userName, dto.getProblemId(), dto.getRoleId(), addedUsers);
+                } catch (Exception e) {
+                    log.error("Failed to send permission grant notifications: {}", e.getMessage(), e);
+                }
+            });
+        }
+
         return response;
     }
 
-    @Transactional
+    /**
+     * Validate that roleId is one of the allowed values (excluding OWNER)
+     *
+     * @param roleId Role ID to validate
+     * @throws ResponseStatusException if roleId is invalid
+     */
+    private void validateRoleId(String roleId) {
+        Set<String> validRoles = Set.of(
+            UserContestProblemRole.ROLE_EDITOR,
+            UserContestProblemRole.ROLE_VIEWER
+        );
+
+        if (!validRoles.contains(roleId)) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Invalid roleId"
+            );
+        }
+    }
+
     @Override
-    public boolean removeAUserProblemRole(String userName, ModelUserProblemRole input) {
-        checkProblemOwnerPermission(input.getProblemId(), userName);
-        List<UserContestProblemRole> record = userContestProblemRoleRepo.findAllByProblemIdAndUserIdAndRoleId(
+    @Transactional
+    public boolean revokeProblemPermission(String userId, RevokeProblemPermissionDTO input) {
+        validateRoleId(input.getRoleId());
+        problemPermissionUtil.checkProblemOwnerPermission(input.getProblemId(), userId);
+
+        // Check if the current user is trying to remove himself
+        if (userId.equals(input.getUserId())) {
+            return false;
+        }
+
+        userContestProblemRoleRepo.deleteAllByProblemIdAndUserIdAndRoleId(
             input.getProblemId(),
             input.getUserId(),
             input.getRoleId());
 
-        if (CollectionUtils.isEmpty(record)) {
-            return false;
-        }
-
-        userContestProblemRoleRepo.deleteAll(record);
         return true;
-    }
-
-    private void checkProblemOwnerPermission(String problemId, String userId) {
-        if (!problemRepo.existsByProblemId(problemId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found");
-        }
-
-        boolean isOwner = userContestProblemRoleRepo.existsByProblemIdAndUserIdAndRoleId(
-            problemId,
-            userId,
-            UserContestProblemRole.ROLE_OWNER);
-        if (!isOwner) {
-            throw new ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "You don't have permission to perform this operation");
-        }
     }
 
     private List<ProblemBlock> createProblemBlocks(String problemId, List<BlockCode> blockCodes) {
@@ -981,8 +1073,14 @@ public class ProblemServiceImpl implements ProblemService {
         response.setAttachments(problemDetail.getAttachments());
         response.setSampleTestCase(problemDetail.getSampleTestCase());
         response.setCategoryId(problemDetail.getCategoryId());
-        response.setBlockCodes(problemDetail.getBlockCodes());
         response.setListLanguagesAllowed(contest.getListLanguagesAllowedInContest());
+
+        // Filter block codes based on contest allowed languages
+        List<BlockCode> filteredBlockCodes = filterBlockCodesByContestLanguages(
+            problemDetail.getBlockCodes(),
+            contest.getListLanguagesAllowedInContest()
+        );
+        response.setBlockCodes(filteredBlockCodes);
 
         if (ContestEntity.CONTEST_PROBLEM_DESCRIPTION_VIEW_TYPE_HIDDEN.equals(contest.getProblemDescriptionViewType())) {
             response.setProblemStatement(null);
@@ -1133,32 +1231,16 @@ public class ProblemServiceImpl implements ProblemService {
         String problemId,
         String fileId
     ) {
-        // Check if teacher has minimum VIEW permission to access this problem
+        boolean hasViewPermission = problemPermissionUtil.checkViewProblemPermission(problemId, userId);
+        if (!hasViewPermission) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You need to be granted permission to perform this action");
+        }
+
         ProblemEntity problem = problemRepo.findByProblemId(problemId);
-        if (problem == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found");
-        }
 
-        List<String> allowedRoles = new ArrayList<>(List.of(
-            UserContestProblemRole.ROLE_OWNER,
-            UserContestProblemRole.ROLE_EDITOR
-        ));
-        if (ProblemEntity.PROBLEM_STATUS_HIDDEN.equals(problem.getStatusId())) {
-            // For hidden problems, only OWNER and EDITOR can access
-        } else if (ProblemEntity.PROBLEM_STATUS_OPEN.equals(problem.getStatusId())) {
-            // For open problems, VIEWER can also access
-            allowedRoles.add(UserContestProblemRole.ROLE_VIEWER);
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to access this problem");
-        }
-
-        List<String> roles = userContestProblemRoleRepo.getRolesByProblemIdAndUserId(problemId, userId);
-        boolean hasPermission = !CollectionUtils.isEmpty(roles) && roles.stream().anyMatch(allowedRoles::contains);
-        if (!hasPermission) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to access this problem");
-        }
-
-        // Check if file exists in problem attachments
+        // Check if the file exists in problem attachments
         if (StringUtils.isBlank(problem.getAttachment())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
         }
@@ -1188,4 +1270,80 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    @Override
+    public Page<ModelGetTestCaseDetail> getTestCaseByProblem(String problemId, String userId, TestCaseFilter filter) {
+        boolean hasViewPermission = problemPermissionUtil.checkViewProblemPermission(problemId, userId);
+        if (!hasViewPermission) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You need to be granted permission to perform this action");
+        }
+
+        Pageable pageable = CommonUtils.getPageable(
+            filter.getPage(),
+            filter.getSize(),
+            Sort.by("lastUpdatedStamp").descending());
+
+        if (filter.getFullView() != null && filter.getFullView()) {
+            return testCaseRepo.getFullByProblemId(problemId, filter.getPublicOnly(), pageable);
+        } else {
+            return testCaseRepo.getPreviewByProblemId(problemId, pageable);
+        }
+    }
+
+    /**
+     * Send notifications to users who were granted problem permissions
+     *
+     * @param ownerUserId Name of the user who granted the permission
+     * @param problemId   Problem ID
+     * @param roleId      Role that was granted (EDITOR or VIEWER)
+     * @param userIds     List of user IDs who received the permission
+     */
+    @Transactional
+    protected void sendPermissionGrantNotifications(
+        String ownerUserId,
+        String problemId,
+        String roleId,
+        List<String> userIds
+    ) {
+        try {
+            ProblemEntity problem = problemRepo.findByProblemId(problemId);
+            if (problem == null) {
+                log.warn("Problem {} not found for notification", problemId);
+                return;
+            }
+
+            // Get owner's full name
+            String ownerFullName = userService.getUserFullName(ownerUserId);
+            if (StringUtils.isBlank(ownerFullName)) {
+                ownerFullName = ownerUserId;
+            }
+
+            String action;
+            if (UserContestProblemRole.ROLE_EDITOR.equals(roleId)) {
+                action = "edit";
+            } else if (UserContestProblemRole.ROLE_VIEWER.equals(roleId)) {
+                action = "view";
+            } else {
+                log.warn("Unknown role for notification: {}", roleId);
+                return;
+            }
+
+            String content = String.format(
+                "%s invited you to %s problem %s",
+                ownerFullName,
+                action,
+                problem.getProblemName());
+            String notificationUrl = String.format(
+                "/programming-contest/manager-view-problem-detail/%s",
+                problemId);
+            for (String userId : userIds) {
+                notificationsService.create(ownerUserId, userId, content, notificationUrl);
+            }
+
+            log.info("Sent permission grant notifications to {} users for problem {}", userIds.size(), problemId);
+        } catch (Exception e) {
+            log.error("Error sending permission grant notifications for problem {}: {}", problemId, e.getMessage(), e);
+        }
+    }
 }

@@ -54,8 +54,6 @@ public class ModelCreateContestProblemResponse {
 
     String preloadCode;
 
-    int levelOrder;
-
     Date createdAt;
 
     boolean isPublicProblem;

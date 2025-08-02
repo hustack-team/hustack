@@ -14,7 +14,6 @@ import com.hust.baseweb.applications.programmingcontest.utils.DateTimeUtils;
 import com.hust.baseweb.applications.programmingcontest.utils.codesimilaritycheckingalgorithms.CodeSimilarityCheck;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.model.SubmissionFilter;
-import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.repo.UserLoginRepo;
 import com.hust.baseweb.service.UserService;
 import com.hust.baseweb.utils.CommonUtils;
@@ -1610,20 +1609,6 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
 //    }
 
     @Override
-    public Page<ModelGetTestCaseDetail> getTestCaseByProblem(String problemId, TestCaseFilter filter) {
-        Pageable pageable = CommonUtils.getPageable(
-            filter.getPage(),
-            filter.getSize(),
-            Sort.by("lastUpdatedStamp").descending());
-
-        if (filter.getFullView() != null && filter.getFullView()) {
-            return testCaseRepo.getFullByProblemId(problemId, filter.getPublicOnly(), pageable);
-        } else {
-            return testCaseRepo.getPreviewByProblemId(problemId, pageable);
-        }
-    }
-
-    @Override
     public TestCaseDetailProjection getTestCaseDetail(UUID testCaseId) {
         TestCaseDetailProjection testCase = testCaseRepo.getTestCaseDetailByTestCaseId(
             testCaseId,
@@ -1730,7 +1715,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
             ? addUsers2Contest.getUserIds()
             : new ArrayList<>();
 
-        List<String> groupUserIds = new ArrayList<>();
+        Set<String> groupUserIds = new HashSet<>();
         if (addUsers2Contest.getGroupIds() != null && !addUsers2Contest.getGroupIds().isEmpty()) {
             groupUserIds = teacherGroupRelationRepository.findUserIdsByGroupIds(addUsers2Contest.getGroupIds());
         }

@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function ListTestCase({mode}) {
+export default function ListTestCase({mode, hideWhenEmpty = false}) {
   const params = useParams();
   const history = useHistory();
 
@@ -421,72 +421,76 @@ export default function ListTestCase({mode}) {
 
   return (
     <>
-      <Stack direction="row" justifyContent='space-between' mb={1.5}>
-        <Typography variant="h6">{t("Test Case")}</Typography>
+      {!hideWhenEmpty && (
+        <>
+          <Stack direction="row" justifyContent='space-between' mb={1.5}>
+            <Typography variant="h6">{t("Test Case")}</Typography>
 
-        <Stack direction='row' spacing={2}>
-          {mode !== 2 && <PrimaryButton
-            startIcon={<AddIcon/>}
-            onClick={() => addTestCase()}
-          >
-            {t("common:create", {name: ''})}
-          </PrimaryButton>}
-          {testCases?.length > 0 && <>
-            <TertiaryButton
-              variant="outlined"
-              startIcon={<ContentCopyIcon/>}
-              onClick={() => setOpenModalCopyTestcase(true)}
-            >
-              {t('common:copy')}
-            </TertiaryButton>
-            <TertiaryButton
-              variant="outlined"
-              startIcon={<DownloadIcon/>}
-              onClick={() => setOpenModalDownloadTestcase(true)}
-            >
-              {t('common:download')}
-            </TertiaryButton>
-          </>}
-        </Stack>
-      </Stack>
-      <StandardTable
-        columns={testcaseColumns}
-        data={testCases}
-        hideCommandBar
-        hideToolBar
-        options={{
-          selection: false,
-          pageSize: 5,
-          search: false,
-          sorting: false,
-        }}
-        components={{
-          Container: (props) => <Paper {...props} elevation={0}/>,
-        }}
-        isLoading={loading}
-        page={page}
-        totalCount={totalCount}
-        onChangePage={handleChangePage}
-        onChangeRowsPerPage={handleChangePageSize}
-      />
+            <Stack direction='row' spacing={2}>
+              {mode !== 2 && <PrimaryButton
+                startIcon={<AddIcon/>}
+                onClick={() => addTestCase()}
+              >
+                {t("common:create", {name: ''})}
+              </PrimaryButton>}
+              {testCases?.length > 0 && <>
+                <TertiaryButton
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon/>}
+                  onClick={() => setOpenModalCopyTestcase(true)}
+                >
+                  {t('common:copy')}
+                </TertiaryButton>
+                <TertiaryButton
+                  variant="outlined"
+                  startIcon={<DownloadIcon/>}
+                  onClick={() => setOpenModalDownloadTestcase(true)}
+                >
+                  {t('common:download')}
+                </TertiaryButton>
+              </>}
+            </Stack>
+          </Stack>
+          <StandardTable
+            columns={testcaseColumns}
+            data={testCases}
+            hideCommandBar
+            hideToolBar
+            options={{
+              selection: false,
+              pageSize: 5,
+              search: false,
+              sorting: false,
+            }}
+            components={{
+              Container: (props) => <Paper {...props} elevation={0}/>,
+            }}
+            isLoading={loading}
+            page={page}
+            totalCount={totalCount}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangePageSize}
+          />
 
-      <ModalCopy/>
-      <ModalDownload/>
-      <ModalPreview testCase={selectedTestCase}/>
-      <CustomizedDialogs
-        open={openModalReGenerateResult}
-        handleClose={() => setOpenModalReGenerateResult(false)}
-        title={t("reGenerateResult")}
-        contentTopDivider
-        content={<TestCaseExecutionResult uploadResult={executionResult} hideTitle/>}
-        classNames={{paper: classes.paper, content: classes.dialogContent}}
-      />
-      <ConfirmDeleteDialog open={openModalConfirmDelete}
-                           handleClose={handleCloseConfirmDeleteModal}
-                           handleDelete={handleDelete}
-                           entity='test case'
-                           name={selectedTestCase?.description}
-      />
+          <ModalCopy/>
+          <ModalDownload/>
+          <ModalPreview testCase={selectedTestCase}/>
+          <CustomizedDialogs
+            open={openModalReGenerateResult}
+            handleClose={() => setOpenModalReGenerateResult(false)}
+            title={t("reGenerateResult")}
+            contentTopDivider
+            content={<TestCaseExecutionResult uploadResult={executionResult} hideTitle/>}
+            classNames={{paper: classes.paper, content: classes.dialogContent}}
+          />
+          <ConfirmDeleteDialog open={openModalConfirmDelete}
+                               handleClose={handleCloseConfirmDeleteModal}
+                               handleDelete={handleDelete}
+                               entity='test case'
+                               name={selectedTestCase?.description}
+          />
+        </>
+      )}
     </>
   );
 }

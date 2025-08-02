@@ -1,10 +1,10 @@
 package com.hust.baseweb.applications.programmingcontest.repo;
 
 import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
-import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.model.ProblemFilter;
+import com.hust.baseweb.model.TestCaseFilter;
 import com.hust.baseweb.model.dto.ProblemDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,24 +15,20 @@ import java.util.Map;
 
 public interface ProblemService {
 
-    ProblemEntity createProblem(String userID, ModelCreateContestProblem dto, MultipartFile[] files);
+    ProblemEntity createProblem(String userID, CreateProblemDTO dto, MultipartFile[] files);
 
-    ProblemEntity editProblem(
+    void editProblem(
         String problemId,
         String userId,
-        ModelUpdateContestProblem dto,
+        EditProblemDTO dto,
         MultipartFile[] files
     );
 
     List<ModelProblemGeneralInfo> getAllProblemsGeneralInfo();
 
-    boolean removeAUserProblemRole(String userName, ModelUserProblemRole input) throws Exception;
-
-    Map<String, Object> addUserProblemRole(String userName, ModelUserProblemRoleInput input) throws Exception;
-
     Page<ProblemDTO> getProblems(String ownerId, ProblemFilter filter, Boolean isPublic);
 
-    ProblemEntity cloneProblem(String userId, CloneProblemDTO cloneRequest) throws MiniLeetCodeException;
+    void cloneProblem(String userId, CloneProblemDTO cloneRequest);
 
     Page<ProblemDTO> getPublicProblems(String userId, ProblemFilter filter);
 
@@ -50,9 +46,7 @@ public interface ProblemService {
         String userId
     ) throws Exception;
 
-    void exportProblem(String id, OutputStream outputStream);
-
-    List<ModelResponseUserProblemRole> getUserProblemRoles(String problemId, String userId);
+    void exportProblem(String id, String userId, OutputStream outputStream);
 
     ProblemDetailForParticipantDTO getProblemDetailForParticipant(String userId, String contestId, String problemId);
 
@@ -61,4 +55,12 @@ public interface ProblemService {
     AttachmentMetadata downloadProblemAttachment(String userId, String contestId, String problemId, String fileId);
 
     AttachmentMetadata downloadProblemAttachmentForTeacher(String userId, String problemId, String fileId);
+
+    List<UserProblemRoleDTO> getProblemPermissions(String problemId, String userId);
+    
+    Map<String, Object> grantProblemPermission(String userName, GrantProblemPermissionDTO input);
+    
+    boolean revokeProblemPermission(String userName, RevokeProblemPermissionDTO input);
+
+    Page<ModelGetTestCaseDetail> getTestCaseByProblem(String problemId, String userId, TestCaseFilter filter);
 }

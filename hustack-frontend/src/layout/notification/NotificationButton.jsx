@@ -144,7 +144,7 @@ function NotificationButton() {
           <Typography variant={"subtitle2"} component={'span'}> {t('submissionGradedTail')} </Typography>
         </Box>, {
           position: "bottom-right",
-          autoClose: false,
+          autoClose: 10000,
           pauseOnHover: true,
           draggable: true,
           progress: undefined,

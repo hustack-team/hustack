@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Date;
@@ -54,6 +55,7 @@ public class NotificationsServiceImpl implements NotificationsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<NotificationProjection> getNotifications(String toUser, UUID fromId, int page, int size) {
         Pageable sortedByCreatedStampDsc =
             PageRequest.of(page, size, Sort.by("created_stamp").descending());
@@ -67,11 +69,13 @@ public class NotificationsServiceImpl implements NotificationsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countNumUnreadNotification(String toUser) {
         return notificationsRepo.countByToUserAndStatusId(toUser, STATUS_CREATED);
     }
 
     @Override
+    @Transactional
     public void create(String fromUser, String toUser, String content, String url) {
         Notifications notification = new Notifications();
 
@@ -88,8 +92,9 @@ public class NotificationsServiceImpl implements NotificationsService {
      * @param notification
      */
     @Override
+    @Transactional
     public void create(Notifications notification) {
-        notification = notificationsRepo.save(notification);
+        notification = notificationsRepo.saveAndFlush(notification);
         NotificationDTO dto = mapper.convertValue(
             notificationsRepo.findNotificationById(notification.getId()),
             NotificationDTO.class);
@@ -141,8 +146,8 @@ public class NotificationsServiceImpl implements NotificationsService {
         ));
     }
 
-
     @Override
+    @Transactional
     public void updateStatus(UUID notificationId, String status) {
         Notifications notification = notificationsRepo.findById(notificationId).orElse(null);
 
@@ -153,6 +158,7 @@ public class NotificationsServiceImpl implements NotificationsService {
     }
 
     @Override
+    @Transactional
     public void updateMultipleNotificationsStatus(
         String userId,
         String status,
