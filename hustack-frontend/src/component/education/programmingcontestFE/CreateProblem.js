@@ -241,11 +241,9 @@ function CreateProblem() {
         .filter((language) => blockCodes[language].length > 0)
         .flatMap((language) =>
           blockCodes[language].map((block, index) => ({
-            id: `${language}_${index}`,
             code: block.code,
             forStudent: block.forStudent ? 1 : 0,
             language: language,
-            seq: index + 1,
           }))
         );
     }

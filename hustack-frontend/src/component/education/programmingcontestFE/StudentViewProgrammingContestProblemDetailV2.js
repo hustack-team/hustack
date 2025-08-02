@@ -174,8 +174,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
     const body = {
       problemId: problemId,
       contestId: contestId,
-      language: isProblemBlock ? selectedLanguage : language,
-      isProblemBlock: isProblemBlock ? 1 : 0
+      language: isProblemBlock ? selectedLanguage : language
     };
 
     if (isProblemBlock) {
@@ -183,16 +182,15 @@ export default function StudentViewProgrammingContestProblemDetail() {
         .filter(block => block.language === selectedLanguage && block.forStudent)
         .sort((a, b) => a.seq - b.seq)
         .map(block => ({
-          seq: block.seq,
-          code: blockCodeInputs[block.id] || "",
-          language: block.language
+          id: block.id,
+          code: blockCodeInputs[block.id],
         }));
     }
 
     // Validate submission data
     if (isProblemBlock) {
-      if (isBlockCodeBlank(body.blockCodes)) {
-        errorNoti(t("common:sourceCodeRequired"), 3000);
+      if (isAllBlocksBlank(body.blockCodes)) {
+        errorNoti(t("common:pleaseCompleteStudentBlocks"), 3000);
         setIsProcessing(false);
         return;
       }
@@ -280,7 +278,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
     );
   };
 
-  function isBlockCodeBlank(blockCodes) {
+  function isAllBlocksBlank(blockCodes) {
     return blockCodes.every(block => _.isEmpty(_.trim(block.code)));
   }
 

@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -62,19 +63,29 @@ public class SubmissionServiceImpl implements SubmissionService {
     WebClient.Builder webClientBuilder;
 
     HustackAiServiceConfig hustackAiServiceConfig;
+
     ContestSubmissionBlockRepo contestSubmissionBlockRepo;
+
     ProblemBlockRepo problemBlockRepo;
 
-    /**
-     * @param model
-     * @param file
-     */
+    ProblemRepo problemRepo;
+
     @Override
     public Object submit(
         HttpServletRequest request,
         ModelContestSubmitProgramViaUploadFile model,
         MultipartFile file
     ) {
+        ProblemEntity problemEntity = problemRepo.findByProblemId(model.getProblemId());
+        if (problemEntity == null) {
+            return buildSubmissionResponseProblemNotFound();
+        }
+
+        boolean isBlockProblem = Objects.equals(1, problemEntity.getCategoryId());
+        if (!isBlockProblem && file == null) {
+            return buildSubmissionResponseSourceCodeRequired();
+        }
+
         ContestEntity contest = contestRepo.findContestByContestId(model.getContestId());
         if (contest == null) {
             return buildSubmissionResponseContestNotFound();
@@ -140,12 +151,9 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         try {
             String source;
-            if (Integer.valueOf(1).equals(model.getIsProblemBlock())) {
-                source = processBlockCodeSubmission(model, problem);
+            if (isBlockProblem) {
+                source = mergeBlockCodes(model);
             } else {
-                if (file == null) {
-                    return buildSubmissionResponseSourceCodeRequired();
-                }
                 try (ByteArrayInputStream stream = new ByteArrayInputStream(file.getBytes())) {
                     source = IOUtils.toString(stream, StandardCharsets.UTF_8);
                 }
@@ -174,6 +182,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 String[] forbiddenInstructions = problem.getForbiddenInstructions().split(",");
                 for (String rawInstruction : forbiddenInstructions) {
                     String instruction = rawInstruction.trim();
+
                     if (!instruction.isEmpty() && source.contains(instruction)) {
                         return submitContestProblemNotExecuteDueToForbiddenInstructions(
                             dto,
@@ -197,8 +206,8 @@ public class SubmissionServiceImpl implements SubmissionService {
                 res = submitContestProblemStoreOnlyNotExecute(dto, model.getUserId(), model.getSubmittedByUserId());
             }
 
-            if (Integer.valueOf(1).equals(model.getIsProblemBlock())) {
-                saveSubmissionBlockCodes(res.getContestSubmissionID(), model.getBlockCodes());
+            if (isBlockProblem) {
+                createSubmissionBlocks(res.getContestSubmissionID(), model.getBlockCodes());
             }
             return res;
         } catch (Exception e) {
@@ -207,54 +216,52 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Transactional(readOnly = true)
-    public String processBlockCodeSubmission(ModelContestSubmitProgramViaUploadFile model, ContestProblem problem) {
-        String language = model.getLanguage();
-
-        List<ProblemBlock> teacherBlocks = problemBlockRepo.findByProblemIdAndCompletedByAndProgrammingLanguage(
+    public String mergeBlockCodes(ModelContestSubmitProgramViaUploadFile model) {
+        List<ProblemBlock> languageBlocks = problemBlockRepo.findByProblemIdAndProgrammingLanguageOrderBySeq(
             model.getProblemId(),
-            0,
-            language
+            model.getLanguage()
         );
 
-        List<BlockCode> studentBlocks = model.getBlockCodes();
-
-        Map<Integer, String> mergedBySeq = new TreeMap<>();
-
-        for (ProblemBlock teacherBlock : teacherBlocks) {
-            int seq = teacherBlock.getSeq();
-            mergedBySeq.putIfAbsent(seq, "");
-            mergedBySeq.put(seq, mergedBySeq.get(seq) + teacherBlock.getSourceCode() + "\n");
-        }
-
-        for (BlockCode studentBlock : studentBlocks) {
-            int seq = studentBlock.getSeq();
-            mergedBySeq.putIfAbsent(seq, "");
-            mergedBySeq.put(seq, mergedBySeq.get(seq) + studentBlock.getCode() + "\n");
+        Map<UUID, String> studentCodeMap = new HashMap<>();
+        List<BlockCode> studentSubmittedBlocks = model.getBlockCodes();
+        if (!CollectionUtils.isEmpty(studentSubmittedBlocks)) {
+            studentCodeMap = studentSubmittedBlocks.stream()
+                                                   .collect(Collectors.toMap(BlockCode::getId, BlockCode::getCode));
         }
 
         StringBuilder mergedCode = new StringBuilder();
-        for (String code : mergedBySeq.values()) {
-            mergedCode.append(code);
+        for (ProblemBlock block : languageBlocks) {
+            if (block.getCompletedBy() == 0) {
+                String teacherCode = block.getSourceCode();
+                if (!StringUtils.isBlank(teacherCode)) {
+                    mergedCode.append(teacherCode).append("\n");
+                }
+            } else {
+                String studentCode = studentCodeMap.getOrDefault(block.getId(), "");
+                if (!StringUtils.isBlank(studentCode)) {
+                    mergedCode.append(studentCode).append("\n");
+                }
+            }
         }
 
         return mergedCode.toString();
     }
 
     @Transactional
-    public void saveSubmissionBlockCodes(UUID submissionId, List<BlockCode> blockCodes) {
-        List<ContestSubmissionBlock> submissionBlocks = new ArrayList<>();
+    public void createSubmissionBlocks(UUID submissionId, List<BlockCode> blockCodes) {
+        if (!CollectionUtils.isEmpty(blockCodes)) {
+            List<SubmissionBlock> submissionBlocks = new ArrayList<>();
+            for (BlockCode block : blockCodes) {
+                SubmissionBlock submissionBlock = SubmissionBlock.builder()
+                                                                 .submissionId(submissionId)
+                                                                 .blockId(block.getId())
+                                                                 .sourceCode(block.getCode())
+                                                                 .build();
+                submissionBlocks.add(submissionBlock);
+            }
 
-
-        for (BlockCode block : blockCodes) {
-            ContestSubmissionBlock submissionBlock = ContestSubmissionBlock.builder()
-                                                                           .submissionId(submissionId)
-                                                                           .blockSeq(block.getSeq())
-                                                                           .sourceCode(block.getCode())
-                                                                           .build();
-            submissionBlocks.add(submissionBlock);
+            contestSubmissionBlockRepo.saveAll(submissionBlocks);
         }
-
-        contestSubmissionBlockRepo.saveAll(submissionBlocks);
     }
 
     /**
@@ -308,12 +315,13 @@ public class SubmissionServiceImpl implements SubmissionService {
             return buildSubmissionResponseProblemNotFound();
         }
 
-        ModelContestSubmitProgramViaUploadFile dto = new ModelContestSubmitProgramViaUploadFile(
-            model.getContestId(),
-            problem.getProblemId(),
-            language,
-            s1[0].trim(),
-            principal.getName());
+        ModelContestSubmitProgramViaUploadFile dto = ModelContestSubmitProgramViaUploadFile.builder()
+                                                                                           .contestId(model.getContestId())
+                                                                                           .problemId(problem.getProblemId())
+                                                                                           .language(language)
+                                                                                           .userId(s1[0].trim())
+                                                                                           .submittedByUserId(principal.getName())
+                                                                                           .build();
         return submit(request, dto, file);
     }
 
@@ -350,7 +358,8 @@ public class SubmissionServiceImpl implements SubmissionService {
         boolean checkUser
     ) {
         ContestSubmissionEntity submission = contestSubmissionRepo.findById(submissionId)
-                                                                  .orElseThrow(() -> new EntityNotFoundException("Submission not found: " + submissionId));
+                                                                  .orElseThrow(() -> new EntityNotFoundException(
+                                                                      "Submission not found: " + submissionId));
 
         if ((checkUser && !expectedUserId.equals(submission.getUserId())) ||
             !expectedContestId.equals(submission.getContestId()) ||
@@ -360,8 +369,6 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         return submission;
     }
-
-
 
     /**
      * @param contestId

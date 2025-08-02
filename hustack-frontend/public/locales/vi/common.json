@@ -140,6 +140,7 @@
   "owner": "Người sở hữu",
   "participantRemovedSuccessfully": "Người tham gia đã được xóa thành công",
   "pdfExportFailed": "Không thể xuất tệp PDF. Vui lòng thử lại",
+  "pleaseCompleteStudentBlocks": "Vui lòng hoàn thiện các khối mã dành cho bạn",
   "pleaseEnterRequiredInfo": "Vui lòng nhập đầy đủ thông tin cần thiết",
   "pleaseSelectFile": "Vui lòng chọn file để nộp",
   "postCommentFailed": "Đăng bình luận thất bại",

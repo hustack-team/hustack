@@ -486,7 +486,7 @@ public class ProblemServiceImpl implements ProblemService {
     private BlockCode mapToBlockCode(ProblemBlock block) {
         BlockCode blockCode = new BlockCode();
 
-        blockCode.setId(String.valueOf(block.getId()));
+        blockCode.setId(block.getId());
         blockCode.setCode(block.getSourceCode());
         blockCode.setForStudent(block.getCompletedBy());
         blockCode.setSeq(block.getSeq());

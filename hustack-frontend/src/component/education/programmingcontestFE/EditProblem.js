@@ -260,10 +260,8 @@ function EditProblem() {
         .flatMap((language) =>
           blockCodes[language].map((block
             , index) => ({
-            id: block.id || `${language}_${index}`,
             code: block.code,
             forStudent: block.forStudent ? 1 : 0,
-            seq: block.seq || index + 1,
             language: language,
           }))
         );

@@ -9,6 +9,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelContestSubmitProgramViaUploadFile {
 
@@ -22,10 +23,6 @@ public class ModelContestSubmitProgramViaUploadFile {
 
     String submittedByUserId;
 
-    Integer isProblemBlock;
-
     List<BlockCode> blockCodes;
 
-    public ModelContestSubmitProgramViaUploadFile(String contestId, String problemId, String language, String userId, String submittedByUserId) {
-    }
 }

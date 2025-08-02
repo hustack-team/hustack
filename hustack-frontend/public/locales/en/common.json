@@ -140,6 +140,7 @@
   "owner": "Owner",
   "participantRemovedSuccessfully": "Participant removed successfully",
   "pdfExportFailed": "Cannot export PDF file. Please try again",
+  "pleaseCompleteStudentBlocks": "Please complete the code blocks assigned to you",
   "pleaseEnterRequiredInfo": "Please enter all required information",
   "pleaseSelectFile": "Please select a file to submit",
   "postCommentFailed": "Post comment failed",

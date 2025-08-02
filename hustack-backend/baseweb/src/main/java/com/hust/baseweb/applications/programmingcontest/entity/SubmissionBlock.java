@@ -9,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -20,7 +21,7 @@ import java.util.UUID;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
-public class ContestSubmissionBlock {
+public class SubmissionBlock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,8 +31,8 @@ public class ContestSubmissionBlock {
     @Column(name = "submission_id")
     UUID submissionId;
 
-    @Column(name = "block_seq")
-    Integer blockSeq;
+    @Column(name = "block_id")
+    UUID blockId;
 
     @Column(name = "source_code", columnDefinition = "text")
     String sourceCode;
@@ -42,7 +43,7 @@ public class ContestSubmissionBlock {
 
     @CreatedDate
     @Column(name = "created_date")
-    java.util.Date createdDate;
+    Date createdDate;
 
     @LastModifiedBy
     @Column(name = "last_modified_by")
@@ -50,5 +51,5 @@ public class ContestSubmissionBlock {
 
     @LastModifiedDate
     @Column(name = "last_modified_date")
-    java.util.Date lastModifiedDate;
+    Date lastModifiedDate;
 }

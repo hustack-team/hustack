@@ -1,16 +1,20 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
-@Data
+import java.util.UUID;
+
 @ToString
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BlockCode {
 
-    String id;
+    UUID id;
 
     String code;
 

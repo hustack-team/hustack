@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProblemBlockRepo extends JpaRepository<ProblemBlock, UUID> {
-    List<ProblemBlock> findByProblemId(String problemId);
-    void deleteByProblemId(String problemId);
-    List<ProblemBlock> findByProblemIdAndCompletedByAndProgrammingLanguage(String problemId, int completedBy, String programmingLanguage);
 
+    List<ProblemBlock> findByProblemId(String problemId);
+
+    List<ProblemBlock> findByProblemIdAndProgrammingLanguageOrderBySeq(String problemId, String programmingLanguage);
+
+    void deleteByProblemId(String problemId);
 }
