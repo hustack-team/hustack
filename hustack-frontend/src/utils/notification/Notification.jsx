@@ -13,7 +13,7 @@ export const processingNoti = (toastId, autoClose) =>
   (toastId.current = toast.info(
     <Box display="flex" alignItems="center">
       <IconContext.Provider>
-        <GiInfo size={20} style={{ marginRight: "5px" }} />
+        <GiInfo size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
       </IconContext.Provider>
       Đang xử lý...
     </Box>,
@@ -33,7 +33,7 @@ export const updateSuccessNoti = (toastId, message, autoClose) =>
     render: (
       <Box display="flex" alignItems="center">
         <IconContext.Provider>
-          <FiCheckCircle size={20} style={{ marginRight: "5px" }} />
+          <FiCheckCircle size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
         </IconContext.Provider>
         {message}
       </Box>
@@ -47,7 +47,7 @@ export const updateErrorNoti = (toastId, message) =>
     render: (
       <Box display="flex" alignItems="center">
         <IconContext.Provider>
-          <MdCancel size={20} style={{ marginRight: "5px" }} />
+          <MdCancel size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
         </IconContext.Provider>
         {message}
       </Box>
@@ -89,7 +89,7 @@ export const unduplicatedErrorNoti = (toastId, message, autoClose) => {
   const content = (
     <ContentContainer>
       <IconContext.Provider>
-        <MdCancel size={20} style={{ marginRight: "5px" }} />
+        <MdCancel size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
       </IconContext.Provider>
       {message}
     </ContentContainer>
@@ -109,7 +109,7 @@ export const errorNoti = (message, autoClose) => {
   const content = (
     <ContentContainer>
       <IconContext.Provider>
-        <MdCancel size={20} style={{ marginRight: "5px" }} />
+        <MdCancel size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
       </IconContext.Provider>
       {message}
     </ContentContainer>
@@ -130,7 +130,7 @@ export const successNoti = (message, autoClose) =>
       {/* <IconContext.Provider>
         <FiCheckCircle size={20} style={{marginRight: "5px" }} />
       </IconContext.Provider> */}
-      <CheckCircleRoundedIcon style={{ marginRight: "5px" }} />
+      <CheckCircleRoundedIcon style={{ marginRight: "5px", flexShrink: 0 }} />
       {message}
     </Box>,
     {
@@ -146,7 +146,7 @@ export const warningNoti = (message, autoClose) =>
   toast.warning(
     <Box display="flex" alignItems="center">
       <IconContext.Provider>
-        <MdWarning size={20} style={{ marginRight: "5px" }} />
+        <MdWarning size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
       </IconContext.Provider>
       {message}
     </Box>,
@@ -163,7 +163,7 @@ export const infoNoti = (message, autoClose) =>
   toast.info(
     <Box display="flex" alignItems="center">
       <IconContext.Provider>
-        <GiInfo size={20} style={{ marginRight: "5px" }} />
+        <GiInfo size={20} style={{ marginRight: "5px", flexShrink: 0 }} />
       </IconContext.Provider>
       {message}
     </Box>,

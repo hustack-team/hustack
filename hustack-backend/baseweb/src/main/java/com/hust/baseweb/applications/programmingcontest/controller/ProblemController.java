@@ -6,9 +6,6 @@ import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.
 import com.hust.baseweb.applications.programmingcontest.entity.TagEntity;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.GetSubmissionsOfParticipantModelInput;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.ProblemFilter;
@@ -123,6 +120,7 @@ public class ProblemController {
         return ResponseEntity.ok().body(null);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/check-compile")
     public ResponseEntity<?> checkCompile(@RequestBody ModelCheckCompile modelCheckCompile, Principal principal)
         throws Exception {
@@ -136,6 +134,7 @@ public class ProblemController {
         return ResponseEntity.ok().body(tags);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/tags")
     public ResponseEntity<?> addNewTag(@RequestBody ModelTag tagInput) {
 
@@ -161,6 +160,7 @@ public class ProblemController {
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/problems/{problemId}/testcases/{testCaseId}/solution")
     public ResponseEntity<?> rerunCreateTestCaseSolution(
         @PathVariable String problemId,
@@ -213,6 +213,7 @@ public class ProblemController {
                              .body(stream);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping(value = "/teachers/problems/clone")
     public ResponseEntity<?> cloneProblem(
         Principal principal,
@@ -260,20 +261,18 @@ public class ProblemController {
 //    public List<ProblemEntity> getAllProblems(Principal owner) {
 //        return this.problemTestCaseService.getAllProblems(owner.getName());
 //    }
-
     //@Secured("ROLE_EXT_DATA_QUERY")
-    @GetMapping("/extapi/all-problems")
-    public ResponseEntity<?> extGetAllProblems(Principal principal) {
-        List<ContestProblemModelResponse> problems = problemTestCaseService.extApiGetAllProblems(principal.getName());
-        return ResponseEntity.ok().body(problems);
-    }
-
-    @PostMapping("extapi/get-submissions-of-participant")
-    public ResponseEntity<?> getSubmissionOf(@RequestBody GetSubmissionsOfParticipantModelInput I) {
-        String participantId = I.getParticipantId();
-        List<SubmissionModelResponse> res = problemService.extApiGetSubmissions(participantId);
-        return ResponseEntity.ok().body(res);
-    }
+//    @GetMapping("/extapi/all-problems")
+//    public ResponseEntity<?> extGetAllProblems(Principal principal) {
+//        List<ContestProblemModelResponse> problems = problemTestCaseService.extApiGetAllProblems(principal.getName());
+//        return ResponseEntity.ok().body(problems);
+//    }
+//    @PostMapping("extapi/get-submissions-of-participant")
+//    public ResponseEntity<?> getSubmissionOf(@RequestBody GetSubmissionsOfParticipantModelInput I) {
+//        String participantId = I.getParticipantId();
+//        List<SubmissionModelResponse> res = problemService.extApiGetSubmissions(participantId);
+//        return ResponseEntity.ok().body(res);
+//    }
 
     @Secured("ROLE_STUDENT")
     @GetMapping("/contests/{contestId}/problems/{problemId}/attachments/{fileId}")

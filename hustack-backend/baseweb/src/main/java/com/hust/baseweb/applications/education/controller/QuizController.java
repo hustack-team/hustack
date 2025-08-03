@@ -12,13 +12,15 @@ import com.hust.baseweb.applications.education.service.*;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,31 +28,42 @@ import org.springframework.web.multipart.MultipartFile;
 import java.security.Principal;
 import java.util.*;
 
-@Log4j2
-@Controller
+
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-module-quiz-test",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
 //@RequestMapping("/edu/class")
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuizController {
 
-    private QuizQuestionService quizQuestionService;
+    QuizQuestionService quizQuestionService;
 
-    private QuizChoiceAnswerService quizChoiceAnswerService;
+    QuizChoiceAnswerService quizChoiceAnswerService;
 
-    private QuizCourseTopicService quizCourseTopicService;
+    QuizCourseTopicService quizCourseTopicService;
 
-    private UserService userService;
+    UserService userService;
 
-    private ClassService classService;
+    ClassService classService;
 
-    private CommentOnQuizQuestionService commentOnQuizQuestionService;
+    CommentOnQuizQuestionService commentOnQuizQuestionService;
 
-    private QuizQuestionUserRoleRepo quizQuestionUserRoleRepo;
+    QuizQuestionUserRoleRepo quizQuestionUserRoleRepo;
 
-    private QuizTagRepo quizTagRepo;
-    private QuizTagService quizTagService;
-    private QuizQuestionTagRepo quizQuestionTagRepo;
-    private QuizQuestionTagService quizQuestionTagService;
+    QuizTagRepo quizTagRepo;
+
+    QuizTagService quizTagService;
+
+    QuizQuestionTagRepo quizQuestionTagRepo;
+
+    QuizQuestionTagService quizQuestionTagService;
 
     @PostMapping("/post-comment-on-quiz")
     public ResponseEntity<?> postCommentOnQuizQuestion(
@@ -126,12 +139,14 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestionTag);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-tags-of-course/{courseId}")
     public ResponseEntity<?> getListTagOfCourse(Principal principal, @PathVariable String courseId) {
         
         return ResponseEntity.ok().body(quizTagRepo.findAllByCourseId(courseId));
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-tags-of-quiz/{questionId}")
     public ResponseEntity<?> getListTagOfQuiz(Principal principal, @PathVariable UUID questionId) {
         List<QuizQuestionTag> quizQuestionTags = quizQuestionTagRepo.findAllByQuestionId(questionId);
@@ -143,6 +158,7 @@ public class QuizController {
         return ResponseEntity.ok().body(quizTags);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-questions-of-course-by-tags")
     public ResponseEntity<?> getListQuestionByTags(Principal principal, @RequestParam("tags") List<String> tags, @RequestParam("courseId") String courseId) {
         // List<UUID> tagIds = quizTagRepo.findAllTagIdByCourseIdAndTagName(courseId, tags);
@@ -312,13 +328,14 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestion);
     }
 
-    @GetMapping("/get-all-quiz-questions")
-    public ResponseEntity<?> getAllQuizQuestions(Principal principal) {
-        log.info("getAllQuizQuestions");
-        List<QuizQuestion> quizQuestionList = quizQuestionService.findAll();
-        return ResponseEntity.ok().body(quizQuestionList);
-    }
+//    @GetMapping("/get-all-quiz-questions")
+//    public ResponseEntity<?> getAllQuizQuestions(Principal principal) {
+//        log.info("getAllQuizQuestions");
+//        List<QuizQuestion> quizQuestionList = quizQuestionService.findAll();
+//        return ResponseEntity.ok().body(quizQuestionList);
+//    }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/change-quiz-open-close-status/{questionId}")
     public ResponseEntity<?> changeQuizOpenCloseStatus(Principal principal, @PathVariable UUID questionId) {
         UserLogin u = userService.findById(principal.getName());
@@ -326,20 +343,21 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestion);
     }
 
-    @GetMapping("/get-quiz-of-class/{classId}")
-    public ResponseEntity<?> getQuizOfClass(Principal principal, @PathVariable UUID classId) {
-        GetClassDetailOM eduClass = classService.getClassDetail(classId);
-        String courseId = eduClass.getCourseId();
-        log.info("getQuizOfClass, classId = " + classId + ", courseId = " + courseId);
-        List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
-        List<QuizQuestionDetailModel> quizQuestionDetailModels = new ArrayList<>();
-        for (QuizQuestion q : quizQuestions) {
-            QuizQuestionDetailModel quizQuestionDetailModel = quizQuestionService.findQuizDetail(q.getQuestionId());
-            quizQuestionDetailModels.add(quizQuestionDetailModel);
-        }
-        return ResponseEntity.ok().body(quizQuestionDetailModels);
-    }
+//    @GetMapping("/get-quiz-of-class/{classId}")
+//    public ResponseEntity<?> getQuizOfClass(Principal principal, @PathVariable UUID classId) {
+//        GetClassDetailOM eduClass = classService.getClassDetail(classId);
+//        String courseId = eduClass.getCourseId();
+//        log.info("getQuizOfClass, classId = " + classId + ", courseId = " + courseId);
+//        List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
+//        List<QuizQuestionDetailModel> quizQuestionDetailModels = new ArrayList<>();
+//        for (QuizQuestion q : quizQuestions) {
+//            QuizQuestionDetailModel quizQuestionDetailModel = quizQuestionService.findQuizDetail(q.getQuestionId());
+//            quizQuestionDetailModels.add(quizQuestionDetailModel);
+//        }
+//        return ResponseEntity.ok().body(quizQuestionDetailModels);
+//    }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-quiz-question-detail/{questionId}")
     public ResponseEntity<?> getQuizQuestionDetail(Principal principal, @PathVariable UUID questionId) {
         //QuizQuestion q = quizQuestionService.findById(questionId);
@@ -373,40 +391,41 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestionDetailModels);
     }
 
-    @GetMapping("/get-unpublished-quiz-of-course/{courseId}")
-    public ResponseEntity<?> getUnPublishedQuizOfCourse(Principal principal, @PathVariable String courseId) {
+//    @GetMapping("/get-unpublished-quiz-of-course/{courseId}")
+//    public ResponseEntity<?> getUnPublishedQuizOfCourse(Principal principal, @PathVariable String courseId) {
+//
+//        log.info("getUnPublishedQuizOfCourse, courseId = " + courseId);
+//        List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
+//        List<QuizQuestionDetailModel> quizQuestionDetailModels = new ArrayList<>();
+//        for (QuizQuestion q : quizQuestions) {
+//            if (q.getStatusId().equals(QuizQuestion.STATUS_PUBLIC)) {
+//                continue;
+//            }
+//            QuizQuestionDetailModel quizQuestionDetailModel = quizQuestionService.findQuizDetail(q.getQuestionId());
+//            quizQuestionDetailModels.add(quizQuestionDetailModel);
+//        }
+//        Collections.sort(quizQuestionDetailModels, new Comparator<QuizQuestionDetailModel>() {
+//            @Override
+//            public int compare(QuizQuestionDetailModel o1, QuizQuestionDetailModel o2) {
+//                String topic1 = o1.getQuizCourseTopic().getQuizCourseTopicId();
+//                String topic2 = o2.getQuizCourseTopic().getQuizCourseTopicId();
+//                String level1 = o1.getLevelId();
+//                String level2 = o2.getLevelId();
+//                int c1 = topic1.compareTo(topic2);
+//                if (c1 == 0) {
+//                    return level1.compareTo(level2);
+//                } else {
+//                    return c1;
+//                }
+//            }
+//        });
+//        log.info("getUnPublishedQuizOfCourse, courseId = " + courseId
+//                 + " RETURN list.sz = " + quizQuestionDetailModels.size());
+//
+//        return ResponseEntity.ok().body(quizQuestionDetailModels);
+//    }
 
-        log.info("getUnPublishedQuizOfCourse, courseId = " + courseId);
-        List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
-        List<QuizQuestionDetailModel> quizQuestionDetailModels = new ArrayList<>();
-        for (QuizQuestion q : quizQuestions) {
-            if (q.getStatusId().equals(QuizQuestion.STATUS_PUBLIC)) {
-                continue;
-            }
-            QuizQuestionDetailModel quizQuestionDetailModel = quizQuestionService.findQuizDetail(q.getQuestionId());
-            quizQuestionDetailModels.add(quizQuestionDetailModel);
-        }
-        Collections.sort(quizQuestionDetailModels, new Comparator<QuizQuestionDetailModel>() {
-            @Override
-            public int compare(QuizQuestionDetailModel o1, QuizQuestionDetailModel o2) {
-                String topic1 = o1.getQuizCourseTopic().getQuizCourseTopicId();
-                String topic2 = o2.getQuizCourseTopic().getQuizCourseTopicId();
-                String level1 = o1.getLevelId();
-                String level2 = o2.getLevelId();
-                int c1 = topic1.compareTo(topic2);
-                if (c1 == 0) {
-                    return level1.compareTo(level2);
-                } else {
-                    return c1;
-                }
-            }
-        });
-        log.info("getUnPublishedQuizOfCourse, courseId = " + courseId
-                 + " RETURN list.sz = " + quizQuestionDetailModels.size());
-
-        return ResponseEntity.ok().body(quizQuestionDetailModels);
-    }
-
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-course-of-quiz-question/{questionId}")
     public ResponseEntity<?> getCourseOfQuizQuestion(Principal principal, @PathVariable UUID questionId) {
         log.info("getCourseOfQuizQuestion, questionId = " + questionId);
@@ -415,6 +434,7 @@ public class QuizController {
         return ResponseEntity.ok().body(eduCourse);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-quiz-of-course-topic/{quizCourseTopicId}")
     public ResponseEntity<?> getQuizOfCourseTopic(@PathVariable String quizCourseTopicId) {
         log.info("getQuizOfCourseTopic, quizCourseTopicId = " + quizCourseTopicId);
@@ -443,6 +463,7 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestionDetailModels);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-quiz-of-course-sorted-created-time-desc/{courseId}")
     public ResponseEntity<?> getQuizOfCourseSortedCreatedTimeDesc(Principal principal, @PathVariable String courseId) {
         List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
@@ -474,6 +495,7 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestionDetailModels);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-quiz-of-course/{courseId}")
     public ResponseEntity<?> getQuizOfCourse(Principal principal, @PathVariable String courseId) {
         //log.info("getQuizOfCourse, courseId = " + courseId);
@@ -586,13 +608,6 @@ public class QuizController {
         return ResponseEntity.ok().body(quizChoiceAnswers);
     }
 
-    @GetMapping("/get-quiz-detail/{questionId}")
-    public ResponseEntity<?> getQuizDetail(Principal principal, @PathVariable UUID questionId) {
-        QuizQuestionDetailModel quizQuestion = quizQuestionService.findQuizDetail(questionId);
-
-        return ResponseEntity.ok().body(quizQuestion);
-    }
-
     @PostMapping("/quiz-choose_answer")
     public ResponseEntity<?> quizChooseAnswer(
         @CurrentSecurityContext(expression = "authentication.name") String userId,
@@ -605,21 +620,14 @@ public class QuizController {
         return ResponseEntity.ok().body(ans);
     }
 
-    @PostMapping("/remove-choice-answer-of-quiz")
-    public ResponseEntity<?> removeChoiceAnswerOfQuiz(
-        Principal principal,
-        @RequestBody RemoveChoiceAnswerInputModel input
-    ) {
-        QuizChoiceAnswer quizChoiceAnswer = quizChoiceAnswerService.delete(input.getChoiceAnswerId());
-        return ResponseEntity.ok().body(quizChoiceAnswer);
-    }
-
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-users-granted-to-quiz-question/{questionId}")
     public ResponseEntity<?> getUsersGranttedToQuizQuestion(@PathVariable UUID questionId) {
         List<QuizQuestionUserRole> res = quizQuestionService.getUsersGranttedToQuizQuestion(questionId);
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/add-quiz-question-user-role")
     public ResponseEntity<?> addQuizQuestionUserRole(
         Principal princiapl,
@@ -629,6 +637,7 @@ public class QuizController {
         return ResponseEntity.ok().body(quizQuestionUserRole);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/grant-role-to-user-on-all-quiz-questions/{roleId}/{userId}")
     public ResponseEntity<?> grantRoleToUserOnAllQuizQuestion(
         Principal principal,
@@ -639,6 +648,7 @@ public class QuizController {
         return ResponseEntity.ok().body(ok);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-roles-user-not-granted-in-quiz-question/{questionId}/{userId}")
     public ResponseEntity<?> getRolesUserNotGranttedInQuizQuestion(
         @PathVariable UUID questionId,

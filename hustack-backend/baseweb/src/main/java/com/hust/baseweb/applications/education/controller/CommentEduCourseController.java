@@ -5,8 +5,11 @@ import com.hust.baseweb.applications.education.model.CommentEduCourseDetailOM;
 import com.hust.baseweb.applications.education.service.CommentsEduCourseMaterialService;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,13 +17,20 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @RestController
-@CrossOrigin
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CommentEduCourseController {
 
-    public CommentsEduCourseMaterialService commentsEduCourseMaterialService;
-    public UserService userService;
+    CommentsEduCourseMaterialService commentsEduCourseMaterialService;
+
+    UserService userService;
 
     @PostMapping("/edu/class/comment")
     public ResponseEntity<?> createComment(

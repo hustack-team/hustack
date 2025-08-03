@@ -8,6 +8,7 @@ import {isFunction, request} from "api";
 import FileSaver from "file-saver";
 import MaterialTable from "material-table";
 import {useEffect, useReducer, useRef, useState} from "react";
+import {useTranslation} from "react-i18next";
 import {toast} from "react-toastify";
 import SimpleBar from "simplebar-react";
 import {infoNoti} from "utils/notification";
@@ -125,6 +126,7 @@ export const generatePdfDocument = async (
 
 export default function QuizTestGroupList(props) {
   // const classes = useStyles();
+  const {t} = useTranslation("common");
   const toastId = useRef(null);
 
   const [studentQuestions, setStudentQuestions] = useState();
@@ -493,7 +495,7 @@ export default function QuizTestGroupList(props) {
         }
         actions={
           <>
-            <TertiaryButton onClick={handleClose}>Huỷ</TertiaryButton>
+            <TertiaryButton color="inherit" onClick={handleClose}>{t('common:cancel')}</TertiaryButton>
             <PrimaryButton onClick={handleGenerateQuizGroup}>
               Sinh thêm đề
             </PrimaryButton>

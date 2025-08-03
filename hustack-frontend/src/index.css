@@ -46,18 +46,13 @@ code {
   left: 0;
 }
 
-.leaflet-container {
-  width: 100%;
-  height: calc(100vh - 112px);
-}
-
 .slider-parent .slick-track {
   height: 100% !important;
 }
 
 .__react_component_tooltip {
   border-radius: 6px !important;
-  padding: 6px 8px 0px 8px !important;
+  padding: 6px 8px 0 8px !important;
 }
 
 .__react_component_tooltip.show {

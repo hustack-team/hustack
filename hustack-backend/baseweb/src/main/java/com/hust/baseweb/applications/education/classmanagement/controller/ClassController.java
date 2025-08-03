@@ -32,14 +32,17 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +50,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,34 +59,55 @@ import java.io.InputStream;
 import java.security.Principal;
 import java.util.*;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-module-quiz-test",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
 @RequestMapping("/edu/class")
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ClassController {
 
-    private ClassServiceImpl classService;
-    private CourseService courseService;
-    private SemesterService semesterService;
-    private UserService userService;
-    private EduDepartmentService eduDepartmentService;
-    private EduCourseChapterService eduCourseChapterService;
-    private EduCourseChapterMaterialService eduCourseChapterMaterialService;
-    private EduClassMaterialService eduClassMaterialService;
-    private LogUserLoginCourseChapterMaterialService logUserLoginCourseChapterMaterialService;
-    private LogUserLoginQuizQuestionService logUserLoginQuizQuestionService;
-    private VideoService videoService;
-    private NotificationsService notificationsService;
-    private ClassRepo classRepo;
-    private FileSystemStorageProperties properties;
-    private ClassRegistrationRepo classRegistrationRepo;
-    private EduClassSessionService eduClassSessionService;
+    ClassServiceImpl classService;
+
+    CourseService courseService;
+
+    SemesterService semesterService;
+
+    UserService userService;
+
+    EduDepartmentService eduDepartmentService;
+
+    EduCourseChapterService eduCourseChapterService;
+
+    EduCourseChapterMaterialService eduCourseChapterMaterialService;
+
+    EduClassMaterialService eduClassMaterialService;
+
+    LogUserLoginCourseChapterMaterialService logUserLoginCourseChapterMaterialService;
+
+    LogUserLoginQuizQuestionService logUserLoginQuizQuestionService;
+
+    VideoService videoService;
+
+    NotificationsService notificationsService;
+
+    ClassRepo classRepo;
+
+    FileSystemStorageProperties properties;
+
+    ClassRegistrationRepo classRegistrationRepo;
+
+    EduClassSessionService eduClassSessionService;
 
     ApiService apiService;
 
-    @Autowired
-    private MongoContentService mongoContentService;
+    MongoContentService mongoContentService;
 
     @PostMapping
     public ResponseEntity<?> getClassesOfCurrSemester(
@@ -133,23 +156,27 @@ public class ClassController {
         return ResponseEntity.ok().body(eduClassUserLoginRole);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/{classId}/user-login-roles")
     public ResponseEntity getEduUserLoginRolesOfClass(@PathVariable UUID classId) {
         return ResponseEntity.ok(classService.getUserLoginRolesOfClass(classId));
     }
 
+    @Secured("ROLE_TEACHER")
     @DeleteMapping("/class-user-login-roles")
     public ResponseEntity deleteEduClassUserLoginRole(@RequestBody AddEduClassUserLoginRoleIM deletedPermission) {
         classService.deleteEduClassUserLoginRole(deletedPermission);
         return ResponseEntity.noContent().build();
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-class")
     public ResponseEntity<?> getAllClass(Principal principal) {
         List<ModelResponseEduClassDetail> res = classService.getAllClass();
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-classes-of-user/{userLoginId}")
     public ResponseEntity getClassesOfUser(Principal principal, @PathVariable String userLoginId) {
         String currentUserLoginId = principal.getName();
@@ -163,6 +190,7 @@ public class ClassController {
         return ResponseEntity.ok().body(eduClasses);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-role-list-educlass-userlogin")
     public ResponseEntity<?> getRoleListEduClassUserLogin() {
         List<EduClassUserLoginRoleType> lst = new ArrayList();
@@ -309,6 +337,7 @@ public class ClassController {
         return ResponseEntity.ok().body(classService.getAssign4Student(id));
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/add")
     public ResponseEntity<?> addEduClass(Principal principal, @RequestBody AddClassModel addClassModel) {
         log.info("addEduClass, start....");
@@ -367,6 +396,7 @@ public class ClassController {
         return ResponseEntity.ok().body(eduCourseChapter);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/change-chapter-status/{chapterId}")
     public ResponseEntity<?> changeChapterStatus(Principal principal, @PathVariable UUID chapterId) {
         log.info("changeChapterStatus, chapterId = " + chapterId);
@@ -374,6 +404,7 @@ public class ClassController {
         return ResponseEntity.ok().body(statusId);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-course-chapter-material-type-list")
     public ResponseEntity<?> getCourseChapterMaterialTypeList(Principal principal) {
         log.info("getCourseChapterMaterialTypeList");
@@ -594,7 +625,6 @@ public class ClassController {
         @PathVariable UUID chapterMarialId,
         @RequestBody EduCourseChapterMaterial eduCourseChapterMaterial
     ) {
-        log.info(eduCourseChapterMaterial);
         try {
             eduCourseChapterMaterial = eduCourseChapterMaterialService.findById(chapterMarialId);
             log.info("find successs");
@@ -851,6 +881,7 @@ public class ClassController {
         return ResponseEntity.ok().body(semesters);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-departments")
     public ResponseEntity<?> getAllEduDepartments(Principal principal) {
 
@@ -870,6 +901,7 @@ public class ClassController {
         return ResponseEntity.ok().body(studentCourseParticipationModels);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/get-log-user-course-chapter-material-by-page")
     public ResponseEntity<?> getLogUserCourseChapterMaterialByPage(
         @RequestParam(name = "classId") UUID classId,
@@ -907,6 +939,7 @@ public class ClassController {
         return ResponseEntity.ok().body(studentQuizParticipationModels);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/add-students-to-class-excel-upload")
     public ResponseEntity<?> addStudentToClassViaExcelUpload(
         Principal principal,

@@ -1,6 +1,4 @@
 import {useState} from "@hookstate/core";
-import Card from "@material-ui/core/Card";
-//import Grid from "@material-ui/core/Grid";
 import Snackbar from "@material-ui/core/Snackbar";
 import {makeStyles} from "@material-ui/core/styles";
 import Alert from "@material-ui/lab/Alert";
@@ -10,12 +8,17 @@ import {request} from "../../../api";
 import {errorNoti, successNoti} from "../../../utils/notification";
 import StudentQuizDetailListForm from "./StudentQuizDetailListForm";
 import StudentQuizDetailStepForm from "./StudentQuizDetailStepForm";
-import {Button, Chip} from "@mui/material";
+import {Button, Chip, Grid, Stack, Typography} from "@mui/material";
 import CheckAndConfirmQuizGroupDialog from "./CheckAndConfirmQuizGroupDialog";
 import XLSX from "xlsx";
 import {LoadingButton} from "@mui/lab";
 import PublishIcon from "@mui/icons-material/Publish";
 import SendIcon from "@mui/icons-material/Send";
+import PrimaryButton from "../../button/PrimaryButton";
+import ProgrammingContestLayout from "../programmingcontestFE/ProgrammingContestLayout";
+import {localeOption} from "../../../utils/NumberFormat";
+import {detail} from "../programmingcontestFE/ContestProblemSubmissionDetailViewedByManager";
+import {useTranslation} from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -40,6 +43,12 @@ export default function StudentQuizDetail() {
 
   const classes = useStyles();
 
+  const {t} = useTranslation([
+    "education/programmingcontest/problem",
+    "common",
+    "validation",
+  ]);
+
   //
   const [questions, setQuestions] = React.useState([]);
   const [requestSuccessfully, setRequestSuccessfully] = React.useState(false);
@@ -63,6 +72,7 @@ export default function StudentQuizDetail() {
   function onClose() {
     setOpen(false);
   }
+
   function onUpdateInfo() {
     request(
       "get",
@@ -72,7 +82,9 @@ export default function StudentQuizDetail() {
         setOpen(false);
       },
       {
-        401: () => {},
+        // onError: e => {
+        //   errorNoti(t("common:error", 3000))
+        // },
         406: () => {
           //setMessageRequest("Time Out!");
           setRequestFailed(true);
@@ -80,6 +92,7 @@ export default function StudentQuizDetail() {
       }
     );
   }
+
   function getQuestionList() {
     request(
       "get",
@@ -100,7 +113,7 @@ export default function StudentQuizDetail() {
         // TODO: optimize code
         const chkState = [];
 
-        listQuestion.forEach((question) => {
+        listQuestion?.forEach((question) => {
           const choices = {};
           const choseAnswers =
             participationExecutionChoice[question.questionId];
@@ -127,7 +140,9 @@ export default function StudentQuizDetail() {
         checkState.set(chkState);
       },
       {
-        401: () => {},
+        // onError: e => {
+        //   errorNoti(t("common:error", 3000))
+        // },
         406: () => {
           setMessageRequest("Time Out!");
           setRequestFailed(true);
@@ -135,6 +150,7 @@ export default function StudentQuizDetail() {
       }
     );
   }
+
   function getQuizTestGroup() {
     request(
       "get",
@@ -147,7 +163,9 @@ export default function StudentQuizDetail() {
         }
       },
       {
-        401: () => {},
+        // onError: e => {
+        //   errorNoti(t("common:error", 3000))
+        // },
         406: () => {
           setMessageRequest("Time Out!");
           setRequestFailed(true);
@@ -155,6 +173,7 @@ export default function StudentQuizDetail() {
       }
     );
   }
+
   const onSave = (order, questionId, choseAnswers) => {
     request(
       "post",
@@ -196,9 +215,11 @@ export default function StudentQuizDetail() {
     getQuizTestGroup();
     getQuestionList();
   }, []);
+
   function updateCode() {
     alert("update group code " + groupCode);
   }
+
   function checkoutQuestion() {
     request(
       "get",
@@ -246,7 +267,9 @@ export default function StudentQuizDetail() {
         checkState.set(chkState);
       },
       {
-        401: () => {},
+        // onError: e => {
+        //   errorNoti(t("common:error", 3000))
+        // },
         406: () => {
           setMessageRequest("Time Out!");
           setRequestFailed(true);
@@ -256,16 +279,18 @@ export default function StudentQuizDetail() {
 
     setOpen(true);
   }
+
   function checkAndConfirmCode() {
     history.push(
       "/edu/class/student/quiztest-detail/check-confirm-code/" + testQuizId
     );
   }
+
   function handleDownloadExcel() {
     var wbcols = [];
-    wbcols.push({ wpx: 80 });
-    wbcols.push({ wpx: 120 });
-    wbcols.push({ wpx: 120 });
+    wbcols.push({wpx: 80});
+    wbcols.push({wpx: 120});
+    wbcols.push({wpx: 120});
     let data = [];
     for (let i = 0; i < questions.length; i++) {
       let row = {};
@@ -283,8 +308,8 @@ export default function StudentQuizDetail() {
 
     // create data about userId and testId
     var wbhcols = [];
-    wbhcols.push({ wpx: 80 });
-    wbhcols.push({ wpx: 120 });
+    wbhcols.push({wpx: 80});
+    wbhcols.push({wpx: 120});
 
     let dataHeader = [];
     let row1 = {};
@@ -319,13 +344,13 @@ export default function StudentQuizDetail() {
 
     setIsProcessing(true);
     let formData = new FormData();
-    formData.append("inputJson", JSON.stringify({ testQuizId }));
+    formData.append("inputJson", JSON.stringify({testQuizId}));
     formData.append("file", importedExcelFile);
 
     let successHandler = (res) => {
       setIsProcessing(false);
       setImportedExcelFile(undefined);
-              successNoti(t("common:uploadSuccessfully"), true);
+      successNoti(t("common:uploadSuccessfully"), true);
     };
     let errorHandlers = {
       onError: (error) => {
@@ -343,149 +368,104 @@ export default function StudentQuizDetail() {
     getQuizTestGroup();
     getQuestionList();
   }
+
+  const handleExit = () => {
+    history.push(`/edu/class/student/myquiztest/list`);
+  }
+
   return (
-    <div className={classes.root}>
-      <Card style={{ padding: "20px 20px 20px 20px" }}>
-        <Snackbar
-          open={requestSuccessfully}
-          autoHideDuration={2000}
-          onClose={handleCloseSuccess}
-        >
-          <Alert variant="filled" severity="success">
-            {messageRequest}
-          </Alert>
-        </Snackbar>
-        <Snackbar
-          open={requestFailed}
-          autoHideDuration={8000}
-          onClose={handleCloseError}
-        >
-          <Alert variant="filled" severity="error">
-            {messageRequest}
-          </Alert>
-        </Snackbar>
-        <div style={{ padding: "0px 20px 20px 30px" }}>
-          <div style={{ justifyContent: "space-between", display: "flex" }}>
-            <h3>Quiz test: {quizGroupTestDetail.testName}</h3>
-            <h3>QuizTestID: {testQuizId}</h3>
-            <h3>Course: {quizGroupTestDetail.courseName}</h3>
-          </div>
-          {/*<h4>Start Time: {quizGroupTestDetail.scheduleDatetime}</h4>*/}
-          <h4>Duration: {quizGroupTestDetail.duration} minutes</h4>
-          <div style={{ justifyContent: "space-between", display: "flex" }}>
-            <h3>Code: {groupCode}</h3>
-            <Button variant="contained" onClick={checkAndConfirmCode}>
-              {" "}
-              Check & Confirm Code
-            </Button>
+    <ProgrammingContestLayout onBack={handleExit}>
+      <Stack direction="row" spacing={2} mb={1.5} justifyContent="space-between">
+        <Typography variant="h6" component='span'>
+          {t("generalInfo")}
+        </Typography>
 
-            {quizGroupTestDetail.judgeMode === "OFFLINE_VIA_EXCEL_UPLOAD" ? (
-              <div>
-                <Button variant="contained" onClick={handleDownloadExcel}>
-                  {" "}
-                  Download Template excel
-                </Button>
-                <Button color="primary" variant="contained" component="label">
-                  <PublishIcon /> Select excel file to import
-                  <input
-                    type="file"
-                    hidden
-                    onChange={(event) =>
-                      setImportedExcelFile(event.target.files[0])
-                    }
-                  />
-                </Button>
-                {importedExcelFile && (
-                  <Chip
-                    color="success"
-                    variant="outlined"
-                    label={importedExcelFile.name}
-                    onDelete={() => setImportedExcelFile(undefined)}
-                  />
-                )}
-                <LoadingButton
-                  loading={isProcessing}
-                  endIcon={<SendIcon />}
-                  disabled={!importedExcelFile}
-                  color="primary"
-                  variant="contained"
-                  onClick={handleUploadSolutionQuiz}
-                >
-                  Upload solution excel
-                </LoadingButton>
-              </div>
-            ) : null}
+        <Stack direction="row" spacing={2}>
+          <PrimaryButton variant="contained" onClick={checkAndConfirmCode}>
+            Check & Confirm Code
+          </PrimaryButton>
 
-            {/*
-              quizGroupTestDetail ? (
-              <div>
-                <TextField
-                  autoFocus
-                  required
-                  id="groupCode"
-                  label="groupCode"
-                  placeholder="groupCode"
-                  value={groupCode}
-                  onChange={(event) => {
-                    setGroupCode(event.target.value);
-                  }}
+          {quizGroupTestDetail.judgeMode === "OFFLINE_VIA_EXCEL_UPLOAD" ? (
+            <>
+              <Button variant="contained" onClick={handleDownloadExcel}>
+                Download Template excel
+              </Button>
+              <Button color="primary" variant="contained" component="label">
+                <PublishIcon/> Select excel file to import
+                <input
+                  type="file"
+                  hidden
+                  onChange={(event) =>
+                    setImportedExcelFile(event.target.files[0])
+                  }
                 />
-              </div>
-            ) : (
-              <div>
-                <TextField
-                  autoFocus
-                  required
-                  id="groupCode"
-                  label="groupCode"
-                  placeholder="groupCode"
-                    value={groupCode}
-                    
-                  onChange={(event) => {
-                    setGroupCode(event.target.value);
-                  }}
+              </Button>
+              {importedExcelFile && (
+                <Chip
+                  color="success"
+                  variant="outlined"
+                  label={importedExcelFile.name}
+                  onDelete={() => setImportedExcelFile(undefined)}
                 />
-               
-              </div>
-                )*/}
-          </div>
-          {/*<Button onClick={checkoutQuestion}>Check</Button>*/}
-        </div>
+              )}
+              <LoadingButton
+                loading={isProcessing}
+                endIcon={<SendIcon/>}
+                disabled={!importedExcelFile}
+                color="primary"
+                variant="contained"
+                onClick={handleUploadSolutionQuiz}
+              >
+                Upload solution excel
+              </LoadingButton>
+            </>
+          ) : null}
+        </Stack>
+      </Stack>
 
-        {viewTypeId === "VIEW_STEP" ? (
-          <StudentQuizDetailStepForm testId={testQuizId} />
-        ) : (
-          <StudentQuizDetailListForm testId={testQuizId} />
-        )}
-
-        {/*
-          <Grid container spacing={3}>
-            {quizGroupTestDetail.quizGroupId ? (
-              questions != null ? (
-                questions.map((question, idx) => (
-                  <Quiz
-                    key={question.questionId}
-                    question={question}
-                    choseAnswers={checkState[idx]}
-                    order={idx}
-                    onSave={onSave}
-                  />
-                ))
-              ) : (
-                <p style={{ justifyContent: "center" }}>
-                  {" "}
-                  Chưa có câu hỏi cho mã đề này
-                </p>
-              )
-            ) : (
-              <p style={{ justifyContent: "center" }}>
-                {" "}
-                Chưa phát đề cho sinh viên{" "}
-              </p>
-            )}
+      <Grid container spacing={2}>
+        {[
+          [t("Name"), quizGroupTestDetail?.testName || ''],
+          [t("Course"), quizGroupTestDetail?.courseName || ''],
+          [t("Duration", {ns: "common"}),
+            quizGroupTestDetail?.duration ? `${quizGroupTestDetail.duration.toLocaleString(
+              "fr-FR",
+              localeOption
+            )} (minutes)` : null
+          ],
+          [t("Code"), groupCode || '',],
+        ].map(([key, value, sx, helpText]) => (
+          <Grid key={key} item xs={12} sm={12} md={3}>
+            {detail(key, value, sx, helpText)}
           </Grid>
-            */}
-      </Card>
+        ))}
+      </Grid>
+
+      {viewTypeId === "VIEW_STEP" ? (
+        <StudentQuizDetailStepForm testId={testQuizId}/>
+      ) : (
+        <StudentQuizDetailListForm testId={testQuizId}/>
+      )}
+
+      <Snackbar
+        open={requestSuccessfully}
+        autoHideDuration={2000}
+        onClose={handleCloseSuccess}
+      >
+        <Alert variant="filled" severity="success">
+          {messageRequest}
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={requestFailed}
+        autoHideDuration={8000}
+        onClose={handleCloseError}
+      >
+        <Alert variant="filled" severity="error">
+          {messageRequest}
+        </Alert>
+      </Snackbar>
+
       <CheckAndConfirmQuizGroupDialog
         open={open}
         onClose={onClose}
@@ -494,6 +474,6 @@ export default function StudentQuizDetail() {
         quizGroupTestDetail={quizGroupTestDetail}
         checkState={checkState}
       />
-    </div>
+    </ProgrammingContestLayout>
   );
 }

@@ -1,9 +1,13 @@
 import React from "react";
-import {Button, Dialog, DialogContent, DialogTitle} from "@mui/material";
+import {Dialog, DialogContent, DialogTitle} from "@mui/material";
+import TertiaryButton from "../../../button/TertiaryButton";
+import {useTranslation} from "react-i18next";
 import ManagerSubmitCodeOfParticipant from "./ManagerSubmitCodeOfParticipant";
 
 export default function ManagerSubmitCodeOfParticipantDialog(props) {
   const { contestId, onClose, open } = props;
+  const {t} = useTranslation("common");
+
   function handleClick() {
     onClose();
   }
@@ -15,7 +19,7 @@ export default function ManagerSubmitCodeOfParticipantDialog(props) {
           contestId={contestId}
           onClose={onClose}
         />
-        <Button onClick={handleClick}>Close</Button>
+        <TertiaryButton color="inherit" onClick={handleClick}>{t('common:close')}</TertiaryButton>
       </DialogContent>
     </Dialog>
   );

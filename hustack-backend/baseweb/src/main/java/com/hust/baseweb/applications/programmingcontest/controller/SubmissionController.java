@@ -210,8 +210,6 @@ public class SubmissionController {
     }
 
     @Secured("ROLE_TEACHER")
-    //@PostMapping("/submissions/{contestId}/{problemId}/evaluation")
-    //public ResponseEntity<?> evaluateSubmissionOfAProblemInContest(@PathVariable String contestId, @PathVariable String problemId) {
     @PostMapping("/submissions-of-a-problem-in-contest/rejudge")
     public ResponseEntity<?> evaluateSubmissionOfAProblemInContest(
         Principal principal,
@@ -402,21 +400,4 @@ public class SubmissionController {
     public ResponseEntity<?> detectCodeAuthorshipOfSubmission(@PathVariable("submissionId") UUID submissionId) {
         return ResponseEntity.ok().body(submissionService.detectCodeAuthorshipOfSubmission(submissionId));
     }
-
-//    @Secured("ROLE_TEACHER")
-//    @PutMapping("/teacher/submissions/{submissionId}/comments/{commentId}")
-//    public ResponseEntity<?> updateComment(
-//        @PathVariable UUID submissionId,
-//        @PathVariable UUID commentId,
-//        @RequestBody ContestSubmissionComment updatedComment
-//    ) {
-//        ContestSubmissionComment existingComment = contestSubmissionCommentRepo.findById(commentId)
-//                                                                               .orElseThrow(() -> new RuntimeException("Comment not found"));
-//
-//        existingComment.setComment(updatedComment.getComment());
-//        existingComment.setLastUpdatedStamp(new Date());
-//
-//        ContestSubmissionComment savedComment = contestSubmissionCommentRepo.save(existingComment);
-//        return ResponseEntity.ok().body(savedComment);
-//    }
 }

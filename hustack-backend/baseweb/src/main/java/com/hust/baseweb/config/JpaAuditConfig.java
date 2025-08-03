@@ -19,7 +19,7 @@ public class JpaAuditConfig {
 
     @Bean
     public AuditorAware<String> auditorProvider() {
-        return new SpringSecurityAuditorAware();
+        return new AuditorAwareImpl();
     }
 
     @Bean(name = "jpa_transaction_manager")

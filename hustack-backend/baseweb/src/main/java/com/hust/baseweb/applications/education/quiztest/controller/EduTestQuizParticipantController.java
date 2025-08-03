@@ -5,27 +5,36 @@ import com.hust.baseweb.applications.education.quiztest.model.edutestquizpartici
 import com.hust.baseweb.applications.education.quiztest.service.EduTestQuizParticipantService;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor = @__(@Autowired))
-@CrossOrigin
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EduTestQuizParticipantController {
 
-    private EduTestQuizParticipantService eduTestQuizParticipantService;
-    private UserService userService;
+    EduTestQuizParticipantService eduTestQuizParticipantService;
+
+    UserService userService;
 
     @PostMapping("/create-quiz-test-participation-register")
     public ResponseEntity<?> createQuizTestParticipationRegister(

@@ -19,52 +19,49 @@ import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRe
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
 import com.hust.baseweb.model.SubmissionFilter;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.PrintWriter;
 import java.security.Principal;
 import java.util.*;
 
-@Log4j2
-@Controller
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Secured("ROLE_ADMIN")
 public class DataAdminController {
 
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private NotificationRepo notificationRepo;
+    UserService userService;
 
-    @Autowired
-    private DataAdminLogUserLoginCourseChapterMaterialRepo dataAdminLogUserLoginCourseChapterMaterial;
+    NotificationRepo notificationRepo;
 
-    @Autowired
-    private EduCourseChapterMaterialRepo eduCourseChapterMaterialRepo;
+    DataAdminLogUserLoginCourseChapterMaterialRepo dataAdminLogUserLoginCourseChapterMaterial;
 
-    @Autowired
-    private EduCourseChapterRepo eduCourseChapterRepo;
+    EduCourseChapterMaterialRepo eduCourseChapterMaterialRepo;
 
-    @Autowired
-    private LogUserLoginQuizQuestionService logUserLoginQuizQuestionService;
+    EduCourseChapterRepo eduCourseChapterRepo;
 
-    @Autowired
-    private ContestSubmissionRepo contestSubmissionRepo;
+    LogUserLoginQuizQuestionService logUserLoginQuizQuestionService;
 
-    @Autowired
-    private ProblemRepo problemRepo;
+    ContestSubmissionRepo contestSubmissionRepo;
 
-    private final ProgrammingContestSubmissionServiceImpl contestSubmissionService;
+    ProblemRepo problemRepo;
+
+    ProgrammingContestSubmissionServiceImpl contestSubmissionService;
 
     @GetMapping("/admin/data/notifications")
     public ResponseEntity<?> getPageNotifications(
@@ -114,7 +111,6 @@ public class DataAdminController {
 
     }
 
-    @Secured("ROLE_ADMIN")
     @GetMapping("/admin/data/view-contest-submission")
     public ResponseEntity<?> getPageContestSubmission(SubmissionFilter filter) {
         return ResponseEntity.ok().body(contestSubmissionService.search(filter));

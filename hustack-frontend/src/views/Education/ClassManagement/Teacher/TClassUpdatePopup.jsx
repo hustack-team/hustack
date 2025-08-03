@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import Button from "@mui/material/Button";
+import TertiaryButton from "../../../../component/button/TertiaryButton";
 
 import {errorNoti, successNoti} from "../../../../utils/notification";
 
@@ -218,7 +219,7 @@ export default function TClassUpdatePopup(props) {
       <DialogActions>
         <Button onClick={() => updateStatus("HIDDEN")}>Hide</Button>
         <Button onClick={() => updateStatus("OPEN")}>Open</Button>
-        <Button onClick={() => setOpen(false)}>Close</Button>
+        <TertiaryButton color="inherit" onClick={() => setOpen(false)}>Close</TertiaryButton>
       </DialogActions>
     </Dialog>
   );

@@ -1,26 +1,19 @@
-import {
-  Box,
-  Button,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-} from "@mui/material";
-import { blue, grey } from "@material-ui/core/colors";
-import { makeStyles } from "@material-ui/core/styles";
+import {Box, Button, List, ListItem, ListItemIcon, ListItemText, Typography,} from "@mui/material";
+import {blue, grey} from "@material-ui/core/colors";
+import {makeStyles} from "@material-ui/core/styles";
 import parse from "html-react-parser";
-import React, { useState, useEffect } from "react";
-import { FcDocument } from "react-icons/fc";
+import React, {useEffect, useState} from "react";
+import {useTranslation} from "react-i18next";
+import {FcDocument} from "react-icons/fc";
 import SimpleBar from "simplebar-react";
-import { request } from "../../../api";
+import {request} from "../../../api";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
 import CustomizedDialogs from "../../dialog/CustomizedDialogs";
 import ErrorDialog from "../../dialog/ErrorDialog";
-import { useHistory } from "react-router";
-import { successNoti } from "utils/notification";
-import { randomImageName } from "utils/FileUpload/covert";
+import {useHistory} from "react-router";
+import {successNoti} from "utils/notification";
+import {randomImageName} from "utils/FileUpload/covert";
 
 function isPDF(base64Data) {
   const decodedData = atob(base64Data);
@@ -90,6 +83,7 @@ export default function TeacherViewQuizDetailInQuizTest({
   onRemoveSuccess,
 }) {
   const classes = useStyles();
+  const {t} = useTranslation("common");
 
   //
   // const [result, setResult] = useState({ submited: false, isCorrect: false });
@@ -268,7 +262,7 @@ export default function TeacherViewQuizDetailInQuizTest({
         }
         actions={
           <>
-            <TertiaryButton onClick={handleClose}>Huỷ</TertiaryButton>
+            <TertiaryButton color="inherit" onClick={handleClose}>{t('common:cancel')}</TertiaryButton>
             <PrimaryButton onClick={onSelectGroup}>Thêm vào đề</PrimaryButton>
           </>
         }
@@ -284,7 +278,7 @@ export default function TeacherViewQuizDetailInQuizTest({
         content={<></>}
         actions={
           <>
-            <TertiaryButton onClick={handleCloseQuizTest}>Huỷ</TertiaryButton>
+            <TertiaryButton color="inherit" onClick={handleCloseQuizTest}>{t('common:cancel')}</TertiaryButton>
             <PrimaryButton onClick={onRemoveFromQuizTest}>
               Loại khỏi kỳ thi
             </PrimaryButton>

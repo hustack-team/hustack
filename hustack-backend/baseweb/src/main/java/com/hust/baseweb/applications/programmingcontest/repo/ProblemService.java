@@ -57,9 +57,9 @@ public interface ProblemService {
     AttachmentMetadata downloadProblemAttachmentForTeacher(String userId, String problemId, String fileId);
 
     List<UserProblemRoleDTO> getProblemPermissions(String problemId, String userId);
-    
+
     Map<String, Object> grantProblemPermission(String userName, GrantProblemPermissionDTO input);
-    
+
     boolean revokeProblemPermission(String userName, RevokeProblemPermissionDTO input);
 
     Page<ModelGetTestCaseDetail> getTestCaseByProblem(String problemId, String userId, TestCaseFilter filter);

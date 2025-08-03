@@ -34,17 +34,17 @@ export const eduLearningManagement = {
       path: "/edu/class/student/myquiztest/list",
       isPublic: false,
       icon: null,
-      text: "My Quiz Test",
+      text: "Quiz Test",
       child: [],
     },
 
-    {
-      id: "MENU_EDUCATION_LEARNING_MANAGEMENT_STUDENT.MENU_EDUCATION_THESIS_DEFENSE_JURY_STUDENT_MANAGEMENT",
-      path: "/edu/student/thesis/create",
-      isPublic: false,
-      icon: null,
-      text: "Create Thesis",
-      child: [],
-    },
+    // {
+    //   id: "MENU_EDUCATION_LEARNING_MANAGEMENT_STUDENT.MENU_EDUCATION_THESIS_DEFENSE_JURY_STUDENT_MANAGEMENT",
+    //   path: "/edu/student/thesis/create",
+    //   isPublic: false,
+    //   icon: null,
+    //   text: "Create Thesis",
+    //   child: [],
+    // },
   ],
 };
