@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -42,8 +43,6 @@ public class ContestEntity implements Serializable {
     public static final String CONTEST_PARTICIPANT_VIEW_TESTCASE_DETAIL_INPUT_PARTICIPANT_OUTPUT = "ONLY_INPUT_PARTICIPANT_OUTPUT";
 
 
-
-
     public static final String CONTEST_PROBLEM_DESCRIPTION_VIEW_TYPE_VISIBLE = "VISIBLE";
     public static final String CONTEST_PROBLEM_DESCRIPTION_VIEW_TYPE_HIDDEN = "HIDDEN";
 
@@ -78,31 +77,34 @@ public class ContestEntity implements Serializable {
     public static Boolean CONTEST_PUBLIC_YES = true;
     public static Boolean CONTEST_PUBLIC_NO = false;
 
-    public static List<String> getListContestTypes(){
+    public static List<String> getListContestTypes() {
         List<String> L = new ArrayList();
         L.add(CONTEST_TYPE_REAL_TEST_WITH_EVALUATION);
         L.add(CONTEST_TYPE_TRAINING_NO_EVALUATION);
         return L;
     }
-    public static List<Boolean> getListContestPublic(){
+
+    public static List<Boolean> getListContestPublic() {
         List<Boolean> L = new ArrayList();
         L.add(CONTEST_PUBLIC_YES);
         L.add(CONTEST_PUBLIC_NO);
         return L;
     }
 
-    public static List<String> getListContestShowTag(){
+    public static List<String> getListContestShowTag() {
         List<String> L = new ArrayList();
         L.add(CONTEST_SHOW_TAG_PROBLEMS_YES);
         L.add(CONTEST_SHOW_TAG_PROBLEMS_NO);
         return L;
     }
-    public static List<String> getListContestShowComment(){
+
+    public static List<String> getListContestShowComment() {
         List<String> L = new ArrayList();
         L.add(CONTEST_SHOW_COMMENT_YES);
         L.add(CONTEST_SHOW_TAG_PROBLEMS_NO);
         return L;
     }
+
     public static List<String> getListParticipantViewSubmissionModes() {
         List<String> L = new ArrayList();
         L.add(PARTICIPANT_VIEW_SUBMISSION_MODE_ENABLED);
@@ -182,26 +184,27 @@ public class ContestEntity implements Serializable {
 //        }
         return L;
     }
+
     public List<String> getListLanguagesAllowedInContest() {
-        List<String> L = new ArrayList<>();
-        if (languagesAllowed != null && !languagesAllowed.equals("")) {
+        List<String> allowedLanguages = new ArrayList<>();
+        if (!StringUtils.isBlank(languagesAllowed)) {
             String[] s = languagesAllowed.split(",");
-            if (s != null && s.length > 0) {
-                for (String l : s) {
-                    if (l != null && !l.equals("")) {
-                        L.add(l.trim());
-                    }
+
+            for (String language : s) {
+                if (!StringUtils.isBlank(language)) {
+                    allowedLanguages.add(language.trim());
                 }
             }
-        } else {// no limitation, take all languages
-            L.add(ContestEntity.PROG_LANGUAGES_C);
-            L.add(ContestEntity.PROG_LANGUAGES_CPP11);
-            L.add(ContestEntity.PROG_LANGUAGES_CPP14);
-            L.add(ContestEntity.PROG_LANGUAGES_CPP17);
-            L.add(ContestEntity.PROG_LANGUAGES_JAVA);
-            L.add(ContestEntity.PROG_LANGUAGES_PYTHON3);
+        } else { // no limitation, take all languages
+            allowedLanguages.add(ContestEntity.PROG_LANGUAGES_C);
+            allowedLanguages.add(ContestEntity.PROG_LANGUAGES_CPP11);
+            allowedLanguages.add(ContestEntity.PROG_LANGUAGES_CPP14);
+            allowedLanguages.add(ContestEntity.PROG_LANGUAGES_CPP17);
+            allowedLanguages.add(ContestEntity.PROG_LANGUAGES_JAVA);
+            allowedLanguages.add(ContestEntity.PROG_LANGUAGES_PYTHON3);
         }
-        return L;
+
+        return allowedLanguages;
     }
 
     @Id
@@ -210,10 +213,6 @@ public class ContestEntity implements Serializable {
 
     @Column(name = "contest_name")
     private String contestName;
-
-//    @OneToOne
-//    @JoinColumn(name = "user_create_id", referencedColumnName = "user_login_id")
-//    private UserLogin userCreatedContest;
 
     @Column(name = "user_create_id")
     private String userId;
@@ -293,9 +292,9 @@ public class ContestEntity implements Serializable {
     @Column(name = "contest_show_comment")
     private String contestShowComment;
 
-
     @Column(name = "allow_participant_pin_submission")
     private Integer allowParticipantPinSubmission;
+
     @Column(name = "use_problem_coefficient")
     private Integer canEditCoefficientPoint;
 

@@ -1,6 +1,9 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
-import com.hust.baseweb.applications.programmingcontest.entity.*;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestProblem;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.UserRegistrationContestEntity;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.repo.*;
 import lombok.AccessLevel;
@@ -101,7 +104,6 @@ public class ContestService {
                                                                                .problemRecode(problemRecode)
                                                                                .forbiddenInstructions(forbiddenInstructions)
                                                                                .coefficientPoint(coefficientPoint)
-                                                                               .levelOrder(contestProblem.getLevelOrder())
                                                                                .problemDescription(contestProblem.getProblemDescription())
                                                                                .createdByUserId(contestProblem.getCreatedBy())
                                                                                .testCasesCount(testCasesCount)

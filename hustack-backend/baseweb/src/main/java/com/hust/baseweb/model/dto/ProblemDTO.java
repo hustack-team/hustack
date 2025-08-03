@@ -30,4 +30,5 @@ public class ProblemDTO {
 
     String statusId;
 
+    boolean canEdit;
 }

@@ -1,11 +1,11 @@
-import { useRef, useState } from "react";
-import { request } from "../../../api";
-import { errorNoti } from "../../../utils/notification";
-import { Box, Button, Link, Stack, Typography, Select, MenuItem, InputLabel, FormControl } from "@mui/material";
+import {useRef, useState} from "react";
+import {request} from "../../../api";
+import {errorNoti} from "../../../utils/notification";
+import {Box, Button, FormControl, InputLabel, Link, MenuItem, Select, Stack, Typography} from "@mui/material";
 import XLSX from "xlsx";
 import HustModal from "../../common/HustModal";
 import StandardTable from "../../table/StandardTable";
-import { InputFileUpload } from "./StudentViewProgrammingContestProblemDetailV2";
+import {InputFileUpload} from "./StudentViewProgrammingContestProblemDetailV2";
 
 const roles = [
   { label: "Participant", value: "PARTICIPANT" },
@@ -55,7 +55,7 @@ export default function UploadUserUpdateFullNameContestDialog(props) {
       {
         onError: (e) => {
           setIsProcessing(false);
-          errorNoti("An error happened", 5000);
+          errorNoti(t("common:error"), 5000);
         },
       },
       formData,

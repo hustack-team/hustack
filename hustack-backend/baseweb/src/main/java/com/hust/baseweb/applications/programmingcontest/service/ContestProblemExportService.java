@@ -1,7 +1,6 @@
 package com.hust.baseweb.applications.programmingcontest.service;
 
 import com.hust.baseweb.applications.contentmanager.repo.MongoContentService;
-import com.hust.baseweb.applications.programmingcontest.constants.Constants;
 import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.TagEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.TestCaseEntity;
@@ -133,7 +132,7 @@ public class ContestProblemExportService {
                     if (content != null) {
                         InputStream inputStream = content.getInputStream();
 
-                        File file = new File(content.getFilename());
+                        File file = new File(mongoContentService.getOriginalFileName(content));
                         OutputStream outputFileStream = new FileOutputStream(file);
                         IOUtils.copy(inputStream, outputFileStream);
 

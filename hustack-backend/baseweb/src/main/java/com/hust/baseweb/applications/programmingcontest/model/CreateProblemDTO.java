@@ -6,10 +6,12 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ModelCreateContestProblem {
+public class CreateProblemDTO {
 
     String problemId;
 
@@ -29,7 +31,7 @@ public class ModelCreateContestProblem {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
@@ -39,21 +41,22 @@ public class ModelCreateContestProblem {
 
     String solutionCheckerLanguage;
 
-    String solution;
+//    Boolean isPreloadCode; // Preload Code functionality - DISABLED
 
-    Boolean isPreloadCode;
-
-    String preloadCode;
+//    String preloadCode; // Preload Code functionality - DISABLED
 
     Boolean isPublic;
 
     String scoreEvaluationType;
 
-    String[] fileId;
+//    String[] fileId;
 
     Integer[] tagIds;
 
     ProblemStatus status;
 
     String sampleTestCase;
+
+    private List<BlockCode> blockCodes;
+
 }

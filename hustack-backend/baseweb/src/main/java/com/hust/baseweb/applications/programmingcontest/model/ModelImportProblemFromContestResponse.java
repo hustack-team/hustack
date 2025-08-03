@@ -1,17 +1,17 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelImportProblemFromContestResponse {
 
-    private String problemId;
-    private String status;
+    String problemId;
+
+    String status;
 
 }

@@ -2,18 +2,19 @@ import DoneIcon from "@mui/icons-material/Done";
 import {Box, Chip, LinearProgress, Paper, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {useTranslation} from "react-i18next";
-import {Link, useParams} from "react-router-dom";
+import {Link, useHistory, useParams} from "react-router-dom";
 import {localeOption} from "utils/NumberFormat";
 import {request} from "../../../api";
 import StandardTable from "../../table/StandardTable";
 import {getColorLevel} from "./lib";
 import {getLevels} from "./CreateProblem";
 import {errorNoti} from "../../../utils/notification";
-import { MTableToolbar } from "material-table";
+import {MTableToolbar} from "material-table";
 
 export default function StudentViewProblemList() {
-  const {t} = useTranslation([ "education/programmingcontest/studentviewcontestdetail","education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
+  const {t} = useTranslation(["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/problem", "education/programmingcontest/testcase", "common"]);
   const levels = getLevels(t);
+  const history = useHistory();
 
   const {contestId} = useParams();
   const [problems, setProblems] = useState([]);
@@ -42,7 +43,7 @@ export default function StudentViewProblemList() {
       title: t("problemCode"),
       field: "problemCode",
       align: "left",
-      cellStyle: { minWidth: 120 },
+      cellStyle: {minWidth: 120},
       render: (rowData) => (
         <Typography component="span" variant="body2" fontFamily="monospace">
           {rowData.problemCode}
@@ -100,7 +101,7 @@ export default function StudentViewProblemList() {
       sorting: false,
       render: (rowData) => (
         <Box>
-          {rowData?.tags.length > 0 &&
+          {rowData?.tags?.length > 0 &&
             rowData.tags.map((tag) => (
               <Chip
                 key={tag}
@@ -138,13 +139,20 @@ export default function StudentViewProblemList() {
         );
         setTotalSubmittedPoints(totalSubmitted);
         setTotalMaxPoints(totalMax);
+        setLoading(false);
       },
       {
         onError: (e) => {
-          errorNoti(t("common:error"), 3000);
+          setLoading(false);
+
+          if (e.response && e.response.status === 403) {
+            history.push("/programming-contest/student-list-contest-registered");
+          } else {
+            errorNoti(t("common:error"), 3000);
+          }
         }
       }
-    ).finally(() => setLoading(false));
+    );
   }
 
   useEffect(() => {
@@ -161,7 +169,7 @@ export default function StudentViewProblemList() {
 
   return (
     <>
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress/>}
       <Box
         sx={{
           display: "flex",
@@ -173,17 +181,19 @@ export default function StudentViewProblemList() {
           // borderBottom: "1px solid rgb(224, 224, 224)",
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            color: getPointsColor(),
-          }}
-        >
-          {t("common:maxSubmittedPoint")}:{" "}
-          {totalSubmittedPoints?.toFixed(2) || 0} /{" "}
-          {t("common:maxPoint")}:{" "}
-          {totalMaxPoints?.toFixed(2) || 0}
-        </Typography>
+        {!loading && (
+          <Typography
+            variant="h6"
+            sx={{
+              color: getPointsColor(),
+            }}
+          >
+            {t("common:maxSubmittedPoint")}:{" "}
+            {totalSubmittedPoints?.toFixed(2) || 0} /{" "}
+            {t("common:maxPoint")}:{" "}
+            {totalMaxPoints?.toFixed(2) || 0}
+          </Typography>
+        )}
       </Box>
       <StandardTable
         columns={columns}
@@ -206,11 +216,11 @@ export default function StudentViewProblemList() {
                   padding: "8px 8px",
                 }}
               >
-                <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "flex-end" }}>
+                <Box sx={{flexGrow: 1, display: "flex", justifyContent: "flex-end"}}>
                   <MTableToolbar
                     {...toolBarProps}
                     classes={{
-                      highlight: { backgroundColor: "transparent" },
+                      highlight: {backgroundColor: "transparent"},
                     }}
                     searchFieldStyle={{
                       height: 40,

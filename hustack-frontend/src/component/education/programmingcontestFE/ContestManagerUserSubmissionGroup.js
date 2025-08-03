@@ -51,7 +51,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
         setContestSubmissions(res.data.content);
         setTotalSizeSubmission(res.data.totalElements);
       },
-      {onError: (error) => errorNoti("An error happened", 3000)},
+              {onError: (error) => errorNoti(t("common:error"), 3000)},
       null,
       {params: filterParams}
     ).then();
@@ -64,7 +64,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
       "/submissions/" + contestId + "/batch-evaluation",
       (res) => {
         setIsProcessing(false);
-        successNoti("Submissions will be rejudged", 5000);
+        successNoti(t("common:submissionsWillBeRejudged"), 5000);
       }
     ).then();
   }
@@ -76,7 +76,7 @@ export default function ContestManagerUserSubmissionGroup(props) {
       "/submissions/" + contestId + "/batch-non-evaluated-evaluation",
       (res) => {
         setIsProcessing(false);
-        successNoti("Submissions will be judged", 5000);
+        successNoti(t("common:submissionsWillBeJudged"), 5000);
       }
     ).then();
   }

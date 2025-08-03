@@ -2,6 +2,7 @@ import axios from "axios";
 import keycloak from "config/keycloak";
 import {config} from "./config/config";
 import {infoNoti} from "./utils/notification";
+import i18n from "i18next";
 
 export const isFunction = (func) =>
   func &&
@@ -64,7 +65,7 @@ export async function request(
     }
 
     if (e.response) {
-      // The request was made and the server responded with a status code that falls out of the range of 2xx.
+      // The request was made, and the server responded with a status code that falls out of the range of 2xx.
       switch (e.response.status) {
         // case 401:
         //   if (isFunction(errorHandlers[401])) {
@@ -77,7 +78,7 @@ export async function request(
           if (isFunction(errorHandlers[403])) {
             errorHandlers[403](e);
           } else {
-            infoNoti("Bạn cần được cấp quyền để thực hiện hành động này.");
+            infoNoti(i18n.t("common:needPermissionToPerformAction"), 3000);
           }
           break;
         default:
@@ -94,12 +95,8 @@ export async function request(
       }
     } else if (e.request) {
       // The request was made but no response was received
-      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-      // http.ClientRequest in node.js
-      console.log(
-        "The request was made but no response was received",
-        e.request
-      );
+      // error.request is an instance of XMLHttpRequest in the browser and an instance of http.ClientRequest in node.js
+      console.log("The request was made but no response was received", e.request);
 
       if (isFunction(errorHandlers["noResponse"])) {
         errorHandlers["noResponse"](e);
@@ -109,10 +106,7 @@ export async function request(
       // wifiOffNotify(wifiOffNotifyToastId);
     } else {
       // Something happened in setting up the request that triggered an Error.
-      console.log(
-        "Something happened in setting up the request that triggered an error: ",
-        e.message
-      );
+      console.log("Something happened in setting up the request that triggered an error: ", e.message);
     }
     console.log("Request config", e.config);
   }
@@ -156,5 +150,4 @@ export const saveFile = (fileName, data) => {
     // window.location.assign(exportUrl);
     // URL.revokeObjectURL(exportUrl);
   }
-}
-;
+};

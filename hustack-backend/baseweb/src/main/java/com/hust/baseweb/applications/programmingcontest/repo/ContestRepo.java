@@ -12,9 +12,10 @@ public interface ContestRepo extends JpaRepository<ContestEntity, String> {
 
     ContestEntity findContestByContestId(String contestId);
 
-    List<ContestEntity> findByContestIdInAndStatusIdNot(Set<String> ids, String statusId);
+    @Query("select c.statusId from ContestEntity c where c.contestId = ?1")
+    String findContestStatusById(String contestId);
 
-    ContestEntity findContestEntityByContestIdAndUserId(String contestId, String userId);
+    List<ContestEntity> findByContestIdInAndStatusIdNot(Set<String> ids, String statusId);
 
     @Modifying
     @Query(value = "update contest_new " +
@@ -24,4 +25,12 @@ public interface ContestRepo extends JpaRepository<ContestEntity, String> {
     void switchAllContestToJudgeMode(String judgeMode);
 
     List<ContestEntity> findByContestPublicTrue();
+
+    @Query(value = "select * from contest_new " +
+                   "where public = true " +
+                   "and status_id in ('RUNNING', 'COMPLETED') " +
+                   "order by created_stamp desc",
+           nativeQuery = true)
+    List<ContestEntity> findPublicContestsForParticipant();
+
 }

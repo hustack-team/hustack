@@ -1,8 +1,8 @@
-import { Button } from "@mui/material";
+import {Button} from "@mui/material";
 import StandardTable from "component/table/StandardTable";
-import { useEffect, useState } from "react";
-import { errorNoti, successNoti } from "utils/notification";
-import { request } from "../../../api";
+import {useEffect, useState} from "react";
+import {errorNoti, successNoti} from "utils/notification";
+import {request} from "../../../api";
 
 export default function ContestManagerListRegisteredParticipant(props) {
   const contestId = props.contestId;
@@ -30,13 +30,13 @@ export default function ContestManagerListRegisteredParticipant(props) {
       "post",
       "/contests/registers/approval",
       (res) => {
-        successNoti("Successful", 3000);
+        successNoti(t("common:successful"), 3000);
         setIsProcessing(false);
       },
       {
         onError: () => {
           setIsProcessing(false);
-          errorNoti("An error happened", 5000);
+          errorNoti(t("common:error"), 5000);
         },
         401: () => {},
       },

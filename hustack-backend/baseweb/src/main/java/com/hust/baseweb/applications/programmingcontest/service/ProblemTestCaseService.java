@@ -5,18 +5,11 @@ import com.hust.baseweb.applications.programmingcontest.entity.*;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
-import com.hust.baseweb.model.ProblemFilter;
 import com.hust.baseweb.model.SubmissionFilter;
-import com.hust.baseweb.model.TestCaseFilter;
-import com.hust.baseweb.model.dto.ProblemDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface ProblemTestCaseService {
@@ -48,13 +41,11 @@ public interface ProblemTestCaseService {
 
     ModelGetContestDetailResponse getContestDetailByContestIdAndTeacher(String contestId, String userName);
 
-
     List<SubmissionDetailByTestcaseOM> getSubmissionDetailByTestcase(UUID submissionId, UUID testcaseId);
 
     ContestSubmissionEntity teacherDisableSubmission(String userId, UUID submissionId);
 
     ContestSubmissionEntity teacherEnableSubmission(String userId, UUID submissionId);
-
 
     List<SubmissionDetailByTestcaseOM> getParticipantSubmissionDetailByTestCase(
         String userId, UUID submissionId
@@ -107,7 +98,7 @@ public interface ProblemTestCaseService {
 
     List<ModelMemberOfContestResponse> getPendingRegisteredUsersOfContest(String contestId);
 
-    ModelGetContestPageResponse getRegisteredContestsByUser(String userName);
+    ModelGetContestPageResponse getRegisteredContestsForParticipant(String userName);
 
     ModelGetContestPageResponse getNotRegisteredContestByUser(Pageable pageable, String userName);
 
@@ -123,8 +114,6 @@ public interface ProblemTestCaseService {
     );
 
 //    Page<ProblemEntity> getPublicProblemPaging(Pageable pageable);
-
-    Page<ModelGetTestCaseDetail> getTestCaseByProblem(String problemId, TestCaseFilter filter);
 
     TestCaseDetailProjection getTestCaseDetail(UUID testCaseId);
 
@@ -144,9 +133,6 @@ public interface ProblemTestCaseService {
         String contestId,
         SubmissionFilter filter
     );
-
-
-
 
     Page<ContestSubmission> findContestGroupSubmissionByContestIdPaging(
         Pageable pageable,
@@ -227,7 +213,6 @@ public interface ProblemTestCaseService {
 
     boolean removeMemberFromContestGroup(String contestId, String userId, String participantId);
 
-
     boolean updatePermissionMemberToContest(String userId, ModelUpdatePermissionMemberToContestInput input);
 
     List<TagEntity> getAllTags();
@@ -243,4 +228,6 @@ public interface ProblemTestCaseService {
     List<ContestProblemModelResponse> extApiGetAllProblems(String userID);
 
     ModelGetContestPageResponse getAllPublicContests();
+
+    ModelGetContestPageResponse getAllPublicContestsForParticipant();
 }

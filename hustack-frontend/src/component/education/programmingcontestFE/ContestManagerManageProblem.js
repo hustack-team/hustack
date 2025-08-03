@@ -1,31 +1,21 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import {
-  Autocomplete,
-  IconButton,
-  LinearProgress,
-  //Link,
-  Paper,
-  Popper,
-  Stack,
-  TextField,
-  Tooltip,
-} from "@mui/material";
-import { Link } from "react-router-dom";
-import { autocompleteClasses } from "@mui/material/Autocomplete";
+import {Autocomplete, IconButton, LinearProgress, Paper, Popper, Stack, TextField, Tooltip,} from "@mui/material";
+import {Link} from "react-router-dom";
+import {autocompleteClasses} from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
-import { styled, useTheme } from "@mui/material/styles";
-import { request } from "api";
+import {styled, useTheme} from "@mui/material/styles";
+import {request} from "api";
 import PrimaryButton from "component/button/PrimaryButton";
 import StandardTable from "component/table/StandardTable";
-import { useEffect, useState } from "react";
-import { infoNoti, successNoti } from "utils/notification";
-import { getSubmissionModeFromConstant } from "./Constant";
+import {useEffect, useState} from "react";
+import {infoNoti, successNoti} from "utils/notification";
+import {getSubmissionModeFromConstant} from "./Constant";
 import ModalAddProblemToContest from "./ModalAddProblemToContest";
 import ModalImportProblemsFromContest from "./ModalImportProblemsFromContest";
 import ModalUpdateProblemInfoInContest from "./ModalUpdateProblemInfoInContest";
-import { getColorLevel } from "./lib";
-import { useTranslation } from "react-i18next";
+import {getColorLevel} from "./lib";
+import {useTranslation} from "react-i18next";
 
 
 const StyledAutocompletePopper = styled(Popper)(({ theme }) => ({
@@ -179,7 +169,7 @@ export function ContestManagerManageProblem(props) {
               "delete",
               `/contest-problem?contestId=${contestId}&problemId=${problem.problemId}`,
               () => {
-                successNoti("Problem removed from contest", 5000);
+                successNoti(t("common:problemRemovedFromContest"), 5000);
                 getProblemsInContest();
               },
               {}
@@ -233,7 +223,7 @@ export function ContestManagerManageProblem(props) {
   }
 
   const handleAddProblemToContestSuccess = () => {
-    successNoti("Problem saved to contest successfully", 5000);
+            successNoti(t("common:problemSavedToContest"), 5000);
     getProblemsInContest();
   };
   const handleCloseModal = () => {

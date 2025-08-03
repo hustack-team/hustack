@@ -4,14 +4,19 @@ import com.google.gson.Gson;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.model.LmsLogModelCreate;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.ApiService;
 import com.hust.baseweb.applications.programmingcontest.constants.Constants;
-import com.hust.baseweb.applications.programmingcontest.entity.*;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.ProblemEntity;
+import com.hust.baseweb.applications.programmingcontest.entity.UserRegistrationContestEntity;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.repo.*;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ContestSubmissionRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemRepo;
+import com.hust.baseweb.applications.programmingcontest.repo.ProblemService;
 import com.hust.baseweb.applications.programmingcontest.service.ContestService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.SubmissionFilter;
-import com.hust.baseweb.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -28,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -37,7 +43,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -46,17 +53,19 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContestController {
 
-    TestCaseRepo testCaseRepo;
+    ProblemService problemService;
+
     ProblemTestCaseService problemTestCaseService;
+
     ContestRepo contestRepo;
+
     ContestSubmissionRepo contestSubmissionRepo;
-    ContestProblemRepo contestProblemRepo;
-    UserService userService;
+
     ProblemRepo problemRepo;
+
     ContestService contestService;
 
     ApiService apiService;
-    ProblemService problemService;
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/map-new-problem-to-submissions-in-contest")
@@ -135,10 +144,15 @@ public class ContestController {
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/contests/import-problems")
-    public ResponseEntity<?> importProblemsFromAContest(@RequestBody ModelImportProblemsFromAContestInput input) {
+    public ResponseEntity<?> importProblemsFromAContest(
+        Principal principal,
+        @RequestBody ImportProblemsFromAContestDTO input
+    ) {
 
         try {
-            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(input);
+            List<ModelImportProblemFromContestResponse> res = problemService.importProblemsFromAContest(
+                principal.getName(),
+                input);
             return ResponseEntity.ok().body(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -255,50 +269,20 @@ public class ContestController {
 
 
     @GetMapping("/contests/{contestId}/problems/{problemId}")
-    public ResponseEntity<?> getProblemDetailInContestViewByStudent(
+    public ResponseEntity<?> getProblemDetailInContestForParticipant(
         Principal principal,
-        @PathVariable("problemId") String problemId, @PathVariable("contestId") String contestId
+        @PathVariable("problemId") String problemId,
+        @PathVariable("contestId") String contestId
     ) {
-
         logStudentGetProblemOfContestForSolving(principal.getName(), contestId, problemId);
-
-        //System.out.println("ALO");
-        try {
-            ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
-            ContestProblem cp = contestProblemRepo.findByContestIdAndProblemId(contestId, problemId);
-            if (cp == null) {
-                return ResponseEntity.ok().body("NOTFOUND");
-            }
-            if (!ContestEntity.CONTEST_STATUS_RUNNING.equals(contestEntity.getStatusId())) {
-                return ResponseEntity.ok().body(null);
-            }
-            ModelCreateContestProblemResponse problemEntity = problemService.getContestProblem(problemId);
-            ModelStudentViewProblemDetail model = new ModelStudentViewProblemDetail();
-            if (contestEntity.getProblemDescriptionViewType() != null &&
-                contestEntity.getProblemDescriptionViewType()
-                             .equals(ContestEntity.CONTEST_PROBLEM_DESCRIPTION_VIEW_TYPE_HIDDEN)) {
-                model.setProblemStatement(" ");
-            } else {
-                model.setProblemStatement(problemEntity.getProblemDescription());
-            }
-
-            model.setSubmissionMode(cp.getSubmissionMode());
-            model.setProblemName(cp.getProblemRename());
-            model.setProblemCode(cp.getProblemRecode());
-            model.setIsPreloadCode(problemEntity.getIsPreloadCode());
-            model.setPreloadCode(problemEntity.getPreloadCode());
-            model.setAttachment(problemEntity.getAttachment());
-            model.setAttachmentNames(problemEntity.getAttachmentNames());
-            //model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowed());
-            model.setListLanguagesAllowed(contestEntity.getListLanguagesAllowedInContest());
-            model.setSampleTestCase(problemEntity.getSampleTestCase());
-            return ResponseEntity.ok().body(model);
-        } catch (Exception e) {
-            e.printStackTrace();
+        ProblemDetailForParticipantDTO result = problemService.getProblemDetailForParticipant(
+            principal.getName(), contestId, problemId
+        );
+        if (result == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Problem not found");
         }
-        return ResponseEntity.ok().body("NOTFOUND");
+        return ResponseEntity.ok().body(result);
     }
-
 
     @GetMapping("/contests/{contestId}/problems")
     public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
@@ -331,8 +315,10 @@ public class ContestController {
         String userId = principal.getName();
         logStudentGetDetailContest(userId, contestId);
 
-        List<ModelStudentOverviewProblem> responses = problemService.getStudentContestProblems(userId, contestId);
-        return ResponseEntity.ok(responses);
+        List<ModelStudentOverviewProblem> responses =
+            problemService.getListProblemsInContestForParticipant(userId, contestId);
+
+        return ResponseEntity.ok().body(responses);
     }
 
     @Secured("ROLE_TEACHER")
@@ -520,43 +506,46 @@ public class ContestController {
         apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log", logM);
     }
 
+    @Secured("ROLE_STUDENT")
     @GetMapping("/students/contests")
-    public ResponseEntity<?> getContestRegisteredStudent(Principal principal) {
+    public ResponseEntity<?> getRegisteredContestsForParticipant(Principal principal) {
         //logStudentGetHisContests(principal.getName());
 
-        ModelGetContestPageResponse res = problemTestCaseService.getRegisteredContestsByUser(principal.getName());
-        List<ModelGetContestResponse> filteredContests = res.getContests().stream()
-                                                            .filter(contest -> Arrays
-                                                                .asList("CREATED", "RUNNING", "COMPLETED")
-                                                                .contains(contest.getStatusId()))
-                                                            .collect(Collectors.toList());
-        res.setContests(filteredContests);
+        ModelGetContestPageResponse res = problemTestCaseService.getRegisteredContestsForParticipant(principal.getName());
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/public")
     public ResponseEntity<ModelGetContestPageResponse> getAllPublicContests() {
         ModelGetContestPageResponse response = problemTestCaseService.getAllPublicContests();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/students/not-registered-contests")
-    public ResponseEntity<?> getContestNotRegisteredByStudentPaging(
-        Pageable pageable, @Param("sortBy") String sortBy,
-        Principal principal
-    ) {
-        log.info("getContestRegisteredByStudentPaging sortBy {} pageable {}", sortBy, pageable);
-        if (sortBy != null) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortBy));
-        } else {
-            pageable = PageRequest.of(
-                pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by("startedAt").descending());
-        }
-        ModelGetContestPageResponse modelGetContestPageResponse = problemTestCaseService
-            .getNotRegisteredContestByUser(pageable, principal.getName());
-        return ResponseEntity.ok().body(modelGetContestPageResponse);
+    @Secured("ROLE_STUDENT")
+    @GetMapping("/students/contests/public")
+    public ResponseEntity<ModelGetContestPageResponse> getPublicContestsForStudents() {
+        ModelGetContestPageResponse response = problemTestCaseService.getAllPublicContestsForParticipant();
+        return ResponseEntity.ok(response);
     }
+
+//    @GetMapping("/students/not-registered-contests")
+//    public ResponseEntity<?> getContestNotRegisteredByStudentPaging(
+//        Pageable pageable, @Param("sortBy") String sortBy,
+//        Principal principal
+//    ) {
+//        log.info("getContestRegisteredByStudentPaging sortBy {} pageable {}", sortBy, pageable);
+//        if (sortBy != null) {
+//            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortBy));
+//        } else {
+//            pageable = PageRequest.of(
+//                pageable.getPageNumber(), pageable.getPageSize(),
+//                Sort.by("startedAt").descending());
+//        }
+//        ModelGetContestPageResponse modelGetContestPageResponse = problemTestCaseService
+//            .getNotRegisteredContestByUser(pageable, principal.getName());
+//        return ResponseEntity.ok().body(modelGetContestPageResponse);
+//    }
 
     @Secured("ROLE_TEACHER")
     @Deprecated
@@ -685,8 +674,7 @@ public class ContestController {
                 problemId);
         return ResponseEntity.ok().body(page);
     }
-    
-    
+
     @Async
     protected void logGetSubmissionsOfContest(String userId, String contestId) {
         if (true) {
@@ -867,6 +855,7 @@ public class ContestController {
         return ResponseEntity.ok().body(uploadedUsers);
     }
 
+    @Secured("ROLE_TEACHER")
     @PostMapping("/contests/students/upload-group-list")
     public ResponseEntity<?> uploadExcelStudentGroupListOfContest(
         Principal principal,

@@ -16,7 +16,7 @@ import XLSX from "xlsx";
 import {LoadingButton} from "@mui/lab";
 import PublishIcon from "@mui/icons-material/Publish";
 import SendIcon from "@mui/icons-material/Send";
-import {LinearProgress} from "@mui/material";
+
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -325,12 +325,12 @@ export default function StudentQuizDetail() {
     let successHandler = (res) => {
       setIsProcessing(false);
       setImportedExcelFile(undefined);
-      successNoti("Upload successfully", true);
+              successNoti(t("common:uploadSuccessfully"), true);
     };
     let errorHandlers = {
       onError: (error) => {
         setIsProcessing(false);
-        errorNoti("Error when uploading solution", true);
+        errorNoti(t("common:uploadSolutionError"), true);
       },
     };
     request(
