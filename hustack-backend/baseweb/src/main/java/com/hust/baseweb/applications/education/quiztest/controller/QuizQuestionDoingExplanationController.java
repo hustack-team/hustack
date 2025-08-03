@@ -2,10 +2,13 @@ package com.hust.baseweb.applications.education.quiztest.controller;
 
 import com.hust.baseweb.applications.education.quiztest.model.quizdoingexplanation.QuizDoingExplanationInputModel;
 import com.hust.baseweb.applications.education.quiztest.service.QuizQuestionDoingExplanationService;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +18,20 @@ import org.springframework.web.multipart.MultipartFile;
 import java.security.Principal;
 import java.util.UUID;
 
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @Slf4j
 @RestController
 @RequestMapping("/quiz-doing-explanations")
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuizQuestionDoingExplanationController {
 
-    private final QuizQuestionDoingExplanationService quizDoingExplanationService;
+    QuizQuestionDoingExplanationService quizDoingExplanationService;
 
     @GetMapping("/{questionId}")
     public ResponseEntity<?> getParticipantExplanationForQuestion(
@@ -61,7 +71,7 @@ public class QuizQuestionDoingExplanationController {
             return ResponseEntity.ok(
                 quizDoingExplanationService.updateExplanation(explanationId, solutionExplanation, attachment)
             );
-        } catch (ResourceNotFoundException e) {
+        } catch (EntityNotFoundException e) {
             log.error(e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (RuntimeException e) {
@@ -77,7 +87,7 @@ public class QuizQuestionDoingExplanationController {
         try {
             quizDoingExplanationService.deleteExplanation(explanationId);
             return ResponseEntity.noContent().build();
-        } catch (ResourceNotFoundException e) {
+        } catch (EntityNotFoundException e) {
             log.error(e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (RuntimeException e) {

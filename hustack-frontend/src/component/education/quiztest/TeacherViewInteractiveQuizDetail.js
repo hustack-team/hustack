@@ -1,25 +1,15 @@
-import {
-  Box,
-  Button,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-} from "@material-ui/core";
-import { blue, grey, green } from "@material-ui/core/colors";
-import { makeStyles, withStyles } from "@material-ui/core/styles";
+import {Box, Button, Typography,} from "@material-ui/core";
+import {blue, green, grey} from "@material-ui/core/colors";
+import {makeStyles, withStyles} from "@material-ui/core/styles";
 import parse from "html-react-parser";
-import React, { useEffect, useState } from "react";
-import { FcDocument } from "react-icons/fc";
-import SimpleBar from "simplebar-react";
-import { request } from "../../../api";
+import React, {useEffect, useState} from "react";
+import {useTranslation} from "react-i18next";
+import {request} from "../../../api";
 import PrimaryButton from "../../button/PrimaryButton";
 import TertiaryButton from "../../button/TertiaryButton";
 import CustomizedDialogs from "../../dialog/CustomizedDialogs";
-import ErrorDialog from "../../dialog/ErrorDialog";
-import { Checkbox, FormControlLabel, FormGroup } from "@mui/material";
-import { randomImageName } from "utils/FileUpload/covert";
+import {Checkbox, FormControlLabel, FormGroup} from "@mui/material";
+import {randomImageName} from "utils/FileUpload/covert";
 
 function isPDF(base64Data) {
   const decodedData = atob(base64Data);
@@ -110,6 +100,7 @@ export default function TeacherViewInteractiveQuizDetail({
   // quizGroups,
 }) {
   const classes = useStyles();
+  const {t} = useTranslation("common");
 
   //
   // const [result, setResult] = useState({ submited: false, isCorrect: false });
@@ -227,7 +218,7 @@ export default function TeacherViewInteractiveQuizDetail({
         content={<></>}
         actions={
           <>
-            <TertiaryButton onClick={handleCloseQuizTest}>Huỷ</TertiaryButton>
+            <TertiaryButton color="inherit" onClick={handleCloseQuizTest}>{t('common:cancel')}</TertiaryButton>
             <PrimaryButton onClick={onSelectQuizTest}>
               Thêm vào kỳ thi
             </PrimaryButton>

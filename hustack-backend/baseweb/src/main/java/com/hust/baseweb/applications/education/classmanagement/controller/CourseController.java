@@ -1,17 +1,5 @@
 package com.hust.baseweb.applications.education.classmanagement.controller;
 
-import java.security.Principal;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestMapping;
-
 import com.hust.baseweb.applications.education.entity.EduCourse;
 import com.hust.baseweb.applications.education.entity.EduCourseSession;
 import com.hust.baseweb.applications.education.entity.EduCourseSessionInteractiveQuiz;
@@ -23,27 +11,45 @@ import com.hust.baseweb.applications.education.repo.EduCourseSessionRepo;
 import com.hust.baseweb.applications.education.service.CourseService;
 import com.hust.baseweb.applications.education.service.EduCourseSessionInteractiveQuizService;
 import com.hust.baseweb.applications.education.service.EduCourseSessionService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.security.Principal;
+import java.util.List;
+import java.util.UUID;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
-
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
 @RequestMapping("/edu/course")
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CourseController {
-    private CourseService courseService;
-    private EduCourseSessionRepo eduCourseSessionRepo;
-    private EduCourseSessionService eduCourseSessionService;
-    private EduCourseSessionInteractiveQuizService eduCourseSessionInteractiveQuizService;
-    private EduCourseSessionInteractiveQuizRepo eduCourseSessionInteractiveQuizRepo;
+
+    CourseService courseService;
+
+    EduCourseSessionRepo eduCourseSessionRepo;
+
+    EduCourseSessionService eduCourseSessionService;
+
+    EduCourseSessionInteractiveQuizService eduCourseSessionInteractiveQuizService;
+
+    EduCourseSessionInteractiveQuizRepo eduCourseSessionInteractiveQuizRepo;
 
     @PostMapping("/create")
     public ResponseEntity<?> addEduClass(Principal principal, @RequestBody AddCourseModel addCourseModel) {

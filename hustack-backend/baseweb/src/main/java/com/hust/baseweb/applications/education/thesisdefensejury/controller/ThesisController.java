@@ -7,14 +7,16 @@ import com.hust.baseweb.applications.education.thesisdefensejury.models.*;
 import com.hust.baseweb.applications.education.thesisdefensejury.service.ThesisService;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,15 +24,24 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
-@Log4j2
-@Controller
+@ConditionalOnProperty(
+    prefix = "feature",
+    name = "enable-non-programming-contest-modules",
+    havingValue = "true",
+    matchIfMissing = true
+)
+@Slf4j
+@RestController
 @Validated
-@AllArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ThesisController {
 
-    private final ThesisService thesisService;
-    private final EduTeacherRepo eduTeacherRepo;
-    private UserService userService;
+    ThesisService thesisService;
+
+    EduTeacherRepo eduTeacherRepo;
+
+    UserService userService;
 
     @GetMapping("/thesis")
     public ResponseEntity<?> getThesis(Pageable pageable) {

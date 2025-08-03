@@ -218,6 +218,7 @@ public class ContestController {
         return ResponseEntity.ok().body("ok");
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/roles")
     public ResponseEntity<?> getListRolesContest() {
         List<String> L = UserRegistrationContestEntity.getListRoles();
@@ -239,6 +240,7 @@ public class ContestController {
         apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log", logM);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}")
     public ResponseEntity<?> getContestDetail(@PathVariable("contestId") String contestId, Principal principal) {
         log.info("getContestDetail constestid {}", contestId);
@@ -386,7 +388,7 @@ public class ContestController {
         return ResponseEntity.ok().body(resp);
     }
 
-    //@Secured("ROLE_TEACHER")
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/registered-users")
     public ResponseEntity<?> getUserRegisterSuccessfulContest(
         @PathVariable("contestId") String contestId,
@@ -398,13 +400,14 @@ public class ContestController {
         return ResponseEntity.ok().body(resp);
     }
 
-    //@Secured("ROLE_TEACHER")
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/members")
     public ResponseEntity<?> getMembersOfContest(@PathVariable String contestId) {
         List<ContestMembers> res = problemTestCaseService.getListMemberOfContest(contestId);
         return ResponseEntity.ok().body(res);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/group/members")
     public ResponseEntity<?> getMembersOfContestGroup(Principal principal, @PathVariable String contestId) {
         String userId = principal.getName();
@@ -565,6 +568,7 @@ public class ContestController {
         return ResponseEntity.ok().body(null);
     }
 
+    @Secured("ROLE_TEACHER")
     @DeleteMapping("/contests/users")
     public ResponseEntity<?> deleteUserFromContest(@RequestBody ModelAddUserToContest modelAddUserToContest)
         throws MiniLeetCodeException {
@@ -749,7 +753,7 @@ public class ContestController {
         return ResponseEntity.ok().body(perms);
     }
 
-    @Secured("ROLE_TEACHER")
+    @Secured("ROLE_ADMIN")
     @PostMapping("/contests/switch-judge-mode")
     public ResponseEntity<?> switchAllContestJudgeMode(@RequestParam("mode") String judgeMode) {
 
@@ -896,6 +900,7 @@ public class ContestController {
         return ResponseEntity.ok().body(uploadedUsers);
     }
 
+    @Secured("ROLE_TEACHER")
     @GetMapping("/contests/users/{userLoginId}/contest-result")
     public ResponseEntity<?> getContestResultOnProblemOfAUser(
         @PathVariable("userLoginId") String userLoginId

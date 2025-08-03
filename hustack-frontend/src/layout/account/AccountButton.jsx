@@ -1,9 +1,9 @@
-import { useState } from "@hookstate/core";
-import { Avatar, IconButton } from "@mui/material";
-import { useKeycloak } from "@react-keycloak/web";
+import {useState} from "@hookstate/core";
+import {Avatar, IconButton} from "@mui/material";
+import {useKeycloak} from "@react-keycloak/web";
 import randomColor from "randomcolor";
-import React, { useEffect } from "react";
-import { AccountMenu } from "./AccountMenu";
+import React, {useEffect} from "react";
+import {AccountMenu} from "./AccountMenu";
 
 const bgColor = randomColor({
   luminosity: "dark",
@@ -29,7 +29,7 @@ export const getTextAvatar = (name) => {
 
 function AccountButton() {
   //
-  const { keycloak } = useKeycloak();
+  const {keycloak} = useKeycloak();
 
   const open = useState(false);
 
@@ -60,11 +60,11 @@ function AccountButton() {
         aria-label="account of current user"
         aria-controls={open.get() ? menuId : undefined}
         onClick={handleToggle}
-        sx={{ p: 1.5 }}
+        sx={{p: 1.5}}
       >
         <Avatar
           alt="account button"
-          sx={{ width: 36, height: 36, background: bgColor }}
+          sx={{width: 36, height: 36, background: bgColor}}
         >
           {getTextAvatar(keycloak.tokenParsed.name)?.toLocaleUpperCase()}
         </Avatar>

@@ -19,6 +19,7 @@ import {useHistory} from "react-router-dom";
 import {localeOption} from "utils/NumberFormat";
 import {detail} from "./ContestProblemSubmissionDetailViewedByManager";
 import {useTranslation} from "react-i18next";
+import TertiaryButton from "../../button/TertiaryButton";
 
 export function ContestManagerDetail(props) {
   const contestId = props.contestId;
@@ -256,9 +257,9 @@ export function ContestManagerDetail(props) {
           {errorMessage && <Typography color="error">{errorMessage}</Typography>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloneDialogClose} color="primary">
-            Cancel
-          </Button>
+          <TertiaryButton color="inherit" onClick={handleCloneDialogClose}>
+            {t('common:cancel')}
+          </TertiaryButton>
           <Button onClick={handleClone} color="primary">
             Create
           </Button>

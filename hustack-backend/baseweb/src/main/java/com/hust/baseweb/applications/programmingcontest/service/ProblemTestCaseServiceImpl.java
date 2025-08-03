@@ -1823,7 +1823,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
             return Page.empty(pageable);
         }
-        
+
         return contestSubmissionPagingAndSortingRepo.findAllByUserIdAndContestId(pageable, userLoginId, contestId)
                                                     .map(contestSubmissionEntity -> ContestSubmission
                                                         .builder()
@@ -1859,7 +1859,7 @@ public class ProblemTestCaseServiceImpl implements ProblemTestCaseService {
         if (contest != null && ContestEntity.CONTEST_STATUS_OPEN.equals(contest.getStatusId())) {
             return Page.empty(pageable);
         }
-        
+
         Integer allowParticipantPinSubmission = contest != null ? contest.getAllowParticipantPinSubmission() : 0;
         return contestSubmissionPagingAndSortingRepo
             .findAllByUserIdAndContestIdAndProblemId(pageable, userLoginId, contestId, problemId)

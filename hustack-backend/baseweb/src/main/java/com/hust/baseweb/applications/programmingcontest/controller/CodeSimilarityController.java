@@ -3,19 +3,25 @@ package com.hust.baseweb.applications.programmingcontest.controller;
 import com.hust.baseweb.applications.programmingcontest.entity.CodePlagiarism;
 import com.hust.baseweb.applications.programmingcontest.model.*;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
 
-@RestController
-@CrossOrigin
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
+@RestController
+@Validated
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Secured({"ROLE_TEACHER"})
 public class CodeSimilarityController {
 
     ProblemTestCaseService problemTestCaseService;

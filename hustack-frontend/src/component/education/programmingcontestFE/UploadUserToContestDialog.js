@@ -6,6 +6,7 @@ import XLSX from "xlsx";
 import HustModal from "../../common/HustModal";
 import StandardTable from "../../table/StandardTable";
 import {InputFileUpload} from "./StudentViewProgrammingContestProblemDetailV2";
+import TertiaryButton from "../../button/TertiaryButton";
 
 const roles = [
   { label: "Participant", value: "PARTICIPANT" },
@@ -177,7 +178,7 @@ export default function UploadUserToContestDialog(props) {
           </FormControl>
 
           {/* Cancel and Upload buttons */}
-          <Button variant="outlined" onClick={onClose}>Cancel</Button>
+          <TertiaryButton color="inherit" onClick={onClose}>Cancel</TertiaryButton>
           <Button variant="contained" onClick={handleUpload} disabled={isProcessing}>Upload</Button>
         </Stack>
 

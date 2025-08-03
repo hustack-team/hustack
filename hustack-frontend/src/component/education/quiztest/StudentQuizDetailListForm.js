@@ -1,35 +1,19 @@
-import { useState } from "@hookstate/core";
-import { Button, Card } from "@material-ui/core";
+import {useState} from "@hookstate/core";
+import {Button} from "@material-ui/core";
 import Grid from "@material-ui/core/Grid";
 import Snackbar from "@material-ui/core/Snackbar";
-import { makeStyles } from "@material-ui/core/styles";
 import Alert from "@material-ui/lab/Alert";
-import React, { useEffect } from "react";
-import { useHistory } from "react-router-dom";
-import { request } from "../../../api";
+import React, {useEffect} from "react";
+import {request} from "../../../api";
 import Quiz from "./Quiz";
-import { LinearProgress } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-  },
-  paper: {
-    padding: theme.spacing(2),
-    textAlign: "left",
-    //color: theme.palette.text.secondary,
-    color: "black",
-    borderRadius: "20px",
-    //background: "beige",
-    background: "#EBEDEF",
-  },
-}));
+import {Paper} from "@mui/material";
+import {LoadingButton} from "@mui/lab";
+import {errorNoti} from "../../../utils/notification";
+import {useTranslation} from "react-i18next";
 
 export default function StudentQuizDetailListForm(props) {
-  const history = useHistory();
-  //const testQuizId = history.location.state?.testId;
+  const {t} = useTranslation(["common"]);
   const testQuizId = props.testId;
-  const classes = useStyles();
 
   //
   const [questions, setQuestions] = React.useState([]);
@@ -60,7 +44,7 @@ export default function StudentQuizDetailListForm(props) {
         // TODO: optimize code
         const chkState = [];
 
-        listQuestion.forEach((question) => {
+        listQuestion?.forEach((question) => {
           const choices = {};
           const choseAnswers =
             participationExecutionChoice[question.questionId];
@@ -89,13 +73,12 @@ export default function StudentQuizDetailListForm(props) {
         setLoading(false);
       },
       {
-        401: () => {
+        onError: e => {
           setLoading(false);
         },
         406: () => {
           setMessageRequest("Time Out!");
           setRequestFailed(true);
-          setLoading(false);
         },
       }
     );
@@ -146,9 +129,11 @@ export default function StudentQuizDetailListForm(props) {
       }
     );
   };
+
   function handleClickViewQuestion() {
     getQuestionList();
   }
+
   function handleRefresh() {
     request(
       "get",
@@ -194,7 +179,9 @@ export default function StudentQuizDetailListForm(props) {
         checkState.set(chkState);
       },
       {
-        401: () => {},
+        onError: e => {
+          errorNoti(t("common:error", 3000))
+        },
         406: () => {
           setMessageRequest("Time Out!");
           setRequestFailed(true);
@@ -202,6 +189,7 @@ export default function StudentQuizDetailListForm(props) {
       }
     );
   }
+
   const handleCloseSuccess = () => {
     setRequestSuccessfully(false);
   };
@@ -215,49 +203,29 @@ export default function StudentQuizDetailListForm(props) {
   }, []);
 
   return (
-    <div className={classes.root}>
-      {loading && <LinearProgress />}
-      <Card style={{ padding: "20px 20px 20px 20px" }}>
-        <Snackbar
-          open={requestSuccessfully}
-          autoHideDuration={2000}
-          onClose={handleCloseSuccess}
-        >
-          <Alert variant="filled" severity="success">
-            {messageRequest}
-          </Alert>
-        </Snackbar>
-        <Snackbar
-          open={requestFailed}
-          autoHideDuration={8000}
-          onClose={handleCloseError}
-        >
-          <Alert variant="filled" severity="error">
-            {messageRequest}
-          </Alert>
-        </Snackbar>
-        <div style={{}}>
-          <LoadingButton
-            variant="contained"
-            color="secondary"
-            loading={loading}
-            onClick={handleClickViewQuestion}
-          >
-            View Questions
-          </LoadingButton>
-          {quizGroupTestDetail.judgeMode === "BATCH_LAZY_EVALUATION" ? (
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleRefresh}
-            >
-              REFRESH (limited)
-            </Button>
-          ) : null}
-        </div>
+    <>
+      <LoadingButton
+        variant="outlined"
+        loading={loading}
+        sx={{mt: 2, textTransform: 'none'}}
+        onClick={handleClickViewQuestion}
+      >
+        View Questions
+      </LoadingButton>
 
-        {/* Quiz */}
-        <Grid container spacing={3}>
+      {quizGroupTestDetail.judgeMode === "BATCH_LAZY_EVALUATION" ? (
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleRefresh}
+        >
+          REFRESH (limited)
+        </Button>
+      ) : null}
+
+      {/* Quiz */}
+      <Paper elevation={0} sx={{p: 2}}>
+        <Grid container spacing={4}>
           {quizGroupTestDetail.quizGroupId ? (
             questions != null ? (
               questions.map((question, idx) => (
@@ -272,19 +240,36 @@ export default function StudentQuizDetailListForm(props) {
                 />
               ))
             ) : (
-              <p style={{ justifyContent: "center" }}>
-                {" "}
+              <p style={{justifyContent: "center"}}>
                 Questions not available
               </p>
             )
           ) : (
-            <p style={{ justifyContent: "center" }}>
-              {" "}
-              Exam has not been available to student yet{" "}
+            <p style={{justifyContent: "center"}}>
+              Exam has not been available to student yet
             </p>
           )}
         </Grid>
-      </Card>
-    </div>
+      </Paper>
+
+      <Snackbar
+        open={requestSuccessfully}
+        autoHideDuration={2000}
+        onClose={handleCloseSuccess}
+      >
+        <Alert variant="filled" severity="success">
+          {messageRequest}
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={requestFailed}
+        autoHideDuration={8000}
+        onClose={handleCloseError}
+      >
+        <Alert variant="filled" severity="error">
+          {messageRequest}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
