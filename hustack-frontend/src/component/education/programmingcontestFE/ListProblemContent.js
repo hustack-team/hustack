@@ -1,10 +1,11 @@
 import {GetApp} from "@material-ui/icons";
 import AddIcon from "@material-ui/icons/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import {Box, Chip, Divider, Grid, IconButton, Paper, Stack, TextField, Tooltip, Typography,} from "@mui/material";
 import {request, saveFile} from "api";
 import React, {useEffect, useState} from "react";
 import {useTranslation} from "react-i18next";
-import {Link} from "react-router-dom";
+import {Link, useHistory} from "react-router-dom";
 import {toFormattedDateTime} from "utils/dateutils";
 import {errorNoti} from "utils/notification";
 import StandardTable from "component/table/StandardTable";
@@ -42,6 +43,7 @@ export const selectProps = (options) => ({
 
 function ListProblemContent({type}) {
   const {keycloak} = useKeycloak();
+  const history = useHistory();
 
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -143,6 +145,10 @@ function ListProblemContent({type}) {
       {responseType: "blob"});
   };
 
+  const handleEdit = (problemId) => {
+    history.push(`/programming-contest/edit-problem/${problemId}`);
+  };
+
   const COLUMNS = [
     {
       title: "ID",
@@ -231,18 +237,31 @@ function ListProblemContent({type}) {
     },
     {
       title: t("common:action"),
-      cellStyle: {minWidth: 120},
+      align: 'center',
+      cellStyle: {minWidth: 100},
       render: (rowData) => {
         return (
-          <Tooltip title={t('export')}>
-            <IconButton
-              variant="contained"
-              color="primary"
-              onClick={() => onSingleDownload(rowData)}
-            >
-              <GetApp/>
-            </IconButton>
-          </Tooltip>
+          <Stack direction="row" justifyContent='center' spacing={1}>
+            {rowData.canEdit && (
+              <Tooltip title={t('common:edit', {name: ""})}>
+                <IconButton
+                  color="primary"
+                  onClick={() => handleEdit(rowData.problemId)}
+                >
+                  <EditIcon/>
+                </IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title={t('export')}>
+              <IconButton
+                variant="contained"
+                color="primary"
+                onClick={() => onSingleDownload(rowData)}
+              >
+                <GetApp/>
+              </IconButton>
+            </Tooltip>
+          </Stack>
         );
       },
     },
@@ -303,7 +322,7 @@ function ListProblemContent({type}) {
           variant="outlined"
           startIcon={<AutorenewIcon/>}
         >
-          {t("reset")}
+          {t("common:reset")}
         </TertiaryButton>
         <PrimaryButton
           disabled={loading}

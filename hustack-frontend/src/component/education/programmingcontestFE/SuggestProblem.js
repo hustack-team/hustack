@@ -43,11 +43,11 @@ function CreateProblem() {
       (res) => {
         setLoading(false);
         setResult(res.data);
-        successNoti("Problem generated successfully. Check it out!", 2000);
+        successNoti(t("common:problemGeneratedSuccess"), 2000);
       },
       {
         onError: () => {
-          errorNoti(t("error", {ns: "common"}), 3000);
+          errorNoti(t("common:error"), 3000);
           setLoading(false);
         },
       },

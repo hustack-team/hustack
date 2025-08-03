@@ -22,12 +22,12 @@ export default function ManagerSubmitCodeOfParticipant(props) {
     let successHandler = (res) => {
       setIsProcessing(false);
       setFilename(undefined);
-      successNoti("Submit successfully", true);
+      successNoti(t("common:submitSuccessfully"), true);
     };
     let errorHandlers = {
       onError: (error) => {
         setIsProcessing(false);
-        errorNoti("Exception when submit", true);
+        errorNoti(t("common:submitException"), true);
       },
     };
     request(

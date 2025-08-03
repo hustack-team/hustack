@@ -101,7 +101,7 @@ export function ContestManagerDetail(props) {
 
   const handleClone = () => {
     if (hasSpecialCharacterContestId()) {
-        setErrorMessage("Contest ID can only contain letters, numbers, underscores, and hyphens.");
+        setErrorMessage(t("common:invalidCharactersInContestId"));
         return;
     }
 
@@ -120,17 +120,17 @@ export function ContestManagerDetail(props) {
         },
         {
             onError: (error) => {
-                setErrorMessage("Failed to clone the contest. Please try again.");
+                setErrorMessage(t("common:cloneContestFailed"));
                 console.error("Error cloning contest:", error);
             },
             400: (error) => {
-                setErrorMessage("Invalid request. Please check your input.");
+                setErrorMessage(t("common:invalidInput"));
             },
             404: (error) => {
-                setErrorMessage("Original contest not found.");
+                setErrorMessage(t("common:contestNotFound"));
             },
             500: (error) => {
-              setErrorMessage("Contest already exists.");
+              setErrorMessage(t("common:contestAlreadyExists"));
           },
         },
         cloneRequest 
@@ -240,7 +240,7 @@ export function ContestManagerDetail(props) {
             value={newContestId}
             onChange={(e) => setNewContestId(e.target.value)}
             error={hasSpecialCharacterContestId()}
-            helperText={hasSpecialCharacterContestId() ? "Invalid characters in Problem ID." : ""}
+            helperText={hasSpecialCharacterContestId() ? t("common:invalidCharactersInContestId") : ""}
           />
           <TextField
             margin="dense"

@@ -1,5 +1,5 @@
 import ReplayIcon from "@mui/icons-material/Replay";
-import {Box, LinearProgress, Paper, Typography, Checkbox, Button} from "@mui/material";
+import {Box, Checkbox, LinearProgress, Paper, Stack, Typography} from "@mui/material";
 import {request} from "api";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import StandardTable from "component/table/StandardTable";
@@ -12,8 +12,11 @@ import {toFormattedDateTime} from "../../../utils/dateutils";
 import {localeOption} from "../../../utils/NumberFormat";
 import {errorNoti, successNoti} from "utils/notification";
 import CustomizedDialogs from "component/dialog/CustomizedDialogs";
+import PrimaryButton from "component/button/PrimaryButton";
+import TertiaryButton from "component/button/TertiaryButton";
 
 const StudentViewSubmission = forwardRef((props, ref) => {
+  const {showTitle = false} = props;
   const {t} = useTranslation(
     ["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/testcase", "common"]
   );
@@ -27,8 +30,8 @@ const StudentViewSubmission = forwardRef((props, ref) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [currentLockedSubmissionId, setCurrentLockedSubmissionId] = useState(null);
   const [allowPinSubmission, setAllowPinSubmission] = useState(0);
-  const [openConfirmModal, setOpenConfirmModal] = useState(false); 
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null); 
+  const [openConfirmModal, setOpenConfirmModal] = useState(false);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
   const [pendingSubmission, setPendingSubmission] = useState(null);
 
   const getCommentsBySubmissionId = async (submissionId) => {
@@ -216,21 +219,21 @@ const StudentViewSubmission = forwardRef((props, ref) => {
     },
     ...(allowPinSubmission === 1
       ? [
-          {
-            title: t("common:finalSubmission"),
-            sorting: false,
-            cellStyle: { minWidth: 120, textAlign: "center" },
-            render: (rowData) => (
-              <Checkbox
-                checked={rowData.finalSelectedSubmission === 1}
-                onChange={() =>
-                  handleSwitchSubmission(rowData.contestSubmissionId)
-                }
-                disabled={loading}
-              />
-            ),
-          },
-        ]
+        {
+          title: t("common:finalSubmission"),
+          sorting: false,
+          cellStyle: {minWidth: 120, textAlign: "center"},
+          render: (rowData) => (
+            <Checkbox
+              checked={rowData.finalSelectedSubmission === 1}
+              onChange={() =>
+                handleSwitchSubmission(rowData.contestSubmissionId)
+              }
+              disabled={loading}
+            />
+          ),
+        },
+      ]
       : []),
     // {
     //   title: t('common:message'),
@@ -297,27 +300,37 @@ const StudentViewSubmission = forwardRef((props, ref) => {
 
   return (
     <>
-      <StandardTable
-        hideCommandBar
-        columns={columns}
-        data={submissions}
-        loading={loading}
-        options={{
-          selection: false,
-          pageSize: 5,
-        }}
-        components={{
-          Container: (props) => <Paper {...props} elevation={0}/>,
-        }}
-        actions={[
-          {
-            icon: () => <ReplayIcon/>,
-            tooltip: t("common:refresh"),
-            isFreeAction: true,
-            onClick: handleRefresh,
-          },
-        ]}
-      />
+      <Box>
+        <Stack direction="row" justifyContent={showTitle ? 'space-between' : 'flex-end'} mb={1.5}>
+          {showTitle && (
+            <Typography variant="h6">
+              {t("common:submissions")}
+            </Typography>
+          )}
+          <PrimaryButton
+            startIcon={<ReplayIcon/>}
+            onClick={handleRefresh}
+            size="small"
+          >
+            {t("common:refresh")}
+          </PrimaryButton>
+        </Stack>
+        <StandardTable
+          hideCommandBar
+          hideToolBar
+          columns={columns}
+          data={submissions}
+          loading={loading}
+          options={{
+            selection: false,
+            pageSize: 5,
+            search: false,
+          }}
+          components={{
+            Container: (props) => <Paper {...props} elevation={0}/>,
+          }}
+        />
+      </Box>
       <ModalMessage rowData={selectedRowData}/>
       <CustomizedDialogs
         open={openConfirmModal}
@@ -330,20 +343,17 @@ const StudentViewSubmission = forwardRef((props, ref) => {
         }
         actions={
           <>
-            <Button
-              variant="outlined"
-              color="primary"
+            <TertiaryButton
+              color={'inherit'}
               onClick={handleCancelSwitch}
             >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
+              {t("common:cancel")}
+            </TertiaryButton>
+            <PrimaryButton
               onClick={handleConfirmSwitch}
             >
-              Confirm
-            </Button>
+              {t("common:confirm")}
+            </PrimaryButton>
           </>
         }
       />

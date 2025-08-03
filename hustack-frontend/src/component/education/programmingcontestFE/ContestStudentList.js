@@ -81,7 +81,7 @@ export default function ContestStudentList() {
   }
 
   function getPublicContestList() {
-    request("get", "/contests/public", (res) => {
+    request("get", "/students/contests/public", (res) => {
       const data = res.data.contests.map((e, index) => ({
         index: index + 1,
         contestId: e.contestId,

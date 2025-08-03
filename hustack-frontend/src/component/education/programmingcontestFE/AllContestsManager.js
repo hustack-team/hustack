@@ -1,15 +1,13 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { Box, Button, IconButton } from "@mui/material";
+import {Box, Button, IconButton} from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
-import { request } from "api";
+import {request} from "api";
 import withScreenSecurity from "component/withScreenSecurity";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { defaultDatetimeFormat } from "utils/dateutils";
-import { successNoti } from "utils/notification";
-import StandardTable, {
-  TablePaginationActions,
-} from "../../table/StandardTable";
+import {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
+import {defaultDatetimeFormat} from "utils/dateutils";
+import {successNoti} from "utils/notification";
+import StandardTable, {TablePaginationActions,} from "../../table/StandardTable";
 
 function AllContestsManager() {
   const [page, setPage] = useState(0);
@@ -20,7 +18,7 @@ function AllContestsManager() {
 
   const switchJudgeMode = (mode) => {
     request("post", "/contests/switch-judge-mode?mode=" + mode, () =>
-      successNoti("Saved", 5000)
+      successNoti(t("common:saved"), 5000)
     ).then();
   };
 

@@ -56,7 +56,7 @@ export default function UploadUserUpdateFullNameContestDialog(props) {
       {
         onError: (e) => {
           setIsProcessing(false);
-          errorNoti("An error happened", 5000);
+          errorNoti(t("common:error"), 5000);
         },
       },
       formData,

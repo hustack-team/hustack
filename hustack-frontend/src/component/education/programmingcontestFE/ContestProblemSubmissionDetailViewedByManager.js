@@ -127,7 +127,7 @@ function ContestProblemSubmissionDetailViewedByManager({screenAuthorization}) {
       "/teacher/submissions/" + problemSubmissionId + "/disable",
       (res) => {
         setSubmission(res.data);
-        successNoti("Submission disabled");
+        successNoti(t("common:submissionDisabled"));
       },
       {
         onError: (e) => {
@@ -143,7 +143,7 @@ function ContestProblemSubmissionDetailViewedByManager({screenAuthorization}) {
       "/teacher/submissions/" + problemSubmissionId + "/enable",
       (res) => {
         setSubmission(res.data);
-        successNoti("Submission enabled");
+        successNoti(t("common:submissionEnabled"));
       },
       {
         onError: (e) => {
@@ -174,7 +174,7 @@ function ContestProblemSubmissionDetailViewedByManager({screenAuthorization}) {
       `/teacher/submissions/${problemSubmissionId}/comments`,
       (res) => {
         handleCloseDialog();
-        successNoti("Comment added successfully");
+        successNoti(t("common:commentAddedSuccessfully"));
       },
       {
         onError: (e) => {

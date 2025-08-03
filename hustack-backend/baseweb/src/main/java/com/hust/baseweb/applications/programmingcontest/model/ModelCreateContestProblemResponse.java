@@ -36,7 +36,7 @@ public class ModelCreateContestProblemResponse {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
@@ -54,15 +54,11 @@ public class ModelCreateContestProblemResponse {
 
     String preloadCode;
 
-    int levelOrder;
-
     Date createdAt;
 
     boolean isPublicProblem;
 
-    List<byte[]> attachment;
-
-    List<String> attachmentNames;
+    List<AttachmentMetadata> attachments;
 
     List<TagEntity> tags;
 
@@ -71,5 +67,10 @@ public class ModelCreateContestProblemResponse {
     List<String> roles;
 
     String sampleTestCase;
+
+    List<BlockCode> blockCodes;
+
+    Boolean canEditBlocks;
+
 }
 

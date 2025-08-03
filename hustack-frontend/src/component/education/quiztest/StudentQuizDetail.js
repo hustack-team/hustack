@@ -350,12 +350,12 @@ export default function StudentQuizDetail() {
     let successHandler = (res) => {
       setIsProcessing(false);
       setImportedExcelFile(undefined);
-      successNoti("Upload successfully", true);
+      successNoti(t("common:uploadSuccessfully"), true);
     };
     let errorHandlers = {
       onError: (error) => {
         setIsProcessing(false);
-        errorNoti("Error when uploading solution", true);
+        errorNoti(t("common:uploadSolutionError"), true);
       },
     };
     request(

@@ -11,9 +11,7 @@ import java.util.List;
 @Data
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ModelUpdateContestProblem {
-
-    String problemId;
+public class EditProblemDTO {
 
     String problemName;
 
@@ -31,7 +29,7 @@ public class ModelUpdateContestProblem {
 
     String levelId;
 
-    String categoryId;
+    Integer categoryId;
 
     String correctSolutionSourceCode;
 
@@ -41,17 +39,15 @@ public class ModelUpdateContestProblem {
 
     String solutionCheckerLanguage;
 
-    String solution;
+//    Boolean isPreloadCode; // Preload Code functionality - DISABLED
 
-    Boolean isPreloadCode;
-
-    String preloadCode;
+//    String preloadCode; // Preload Code functionality - DISABLED
 
     Boolean isPublic;
 
     String scoreEvaluationType;
 
-    String[] fileId;
+//    String[] fileId;
 
     Integer[] tagIds;
 
@@ -60,4 +56,8 @@ public class ModelUpdateContestProblem {
     ProblemStatus status;
 
     String sampleTestCase;
+
+    int forStudent;
+
+    List<BlockCode> blockCodes;
 }

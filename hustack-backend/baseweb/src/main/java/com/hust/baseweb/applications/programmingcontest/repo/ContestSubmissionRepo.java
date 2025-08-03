@@ -38,27 +38,31 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
 //    List<Object[]> calculatorContest(@Param("contest_id") String contest_id);
 
     @Query(value = "select distinct problem_id from contest_submission_new " +
-                   "where user_submission_id = :user_id " +
-                   "and contest_id = :contest_id " +
+                   "where user_submission_id = :userId " +
+                   "and contest_id = :contestId " +
                    "and status = 'Accepted'",
            nativeQuery = true)
-    List<String> findAcceptedProblemsOfUser(@Param("user_id") String user_id, @Param("contest_id") String contest_id);
+    List<String> findAcceptedProblemsInContestOfUser(
+        @Param("contestId") String contestId,
+        @Param("userId") String userId
+    );
 
     @Query(value = "select problem_id as problemId, max(point) as maxPoint from contest_submission_new " +
-                   "where user_submission_id = :user_id " +
-                   "and contest_id = :contest_id " +
+                   "where user_submission_id = :userId " +
+                   "and contest_id = :contestId " +
                    "group by problemId ",
            nativeQuery = true)
-    List<ModelProblemMaxSubmissionPoint> findSubmittedProblemsOfUser(
-        @Param("user_id") String user_id,
-        @Param("contest_id") String contest_id
+    List<ModelProblemMaxSubmissionPoint> findProblemsInContestHasSubmissionOfUser(
+        @Param("contestId") String contestId,
+        @Param("userId") String userId
     );
 
     ContestSubmissionEntity findContestSubmissionEntityByContestSubmissionId(UUID contestSubmissionId);
 
-    @Query(value =
-               "select * from contest_submission_new csn where csn.contest_id = :cid and csn.user_submission_id=:uid and csn.problem_id=:pid" +
-               " order by created_stamp desc ",
+    @Query(value = "select * " +
+                   "from contest_submission_new csn " +
+                   "where csn.contest_id = :cid and csn.user_submission_id = :uid and csn.problem_id = :pid " +
+                   "order by created_stamp desc ",
            nativeQuery = true)
     List<ContestSubmissionEntity> findAllByContestIdAndUserIdAndProblemId(
         @Param("cid") String cid,
@@ -66,15 +70,19 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         @Param("pid") String pid
     );
 
-    @Query(value = "select * from contest_submission_new csn where csn.contest_id = :cid and csn.problem_id=:pid" +
-                   " order by created_stamp desc ",
+    @Query(value = "select * " +
+                   "from contest_submission_new csn " +
+                   "where csn.contest_id = :cid and csn.problem_id = :pid " +
+                   "order by created_stamp desc ",
            nativeQuery = true)
     List<ContestSubmissionEntity> findAllByContestIdAndProblemId(
         @Param("cid") String cid,
         @Param("pid") String pid
     );
 
-    @Query(value = "select count(*) from contest_submission_new csn where csn.contest_id = :cid and csn.user_submission_id=:uid and csn.problem_id=:pid",
+    @Query(value = "select count(*) " +
+                   "from contest_submission_new csn " +
+                   "where csn.contest_id = :cid and csn.user_submission_id = :uid and csn.problem_id = :pid",
            nativeQuery = true)
     int countAllByContestIdAndUserIdAndProblemId(
         @Param("cid") String cid,
@@ -82,14 +90,20 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         @Param("pid") String pid
     );
 
-    @Query(value = "select * from contest_submission_new csn where csn.contest_id = :cid and csn.status = :status" +
-                   " order by created_stamp asc ",
+    @Query(value = "select * " +
+                   "from contest_submission_new csn " +
+                   "where csn.contest_id = :cid and csn.status = :status " +
+                   "order by created_stamp asc ",
            nativeQuery = true)
     List<ContestSubmissionEntity> findAllByContestIdAndStatus(@Param("cid") String cid, @Param("status") String status);
 
 //    List<ContestSubmissionEntity> findAllByStatus(@Param("status") String status);
 
-    @Query(value = "select * from contest_submission_new where status = ?3 order by created_stamp desc offset ?1 limit ?2",
+    @Query(value = "select * " +
+                   "from contest_submission_new " +
+                   "where status = ?3 " +
+                   "order by created_stamp desc " +
+                   "offset ?1 limit ?2",
            nativeQuery = true)
     List<ContestSubmissionEntity> getPageContestSubmission(int offset, int limit, String status);
 
@@ -126,15 +140,16 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
     @Query("update ContestSubmissionEntity s set s.status = ?2 where s.contestSubmissionId = ?1")
     void updateContestSubmissionStatus(UUID contestSubmissionId, String status);
 
-    @Query(value = "SELECT problem_id AS problemId, MAX(point) AS maxPoint FROM contest_submission_new " +
+    @Query(value = "SELECT problem_id AS problemId, MAX(point) AS maxPoint " +
+                   "FROM contest_submission_new " +
                    "WHERE user_submission_id = :userId " +
                    "AND contest_id = :contestId " +
                    "AND final_selected_submission = 1 " +
                    "GROUP BY problem_id",
            nativeQuery = true)
-    List<ModelProblemMaxSubmissionPoint> findFinalSelectedSubmittedProblemsOfUser(
-        @Param("userId") String userId,
-        @Param("contestId") String contestId
+    List<ModelProblemMaxSubmissionPoint> findProblemsInContestHasFinalSelectedSubmissionOfUser(
+        @Param("contestId") String contestId,
+        @Param("userId") String userId
     );
 
     @Query(value =
@@ -224,4 +239,8 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         @Param("toDate") ZonedDateTime toDate,
         Pageable pageable
     );
+
+    @Query(
+        "SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END FROM ContestSubmissionEntity cs WHERE cs.problemId = :problemId")
+    boolean existsByProblemId(@Param("problemId") String problemId);
 }

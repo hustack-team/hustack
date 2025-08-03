@@ -1,20 +1,13 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import {
-  Avatar,
-  Box,
-  IconButton,
-  ListItemAvatar,
-  ListItemText,
-  Stack,
-} from "@mui/material";
-import { request } from "api";
+import {Avatar, Box, IconButton, ListItemAvatar, ListItemText, Stack,} from "@mui/material";
+import {request} from "api";
 import StandardTable from "component/table/StandardTable";
-import { isEmpty, trim } from "lodash";
-import { useEffect, useState } from "react";
-import { toFormattedDateTime } from "utils/dateutils";
-import { errorNoti, successNoti } from "utils/notification";
-import AddMember2Contest, { stringAvatar } from "./AddMember2Contest";
+import {isEmpty, trim} from "lodash";
+import {useEffect, useState} from "react";
+import {toFormattedDateTime} from "utils/dateutils";
+import {errorNoti, successNoti} from "utils/notification";
+import AddMember2Contest, {stringAvatar} from "./AddMember2Contest";
 import UpdatePermissionMemberOfContestDialog from "./UpdatePermissionMemberOfContestDialog";
 
 export default function ContestManagerListMember(props) {
@@ -93,14 +86,14 @@ export default function ContestManagerListMember(props) {
       "delete",
       "/contests/members",
       (res) => {
-        successNoti("Participant removed successfully");
+        successNoti(t("common:participantRemovedSuccessfully"));
         setIsProcessing(false);
         getContestMembers();
       },
       {
         onError: () => {
           setIsProcessing(false);
-          errorNoti("An error happened");
+          errorNoti(t("common:error"));
         },
         401: () => {},
       },
@@ -145,7 +138,7 @@ export default function ContestManagerListMember(props) {
       "put",
       "/contests/permissions",
       (res) => {
-        successNoti("Updated Successfully");
+        successNoti(t("common:updatedSuccessfully"));
         setIsProcessing(false);
         setOpenUpdateMemberDialog(false);
         getContestMembers();
@@ -153,7 +146,7 @@ export default function ContestManagerListMember(props) {
       {
         onError: () => {
           setIsProcessing(false);
-          errorNoti("An error happened");
+          errorNoti(t("common:error"));
         },
         401: () => {},
       },

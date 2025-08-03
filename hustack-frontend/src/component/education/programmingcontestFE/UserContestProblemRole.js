@@ -1,46 +1,43 @@
-import SearchIcon from "@mui/icons-material/Search";
-import { Button, InputBase, Tooltip } from "@mui/material";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import { request } from "api";
-import StandardTable from "component/table/StandardTable";
-import withScreenSecurity from "component/withScreenSecurity";
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { PROBLEM_ROLE } from "utils/constants";
-import { errorNoti, successNoti } from "utils/notification";
-import { Search, SearchIconWrapper } from "./lib";
 import {
   Autocomplete,
   Avatar,
+  Divider,
+  IconButton,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Popper,
+  Paper,
   Stack,
   TextField,
-  IconButton,
+  Tooltip
 } from "@mui/material";
+import {request} from "api";
+import StandardTable from "component/table/StandardTable";
+import withScreenSecurity from "component/withScreenSecurity";
+import {useEffect, useMemo, useState} from "react";
+import {useHistory, useParams} from "react-router-dom";
+import {PROBLEM_ROLE} from "utils/constants";
+import {errorNoti, successNoti} from "utils/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { autocompleteClasses } from "@mui/material/Autocomplete";
-import { styled } from "@mui/material/styles";
-import { debounce } from "@mui/material/utils";
-import { makeStyles } from "@material-ui/core/styles";
+import {debounce, isEmpty, trim} from "lodash";
+import {makeStyles} from "@material-ui/core/styles";
 import PrimaryButton from "component/button/PrimaryButton";
 import StyledSelect from "component/select/StyledSelect";
-import { Group } from "@mui/icons-material";
-import { isEmpty, trim } from "lodash";
-import { stringAvatar, StyledAutocompletePopper } from "./AddMember2Contest";
-import { useTranslation } from "react-i18next";
+import {Group, Share} from "@mui/icons-material";
+import {stringAvatar, StyledAutocompletePopper} from "./AddMember2Contest";
+import {useTranslation} from "react-i18next";
+import ProgrammingContestLayout from "./ProgrammingContestLayout";
 
 const useStyles = makeStyles((theme) => ({
-  btn: { margin: "4px 8px" },
+  btn: {margin: "4px 8px"},
 }));
 
 function UserContestProblemRole() {
-  const { t } = useTranslation(["common", "validation"]);
-  const roles = [
+  const {t} = useTranslation(["common", "validation"]);
+  const {problemId} = useParams();
+  const history = useHistory();
+
+  const roles = useMemo(() => [
     {
       label: t("common:owner"),
       value: PROBLEM_ROLE.OWNER,
@@ -53,22 +50,35 @@ function UserContestProblemRole() {
       label: t("common:viewer"),
       value: PROBLEM_ROLE.VIEWER,
     },
-  ];
+  ], [t]);
 
-  const { problemId } = useParams();
   const classes = useStyles();
   const [userRoles, setUserRoles] = useState([]);
   const [value, setValue] = useState([]);
   const [options, setOptions] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [selectedRole, setSelectedRole] = useState(roles[1].value);
+  const [isLoading, setIsLoading] = useState(false);
+  const DEFAULT_ROLE = roles[1].value;
+  const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE);
+
+  const handleBack = () => {
+    history.push("/programming-contest/manager-view-problem-detail/" + problemId);
+  };
+
+  const handleError = (e) => {
+    if (e.response && e.response.status === 403) {
+      history.push("/programming-contest/list-problems");
+    } else {
+      errorNoti(t("common:error"), 3000);
+    }
+  };
 
   const delayedSearch = useMemo(
     () =>
-      debounce(({ keyword, excludeUsers, excludeGroups }, callback) => {
+      debounce(({keyword, excludeUsers, excludeGroups}, callback) => {
         Promise.all([
-          searchUsers({ keyword, excludeUsers, pageSize: 10, page: 1 }),
-          searchGroups({ keyword, excludeGroups, pageSize: 10, page: 1 }),
+          searchUsers({keyword, excludeUsers, pageSize: 10, page: 1}),
+          searchGroups({keyword, excludeGroups, pageSize: 10, page: 1}),
         ]).then(([userResults, groupResults]) => {
           callback([...userResults, ...groupResults]);
         });
@@ -78,9 +88,8 @@ function UserContestProblemRole() {
 
   const columnUserRoles = [
     {
-      title: t("common:member"),
+      title: t("common:user"),
       field: "userLoginId",
-      cellStyle: { width: 300 },
       render: (rowData) => (
         <Stack direction="row" alignItems="center">
           <ListItemAvatar>
@@ -99,34 +108,37 @@ function UserContestProblemRole() {
     {
       title: t("common:role"),
       field: "roleId",
-      render: (rowData) => 
+      render: (rowData) =>
         roles.find((role) => role.value === rowData.roleId)?.label || rowData.roleId,
     },
     {
       title: t("common:action"),
       sorting: false,
-      cellStyle: { 
+      cellStyle: {
         width: 50,
-        textAlign: "center"  
-      }, 
+        textAlign: "center"
+      },
       headerStyle: {
-        textAlign: "center"   
+        textAlign: "center"
       },
       render: (row) => (
-        <Tooltip title={t('common:delete')}>
-          <IconButton
-            onClick={() => handleRemove(row.userLoginId, row.roleId)}
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        row.roleId !== PROBLEM_ROLE.OWNER && (
+          <Tooltip title={t('common:revoke')}>
+            <IconButton
+              aria-label={t('common:revokePermission')}
+              onClick={() => handleRemove(row.userLoginId, row.roleId)}
+              color="error"
+            >
+              <DeleteIcon/>
+            </IconButton>
+          </Tooltip>
+        )
       ),
     },
   ];
 
   function handleRemove(userId, roleId) {
-    let body = {
+    const body = {
       problemId: problemId,
       userId: userId,
       roleId: roleId,
@@ -146,15 +158,14 @@ function UserContestProblemRole() {
         getUserRoles();
       },
       {
-        500: () => {
-          errorNoti("Server error", 3000);
-        },
+        onError: handleError,
       },
       body
-    ).then();
+    );
   }
 
   function onAddMembers() {
+    setIsLoading(true);
     const userIds = value
       .filter((item) => item.type === "user")
       .map((user) => user.id);
@@ -173,6 +184,7 @@ function UserContestProblemRole() {
       "post",
       "/problems/users/role",
       (res) => {
+        setIsLoading(false);
         if (groupIds.length > 0) {
           successNoti(t("common:addGroupRoleSuccess"), 3000);
         } else {
@@ -183,76 +195,78 @@ function UserContestProblemRole() {
       },
       {
         400: (err) => {
+          setIsLoading(false);
           if (groupIds.length > 0) {
-            errorNoti(t("common:addGroupRoleError", { message: err?.response?.data?.message || t("common:unknownError") }), 3000);
+            errorNoti(t("common:addGroupRoleError", {message: err?.response?.data?.message || t("common:error")}), 3000);
           } else {
-            errorNoti("Bad request: " + (err?.response?.data?.message || "Unknown error"), 3000);
+            errorNoti(t("common:badRequest") + ": " + (err?.response?.data?.message || t("common:error")), 3000);
           }
         },
-        500: () => {
-          errorNoti(t("common:serverError"), 3000);
+        onError: (e) => {
+          setIsLoading(false);
+          handleError(e);
         },
       },
       body
-    ).then();
-  } 
+    );
+  }
 
   function getUserRoles() {
     request("get", "/problems/" + problemId + "/users/role", (res) => {
       setUserRoles(res.data);
-    }).then();
-  }
-
-  function searchUsers({ keyword, excludeUsers, pageSize, page }) {
-    return new Promise((resolve) => {
-      request(
-        "get",
-        `/users?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${
-          excludeUsers
-            ? excludeUsers.map((id) => "&exclude=" + id).join("")
-            : ""
-        }`,
-        (res) => {
-          const data = res.data.content.map((e) => {
-            const user = {
-              id: e.userLoginId,
-              name: `${e.firstName || ""} ${e.lastName || ""}`,
-              type: "user",
-            };
-            if (isEmpty(trim(user.name))) {
-              user.name = "Anonymous";
-            }
-            return user;
-          });
-          resolve(data);
-        }
-      );
+    }, {
+      onError: handleError,
     });
   }
 
-  function searchGroups({ keyword, excludeGroups, pageSize, page }) {
+  const searchEntities = (type, {keyword, excludeIds, pageSize, page}) => {
+    const endpoint = type === 'user' ? 'users' : 'groups';
+    const excludeParam = excludeIds ? excludeIds.map((id) => "&exclude=" + id).join("") : "";
+
     return new Promise((resolve) => {
       request(
         "get",
-        `/groups?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${
-          excludeGroups
-            ? excludeGroups.map((id) => "&exclude=" + id).join("")
-            : ""
-        }`,
+        `/${endpoint}?size=${pageSize}&page=${page - 1}&keyword=${encodeURIComponent(keyword)}${excludeParam}`,
         (res) => {
-          const data = res.data.content
-            .filter((e) => e.memberCount > 0)
-            .map((e) => ({
-              id: e.id,
-              name: e.name,
-              memberCount: e.memberCount,
-              description: e.description,
-              type: "group",
-            }));
+          let data;
+          if (type === 'user') {
+            data = res.data.content.map((e) => {
+              const user = {
+                id: e.userLoginId,
+                name: `${e.firstName || ""} ${e.lastName || ""}`,
+                type: "user",
+              };
+              if (isEmpty(trim(user.name))) {
+                user.name = "Anonymous";
+              }
+              return user;
+            });
+          } else {
+            data = res.data.content
+              .filter((e) => e.memberCount > 0)
+              .map((e) => ({
+                id: e.id,
+                name: e.name,
+                memberCount: e.memberCount,
+                description: e.description,
+                type: "group",
+              }));
+          }
           resolve(data);
+        },
+        {
+          onError: handleError,
         }
       );
     });
+  };
+
+  function searchUsers({keyword, excludeUsers, pageSize, page}) {
+    return searchEntities('user', {keyword, excludeIds: excludeUsers, pageSize, page});
+  }
+
+  function searchGroups({keyword, excludeGroups, pageSize, page}) {
+    return searchEntities('group', {keyword, excludeIds: excludeGroups, pageSize, page});
   }
 
   const getGroupDisplayName = (group) => {
@@ -275,7 +289,7 @@ function UserContestProblemRole() {
     const excludeUsers = value.filter((item) => item.type === "user").map((item) => item.id);
     const excludeGroups = value.filter((item) => item.type === "group").map((item) => item.id);
 
-    delayedSearch({ keyword, excludeUsers, excludeGroups }, (results) => {
+    delayedSearch({keyword, excludeUsers, excludeGroups}, (results) => {
       if (active) {
         setOptions(results);
       }
@@ -287,18 +301,10 @@ function UserContestProblemRole() {
   }, [value, keyword, delayedSearch]);
 
   return (
-    <div>
-      <Stack
-        spacing={3}
-        alignItems={"flex-start"}
-        sx={{
-          p: 2,
-          mb: 2,
-          backgroundColor: "#ffffff",
-          boxShadow: 1,
-          borderRadius: 2,
-        }}
-      >
+    <ProgrammingContestLayout
+      title={t("common:problemSharing")}
+      onBack={handleBack}>
+      <Stack spacing={2} alignItems={"flex-start"} sx={{mt: 1}}>
         <Autocomplete
           id="add-members"
           multiple
@@ -308,7 +314,7 @@ function UserContestProblemRole() {
           getOptionLabel={(option) =>
             option.type === "group" ? getGroupDisplayName(option) : option.name
           }
-          filterOptions={(x) => x} 
+          filterOptions={(x) => x}
           options={options}
           value={value}
           noOptionsText="No matches found"
@@ -330,11 +336,11 @@ function UserContestProblemRole() {
               }}
             />
           )}
-          renderOption={(props, option, { selected }) => (
+          renderOption={(props, option, {selected}) => (
             <ListItem
               {...props}
               key={option.id}
-              sx={{ p: 0, color: selected && option.type === "group" ? "#1976d2" : "inherit" }}
+              sx={{p: 0, color: selected && option.type === "group" ? "#1976d2" : "inherit"}}
             >
               {option.type === "user" ? (
                 <ListItemAvatar>
@@ -345,7 +351,7 @@ function UserContestProblemRole() {
                 </ListItemAvatar>
               ) : (
                 <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: "#1976d2" }}>
+                  <Avatar sx={{bgcolor: "#1976d2"}}>
                     <Group/>
                   </Avatar>
                 </ListItemAvatar>
@@ -364,30 +370,30 @@ function UserContestProblemRole() {
             </ListItem>
           )}
         />
-        <StyledSelect
-          required
-          key={"Role"}
-          label={t("common:role")}
-          options={roles.filter(role => role.value !== PROBLEM_ROLE.OWNER)}
-          value={selectedRole}
-          onChange={(e) => {
-            setSelectedRole(e.target.value);
-          }}
-        />
-        <Stack direction={"row"} spacing={2}>
+        <Stack direction={"row"} spacing={2} alignItems={"center"}>
+          <StyledSelect
+            required
+            key={"Role"}
+            label={t("common:role")}
+            options={roles.filter(role => role.value !== PROBLEM_ROLE.OWNER)}
+            value={selectedRole}
+            onChange={(e) => {
+              setSelectedRole(e.target.value);
+            }}
+          />
           <PrimaryButton
-            disabled={value.length === 0}
+            disabled={value.length === 0 || isLoading}
             className={classes.btn}
             onClick={onAddMembers}
+            startIcon={<Share/>}
           >
-            {t("common:share")}
+            {isLoading ? t("common:sharing") : t("common:share")}
           </PrimaryButton>
         </Stack>
       </Stack>
 
-      <Box sx={{ margin: "1.5rem" }} />
+      <Divider sx={{margin: "24px 0 16px"}}/>
       <StandardTable
-        title={t("common:userAndRoles")}
         columns={columnUserRoles}
         data={userRoles}
         hideCommandBar
@@ -397,8 +403,11 @@ function UserContestProblemRole() {
           search: true,
           sorting: true,
         }}
+        components={{
+          Container: (props) => <Paper {...props} elevation={0}/>,
+        }}
       />
-    </div>
+    </ProgrammingContestLayout>
   );
 }
 

@@ -321,7 +321,7 @@ public class SubmissionController {
         HttpServletRequest request,
         Principal principal,
         @RequestPart("dto") ModelContestSubmitProgramViaUploadFile model,
-        @RequestPart(value = "file") MultipartFile file
+        @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         logStudentSubmitToAContest(principal.getName(), model.getContestId(), model);
         model.setUserId(principal.getName());
