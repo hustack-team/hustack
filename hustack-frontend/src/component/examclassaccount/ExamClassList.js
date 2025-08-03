@@ -14,7 +14,7 @@ function ExamClassList() {
   const [examClasses, setExamClasses] = useState([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const {t} = useTranslation("common");
-  
+
   const columns = [
     {
       title: t("name"),
@@ -67,7 +67,7 @@ function ExamClassList() {
           }}
         />
       </Paper>
-      
+
       <ExamClassCreate
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}

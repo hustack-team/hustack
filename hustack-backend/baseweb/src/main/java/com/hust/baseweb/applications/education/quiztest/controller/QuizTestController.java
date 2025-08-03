@@ -416,76 +416,6 @@ public class QuizTestController {
         return ResponseEntity.ok().body(listQuizTest);
     }
 
-//    @GetMapping("/get-active-quiz-of-session-for-participant/{sessionId}")
-//    public ResponseEntity<?> getActiveQuizTestOfSession(
-//        Principal principal, @PathVariable UUID sessionId
-//    ) {
-//        UserLogin user = userService.findById(principal.getName());
-//
-//        List<EduQuizTestModel> listQuizTest = quizTestService.getListOpenQuizTestOfSession(sessionId,
-//                                                                                           user.getUserLoginId());
-//        if (listQuizTest == null || listQuizTest.size() == 0) {
-//            log.info("getActiveQuizTestOfSession, listQuizTest null or size = 0 -> RETURN");
-//            return ResponseEntity.ok().body(new QuizGroupTestDetailModel());
-//        }
-//
-//        QuizGroupTestDetailModel testDetail = null;
-//        //for(EduQuizTestModel qt: listQuizTest){
-//        // TO BE IMPROVED
-//        EduQuizTestModel qt = listQuizTest.get(0);
-//        String testID = qt.getTestId();
-//            /*
-//            EduQuizTest eduQuizTest = quizTestService.getQuizTestById(testID);
-//            Date startDateTime = eduQuizTest.getScheduleDatetime();
-//            Date currentDate = new Date();
-//            int timeTest = ((int) (currentDate.getTime() - startDateTime.getTime())) / (60 * 1000); //minutes
-//            log.info("getTestGroupQuestionByUser, current = " + currentDate.toString() +
-//                     " scheduleDate = " + startDateTime.toString() + " timeTest = " + timeTest);
-//
-//            if (timeTest > eduQuizTest.getDuration() || timeTest < 0) {// out-of-allowed date-time
-//                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(null);
-//            }
-//            */
-//        log.info("getActiveQuizTestOfSession, get TestId = " + testID);
-//        EduTestQuizParticipant testParticipant = eduTestQuizParticipationRepo
-//            .findEduTestQuizParticipantByParticipantUserLoginIdAndAndTestId(
-//                principal.getName(),
-//                testID);
-//
-//        if (testParticipant == null ||
-//            (!testParticipant.getStatusId().equals(EduTestQuizParticipant.STATUS_APPROVED))) {
-//            log.info("getActiveQuizTestOfSession, participant to testID " + testID + " is NULL -> return");
-//            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
-//        }
-//
-//
-//        testDetail = eduQuizTestGroupService.getTestGroupQuestionDetail(principal, testID);
-//
-//        // check if user has already done the quiz question, then return null
-//        // in this context, each user can only take quiz once
-//        Set<String> disableQuestionIds = new HashSet();
-//        for (String questionId : testDetail.getParticipationExecutionChoice().keySet()) {
-//            List<UUID> choiceAnswers = testDetail.getParticipationExecutionChoice().get(questionId);
-//            if (choiceAnswers.size() > 0) {
-//                // disable this question, do not return
-//                disableQuestionIds.add(questionId);
-//            }
-//        }
-//        for (String qid : disableQuestionIds) {
-//            testDetail.getParticipationExecutionChoice().remove(qid);
-//            //testDetail.getListQuestion().remove(qid);
-//            for (QuizQuestionDetailModel q : testDetail.getListQuestion()) {
-//                if (q.getQuestionId().toString().equals(qid)) {
-//                    testDetail.getListQuestion().remove(q);
-//                    break;
-//                }
-//            }
-//            log.info("getActiveQuizTestOfSession, question  " + qid + " has already been answered, remove this");
-//        }
-//        return ResponseEntity.ok().body(testDetail);
-//    }
-
-
     @Secured({"ROLE_TEACHER"})
     @GetMapping("/get-all-student-in-test")
     public ResponseEntity<?> getAllStudentInTest(
@@ -580,13 +510,6 @@ public class QuizTestController {
 
 //    @GetMapping("/get-list-interactive-quiz-by-session/{sessionId}")
 //    public ResponseEntity<?> getListInteractiveQuizBySession(Principal principal, @PathVariable UUID sessionId) {
-//        List<InteractiveQuiz> interactiveQuizs = interactiveQuizRepo.findAllBySessionId(sessionId);
-//        return ResponseEntity.ok().body(interactiveQuizs);
-//
-//    }
-//
-//    @GetMapping("/get-list-course-interactive-quiz-by-session/{sessionId}")
-//    public ResponseEntity<?> getListCourseInteractiveQuizBySession(Principal principal, @PathVariable UUID sessionId) {
 //        List<InteractiveQuiz> interactiveQuizs = interactiveQuizRepo.findAllBySessionId(sessionId);
 //        return ResponseEntity.ok().body(interactiveQuizs);
 //

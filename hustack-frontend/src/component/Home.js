@@ -45,7 +45,7 @@ export default function Home() {
               <InfoCard
                 icon={CodeBracket}
                 iconColor="#0d2d80"
-                mainTitle="1500+"
+                mainTitle="1 500+"
                 subTitle="Problems"
               />
             }
@@ -60,7 +60,7 @@ export default function Home() {
               <InfoCard
                 icon={AcademicCap}
                 iconColor="#1976d2"
-                mainTitle="1000+"
+                mainTitle="1 000+"
                 subTitle="Contests"
               />
             }

@@ -607,13 +607,6 @@ public class QuizController {
         return ResponseEntity.ok().body(quizChoiceAnswers);
     }
 
-//    @GetMapping("/get-quiz-detail/{questionId}")
-//    public ResponseEntity<?> getQuizDetail(Principal principal, @PathVariable UUID questionId) {
-//        QuizQuestionDetailModel quizQuestion = quizQuestionService.findQuizDetail(questionId);
-//
-//        return ResponseEntity.ok().body(quizQuestion);
-//    }
-
     @PostMapping("/quiz-choose_answer")
     public ResponseEntity<?> quizChooseAnswer(
         @CurrentSecurityContext(expression = "authentication.name") String userId,
@@ -625,15 +618,6 @@ public class QuizController {
 
         return ResponseEntity.ok().body(ans);
     }
-
-//    @PostMapping("/remove-choice-answer-of-quiz")
-//    public ResponseEntity<?> removeChoiceAnswerOfQuiz(
-//        Principal principal,
-//        @RequestBody RemoveChoiceAnswerInputModel input
-//    ) {
-//        QuizChoiceAnswer quizChoiceAnswer = quizChoiceAnswerService.delete(input.getChoiceAnswerId());
-//        return ResponseEntity.ok().body(quizChoiceAnswer);
-//    }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/get-users-granted-to-quiz-question/{questionId}")

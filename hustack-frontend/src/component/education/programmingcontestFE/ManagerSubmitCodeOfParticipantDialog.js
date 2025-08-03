@@ -7,7 +7,7 @@ import ManagerSubmitCodeOfParticipant from "./ManagerSubmitCodeOfParticipant";
 export default function ManagerSubmitCodeOfParticipantDialog(props) {
   const { contestId, onClose, open } = props;
   const {t} = useTranslation("common");
-  
+
   function handleClick() {
     onClose();
   }

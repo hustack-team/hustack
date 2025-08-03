@@ -6,9 +6,6 @@ import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.
 import com.hust.baseweb.applications.programmingcontest.entity.TagEntity;
 import com.hust.baseweb.applications.programmingcontest.exception.MiniLeetCodeException;
 import com.hust.baseweb.applications.programmingcontest.model.*;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.ContestProblemModelResponse;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.GetSubmissionsOfParticipantModelInput;
-import com.hust.baseweb.applications.programmingcontest.model.externalapi.SubmissionModelResponse;
 import com.hust.baseweb.applications.programmingcontest.repo.ProblemService;
 import com.hust.baseweb.applications.programmingcontest.service.ProblemTestCaseService;
 import com.hust.baseweb.model.ProblemFilter;
