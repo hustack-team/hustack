@@ -1,5 +1,5 @@
 import ReplayIcon from "@mui/icons-material/Replay";
-import {Box, Button, Checkbox, LinearProgress, Paper, Stack, Typography} from "@mui/material";
+import {Box, Checkbox, LinearProgress, Paper, Stack, Typography} from "@mui/material";
 import {request} from "api";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
 import StandardTable from "component/table/StandardTable";
@@ -13,9 +13,10 @@ import {localeOption} from "../../../utils/NumberFormat";
 import {errorNoti, successNoti} from "utils/notification";
 import CustomizedDialogs from "component/dialog/CustomizedDialogs";
 import PrimaryButton from "component/button/PrimaryButton";
+import TertiaryButton from "component/button/TertiaryButton";
 
 const StudentViewSubmission = forwardRef((props, ref) => {
-  const { showTitle = false } = props;
+  const {showTitle = false} = props;
   const {t} = useTranslation(
     ["education/programmingcontest/studentviewcontestdetail", "education/programmingcontest/testcase", "common"]
   );
@@ -342,11 +343,12 @@ const StudentViewSubmission = forwardRef((props, ref) => {
         }
         actions={
           <>
-            <Button
+            <TertiaryButton
+              color={'inherit'}
               onClick={handleCancelSwitch}
             >
               {t("common:cancel")}
-            </Button>
+            </TertiaryButton>
             <PrimaryButton
               onClick={handleConfirmSwitch}
             >

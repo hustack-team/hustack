@@ -49,7 +49,7 @@ public class CreateProblemDTO {
 
     String scoreEvaluationType;
 
-    String[] fileId;
+//    String[] fileId;
 
     Integer[] tagIds;
 

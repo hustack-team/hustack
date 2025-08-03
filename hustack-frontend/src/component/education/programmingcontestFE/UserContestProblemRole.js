@@ -302,7 +302,7 @@ function UserContestProblemRole() {
 
   return (
     <ProgrammingContestLayout
-      title={t("common:problemPermissionManagement")}
+      title={t("common:problemSharing")}
       onBack={handleBack}>
       <Stack spacing={2} alignItems={"flex-start"} sx={{mt: 1}}>
         <Autocomplete

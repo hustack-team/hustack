@@ -1,6 +1,6 @@
 import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import SecurityIcon from '@mui/icons-material/Security';
+import ShareIcon from '@mui/icons-material/Share';
 
 import {Box, Collapse, Grid, IconButton, LinearProgress, Stack, TextField, Tooltip, Typography,} from "@mui/material";
 import {request, saveFile} from "api";
@@ -33,22 +33,16 @@ import {dracula, github} from 'react-code-blocks';
 import {grey} from '@mui/material/colors';
 import RotatingIconButton from "../../common/RotatingIconButton";
 import {errorNoti} from "utils/notification";
-import {getLevels, getStatuses} from "./CreateProblem";
+import {getLevels, getStatuses, PROGRAMMING_LANGUAGES} from "./CreateProblem";
 import HustCopyCodeBlock from "../../common/HustCopyCodeBlock";
 import CustomizedDialogs from "../../dialog/CustomizedDialogs";
 import {makeStyles} from "@material-ui/core/styles";
 import {useForm} from "react-hook-form";
 
-
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
     minWidth: 500
   },
-}));
-
-const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
-  label: key,
-  value: COMPUTER_LANGUAGES[key],
 }));
 
 function ManagerViewProblemDetailV2() {
@@ -129,11 +123,10 @@ function ManagerViewProblemDetailV2() {
         isCustomEvaluated: data.scoreEvaluationType === CUSTOM_EVALUATION,
         description: data.problemDescription,
         categoryId: data.categoryId || 0,
-        // Ensure roles is always an array
         roles: data.roles || [],
       });
 
-      if (data.categoryId > 0) {
+      if (data.categoryId === 1) {
         const newBlockCodes = Object.fromEntries(
           PROGRAMMING_LANGUAGES.map(({value}) => [value, []])
         );
@@ -147,12 +140,14 @@ function ManagerViewProblemDetailV2() {
             });
           }
         });
+
+        // Sort blocks by seq for each language
         Object.keys(newBlockCodes).forEach((lang) => {
           newBlockCodes[lang].sort((a, b) => a.seq - b.seq);
         });
         setBlockCodes(newBlockCodes);
 
-        // Select first language with block codes
+        // Select the first language with block codes
         const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
           newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
         );
@@ -163,7 +158,11 @@ function ManagerViewProblemDetailV2() {
     }, {
       onError: (e) => {
         setLoading(false);
-        errorNoti(t("common:error"), 3000);
+        if (e?.response?.status === 403) {
+          history.push("/programming-contest/list-problems");
+        } else {
+          errorNoti(t("common:error"), 3000);
+        }
       },
     });
   }, [problemId]);
@@ -197,13 +196,15 @@ function ManagerViewProblemDetailV2() {
       "/teachers/problems/clone",
       (res) => {
         handleCloneDialogClose();
-        history.push("/programming-contest/list-problems");
+        history.push(`/programming-contest/manager-view-problem-detail/${data.problemId}`);
       },
       {
         onError: (error) => {
-          if (error?.response?.status !== 400 && 
-              error?.response?.status !== 404 && 
-              error?.response?.status !== 409) {
+          if (error?.response?.status === 403) {
+            history.push("/programming-contest/list-problems");
+          } else if (error?.response?.status !== 400 &&
+            error?.response?.status !== 404 &&
+            error?.response?.status !== 409) {
             errorNoti(t("common:error"), 3000);
           }
         },
@@ -225,13 +226,9 @@ function ManagerViewProblemDetailV2() {
     setSelectedLanguage(newValue);
   };
 
-  const handleToggleBlockDisplayMode = () => {
-    setBlockDisplayMode((prev) => (prev === "individual" ? "combined" : "individual"));
-  };
-
   const getCombinedBlockCode = () => {
     const blocks = blockCodes[selectedLanguage] || [];
-    return blocks.map((block, index) => `// Block ${index + 1}\n${block.code}`).join('\n\n');
+    return blocks.map((block) => block.code).join('\n');
   };
 
   const handleDownloadFile = (file) => {
@@ -243,8 +240,13 @@ function ManagerViewProblemDetailV2() {
         saveFile(fileName, res.data);
       },
       {
-        403: () => errorNoti(t('common:noPermissionToDownload')),
-        onError: () => errorNoti(t('common:error')),
+        onError: (error) => {
+          if (error?.response?.status === 403) {
+            history.push("/programming-contest/list-problems");
+          } else {
+            errorNoti(t('common:error'), 3000);
+          }
+        },
       },
       null,
       {responseType: "blob"}
@@ -309,9 +311,9 @@ function ManagerViewProblemDetailV2() {
                   problemId
                 );
               }}
-              startIcon={<SecurityIcon/>}
+              startIcon={<ShareIcon/>}
             >
-              {t("manageRole")}
+              {t("common:share")}
             </TertiaryButton>
           )}
         </Stack>

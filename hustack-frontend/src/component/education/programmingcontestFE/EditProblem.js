@@ -12,7 +12,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {debounce} from "lodash";
+import {debounce, isEmpty, trim} from "lodash";
 import {extractErrorMessage, request, saveFile} from "../../../api";
 import withScreenSecurity from "component/withScreenSecurity";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
@@ -39,7 +39,7 @@ import {getAllTags} from "./service/TagService";
 import ProgrammingContestLayout from "./ProgrammingContestLayout";
 import {useHistory} from "react-router-dom";
 import StyledSelect from "../../select/StyledSelect";
-import {getLevels, getPublicOptions, getStatuses} from "./CreateProblem";
+import {getLevels, getPublicOptions, getStatuses, PROGRAMMING_LANGUAGES} from "./CreateProblem";
 import FilterByTag from "../../table/FilterByTag";
 import TertiaryButton from "../../button/TertiaryButton";
 import AddIcon from "@mui/icons-material/Add";
@@ -58,12 +58,6 @@ import {dracula, github} from 'react-code-blocks';
 import {grey} from '@mui/material/colors';
 import RotatingIconButton from "../../common/RotatingIconButton";
 
-const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
-  label: key,
-  value: COMPUTER_LANGUAGES[key],
-}));
-
-
 function EditProblem() {
   const history = useHistory();
   const {problemId} = useParams();
@@ -78,7 +72,7 @@ function EditProblem() {
 
   const [problemName, setProblemName] = useState("");
   const [description, setDescription] = useState("");
-  const [solution, setSolution] = useState("");
+  // const [solution, setSolution] = useState("");
   const [timeLimitCPP, setTimeLimitCPP] = useState('');
   const [timeLimitJAVA, setTimeLimitJAVA] = useState('');
   const [timeLimitPYTHON, setTimeLimitPYTHON] = useState('');
@@ -99,7 +93,6 @@ function EditProblem() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [fetchedImageArray, setFetchedImageArray] = useState([]);
   const [attachmentFiles, setAttachmentFiles] = useState([]);
-  const [dropzoneFiles, setDropzoneFiles] = useState([]);
   const [removedFilesId, setRemovedFileIds] = useState([]);
   const [status, setStatus] = useState('');
   const [isOwner, setIsOwner] = useState(false);
@@ -125,21 +118,18 @@ function EditProblem() {
   };
 
   const handleAttachmentFiles = (files) => {
-    console.log('handleAttachmentFiles called with:', files);
     setAttachmentFiles(files);
   };
 
   const handleDeleteImageAttachment = async (fileId) => {
-    console.log('handleDeleteImageAttachment called with fileId:', fileId);
     const fileToDelete = fetchedImageArray.find(file => file.id === fileId);
-    console.log('fileToDelete:', fileToDelete);
 
     // Only handle existing files from API
     if (fileToDelete) {
       setFetchedImageArray(
         fetchedImageArray.filter((file) => file.id !== fileId)
       );
-      setRemovedFileIds([...removedFilesId, fileToDelete.id]); // Gửi fileId thay vì fileName
+      setRemovedFileIds([...removedFilesId, fileToDelete.id]);
     }
   };
 
@@ -192,12 +182,21 @@ function EditProblem() {
     );
   };
 
+  const hasSpecialCharacterProblemName = (value) => {
+    return !new RegExp(/^[0-9a-zA-Z ]*$/).test(value);
+  };
+
   const validateSubmit = () => {
-    if (problemName === "") {
-      errorNoti(
-        t("validation:missingField", {fieldName: t("problemName")}),
-        3000
-      );
+    if (isEmpty(trim(problemName))) {
+      errorNoti(t("validation:missingField", {fieldName: t("problemName")}), 3000);
+      return false;
+    }
+    if (hasSpecialCharacterProblemName(problemName)) {
+      errorNoti(t("common:invalidCharactersInProblemName"), 3000);
+      return false;
+    }
+    if (problemName.length > 100) {
+      errorNoti(t("validation:maxLength", {fieldName: t("problemName"), max: 100}), 3000);
       return false;
     }
     if (timeLimitCPP < 1 || timeLimitJAVA < 1 || timeLimitPYTHON < 1 ||
@@ -234,14 +233,14 @@ function EditProblem() {
     return true;
   };
 
-  const handleCopyAllCode = async () => {
+  const handleCopyAllCode =  () => {
     const blocks = blockCodes[selectedLanguage] || [];
     if (blocks.length === 0) {
       errorNoti(t("common:noBlockCodesToCopy"), 3000);
       return;
     }
     const allCode = blocks.map(block => block.code).join('\n');
-    await navigator.clipboard.writeText(allCode).then(() => {
+     navigator.clipboard.writeText(allCode).then(() => {
       successNoti(t('common:copySuccess'), 2000);
     });
     ;
@@ -258,8 +257,7 @@ function EditProblem() {
       formattedBlockCodes = Object.keys(blockCodes)
         .filter((language) => blockCodes[language].length > 0)
         .flatMap((language) =>
-          blockCodes[language].map((block
-            , index) => ({
+          blockCodes[language].map((block) => ({
             code: block.code,
             forStudent: block.forStudent ? 1 : 0,
             language: language,
@@ -269,9 +267,7 @@ function EditProblem() {
 
     // Get new files (without id) and removed file ids
     const newFiles = attachmentFiles;
-    const removedFileIds = removedFilesId;
-    // Backend sẽ tự động tạo unique filename, không cần UUID ở frontend
-    const fileIds = newFiles.map((file) => file.name);
+    // const fileIds = newFiles.map((file) => file.name);
 
     const body = {
       problemName: problemName,
@@ -282,15 +278,15 @@ function EditProblem() {
       levelId: levelId,
       memoryLimit: memoryLimit,
       correctSolutionLanguage: languageSolution,
-      solution: solution,
+      // solution: solution,
       correctSolutionSourceCode: codeSolution,
       // isPreloadCode: isPreloadCode, // Preload Code functionality - DISABLED
       // preloadCode: preloadCode, // Preload Code functionality - DISABLED
       solutionChecker: solutionChecker,
       solutionCheckerLanguage: solutionCheckerLanguage,
       isPublic: isPublic === 'Y',
-      removedFilesId: removedFileIds,
-      fileId: fileIds, // Add fileId array
+      removedFilesId: removedFilesId,
+      // fileId: fileIds,
       scoreEvaluationType: isCustomEvaluated ? CUSTOM_EVALUATION : NORMAL_EVALUATION,
       tagIds: tagIds,
       status: status,
@@ -367,11 +363,7 @@ function EditProblem() {
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
       [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
-      const updatedBlocks = newBlocks.map((block, i) => ({
-        ...block,
-        seq: i + 1,
-      }));
-      return {...prev, [selectedLanguage]: updatedBlocks};
+      return {...prev, [selectedLanguage]: newBlocks};
     });
   }, [canEditBlocks, selectedLanguage]);
 
@@ -384,11 +376,7 @@ function EditProblem() {
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
       [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
-      const updatedBlocks = newBlocks.map((block, i) => ({
-        ...block,
-        seq: i + 1,
-      }));
-      return {...prev, [selectedLanguage]: updatedBlocks};
+      return {...prev, [selectedLanguage]: newBlocks};
     });
   }, [canEditBlocks, selectedLanguage, blockCodes]);
 
@@ -409,12 +397,11 @@ function EditProblem() {
       newBlocks.splice(index, 0, {
         code: null,
         forStudent: 0,
-        seq: index,
-        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        id: uuidv4()
       });
       return {
         ...prev,
-        [selectedLanguage]: newBlocks.map((block, i) => ({...block, seq: i + 1})),
+        [selectedLanguage]: newBlocks,
       };
     });
   };
@@ -429,12 +416,11 @@ function EditProblem() {
       newBlocks.splice(index + 1, 0, {
         code: null,
         forStudent: 0,
-        seq: index + 2,
-        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        id: uuidv4()
       });
       return {
         ...prev,
-        [selectedLanguage]: newBlocks.map((block, i) => ({...block, seq: i + 1})),
+        [selectedLanguage]: newBlocks,
       };
     });
   };
@@ -453,13 +439,11 @@ function EditProblem() {
           {
             code: null,
             forStudent: 0,
-            seq: prev[language].length + 1,
-            id: `${language}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+            id: uuidv4()
           },
         ],
       }));
     } catch (error) {
-      console.error("Error adding block code:", error);
       errorNoti(t("common:failedToAddBlockCode"), 3000);
     }
   };
@@ -478,7 +462,6 @@ function EditProblem() {
         ),
       }));
     } catch (error) {
-      console.error("Error updating code:", error);
       errorNoti(t("common:failedToUpdateCode"), 3000);
     }
   }, [canEditBlocks, selectedLanguage, t]);
@@ -497,7 +480,7 @@ function EditProblem() {
         );
         setSelectedLanguage(firstLanguageWithBlocks ? firstLanguageWithBlocks.value : COMPUTER_LANGUAGES.CPP17);
       }
-      // If disabling problem block, reset to CPP17
+      // If disabling the problem block, reset to CPP17
       if (!newValue && prev) {
         setSelectedLanguage(COMPUTER_LANGUAGES.CPP17);
       }
@@ -505,15 +488,10 @@ function EditProblem() {
     });
   };
 
-  const handleToggleBlockDisplayMode = () => {
-    setBlockDisplayMode((prev) => (prev === "individual" ? "combined" : "individual"));
-  };
-
   const getCombinedBlockCode = () => {
     if (!blockCodes[selectedLanguage]) return "";
 
     return blockCodes[selectedLanguage]
-      .sort((a, b) => a.seq - b.seq)
       .map(block => block.code)
       .join("\n");
   };
@@ -528,19 +506,6 @@ function EditProblem() {
 
         if (data.attachments && data.attachments.length !== 0) {
           setFetchedImageArray(data.attachments);
-        }
-
-        // Convert attachments to dropzone format
-        if (data.attachments && data.attachments.length > 0) {
-          const dropzoneFileObjects = data.attachments.map(attachment => ({
-            name: attachment.fileName,
-            id: attachment.id,
-            // Create a mock File object for dropzone
-            size: 0,
-            type: 'application/octet-stream',
-            lastModified: Date.now(),
-          }));
-          setDropzoneFiles(dropzoneFileObjects);
         }
 
         setProblemName(data.problemName);
@@ -564,10 +529,9 @@ function EditProblem() {
         setIsOwner(data.roles?.includes("OWNER"));
         setIsEditor(data.roles?.includes("EDITOR"));
         setCanEditBlocks(data.canEditBlocks || false);
-        setIsProblemBlock(data.categoryId > 0); // Initialize based on categoryId
+        setIsProblemBlock(data.categoryId === 1);
 
-        // If in view mode (canEditBlocks = false), select first language with block codes
-        if (!(data.canEditBlocks || false) && data.categoryId > 0) {
+        if (data.categoryId === 1) {
           const newBlockCodes = Object.fromEntries(
             PROGRAMMING_LANGUAGES.map(({value}) => [value, []])
           );
@@ -582,31 +546,13 @@ function EditProblem() {
             }
           });
 
-          const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
-            newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
-          );
-          if (firstLanguageWithBlocks) {
-            setSelectedLanguage(firstLanguageWithBlocks.value);
-          }
-        }
-
-        if (data.categoryId > 0) {
-          const newBlockCodes = Object.fromEntries(
-            PROGRAMMING_LANGUAGES.map(({value}) => [value, []])
-          );
-          data.blockCodes.forEach((block) => {
-            if (newBlockCodes[block.language]) {
-              newBlockCodes[block.language].push({
-                id: block.id,
-                code: block.code,
-                forStudent: block.forStudent,
-                seq: block.seq,
-              });
-            }
+          // Sort blocks by seq for each language
+          Object.keys(newBlockCodes).forEach(language => {
+            newBlockCodes[language].sort((a, b) => a.seq - b.seq);
           });
           setBlockCodes(newBlockCodes);
 
-          // Select first language with block codes, or CPP17 as default
+          // Select the first language with block codes, or CPP17 as default
           const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
             newBlockCodes[lang.value] && newBlockCodes[lang.value].length > 0
           );
@@ -629,17 +575,17 @@ function EditProblem() {
     getAllTags(handleGetTagsSuccess);
   }, []);
 
-  // Select appropriate tab when canEditBlocks changes
+  // Select the appropriate tab when canEditBlocks changes
   useEffect(() => {
     if (canEditBlocks !== undefined && isProblemBlock) {
       if (canEditBlocks) {
-        // In edit mode, select first language with block codes or CPP17 as default
+        // In edit mode, select the first language with block codes or CPP17 as default
         const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
           blockCodes[lang.value] && blockCodes[lang.value].length > 0
         );
         setSelectedLanguage(firstLanguageWithBlocks ? firstLanguageWithBlocks.value : COMPUTER_LANGUAGES.CPP17);
       } else {
-        // In view mode, select first language with block codes
+        // In view mode, select the first language with block codes
         const firstLanguageWithBlocks = PROGRAMMING_LANGUAGES.find(lang =>
           blockCodes[lang.value] && blockCodes[lang.value].length > 0
         );
@@ -908,7 +854,7 @@ function EditProblem() {
                             fontWeight: 500,
                           }}
                         >
-                          {block.seq || index + 1}
+                          {index + 1}
                         </Typography>
                       </Box>
                       <Box sx={{flex: 1}}>

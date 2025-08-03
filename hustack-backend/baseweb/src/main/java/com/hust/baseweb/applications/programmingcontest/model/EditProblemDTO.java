@@ -47,7 +47,7 @@ public class EditProblemDTO {
 
     String scoreEvaluationType;
 
-    String[] fileId;
+//    String[] fileId;
 
     Integer[] tagIds;
 

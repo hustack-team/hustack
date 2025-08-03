@@ -3,7 +3,6 @@ import {Alert, Box, Collapse, Divider, Stack, Typography} from "@mui/material";
 import {grey} from "@mui/material/colors";
 import {styled} from "@mui/material/styles";
 import HustCopyCodeBlock from "component/common/HustCopyCodeBlock";
-import HustModal from "component/common/HustModal";
 import {ContentState, EditorState} from "draft-js";
 import htmlToDraft from "html-to-draftjs";
 import React, {forwardRef, useEffect, useRef, useState} from "react";
@@ -88,25 +87,15 @@ export default function StudentViewProgrammingContestProblemDetail() {
   const {t} = useTranslation(["education/programmingcontest/problem", "common"]);
 
   const [problem, setProblem] = useState(null);
-  const [testCases, setTestCases] = useState([]);
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState(COMPUTER_LANGUAGES.CPP17);
   const [listLanguagesAllowed, setListLanguagesAllowed] = useState([]);
   const [codeSolution, setCodeSolution] = useState("");
-  const [submissionMode, setSubmissionMode] = useState(
-    SUBMISSION_MODE_SOURCE_CODE
-  );
+  const [submissionMode, setSubmissionMode] = useState(SUBMISSION_MODE_SOURCE_CODE);
   const [isSubmitCode, setIsSubmitCode] = useState(0);
-  const [openModalPreview, setOpenModalPreview] = useState(false);
-  const [selectedTestcase, setSelectedTestcase] = useState();
   const [isProcessing, setIsProcessing] = React.useState(false);
-  const [editorStateDescription, setEditorStateDescription] = useState(
-    EditorState.createEmpty()
-  );
-  const [sampleTestCase, setSampleTestCase] = useState(
-    null//EditorState.createEmpty()
-  );
-  const [fetchedImageArray, setFetchedImageArray] = useState([]);
+  const [editorStateDescription, setEditorStateDescription] = useState(EditorState.createEmpty());
+  const [sampleTestCase, setSampleTestCase] = useState(null);
   const [isProblemBlock, setIsProblemBlock] = useState(false);
   const [blockCodes, setBlockCodes] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState(null);
@@ -120,11 +109,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
   function onFileChange(event) {
     setFile(event.target.files[0]);
   }
-
-  const onInputChange = (event) => {
-    let name = event.target.value;
-    setFile(name);
-  };
 
   async function isFileBlank(file) {
     if (!file) return true;
@@ -145,10 +129,9 @@ export default function StudentViewProgrammingContestProblemDetail() {
     });
   }
 
-  const handleCopyAllBlocks = async () => {
+  const handleCopyAllBlocks = () => {
     const blocksForLanguage = blockCodes
-      .filter(block => block.language === selectedLanguage)
-      .sort((a, b) => a.seq - b.seq);
+      .filter(block => block.language === selectedLanguage);
 
     if (blocksForLanguage.length === 0) {
       errorNoti(t("common:noBlockCodesToCopy"), 3000);
@@ -156,13 +139,10 @@ export default function StudentViewProgrammingContestProblemDetail() {
     }
 
     const combinedCode = blocksForLanguage
-      .map(block => {
-        const code = block.forStudent ? (blockCodeInputs[block.id] || "") : block.code;
-        return code;
-      })
+      .map(block => block.forStudent ? (blockCodeInputs[block.id] || "") : block.code)
       .join("\n");
 
-    await navigator.clipboard.writeText(combinedCode).then(() => {
+    navigator.clipboard.writeText(combinedCode).then(() => {
       successNoti(t('common:copySuccess'), 2000);
     });
   };
@@ -180,7 +160,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
     if (isProblemBlock) {
       body.blockCodes = blockCodes
         .filter(block => block.language === selectedLanguage && block.forStudent)
-        .sort((a, b) => a.seq - b.seq)
         .map(block => ({
           id: block.id,
           code: blockCodeInputs[block.id],
@@ -264,7 +243,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         }
       },
       {
-        onError: (e) => {
+        onError: () => {
           setIsProcessing(false);
           setFile(null);
           if (inputRef.current) {
@@ -294,41 +273,46 @@ export default function StudentViewProgrammingContestProblemDetail() {
           setListLanguagesAllowed(res.listLanguagesAllowed);
         }
 
-        if (res.blockCodes && res.blockCodes.length > 0) {
+        if (res.categoryId === 1) {
           setIsProblemBlock(true);
-          setBlockCodes(res.blockCodes);
-          const uniqueLanguages = [...new Set(res.blockCodes.map(block => block.language))];
-          setSelectedLanguage(uniqueLanguages[0]);
-          const initialInputs = {};
-          res.blockCodes.forEach(block => {
-            if (block.forStudent) {
-              initialInputs[block.id] = block.code || "";
-            }
-          });
-          setBlockCodeInputs(initialInputs);
+
+          if (res.blockCodes && res.blockCodes.length > 0) {
+            const sortedBlockCodes = res.blockCodes.sort((a, b) => a.seq - b.seq);
+            setBlockCodes(sortedBlockCodes);
+
+            const uniqueLanguages = [...new Set(sortedBlockCodes.map(block => block.language))];
+            setSelectedLanguage(uniqueLanguages[0]);
+
+            const initialInputs = {};
+            sortedBlockCodes.forEach(block => {
+              if (block.forStudent) {
+                initialInputs[block.id] = block.code;
+              }
+            });
+            setBlockCodeInputs(initialInputs);
+          }
         } else if (res.isPreloadCode) {
           setCodeSolution(res.preloadCode);
         }
 
         if (res.submissionMode) setSubmissionMode(res.submissionMode);
-        if (res.attachments && res.attachments.length > 0) {
-          setFetchedImageArray(res.attachments);
-        }
 
-        let problemDescriptionHtml = htmlToDraft(res.problemStatement);
-        let {contentBlocks, entityMap} = problemDescriptionHtml;
-        let contentDescriptionState = ContentState.createFromBlockArray(
-          contentBlocks,
-          entityMap
-        );
-        let statementDescription = EditorState.createWithContent(
-          contentDescriptionState
-        );
+        const problemDescriptionHtml = htmlToDraft(res.problemStatement);
+        const {contentBlocks, entityMap} = problemDescriptionHtml;
+        const contentDescriptionState = ContentState.createFromBlockArray(contentBlocks, entityMap);
+        const statementDescription = EditorState.createWithContent(contentDescriptionState);
         setEditorStateDescription(statementDescription);
-
         setSampleTestCase(res.sampleTestCase);
       },
-      {onError: (e) => console.log(e)}
+      {
+        onError: (error) => {
+          if (error?.response?.status === 403) {
+            history.push("/programming-contest/student-list-contest-registered");
+          } else {
+            errorNoti(t('common:error'), 3000);
+          }
+        },
+      }
     );
   }
 
@@ -355,27 +339,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
         break;
     }
   }, [language, isProblemBlock, problem]);
-
-  const ModalPreview = (chosenTestcase) => {
-    return (
-      <HustModal
-        open={openModalPreview}
-        onClose={() => setOpenModalPreview(false)}
-        isNotShowCloseButton
-        showCloseBtnTitle={false}
-      >
-        <HustCopyCodeBlock
-          title="Input"
-          text={chosenTestcase?.chosenTestcase?.testCase}
-        />
-        <HustCopyCodeBlock
-          title="Output"
-          text={chosenTestcase?.chosenTestcase?.correctAns}
-          mt={2}
-        />
-      </HustModal>
-    );
-  };
 
   async function submitCode() {
     if (isProblemBlock) {
@@ -427,8 +390,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         saveFile(fileName, res.data);
       },
       {
-        403: () => errorNoti(t('common:noPermissionToDownload')),
-        onError: () => errorNoti(t('common:error')),
+        onError: () => errorNoti(t('common:error'), 3000),
       },
       null,
       {responseType: "blob"}
@@ -440,34 +402,22 @@ export default function StudentViewProgrammingContestProblemDetail() {
       <Typography variant="h6" sx={{mb: 1}}>
         {t("common:description")}
       </Typography>
-      <Editor
-        toolbarHidden
-        editorState={editorStateDescription}
-        handlePastedText={() => false}
-        readOnly
-        editorStyle={editorStyle.editor}
-      />
-      {/*
-        <Typography variant="h5">{t("common:sampleTestcase")}</Typography>
-        
+      {problem?.problemStatement && !_.isEmpty(_.trim(problem.problemStatement)) && (
         <Editor
           toolbarHidden
-          editorState={sampleTestCase}
+          editorState={editorStateDescription}
           handlePastedText={() => false}
           readOnly
           editorStyle={editorStyle.editor}
         />
-      */}
-      {/*ReactHtmlParser(sampleTestCase)*/}
-      {/*sampleTestCase*/}
+      )}
 
-      {sampleTestCase && <>
-        <div style={{height: "10px"}}></div>
-        <HustCopyCodeBlock
-          title={t("education/programmingcontest/problem:sampleTestCase")}
-          text={sampleTestCase}
-        />
-      </>}
+      {sampleTestCase && <Box sx={{mt: 2}}>
+        <Typography variant="body1" sx={{mb: 1, fontWeight: 500}}>
+          {t("education/programmingcontest/problem:sampleTestCase")}
+        </Typography>
+        <HustCopyCodeBlock text={sampleTestCase}/>
+      </Box>}
 
       {problem?.attachments && problem.attachments.length > 0 && (
         <Box sx={{mt: 2}}>
@@ -484,8 +434,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
           </Stack>
         </Box>
       )}
-
-      <ModalPreview chosenTestcase={selectedTestcase}/>
 
       {problem && (
         <Box sx={{mt: 2}}>
@@ -539,63 +487,61 @@ export default function StudentViewProgrammingContestProblemDetail() {
                   </AntTabs>
 
                   <Stack spacing={1}>
-                    {groupedBlockCodes[selectedLanguage]
-                      ?.sort((a, b) => a.seq - b.seq)
-                      .map((block) => (
+                    {groupedBlockCodes[selectedLanguage]?.map((block) => (
+                      <Box
+                        key={block.id}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 2,
+                        }}
+                      >
                         <Box
-                          key={block.id}
                           sx={{
+                            width: '48px',
+                            minWidth: '48px',
                             display: 'flex',
+                            justifyContent: 'center',
                             alignItems: 'flex-start',
-                            gap: 2,
+                            pt: block.forStudent ? '0px' : '14px',
                           }}
                         >
-                          <Box
+                          <Typography
+                            variant="body2"
                             sx={{
-                              width: '48px',
-                              minWidth: '48px',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'flex-start',
-                              pt: block.forStudent ? '0px' : '14px',
+                              color: 'text.secondary',
+                              fontWeight: 500,
                             }}
                           >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: 'text.secondary',
-                                fontWeight: 500,
-                              }}
-                            >
-                              {block.seq}
-                            </Typography>
-                          </Box>
-                          <Box sx={{flex: 1}}>
-                            {block.forStudent ? (
-                              <Box sx={{border: `1px solid ${grey[900]}`}}>
-                                <HustCodeEditor
-                                  language={selectedLanguage}
-                                  sourceCode={blockCodeInputs[block.id] || ""}
-                                  onChangeSourceCode={(code) => handleBlockCodeChange(block.id, code)}
-                                  height="200px"
-                                  readOnly={false}
-                                  listLanguagesAllowed={[selectedLanguage]}
-                                  hideProgrammingLanguage={1}
-                                  blockEditor={1}
-                                  minLines={5}
-                                  theme="github"
-                                />
-                              </Box>
-                            ) : (
-                              <HustCopyCodeBlock
-                                text={block.code}
-                                language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
-                                showLineNumbers
-                              />
-                            )}
-                          </Box>
+                            {block.seq}
+                          </Typography>
                         </Box>
-                      ))}
+                        <Box sx={{flex: 1}}>
+                          {block.forStudent ? (
+                            <Box sx={{border: `1px solid ${grey[900]}`}}>
+                              <HustCodeEditor
+                                language={selectedLanguage}
+                                sourceCode={blockCodeInputs[block.id]}
+                                onChangeSourceCode={(code) => handleBlockCodeChange(block.id, code)}
+                                height="200px"
+                                readOnly={false}
+                                listLanguagesAllowed={[selectedLanguage]}
+                                hideProgrammingLanguage={1}
+                                blockEditor={1}
+                                minLines={5}
+                                theme="github"
+                              />
+                            </Box>
+                          ) : (
+                            <HustCopyCodeBlock
+                              text={block.code}
+                              language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                              showLineNumbers
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    ))}
                   </Stack>
 
                   <Box sx={{display: 'flex', justifyContent: 'center', mt: 2, mb: 2}}>

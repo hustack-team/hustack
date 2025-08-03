@@ -41,7 +41,7 @@ import {AntTab, AntTabs} from "component/tab";
 import Tooltip from '@mui/material/Tooltip';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RotatingIconButton from "../../common/RotatingIconButton";
-import {debounce} from "lodash";
+import {debounce, isEmpty, trim} from "lodash";
 
 
 export const getLevels = (t) => [
@@ -81,7 +81,7 @@ export const getStatuses = (t) => [
   }
 ];
 
-const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
+export const PROGRAMMING_LANGUAGES = Object.keys(COMPUTER_LANGUAGES).map((key) => ({
   label: key,
   value: COMPUTER_LANGUAGES[key],
 }));
@@ -172,9 +172,6 @@ function CreateProblem() {
     );
   };
 
-  const isValidProblemId = () => {
-    return new RegExp(/[%^/\\|.?;[\]]/g).test(problemId);
-  };
   const hasSpecialCharacterProblemId = () => {
     return !new RegExp(/^[0-9a-zA-Z_-]*$/).test(problemId);
   };
@@ -184,25 +181,37 @@ function CreateProblem() {
   };
 
   const validateSubmit = () => {
-    if (problemId === "") {
-      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemId")}), 3000);
+    if (isEmpty(trim(problemId))) {
+      errorNoti(t("validation:missingField", {fieldName: t("problemId")}), 3000);
       return false;
     }
     if (hasSpecialCharacterProblemId()) {
       errorNoti(t("common:invalidProblemId"), 3000);
       return false;
     }
-    if (problemName === "") {
-      errorNoti(t("missingField", {ns: "validation", fieldName: t("problemName")}), 3000);
+    if (problemId.length > 100) {
+      errorNoti(t("validation:maxLength", {fieldName: t("problemId"), max: 100}), 3000);
+      return false;
+    }
+    if (isEmpty(trim(problemName))) {
+      errorNoti(t("validation:missingField", {fieldName: t("problemName")}), 3000);
+      return false;
+    }
+    if (hasSpecialCharacterProblemName()) {
+      errorNoti(t("common:invalidCharactersInProblemName"), 3000);
+      return false;
+    }
+    if (problemName.length > 100) {
+      errorNoti(t("validation:maxLength", {fieldName: t("problemName"), max: 100}), 3000);
       return false;
     }
     if (timeLimitCPP < 1 || timeLimitJAVA < 1 || timeLimitPYTHON < 1 ||
       timeLimitCPP > 300 || timeLimitJAVA > 300 || timeLimitPYTHON > 300) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("timeLimit"), min: 1, max: 300}), 3000);
+      errorNoti(t("validation:numberBetween", {fieldName: t("timeLimit"), min: 1, max: 300}), 3000);
       return false;
     }
     if (memoryLimit < 3 || memoryLimit > 1024) {
-      errorNoti(t("numberBetween", {ns: "validation", fieldName: t("memoryLimit"), min: 3, max: 1024}), 3000);
+      errorNoti(t("validation:numberBetween", {fieldName: t("memoryLimit"), min: 3, max: 1024}), 3000);
       return false;
     }
     if (!statusSuccessful) {
@@ -232,7 +241,7 @@ function CreateProblem() {
     if (!validateSubmit()) return;
 
     setLoading(true);
-    const fileId = attachmentFiles.map((file) => file.name); // Backend sẽ tự động tạo unique filename
+    // const fileId = attachmentFiles.map((file) => file.name);
     const tagIds = selectedTags.map((tag) => tag.tagId);
 
     let formattedBlockCodes = [];
@@ -265,13 +274,13 @@ function CreateProblem() {
       solutionChecker: solutionChecker,
       solutionCheckerLanguage: solutionCheckerLanguage,
       isPublic: isPublic === 'Y',
-      fileId: fileId,
+      // fileId: fileId,
       scoreEvaluationType: isCustomEvaluated ? CUSTOM_EVALUATION : NORMAL_EVALUATION,
       tagIds: tagIds,
       status: status,
       sampleTestCase: sampleTestCase,
       categoryId: isProblemBlock ? 1 : 0,
-      blockCodes: formattedBlockCodes,
+      blockCodes: isProblemBlock ? formattedBlockCodes : [],
     };
 
     const formData = new FormData();
@@ -327,11 +336,7 @@ function CreateProblem() {
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
       [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
-      const updatedBlocks = newBlocks.map((block, i) => ({
-        ...block,
-        seq: i + 1,
-      }));
-      return {...prev, [selectedLanguage]: updatedBlocks};
+      return {...prev, [selectedLanguage]: newBlocks};
     });
   }, [selectedLanguage]);
 
@@ -341,11 +346,7 @@ function CreateProblem() {
     setBlockCodes((prev) => {
       const newBlocks = [...prev[selectedLanguage]];
       [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
-      const updatedBlocks = newBlocks.map((block, i) => ({
-        ...block,
-        seq: i + 1,
-      }));
-      return {...prev, [selectedLanguage]: updatedBlocks};
+      return {...prev, [selectedLanguage]: newBlocks};
     });
   }, [selectedLanguage]);
 
@@ -358,12 +359,11 @@ function CreateProblem() {
       newBlocks.splice(index, 0, {
         code: null,
         forStudent: false,
-        seq: index,
-        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        id: uuidv4(),
       });
       return {
         ...prev,
-        [selectedLanguage]: newBlocks.map((block, i) => ({...block, seq: i + 1})),
+        [selectedLanguage]: newBlocks,
       };
     });
   };
@@ -374,12 +374,11 @@ function CreateProblem() {
       newBlocks.splice(index + 1, 0, {
         code: null,
         forStudent: false,
-        seq: index + 2,
-        id: `${selectedLanguage}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        id: uuidv4(),
       });
       return {
         ...prev,
-        [selectedLanguage]: newBlocks.map((block, i) => ({...block, seq: i + 1})),
+        [selectedLanguage]: newBlocks,
       };
     });
   };
@@ -393,8 +392,7 @@ function CreateProblem() {
         {
           code: null,
           forStudent: false,
-          seq: prev[language].length + 1,
-          id: `${language}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+          id: uuidv4(),
         },
       ],
     }));
@@ -410,7 +408,6 @@ function CreateProblem() {
         ),
       }));
     } catch (error) {
-      console.error("Error updating code:", error);
       errorNoti(t("common:failedToUpdateCode"), 3000);
     }
   }, [selectedLanguage, t]);
@@ -440,9 +437,6 @@ function CreateProblem() {
             onChange={(event) => {
               setProblemID(event.target.value);
             }}
-            error={hasSpecialCharacterProblemId()}
-            helperText={hasSpecialCharacterProblemId() ? t("common:invalidProblemId") : ""}
-            sx={{marginBottom: "12px"}}
           />
         </Grid>
         <Grid item xs={3}>
@@ -585,7 +579,6 @@ function CreateProblem() {
             {t("common:add", {name: t('tag')})}
           </TertiaryButton>
         </Grid>
-
       </Grid>
 
       {/*<Link sx={{ mt: 3, display: 'inline-block' }} href="/programming-contest/suggest-problem" target="_blank"*/}
@@ -681,7 +674,7 @@ function CreateProblem() {
                             fontWeight: 500,
                           }}
                         >
-                          {block.seq || index + 1}
+                          {index + 1}
                         </Typography>
                       </Box>
                       <Box sx={{flex: 1}}>
