@@ -1,5 +1,5 @@
 import {useState} from "@hookstate/core";
-import {Avatar, Box, ListItemAvatar, Typography} from "@material-ui/core";
+import {Avatar, Box, ListItemAvatar, Tooltip, Typography} from "@material-ui/core";
 import {grey} from "@material-ui/core/colors";
 import {makeStyles} from "@material-ui/core/styles";
 import {Skeleton} from "@material-ui/lab";
@@ -49,6 +49,7 @@ const useStyles = makeStyles((theme) => ({
     display: "-webkit-box",
     "-webkit-line-clamp": 3 /* number of lines to show */,
     "-webkit-box-orient": "vertical",
+    wordBreak: 'break-word'
   },
   avatar: {
     width: 56,
@@ -100,8 +101,8 @@ const STATUS_NOTIFICATION_CREATED = "NOTIFICATION_CREATED";
 export const STATUS_NOTIFICATION_READ = "NOTIFICATION_READ";
 
 function Notification(props) {
-  const { numUnRead } = useNotificationState();
-  const { handleClose, currentURL, notification } = props;
+  const {numUnRead} = useNotificationState();
+  const {handleClose, currentURL, notification} = props;
 
   //
   const {
@@ -152,8 +153,11 @@ function Notification(props) {
             closeIfOnSameSite(e);
           }
         },
-        { onError: () => closeIfOnSameSite(e), 401: () => {} },
-        { status: STATUS_NOTIFICATION_READ }
+        {
+          onError: () => closeIfOnSameSite(e), 401: () => {
+          }
+        },
+        {status: STATUS_NOTIFICATION_READ}
       );
     } else {
       closeIfOnSameSite(e);
@@ -169,7 +173,7 @@ function Notification(props) {
     >
       <div
         className={classes.contentContainer}
-        style={{ display: "flex", alignItems: "flex-start", width: "100%" }}
+        style={{display: "flex", alignItems: "flex-start", width: "100%"}}
       >
         <ListItemAvatar className={classes.itemAvatar}>{avatar}</ListItemAvatar>
 
@@ -188,7 +192,18 @@ function Notification(props) {
               flexGrow: 1,
             }}
           >
-            <Typography className={classes.content}>{content.get()}</Typography>
+            {content.get().length > 60 ? (
+              <Tooltip
+                title={content.get()}
+                placement="top"
+                enterDelay={500}
+                leaveDelay={200}
+              >
+                <Typography className={classes.content}>{content.get()}</Typography>
+              </Tooltip>
+            ) : (
+              <Typography className={classes.content}>{content.get()}</Typography>
+            )}
             <Typography
               color={read.get() ? "inherit" : "primary"}
               className={classes.time}
@@ -196,7 +211,7 @@ function Notification(props) {
               {formatTime(time.get())}
             </Typography>
           </div>
-          <NotificationReadIcon read={read.get()} />
+          <NotificationReadIcon read={read.get()}/>
         </div>
       </div>
     </ListItemLink>
@@ -217,7 +232,7 @@ function Notification(props) {
           justifyContent="center"
           alignItems="flex-start"
         >
-          <Skeleton variant="circle" width={56} height={56} />
+          <Skeleton variant="circle" width={56} height={56}/>
         </Box>
         <Box
           flexBasis={0}
@@ -230,7 +245,7 @@ function Notification(props) {
           <Typography variant="body1" component="div">
             <Skeleton
               width={`${getRandomIntInclusive(50, 100)}%`}
-              style={{ borderRadius: 8 }}
+              style={{borderRadius: 8}}
             />
           </Typography>
         </Box>

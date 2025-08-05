@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEntity, UUID> {
@@ -240,7 +241,26 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         Pageable pageable
     );
 
-    @Query(
-        "SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END FROM ContestSubmissionEntity cs WHERE cs.problemId = :problemId")
-    boolean existsByProblemId(@Param("problemId") String problemId);
+    @Query(value = "select " +
+                   "    case " +
+                   "        when COUNT(cs.contest_submission_id) > 0 then true " +
+                   "        else false " +
+                   "    end " +
+                   "from " +
+                   "    contest_submission_new cs " +
+                   "inner join contest_contest_problem_new cp on " +
+                   "    cs.contest_id = cp.contest_id and cs.problem_id = cp.problem_id " +
+                   "inner join contest_new c on " +
+                   "    cp.contest_id = c.contest_id " +
+                   "left join user_registration_contest_new urc on " +
+                   "    cs.user_submission_id = urc.user_id and cs.contest_id = urc.contest_id " +
+                   "where " +
+                   "    cs.problem_id = :problemId " +
+                   "    and cs.user_submission_id != c.user_create_id " +
+                   "    and (urc.role_id is null or urc.role_id not in (:excludedRoles)) ",
+           nativeQuery = true)
+    boolean existsByProblemIdAndRoleNotIn(
+        @Param("problemId") String problemId,
+        @Param("excludedRoles") Set<String> excludedRoles
+    );
 }

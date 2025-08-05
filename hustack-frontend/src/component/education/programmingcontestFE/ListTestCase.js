@@ -84,9 +84,15 @@ export default function ListTestCase({mode, hideWhenEmpty = false}) {
         }
       },
       {
+        403: () => {
+        },
         onError: (e) => {
           setLoading(false);
-          errorNoti(t("common:error", 3000))
+
+          if (e?.response?.status === 403) {
+          } else {
+            errorNoti(t("common:error"), 3000);
+          }
         },
       },
     );
@@ -117,8 +123,13 @@ export default function ListTestCase({mode, hideWhenEmpty = false}) {
         }));
       },
       {
+        403: () => {
+        },
         onError: (e) => {
-          errorNoti(t("common:error"))
+          if (e?.response?.status === 403) {
+          } else {
+            errorNoti(t("common:error"), 3000);
+          }
         },
       },
     );
@@ -138,8 +149,13 @@ export default function ListTestCase({mode, hideWhenEmpty = false}) {
         successNoti(t('common:deleteSuccess', {name: 'Test case'}))
       },
       {
+        403: () => {
+        },
         onError: (e) => {
-          errorNoti(e?.response?.data?.message || t('common:error'), 3000)
+          if (e?.response?.status === 403) {
+          } else {
+            errorNoti(e?.response?.data?.message || t('common:error'), 3000);
+          }
         }
       }
     );
@@ -273,9 +289,14 @@ export default function ListTestCase({mode, hideWhenEmpty = false}) {
           setSelectedTestCase(res.data);
         },
         {
+          403: () => {
+          },
           onError: (e) => {
             setLoadingTestCaseDetail(false);
-            errorNoti(t('common:error'), 3000)
+            if (e?.response?.status === 403) {
+            } else {
+              errorNoti(t('common:error'), 3000);
+            }
           },
         }
       );
@@ -331,8 +352,13 @@ export default function ListTestCase({mode, hideWhenEmpty = false}) {
         successHandler(res)
       },
       {
+        403: () => {
+        },
         onError: (e) => {
-          errorNoti(t("common:error", 3000))
+          if (e?.response?.status === 403) {
+          } else {
+            errorNoti(t("common:error"), 3000);
+          }
         },
       },
     );

@@ -533,7 +533,10 @@ public class ProblemServiceImpl implements ProblemService {
             return false;
         }
 
-        if (contestSubmissionRepo.existsByProblemId(problemId)) {
+        Set<String> excludedRoles = Set.of(
+            UserRegistrationContestEntity.ROLE_OWNER,
+            UserRegistrationContestEntity.ROLE_MANAGER);
+        if (contestSubmissionRepo.existsByProblemIdAndRoleNotIn(problemId, excludedRoles)) {
             return false;
         }
 
@@ -782,6 +785,27 @@ public class ProblemServiceImpl implements ProblemService {
 
         newProblem = problemRepo.save(newProblem);
 
+        // Clone blocks
+        if (Objects.equals(originalProblem.getCategoryId(), 1)) {
+            List<ProblemBlock> originalBlocks = problemBlockRepo.findByProblemId(originalProblem.getProblemId());
+            if (!CollectionUtils.isEmpty(originalBlocks)) {
+                List<ProblemBlock> clonedBlocks = new ArrayList<>();
+
+                for (ProblemBlock originalBlock : originalBlocks) {
+                    ProblemBlock clonedBlock = ProblemBlock.builder()
+                                                           .problemId(newProblem.getProblemId())
+                                                           .programmingLanguage(originalBlock.getProgrammingLanguage())
+                                                           .sourceCode(originalBlock.getSourceCode())
+                                                           .completedBy(originalBlock.getCompletedBy())
+                                                           .seq(originalBlock.getSeq())
+                                                           .build();
+                    clonedBlocks.add(clonedBlock);
+                }
+
+                problemBlockRepo.saveAll(clonedBlocks);
+            }
+        }
+
         List<TestCaseEntity> originalTestCases = testCaseRepo.findAllByProblemId(cloneRequest.getOldProblemId());
         for (TestCaseEntity originalTestCase : originalTestCases) {
             TestCaseEntity newTestCase = new TestCaseEntity();
@@ -800,9 +824,21 @@ public class ProblemServiceImpl implements ProblemService {
         grantRoles(newProblem.getProblemId(), userId, List.of(UserContestProblemRole.ROLE_OWNER));
         grantRoles(newProblem.getProblemId(), "admin", List.of(UserContestProblemRole.ROLE_EDITOR));
 
+        String userFullName = userService.getUserFullName(userId);
+        if (StringUtils.isBlank(userFullName)) {
+            userFullName = userId;
+        }
+
+        String notificationContent = String.format(
+            "%s has cloned Problem %s to %s",
+            userFullName,
+            originalProblem.getProblemName(),
+            newProblem.getProblemName()
+        );
+
         notificationsService.create(
             userId, "admin",
-            userId + " has cloned a contest problem ID " + newProblem.getProblemId(),
+            notificationContent,
             "/programming-contest/manager-view-problem-detail/" + newProblem.getProblemId()
         );
     }

@@ -233,14 +233,14 @@ function EditProblem() {
     return true;
   };
 
-  const handleCopyAllCode =  () => {
+  const handleCopyAllCode = () => {
     const blocks = blockCodes[selectedLanguage] || [];
     if (blocks.length === 0) {
       errorNoti(t("common:noBlockCodesToCopy"), 3000);
       return;
     }
     const allCode = blocks.map(block => block.code).join('\n');
-     navigator.clipboard.writeText(allCode).then(() => {
+    navigator.clipboard.writeText(allCode).then(() => {
       successNoti(t('common:copySuccess'), 2000);
     });
     ;
@@ -760,7 +760,7 @@ function EditProblem() {
           content={description}
           onContentChange={(text) => setDescription(text)}
         />
-        <FormControlLabel
+        {canEditBlocks !== undefined && <FormControlLabel
           label={t("problemBlock") + (!canEditBlocks ? " " + t("common:alreadyUsed") : "")}
           control={
             <Checkbox
@@ -770,7 +770,7 @@ function EditProblem() {
             />
           }
           sx={{mt: 1}}
-        />
+        />}
         {isProblemBlock && canEditBlocks !== undefined && (
           <Box sx={{mt: 1}}>
             <Box sx={{display: 'flex', alignItems: 'center'}}>
@@ -824,179 +824,189 @@ function EditProblem() {
                 ))}
               </AntTabs>
 
-
               {blockDisplayMode === "individual" ? (
                 (blockCodes[selectedLanguage] && blockCodes[selectedLanguage].length > 0) ? (
-                  blockCodes[selectedLanguage].map((block, index) => (
-                    <Box
-                      key={block.id || index}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 2,
-                        mb: canEditBlocks ? (index !== blockCodes[selectedLanguage].length - 1 ? 1.5 : 0) : (index === blockCodes[selectedLanguage].length - 1 ? 0 : 1),
-                      }}
-                    >
+                  <>
+                    {blockCodes[selectedLanguage].map((block, index) => (
                       <Box
+                        key={block.id || index}
                         sx={{
-                          width: '48px',
-                          minWidth: '48px',
                           display: 'flex',
-                          justifyContent: 'center',
                           alignItems: 'flex-start',
-                          pt: canEditBlocks ? 0 : '14px',
+                          gap: 2,
+                          mb: canEditBlocks ? (index !== blockCodes[selectedLanguage].length - 1 ? 1.5 : 0) : (index === blockCodes[selectedLanguage].length - 1 ? 0 : 1),
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'text.secondary',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {index + 1}
-                        </Typography>
-                      </Box>
-                      <Box sx={{flex: 1}}>
-                        {canEditBlocks ? (
-                          <HustCodeEditor
-                            key={(block.id || uuidv4()) + '_' + block.forStudent}
-                            sourceCode={block.code || ""}
-                            onChangeSourceCode={(newCode) => debouncedCodeChange(newCode, index)}
-                            language={selectedLanguage}
-                            height="300px"
-                            readOnly={!canEditBlocks}
-                            hideProgrammingLanguage={1}
-                            theme={block.forStudent ? "github" : "monokai"}
-                            minLines={5}
-                          />
-                        ) : (
-                          <>
-                            <Typography
-                              sx={{
-                                position: 'absolute',
-                                top: '8px',
-                                right: '8px',
-                                fontSize: '0.875rem',
-                                color: 'text.secondary',
-                              }}
-                            >
-                              {block.forStudent ? t("common:forStudent") : t("common:forTeacher")}
-                            </Typography>
-                            <Box sx={block.forStudent ? {border: `1px solid ${grey[900]}`, borderRadius: 1} : {}}>
-                              <HustCopyCodeBlock
-                                text={block.code}
-                                language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
-                                showLineNumbers
-                                isStudentBlock={block.forStudent}
-                                theme={block.forStudent ? github : dracula}
-                              />
-                            </Box>
-                          </>
-                        )}
-                      </Box>
-                      {canEditBlocks && (
                         <Box
                           sx={{
-                            width: '200px',
-                            minWidth: '200px',
+                            width: '48px',
+                            minWidth: '48px',
                             display: 'flex',
-                            flexDirection: 'column',
                             justifyContent: 'center',
-                            alignSelf: 'center',
-                            gap: 1,
-                            pl: 0
+                            alignItems: 'flex-start',
+                            pt: canEditBlocks ? 0 : '14px',
                           }}
                         >
-                          <StyledSelect
-                            size="small"
-                            value={block.forStudent ? "student" : "teacher"}
-                            onChange={(event) => {
-                              if (!canEditBlocks) {
-                                errorNoti(t("common:noPermissionToEditBlocks"), 3000);
-                                return;
-                              }
-                              setBlockCodes((prev) => ({
-                                ...prev,
-                                [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
-                                  i === index ? {...b, forStudent: event.target.value === "student"} : b
-                                ),
-                              }));
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.secondary',
+                              fontWeight: 500,
                             }}
-                            options={[
-                              {label: t("common:forTeacher"), value: "teacher"},
-                              {label: t("common:forStudent"), value: "student"},
-                            ]}
-                            sx={{width: "100%"}}
-                            disabled={!canEditBlocks}
-                          />
-                          <Box sx={{
-                            display: 'flex',
-                            gap: 0.5,
-                            justifyContent: 'center',
-                            width: '100%',
-                            alignItems: 'center'
-                          }}>
-                            <Tooltip title={t('common:moveUp')} placement="bottom">
-                              <IconButton
-                                onClick={() => debouncedMoveUp(index)}
-                                disabled={!canEditBlocks || index === 0}
-                                title={t("common:moveUp")}
-                                size="small"
-                                color="primary"
-                              >
-                                <ArrowUpwardIcon fontSize="small"/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t('common:moveDown')} placement="bottom">
-                              <IconButton
-                                onClick={() => debouncedMoveDown(index)}
-                                disabled={!canEditBlocks || index === blockCodes[selectedLanguage].length - 1}
-                                title={t("common:moveDown")}
-                                size="small"
-                                color="primary"
-                              >
-                                <ArrowDownwardIcon fontSize="small"/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t('common:insertAbove')} placement="bottom">
-                              <IconButton
-                                onClick={() => handleInsertAbove(index)}
-                                disabled={!canEditBlocks}
-                                title={t("common:insertAbove")}
-                                size="small"
-                                color="success"
-                              >
-                                <KeyboardDoubleArrowUpIcon fontSize="small"/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t('common:insertBelow')} placement="bottom">
-                              <IconButton
-                                onClick={() => handleInsertBelow(index)}
-                                disabled={!canEditBlocks}
-                                title={t("common:insertBelow")}
-                                size="small"
-                                color="success"
-                              >
-                                <KeyboardDoubleArrowDownIcon fontSize="small"/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t('common:delete')} placement="bottom">
-                              <IconButton
-                                onClick={() => handleDeleteBlock(index)}
-                                disabled={!canEditBlocks}
-                                title={t("common:delete")}
-                                size="small"
-                                color="error"
-                              >
-                                <DeleteIcon fontSize="small"/>
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
+                          >
+                            {index + 1}
+                          </Typography>
                         </Box>
-                      )}
-                    </Box>
-                  ))
+                        <Box sx={{flex: 1}}>
+                          {canEditBlocks ? (
+                            <HustCodeEditor
+                              key={(block.id || uuidv4()) + '_' + block.forStudent}
+                              sourceCode={block.code || ""}
+                              onChangeSourceCode={(newCode) => debouncedCodeChange(newCode, index)}
+                              language={selectedLanguage}
+                              height="300px"
+                              readOnly={!canEditBlocks}
+                              hideProgrammingLanguage={1}
+                              theme={block.forStudent ? "github" : "monokai"}
+                              minLines={5}
+                            />
+                          ) : (
+                            <>
+                              <Typography
+                                sx={{
+                                  position: 'absolute',
+                                  top: '8px',
+                                  right: '8px',
+                                  fontSize: '0.875rem',
+                                  color: 'text.secondary',
+                                }}
+                              >
+                                {block.forStudent ? t("common:forStudent") : t("common:forTeacher")}
+                              </Typography>
+                              <Box sx={block.forStudent ? {border: `1px solid ${grey[900]}`, borderRadius: 1} : {}}>
+                                <HustCopyCodeBlock
+                                  text={block.code}
+                                  language={mapLanguageToCodeBlockLanguage(selectedLanguage)}
+                                  showLineNumbers
+                                  isStudentBlock={block.forStudent}
+                                  theme={block.forStudent ? github : dracula}
+                                />
+                              </Box>
+                            </>
+                          )}
+                        </Box>
+                        {canEditBlocks && (
+                          <Box
+                            sx={{
+                              width: '200px',
+                              minWidth: '200px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignSelf: 'center',
+                              gap: 1,
+                              pl: 0
+                            }}
+                          >
+                            <StyledSelect
+                              size="small"
+                              value={block.forStudent ? "student" : "teacher"}
+                              onChange={(event) => {
+                                if (!canEditBlocks) {
+                                  errorNoti(t("common:noPermissionToEditBlocks"), 3000);
+                                  return;
+                                }
+                                setBlockCodes((prev) => ({
+                                  ...prev,
+                                  [selectedLanguage]: prev[selectedLanguage].map((b, i) =>
+                                    i === index ? {...b, forStudent: event.target.value === "student"} : b
+                                  ),
+                                }));
+                              }}
+                              options={[
+                                {label: t("common:forTeacher"), value: "teacher"},
+                                {label: t("common:forStudent"), value: "student"},
+                              ]}
+                              sx={{width: "100%"}}
+                              disabled={!canEditBlocks}
+                            />
+                            <Box sx={{
+                              display: 'flex',
+                              gap: 0.5,
+                              justifyContent: 'center',
+                              width: '100%',
+                              alignItems: 'center'
+                            }}>
+                              <Tooltip title={t('common:moveUp')} placement="bottom">
+                                <IconButton
+                                  onClick={() => debouncedMoveUp(index)}
+                                  disabled={!canEditBlocks || index === 0}
+                                  title={t("common:moveUp")}
+                                  size="small"
+                                  color="primary"
+                                >
+                                  <ArrowUpwardIcon fontSize="small"/>
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={t('common:moveDown')} placement="bottom">
+                                <IconButton
+                                  onClick={() => debouncedMoveDown(index)}
+                                  disabled={!canEditBlocks || index === blockCodes[selectedLanguage].length - 1}
+                                  title={t("common:moveDown")}
+                                  size="small"
+                                  color="primary"
+                                >
+                                  <ArrowDownwardIcon fontSize="small"/>
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={t('common:insertAbove')} placement="bottom">
+                                <IconButton
+                                  onClick={() => handleInsertAbove(index)}
+                                  disabled={!canEditBlocks}
+                                  title={t("common:insertAbove")}
+                                  size="small"
+                                  color="success"
+                                >
+                                  <KeyboardDoubleArrowUpIcon fontSize="small"/>
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={t('common:insertBelow')} placement="bottom">
+                                <IconButton
+                                  onClick={() => handleInsertBelow(index)}
+                                  disabled={!canEditBlocks}
+                                  title={t("common:insertBelow")}
+                                  size="small"
+                                  color="success"
+                                >
+                                  <KeyboardDoubleArrowDownIcon fontSize="small"/>
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={t('common:delete')} placement="bottom">
+                                <IconButton
+                                  onClick={() => handleDeleteBlock(index)}
+                                  disabled={!canEditBlocks}
+                                  title={t("common:delete")}
+                                  size="small"
+                                  color="error"
+                                >
+                                  <DeleteIcon fontSize="small"/>
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+
+                    {canEditBlocks && (
+                      <Box sx={{display: 'flex', alignItems: 'center', mt: 2, gap: 2}}>
+                        <Box sx={{width: '48px', minWidth: '48px'}}/>
+                        <Typography variant="body2" color="warning.main" sx={{ml: 0}}>
+                          {t('common:blockCodeAutoRemoveNote')}
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
                 ) : null
               ) : (
                 <Box>
@@ -1007,15 +1017,7 @@ function EditProblem() {
                   />
                 </Box>
               )}
-            </Collapse>
-            {canEditBlocks && (
-              <>
-                <Box sx={{display: 'flex', alignItems: 'center', mt: 2, gap: 2}}>
-                  <Box sx={{width: '48px', minWidth: '48px'}}/>
-                  <Typography variant="body2" color="warning.main" sx={{ml: 0}}>
-                    {t('common:blockCodeAutoRemoveNote')}
-                  </Typography>
-                </Box>
+              {canEditBlocks && (
                 <Stack direction="row" spacing={2} sx={{mt: 2}}>
                   <TertiaryButton
                     variant="outlined"
@@ -1034,8 +1036,8 @@ function EditProblem() {
                     {t("common:copyCode")}
                   </TertiaryButton>
                 </Stack>
-              </>
-            )}
+              )}
+            </Collapse>
           </Box>
         )}
 
