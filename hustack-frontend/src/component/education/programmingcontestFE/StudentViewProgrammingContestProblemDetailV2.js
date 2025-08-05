@@ -435,7 +435,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
         </Box>
       )}
 
-      {problem && (
+      {problem && submissionMode !== SUBMISSION_MODE_NOT_ALLOWED && (
         <Box sx={{mt: 2}}>
           {isProblemBlock ? (
             <>
@@ -544,7 +544,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
                     ))}
                   </Stack>
 
-                  <Box sx={{display: 'flex', justifyContent: 'center', mt: 2, mb: 2}}>
+                  <Box sx={{display: 'flex', justifyContent: 'center', mt: 2}}>
                     <Stack direction="row" spacing={2}>
                       <TertiaryButton
                         variant="outlined"
@@ -556,9 +556,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
                       </TertiaryButton>
 
                       <LoadingButton
-                        disabled={
-                          isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
-                        }
+                        disabled={isProcessing}
                         sx={{
                           minWidth: 140,
                           textTransform: 'none',
@@ -574,14 +572,6 @@ export default function StudentViewProgrammingContestProblemDetail() {
                       </LoadingButton>
                     </Stack>
                   </Box>
-
-                  {submissionMode === SUBMISSION_MODE_NOT_ALLOWED && (
-                    <Box sx={{display: 'flex', justifyContent: 'center', mt: 1}}>
-                      <Typography color="gray">
-                        Currently, this contest problem is not open for submissions
-                      </Typography>
-                    </Box>
-                  )}
 
                   {selectedLanguage === COMPUTER_LANGUAGES.JAVA && (
                     <Alert
@@ -621,9 +611,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
                 }}
               >
                 <LoadingButton
-                  disabled={
-                    isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
-                  }
+                  disabled={isProcessing}
                   sx={{
                     minWidth: 140,
                     textTransform: 'none',
@@ -637,37 +625,12 @@ export default function StudentViewProgrammingContestProblemDetail() {
                 >
                   {t("common:submit")}
                 </LoadingButton>
-
-                {submissionMode === SUBMISSION_MODE_NOT_ALLOWED && (
-                  <Typography color="gray" ml={1}>
-                    Currently, this contest problem is not open for submissions
-                  </Typography>
-                )}
               </Box>
 
-              {language === COMPUTER_LANGUAGES.JAVA && (
-                <Alert
-                  variant="outlined"
-                  severity="info"
-                  sx={{
-                    borderRadius: 1.5,
-                    bgcolor: "#e5f6fd",
-                    mt: 2,
-                  }}
-                >
-                  {t("common:javaClassDeclaration")}{" "}
-                  <b>public class Main {"{...}"}</b>
-                </Alert>
-              )}
-            </Box>
-          )}
-
-          {!isProblemBlock && (
-            <>
-              <Divider>Or</Divider>
+              <Divider sx={{mt: 1, mb: 1}}>Or</Divider>
 
               <form onSubmit={handleFormSubmit}>
-                <Stack alignItems={"center"} spacing={2} sx={{mt: 1}}>
+                <Stack alignItems={"center"} spacing={2}>
                   <Stack
                     direction="row"
                     justifyContent={"center"}
@@ -692,9 +655,7 @@ export default function StudentViewProgrammingContestProblemDetail() {
                   </Stack>
 
                   <LoadingButton
-                    disabled={
-                      isProcessing || submissionMode === SUBMISSION_MODE_NOT_ALLOWED
-                    }
+                    disabled={isProcessing}
                     sx={{
                       minWidth: 140,
                       textTransform: 'none',
@@ -710,30 +671,29 @@ export default function StudentViewProgrammingContestProblemDetail() {
                   </LoadingButton>
                 </Stack>
               </form>
-            </>
+
+              {language === COMPUTER_LANGUAGES.JAVA && (
+                <Alert
+                  variant="outlined"
+                  severity="info"
+                  sx={{
+                    borderRadius: 1.5,
+                    bgcolor: "#e5f6fd",
+                    mt: 2,
+                  }}
+                >
+                  {t("common:javaClassDeclaration")}{" "}
+                  <b>public class Main {"{...}"}</b>
+                </Alert>
+              )}
+            </Box>
           )}
-
-
         </Box>
-      )}
-      {problem && language === COMPUTER_LANGUAGES.JAVA && (
-        <Alert
-          variant="outlined"
-          severity="info"
-          sx={{
-            borderRadius: 1.5,
-            bgcolor: "#e5f6fd",
-            mt: 3,
-          }}
-        >
-          {t("common:javaClassDeclaration")}{" "}
-          <b>public class Main {"{...}"}</b>
-        </Alert>
       )}
 
       {problem && (
         <>
-          <Divider sx={{mt: 2, mb: 2}}/>
+          <Divider sx={{mt: 3, mb: 3}}/>
           <StudentViewSubmission problemId={problemId} ref={listSubmissionRef} showTitle={true}/>
         </>
       )}
