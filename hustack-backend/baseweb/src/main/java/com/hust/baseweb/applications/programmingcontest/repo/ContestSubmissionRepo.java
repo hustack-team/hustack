@@ -241,6 +241,10 @@ public interface ContestSubmissionRepo extends JpaRepository<ContestSubmissionEn
         Pageable pageable
     );
 
+    @Query(
+        "SELECT CASE WHEN COUNT(cs.contestSubmissionId) > 0 THEN true ELSE false END FROM ContestSubmissionEntity cs WHERE cs.problemId = :problemId")
+    boolean existsByProblemId(@Param("problemId") String problemId);
+
     @Query(value = "select " +
                    "    case " +
                    "        when COUNT(cs.contest_submission_id) > 0 then true " +
