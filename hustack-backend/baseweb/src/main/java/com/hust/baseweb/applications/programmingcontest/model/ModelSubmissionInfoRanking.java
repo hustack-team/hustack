@@ -1,17 +1,18 @@
 package com.hust.baseweb.applications.programmingcontest.model;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelSubmissionInfoRanking {
 
-    private String problemId;
-    private Long point;
-    private Double pointPercentage;
+    String problemId;
 
+    Long point;
+
+    Double pointPercentage;
 }

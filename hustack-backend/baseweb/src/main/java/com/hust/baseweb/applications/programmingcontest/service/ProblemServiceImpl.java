@@ -533,7 +533,10 @@ public class ProblemServiceImpl implements ProblemService {
             return false;
         }
 
-        if (contestSubmissionRepo.existsByProblemId(problemId)) {
+        Set<String> excludedRoles = Set.of(
+            UserRegistrationContestEntity.ROLE_OWNER,
+            UserRegistrationContestEntity.ROLE_MANAGER);
+        if (contestSubmissionRepo.existsByProblemIdAndRoleNotIn(problemId, excludedRoles)) {
             return false;
         }
 
