@@ -22,4 +22,8 @@ public class KeycloakAdminProperties {
 
     String grantType;
 
+    long defaultAccessTokenLifespan;
+
+    long defaultBonusTtl;
+
 }
