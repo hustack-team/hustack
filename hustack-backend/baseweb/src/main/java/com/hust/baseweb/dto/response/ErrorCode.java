@@ -15,6 +15,7 @@ public enum ErrorCode implements BaseResponseCode {
     ACCOUNT_ALREADY_GENERATED(10003, "The account has already been generated"),
     ACCOUNT_GENERATION_FAILED(10004, "Failed to generate account"),
     EXAM_CLASS_NOT_FOUND(10005, "Exam class not found"),
+    SESSION_REVOKED(10006, "Session has been revoked"),
     ;
 
     int code;

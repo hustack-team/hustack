@@ -26,6 +26,8 @@ public class KeycloakAdminService {
 
     final KeycloakAdminProperties keycloakAdminProperties;
 
+    final SessionRevocationService sessionRevocationService;
+
     volatile String studentGroupId;
 
     public String getStudentGroupId() {
@@ -143,6 +145,34 @@ public class KeycloakAdminService {
 
         String userId = users.get(0).getId();
         keycloak.realm(realm).users().get(userId).logout();
+    }
+
+    public void markSessionsAsRevoked(String username) {
+        if (StringUtils.isBlank(username)) {
+            log.warn("Cannot mark sessions as revoked: username is blank");
+            return;
+        }
+
+        try {
+            sessionRevocationService.mark(
+                keycloakAdminProperties.getRealm(),
+                username,
+                keycloakAdminProperties.getDefaultAccessTokenLifespan() +
+                keycloakAdminProperties.getDefaultBonusTtl());
+        } catch (Exception ignored) {
+        }
+    }
+
+    public void unmarkSessionsAsRevoked(String username) {
+        if (StringUtils.isBlank(username)) {
+            log.warn("Cannot unmark sessions as revoked: username is blank");
+            return;
+        }
+
+        try {
+            sessionRevocationService.unmark(keycloakAdminProperties.getRealm(), username);
+        } catch (Exception ignored) {
+        }
     }
 
     public void deleteUserIfExists(String username) {

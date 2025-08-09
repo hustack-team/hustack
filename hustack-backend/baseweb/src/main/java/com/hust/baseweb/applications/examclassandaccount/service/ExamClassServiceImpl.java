@@ -106,6 +106,7 @@ public class ExamClassServiceImpl implements ExamClassService {
 //            } catch (DataIntegrityViolationException e) {
                 keycloakService.updateEnabledUser(keycloakUsername, false);
                 keycloakService.logout(keycloakUsername);
+                keycloakService.markSessionsAsRevoked(keycloakUsername);
 
                 account.setStatus(ExamClass.STATUS_DISABLE);
                 examAccountRepo.save(account);
@@ -326,6 +327,9 @@ public class ExamClassServiceImpl implements ExamClassService {
                         keycloakService.updateEnabledUser(account.getRandomUserLoginId(), enabled);
                         if (!enabled) { // Log out all user's sessions after disabling the account
                             keycloakService.logout(account.getRandomUserLoginId());
+                            keycloakService.markSessionsAsRevoked(account.getRandomUserLoginId());
+                        } else { // Remove user from revoked sessions when enabling the account
+                            keycloakService.unmarkSessionsAsRevoked(account.getRandomUserLoginId());
                         }
                         account.setStatus(newStatus);
                         updateSuccessful.add(account);
@@ -373,6 +377,7 @@ public class ExamClassServiceImpl implements ExamClassService {
 //        } catch (DataIntegrityViolationException e) {
         keycloakService.updateEnabledUser(keycloakUsername, false);
         keycloakService.logout(keycloakUsername);
+        keycloakService.markSessionsAsRevoked(keycloakUsername);
 
         account.setStatus(ExamClass.STATUS_DISABLE);
         examAccountRepo.save(account);
@@ -421,6 +426,9 @@ public class ExamClassServiceImpl implements ExamClassService {
             keycloakService.updateEnabledUser(account.getRandomUserLoginId(), enabled);
             if (!enabled) { // Log out all user's sessions after disabling the account
                 keycloakService.logout(account.getRandomUserLoginId());
+                keycloakService.markSessionsAsRevoked(account.getRandomUserLoginId());
+            } else { // Remove user from revoked sessions when enabling the account
+                keycloakService.unmarkSessionsAsRevoked(account.getRandomUserLoginId());
             }
 
             account.setStatus(newStatus);
