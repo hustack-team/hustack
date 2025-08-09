@@ -2,7 +2,6 @@ package com.hust.baseweb.applications.programmingcontest.controller;
 
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.model.LmsLogModelCreate;
 import com.hust.baseweb.applications.programmingcontest.callexternalapi.service.ApiService;
-import com.hust.baseweb.applications.programmingcontest.entity.ContestEntity;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionComment;
 import com.hust.baseweb.applications.programmingcontest.entity.ContestSubmissionEntity;
 import com.hust.baseweb.applications.programmingcontest.model.*;
@@ -15,10 +14,6 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -187,11 +181,11 @@ public class SubmissionController {
 //        return ResponseEntity.ok().body(contestSubmission);
 //    }
 
-    @GetMapping("/submissions/{submissionId}/contest")
-    public ResponseEntity<?> getContestInfosOfASubmission(@PathVariable("submissionId") UUID submissionId) {
-        ModelGetContestInfosOfSubmissionOutput res = problemTestCaseService.getContestInfosOfASubmission(submissionId);
-        return ResponseEntity.ok().body(res);
-    }
+//    @GetMapping("/submissions/{submissionId}/contest")
+//    public ResponseEntity<?> getContestInfosOfASubmission(@PathVariable("submissionId") UUID submissionId) {
+//        ModelGetContestInfosOfSubmissionOutput res = problemTestCaseService.getContestInfosOfASubmission(submissionId);
+//        return ResponseEntity.ok().body(res);
+//    }
 
     @Secured("ROLE_TEACHER")
     @PutMapping("/submissions/source-code")
@@ -348,19 +342,19 @@ public class SubmissionController {
             .body(submissionService.managerSubmitCodeOfParticipant(request, principal, dto, file));
     }
 
-    @GetMapping("/submissions/users/{userLoginId}")
-    public ResponseEntity<?> getContestSubmissionPagingOfAUser(
-        @PathVariable("userLoginId") String userLoginId,
-        Pageable pageable
-    ) {
-        log.info("getContestSubmissionPagingOfAUser, user = " + userLoginId);
-        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").descending());
-        Page<ContestSubmission> page = problemTestCaseService.findContestSubmissionByUserLoginIdPaging(
-            pageable,
-            userLoginId);
-        log.info("page {}", page);
-        return ResponseEntity.ok().body(page);
-    }
+//    @GetMapping("/submissions/users/{userLoginId}")
+//    public ResponseEntity<?> getContestSubmissionPagingOfAUser(
+//        @PathVariable("userLoginId") String userLoginId,
+//        Pageable pageable
+//    ) {
+//        log.info("getContestSubmissionPagingOfAUser, user = " + userLoginId);
+//        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").descending());
+//        Page<ContestSubmission> page = problemTestCaseService.findContestSubmissionByUserLoginIdPaging(
+//            pageable,
+//            userLoginId);
+//        log.info("page {}", page);
+//        return ResponseEntity.ok().body(page);
+//    }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/teacher/submissions/{submissionId}/comments")
@@ -380,20 +374,20 @@ public class SubmissionController {
         return ResponseEntity.ok().body(comment);
     }
 
-    @GetMapping("/submissions/{submissionId}/comments")
-    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable UUID submissionId) {
-        ContestSubmissionEntity submission = contestSubmissionService.getSubmissionById(submissionId);
-        ContestEntity contest = contestService.findContest(submission.getContestId());
-
-        if (!"Y".equals(contest.getContestShowComment())) {
-            return ResponseEntity.ok(Collections.emptyList());
-        }
-
-        List<CommentDTO> comments = commentService.getAllCommentsBySubmissionId(submissionId);
-        Collections.reverse(comments);
-
-        return ResponseEntity.ok(comments);
-    }
+//    @GetMapping("/submissions/{submissionId}/comments")
+//    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable UUID submissionId) {
+//        ContestSubmissionEntity submission = contestSubmissionService.getSubmissionById(submissionId);
+//        ContestEntity contest = contestService.findContest(submission.getContestId());
+//
+//        if (!"Y".equals(contest.getContestShowComment())) {
+//            return ResponseEntity.ok(Collections.emptyList());
+//        }
+//
+//        List<CommentDTO> comments = commentService.getAllCommentsBySubmissionId(submissionId);
+//        Collections.reverse(comments);
+//
+//        return ResponseEntity.ok(comments);
+//    }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/submissions/{submissionId}/code-authorship")

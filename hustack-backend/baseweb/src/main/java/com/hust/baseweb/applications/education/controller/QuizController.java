@@ -3,7 +3,6 @@ package com.hust.baseweb.applications.education.controller;
 import com.google.gson.Gson;
 import com.hust.baseweb.applications.education.classmanagement.service.ClassService;
 import com.hust.baseweb.applications.education.entity.*;
-import com.hust.baseweb.applications.education.model.GetClassDetailOM;
 import com.hust.baseweb.applications.education.model.quiz.*;
 import com.hust.baseweb.applications.education.repo.QuizQuestionTagRepo;
 import com.hust.baseweb.applications.education.repo.QuizQuestionUserRoleRepo;
@@ -65,65 +64,65 @@ public class QuizController {
 
     QuizQuestionTagService quizQuestionTagService;
 
-    @PostMapping("/post-comment-on-quiz")
-    public ResponseEntity<?> postCommentOnQuizQuestion(
-        Principal principal,
-        @RequestBody CreateCommentOnQuizQuestionIM input
-    ) {
-
-        UserLogin u = userService.findById(principal.getName());
-        log.info("postCommentOnQuizQuestion, user " + u.getUserLoginId() + " post comments = " + input.getComment());
-
-        //CommentOnQuizQuestion commentOnQuizQuestion = commentOnQuizQuestionService.createComment(input.getQuestionId(), input.getComment(), u);
-
-        CommentOnQuizQuestion commentOnQuizQuestion = commentOnQuizQuestionService.createComment(
-            input.getQuestionId(),
-            input.getComment(),
-            input.getReplyToCommentId(),
-            u
-        );
-        return ResponseEntity.ok().body(commentOnQuizQuestion);
-    }
-
-    @GetMapping("/get-list-comments-on-quiz/{questionId}")
-    public ResponseEntity<?> getListCommentsOnQuiz(Principal principal, @PathVariable UUID questionId) {
-        List<CommentOnQuizQuestionDetailOM> lst = commentOnQuizQuestionService.findByQuestionId(questionId);
-        return ResponseEntity.ok().body(lst);
-    }
-
-    @GetMapping("/get-number-comments-on-quiz/{questionId}")
-    public ResponseEntity<?> getNumberCommentsOnQuiz(Principal principal, @PathVariable UUID questionId) {
-        int nbr = commentOnQuizQuestionService.getNumberCommentsOnQuiz(questionId);
-        //log.info("getNumberCommentsOnQuiz, questionId = " + questionId + " size = " + nbr);
-        return ResponseEntity.ok().body(nbr);
-    }
-
-    @GetMapping("/get-list-reply-comments-on-quiz/{commentId}")
-    public ResponseEntity<?> getListReplyCommentsOnQuiz(Principal principal, @PathVariable UUID commentId) {
-        List<CommentOnQuizQuestionDetailOM> lst = commentOnQuizQuestionService.findByReplyToCommentId(commentId);
-        return ResponseEntity.ok().body(lst);
-    }
-
-    @DeleteMapping("/delete-comment-on-quiz/{commentId}")
-    public ResponseEntity<?> deleteCommentOnQuiz(
-        Principal principal,
-        @PathVariable UUID commentId
-    ) {
-        commentOnQuizQuestionService.deleteCommentOnQuiz(commentId);
-        return ResponseEntity.ok().body(commentId);
-    }
-
-    @PutMapping("/edit-comment-on-quiz/{commentId}")
-    public ResponseEntity<?> editCommentOnQuiz(
-        Principal principal,
-        @RequestBody CommentOnQuizQuestion input,
-        @PathVariable UUID commentId
-    ) {
-        CommentOnQuizQuestion edittedComment = commentOnQuizQuestionService.updateComment(
-            commentId,
-            input.getCommentText());
-        return ResponseEntity.ok().body(edittedComment);
-    }
+//    @PostMapping("/post-comment-on-quiz")
+//    public ResponseEntity<?> postCommentOnQuizQuestion(
+//        Principal principal,
+//        @RequestBody CreateCommentOnQuizQuestionIM input
+//    ) {
+//
+//        UserLogin u = userService.findById(principal.getName());
+//        log.info("postCommentOnQuizQuestion, user " + u.getUserLoginId() + " post comments = " + input.getComment());
+//
+//        //CommentOnQuizQuestion commentOnQuizQuestion = commentOnQuizQuestionService.createComment(input.getQuestionId(), input.getComment(), u);
+//
+//        CommentOnQuizQuestion commentOnQuizQuestion = commentOnQuizQuestionService.createComment(
+//            input.getQuestionId(),
+//            input.getComment(),
+//            input.getReplyToCommentId(),
+//            u
+//        );
+//        return ResponseEntity.ok().body(commentOnQuizQuestion);
+//    }
+//
+//    @GetMapping("/get-list-comments-on-quiz/{questionId}")
+//    public ResponseEntity<?> getListCommentsOnQuiz(Principal principal, @PathVariable UUID questionId) {
+//        List<CommentOnQuizQuestionDetailOM> lst = commentOnQuizQuestionService.findByQuestionId(questionId);
+//        return ResponseEntity.ok().body(lst);
+//    }
+//
+//    @GetMapping("/get-number-comments-on-quiz/{questionId}")
+//    public ResponseEntity<?> getNumberCommentsOnQuiz(Principal principal, @PathVariable UUID questionId) {
+//        int nbr = commentOnQuizQuestionService.getNumberCommentsOnQuiz(questionId);
+//        //log.info("getNumberCommentsOnQuiz, questionId = " + questionId + " size = " + nbr);
+//        return ResponseEntity.ok().body(nbr);
+//    }
+//
+//    @GetMapping("/get-list-reply-comments-on-quiz/{commentId}")
+//    public ResponseEntity<?> getListReplyCommentsOnQuiz(Principal principal, @PathVariable UUID commentId) {
+//        List<CommentOnQuizQuestionDetailOM> lst = commentOnQuizQuestionService.findByReplyToCommentId(commentId);
+//        return ResponseEntity.ok().body(lst);
+//    }
+//
+//    @DeleteMapping("/delete-comment-on-quiz/{commentId}")
+//    public ResponseEntity<?> deleteCommentOnQuiz(
+//        Principal principal,
+//        @PathVariable UUID commentId
+//    ) {
+//        commentOnQuizQuestionService.deleteCommentOnQuiz(commentId);
+//        return ResponseEntity.ok().body(commentId);
+//    }
+//
+//    @PutMapping("/edit-comment-on-quiz/{commentId}")
+//    public ResponseEntity<?> editCommentOnQuiz(
+//        Principal principal,
+//        @RequestBody CommentOnQuizQuestion input,
+//        @PathVariable UUID commentId
+//    ) {
+//        CommentOnQuizQuestion edittedComment = commentOnQuizQuestionService.updateComment(
+//            commentId,
+//            input.getCommentText());
+//        return ResponseEntity.ok().body(edittedComment);
+//    }
 
     @Secured({"ROLE_TEACHER"})
     @PostMapping("/create-quiz-tag")
@@ -367,30 +366,30 @@ public class QuizController {
 
     }
 
-    @GetMapping("/get-published-quiz-of-class/{classId}")
-    public ResponseEntity<?> getPublishedQuizOfClass(Principal principal, @PathVariable UUID classId) {
-        GetClassDetailOM eduClass = classService.getClassDetail(classId);
-        String courseId = eduClass.getCourseId();
-
-//        log.info("getPublishedQuizOfClass, classId = " + classId + ", courseId = " + courseId);
-
-        List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
-        List<QuizQuestionDetailModel> quizQuestionDetailModels = new ArrayList<>();
-
-        for (QuizQuestion q : quizQuestions) {
-            if (q.getStatusId().equals(QuizQuestion.STATUS_PRIVATE)) {
-                continue;
-            }
-            QuizQuestionDetailModel quizQuestionDetailModel = quizQuestionService.findQuizDetail(q.getQuestionId());
-            quizQuestionDetailModels.add(quizQuestionDetailModel);
-        }
-
-//        log.info("getPublishedQuizOfClass, classId = " + classId + ", courseId = " + courseId
-//                 + " RETURN list.sz = " + quizQuestionDetailModels.size());
-
-        return ResponseEntity.ok().body(quizQuestionDetailModels);
-    }
-
+//    @GetMapping("/get-published-quiz-of-class/{classId}")
+//    public ResponseEntity<?> getPublishedQuizOfClass(Principal principal, @PathVariable UUID classId) {
+//        GetClassDetailOM eduClass = classService.getClassDetail(classId);
+//        String courseId = eduClass.getCourseId();
+//
+////        log.info("getPublishedQuizOfClass, classId = " + classId + ", courseId = " + courseId);
+//
+//        List<QuizQuestion> quizQuestions = quizQuestionService.findQuizOfCourse(courseId);
+//        List<QuizQuestionDetailModel> quizQuestionDetailModels = new ArrayList<>();
+//
+//        for (QuizQuestion q : quizQuestions) {
+//            if (q.getStatusId().equals(QuizQuestion.STATUS_PRIVATE)) {
+//                continue;
+//            }
+//            QuizQuestionDetailModel quizQuestionDetailModel = quizQuestionService.findQuizDetail(q.getQuestionId());
+//            quizQuestionDetailModels.add(quizQuestionDetailModel);
+//        }
+//
+////        log.info("getPublishedQuizOfClass, classId = " + classId + ", courseId = " + courseId
+////                 + " RETURN list.sz = " + quizQuestionDetailModels.size());
+//
+//        return ResponseEntity.ok().body(quizQuestionDetailModels);
+//    }
+//
 //    @GetMapping("/get-unpublished-quiz-of-course/{courseId}")
 //    public ResponseEntity<?> getUnPublishedQuizOfCourse(Principal principal, @PathVariable String courseId) {
 //

@@ -286,12 +286,12 @@ public class ContestController {
         return ResponseEntity.ok().body(result);
     }
 
-    @GetMapping("/contests/{contestId}/problems")
-    public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
-        ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
-        List<ProblemEntity> listProblem = contestEntity.getProblems();
-        return ResponseEntity.ok().body(listProblem);
-    }
+//    @GetMapping("/contests/{contestId}/problems")
+//    public ResponseEntity<?> getListContestProblemViewedByStudent(@PathVariable("contestId") String contestId) {
+//        ContestEntity contestEntity = contestRepo.findContestByContestId(contestId);
+//        List<ProblemEntity> listProblem = contestEntity.getProblems();
+//        return ResponseEntity.ok().body(listProblem);
+//    }
 
     @Async
     public void logStudentGetDetailContest(String userId, String contestId) {
@@ -378,15 +378,15 @@ public class ContestController {
         return ResponseEntity.ok().body(resp);
     }
 
-    @PostMapping("contests/{contestId}/register-student")
-    public ResponseEntity<?> studentRegisterContest(@PathVariable("contestId") String contestId, Principal principal)
-        throws MiniLeetCodeException {
-        log.info("studentRegisterContest {}", contestId);
-        ModelStudentRegisterContestResponse resp = problemTestCaseService.studentRegisterContest(
-            contestId,
-            principal.getName());
-        return ResponseEntity.ok().body(resp);
-    }
+//    @PostMapping("contests/{contestId}/register-student")
+//    public ResponseEntity<?> studentRegisterContest(@PathVariable("contestId") String contestId, Principal principal)
+//        throws MiniLeetCodeException {
+//        log.info("studentRegisterContest {}", contestId);
+//        ModelStudentRegisterContestResponse resp = problemTestCaseService.studentRegisterContest(
+//            contestId,
+//            principal.getName());
+//        return ResponseEntity.ok().body(resp);
+//    }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/contests/{contestId}/registered-users")

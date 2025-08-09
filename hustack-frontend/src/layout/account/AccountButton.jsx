@@ -1,5 +1,5 @@
 import {useState} from "@hookstate/core";
-import {Avatar, IconButton} from "@mui/material";
+import {Avatar, IconButton, ListItemText} from "@mui/material";
 import {useKeycloak} from "@react-keycloak/web";
 import randomColor from "randomcolor";
 import React, {useEffect} from "react";
@@ -75,6 +75,8 @@ function AccountButton() {
         anchorRef={anchorRef}
         avatarBgColor={bgColor}
       />
+      <ListItemText primary={(keycloak.tokenParsed.name?.toLocaleUpperCase() || '')}
+                    secondary={keycloak.tokenParsed.preferred_username || ''}/>
     </>
   );
 }

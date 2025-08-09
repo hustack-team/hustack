@@ -41,16 +41,16 @@
             <artifactId>judge0-client</artifactId>
             <version>0.0.1</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.paulcwarren</groupId>
-            <artifactId>spring-content-fs-boot-starter</artifactId>
-            <version>3.0.17</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.paulcwarren</groupId>
-            <artifactId>spring-content-rest-boot-starter</artifactId>
-            <version>3.0.17</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.github.paulcwarren</groupId>-->
+<!--            <artifactId>spring-content-fs-boot-starter</artifactId>-->
+<!--            <version>3.0.17</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.github.paulcwarren</groupId>-->
+<!--            <artifactId>spring-content-rest-boot-starter</artifactId>-->
+<!--            <version>3.0.17</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>

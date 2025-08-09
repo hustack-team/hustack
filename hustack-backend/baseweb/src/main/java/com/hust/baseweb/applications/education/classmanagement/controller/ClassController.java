@@ -29,7 +29,6 @@ import com.hust.baseweb.config.FileSystemStorageProperties;
 import com.hust.baseweb.entity.UserLogin;
 import com.hust.baseweb.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
@@ -109,38 +108,38 @@ public class ClassController {
 
     MongoContentService mongoContentService;
 
-    @PostMapping
-    public ResponseEntity<?> getClassesOfCurrSemester(
-        Principal principal,
-        @RequestParam
-        @Min(value = 0, message = "Số trang có giá trị không âm") Integer page,
-        @RequestParam
-        @Min(value = 0, message = "Kích thước trang có giá trị không âm") Integer size,
-        @RequestBody GetClassesIM filterParams
-    ) {
-        log.info("getClassesOfCurrSemester");
-
-        if (null == page) {
-            page = 0;
-        }
-
-        if (null == size) {
-            size = 20;
-        }
-
-        return ResponseEntity
-            .ok()
-            .body(classService.getClassesOfCurrentSemester(
-                principal.getName(),
-                filterParams,
-                PageRequest.of(page, size)));
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegistIM im, Principal principal) {
-        SimpleResponse res = classService.register(im.getClassId(), principal.getName());
-        return ResponseEntity.status(res.getStatus()).body(res.getMessage());
-    }
+//    @PostMapping
+//    public ResponseEntity<?> getClassesOfCurrSemester(
+//        Principal principal,
+//        @RequestParam
+//        @Min(value = 0, message = "Số trang có giá trị không âm") Integer page,
+//        @RequestParam
+//        @Min(value = 0, message = "Kích thước trang có giá trị không âm") Integer size,
+//        @RequestBody GetClassesIM filterParams
+//    ) {
+//        log.info("getClassesOfCurrSemester");
+//
+//        if (null == page) {
+//            page = 0;
+//        }
+//
+//        if (null == size) {
+//            size = 20;
+//        }
+//
+//        return ResponseEntity
+//            .ok()
+//            .body(classService.getClassesOfCurrentSemester(
+//                principal.getName(),
+//                filterParams,
+//                PageRequest.of(page, size)));
+//    }
+//
+//    @PostMapping("/register")
+//    public ResponseEntity<String> register(@Valid @RequestBody RegistIM im, Principal principal) {
+//        SimpleResponse res = classService.register(im.getClassId(), principal.getName());
+//        return ResponseEntity.status(res.getStatus()).body(res.getMessage());
+//    }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/add-class-user-login-role")
@@ -217,10 +216,10 @@ public class ClassController {
         return ResponseEntity.ok().body("OK");
     }
 
-    @GetMapping("/{id}/students")
-    public ResponseEntity<List<GetStudentsOfClassOM>> getStudentsOfClass(@PathVariable UUID id) {
-        return ResponseEntity.ok().body(classService.getStudentsOfClass(id));
-    }
+//    @GetMapping("/{id}/students")
+//    public ResponseEntity<List<GetStudentsOfClassOM>> getStudentsOfClass(@PathVariable UUID id) {
+//        return ResponseEntity.ok().body(classService.getStudentsOfClass(id));
+//    }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/add-all-users-to-class")
@@ -264,12 +263,12 @@ public class ClassController {
         apiService.callLogAPI("https://analytics.soict.ai/api/log/create-log",logM);
     }
 
-    @GetMapping("/list/student")
-    public ResponseEntity<?> getClassesOfStudent(Principal principal) {
-        logUserGetRegisteredClasses(principal.getName());
-
-        return ResponseEntity.ok().body(classService.getClassesOfStudent(principal.getName()));
-    }
+//    @GetMapping("/list/student")
+//    public ResponseEntity<?> getClassesOfStudent(Principal principal) {
+//        logUserGetRegisteredClasses(principal.getName());
+//
+//        return ResponseEntity.ok().body(classService.getClassesOfStudent(principal.getName()));
+//    }
 
     @Async
     public void logUserGetClassDetailForLearning(String userId, String courseName){
@@ -332,10 +331,10 @@ public class ClassController {
         return ResponseEntity.ok().body(classService.getAssignSubmit4Teacher(id));
     }
 
-    @GetMapping("/{id}/assignments/student")
-    public ResponseEntity<?> getAssignOfClass4Student(@PathVariable UUID id) {
-        return ResponseEntity.ok().body(classService.getAssign4Student(id));
-    }
+//    @GetMapping("/{id}/assignments/student")
+//    public ResponseEntity<?> getAssignOfClass4Student(@PathVariable UUID id) {
+//        return ResponseEntity.ok().body(classService.getAssign4Student(id));
+//    }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/add")
@@ -367,22 +366,22 @@ public class ClassController {
         return ResponseEntity.ok().body(eduCourseChapters);
     }
 
-    @GetMapping("/get-chapters-of-class/{classId}")
-    public ResponseEntity<?> getChaptersOfClass(Principal principal, @PathVariable UUID classId) {
-        String registrationStatus = classRegistrationRepo.checkRegistration(classId, principal.getName());
-        if ("APPROVED".equals(registrationStatus)) {
-
-            GetClassDetailOM eduClass = classService.getClassDetail(classId);
-            String courseId = eduClass.getCourseId();
-            
-            List<EduCourseChapter> eduCourseChapters = eduCourseChapterService.findAllByCourseId(courseId);
-            //        log.info("getChaptersOfClass, classId = " + classId + ", courseId = " + courseId
-            //                 + " RETURN list.sz = " + eduCourseChapters.size());
-            
-            return ResponseEntity.ok().body(eduCourseChapters);
-        } else return ResponseEntity.status(403).build();
-
-    }
+//    @GetMapping("/get-chapters-of-class/{classId}")
+//    public ResponseEntity<?> getChaptersOfClass(Principal principal, @PathVariable UUID classId) {
+//        String registrationStatus = classRegistrationRepo.checkRegistration(classId, principal.getName());
+//        if ("APPROVED".equals(registrationStatus)) {
+//
+//            GetClassDetailOM eduClass = classService.getClassDetail(classId);
+//            String courseId = eduClass.getCourseId();
+//
+//            List<EduCourseChapter> eduCourseChapters = eduCourseChapterService.findAllByCourseId(courseId);
+//            //        log.info("getChaptersOfClass, classId = " + classId + ", courseId = " + courseId
+//            //                 + " RETURN list.sz = " + eduCourseChapters.size());
+//
+//            return ResponseEntity.ok().body(eduCourseChapters);
+//        } else return ResponseEntity.status(403).build();
+//
+//    }
 
     @Secured("ROLE_TEACHER")
     @PostMapping("/create-chapter-of-course")
@@ -863,14 +862,14 @@ public class ClassController {
         return ResponseEntity.ok().body(eduCourseChapterMaterials);
     }
 
-    @GetMapping("/get-chapter-materials-of-class/{classId}/{chapterId}")
-    public ResponseEntity<?> getChapterMaterialsOfClass(Principal principal, @PathVariable UUID classId, @PathVariable UUID chapterId) {
-        //List<EduCourseChapterMaterial> eduCourseChapterMaterials = eduCourseChapterMaterialService.findAll();
-
-        List<EduClassMaterial> eduClassChapterMaterials = eduClassMaterialService.getMaterialByClassIdAndChapterId(
-            classId, chapterId);
-        return ResponseEntity.ok().body(eduClassChapterMaterials);
-    }
+//    @GetMapping("/get-chapter-materials-of-class/{classId}/{chapterId}")
+//    public ResponseEntity<?> getChapterMaterialsOfClass(Principal principal, @PathVariable UUID classId, @PathVariable UUID chapterId) {
+//        //List<EduCourseChapterMaterial> eduCourseChapterMaterials = eduCourseChapterMaterialService.findAll();
+//
+//        List<EduClassMaterial> eduClassChapterMaterials = eduClassMaterialService.getMaterialByClassIdAndChapterId(
+//            classId, chapterId);
+//        return ResponseEntity.ok().body(eduClassChapterMaterials);
+//    }
 
     @Secured("ROLE_TEACHER")
     @GetMapping("/get-all-semesters")
