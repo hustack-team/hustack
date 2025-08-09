@@ -6,6 +6,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import {Box} from "@material-ui/core";
 import QuestionBankDetails from "../questionbank/QuestionBankDetails";
 import {parseHTMLToString} from "../ultils/DataUltils";
+import {getFilePathFromString} from "../ultils/FileUltils";
 
 
 function TestBankQuestionItem(props) {
@@ -45,45 +46,19 @@ function TestBankQuestionItem(props) {
         </div>
         <p>{parseHTMLToString(value.content)}</p>
         {
-          value.type === 0 &&
-            (<Box display="flex" flexDirection='column'>
+          value.type === 0 && (
+            Array.from({ length: value.numberAnswer }, (_, index) => (
               <div style={{display: "flex", alignItems: "center"}}>
-                <span style={{marginRight: "5px"}}>1.</span>
-                <span>{parseHTMLToString(value.contentAnswer1)}</span>
+                <strong style={{marginRight: "5px"}}>{index+1}.</strong>
+                <div>
+                  <p>{parseHTMLToString(value.answers[index]?.content)}</p>
+                  {value.answers[index]?.file && (
+                    <img src={getFilePathFromString(value.answers[index]?.file)} alt="" style={{maxHeight: "150px"}}/>
+                  )}
+                </div>
               </div>
-              {
-                value.numberAnswer >= 2 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>2.</span>
-                    <span>{parseHTMLToString(value.contentAnswer2)}</span>
-                  </div>
-                )
-              }
-              {
-                value.numberAnswer >= 3 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>3.</span>
-                    <span>{parseHTMLToString(value.contentAnswer3)}</span>
-                  </div>
-                )
-              }
-              {
-                value.numberAnswer >= 4 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>4.</span>
-                    <span>{parseHTMLToString(value.contentAnswer4)}</span>
-                  </div>
-                )
-              }
-              {
-                value.numberAnswer >= 5 && (
-                  <div style={{display: "flex", alignItems: "center"}}>
-                    <span style={{marginRight: "5px"}}>5.</span>
-                    <span>{parseHTMLToString(value.contentAnswer5)}</span>
-                  </div>
-                )
-              }
-            </Box>)
+            ))
+          )
         }
       </Box>
       <Box display="flex" justifyContent='space-between' width="110px">

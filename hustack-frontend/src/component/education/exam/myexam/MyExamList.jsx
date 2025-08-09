@@ -1,0 +1,239 @@
+import React, {useState} from 'react';
+import withScreenSecurity from "../../../withScreenSecurity";
+import {
+  Box,
+  Card, CardActions,
+  CardContent,
+} from "@material-ui/core";
+import {request} from "../../../../api";
+import {useHistory} from "react-router-dom";
+import {errorNoti} from "../../../../utils/notification";
+import {DataGrid} from "@mui/x-data-grid";
+import {formatDateTime, getDiffMinutes} from "../ultils/DateUltils";
+import {parseHTMLToString} from "../ultils/DataUltils";
+import PrimaryButton from "../../../button/PrimaryButton";
+import SecondaryButton from "../ultils/component/SecondaryButton";
+import {useLocation} from "react-router";
+import TertiaryButton from "../../../button/TertiaryButton";
+import {useMenu} from "../../../../layout/sidebar/context/MenuContext";
+import ExamViolateDialog from "../exammanagement/ExamViolateDialog";
+
+const baseColumn = {
+  sortable: false,
+};
+
+function MyExamList(props) {
+
+  const columns = [
+    {
+      field: "examTestName",
+      headerName: "Đề thi",
+      minWidth: 200,
+      flex: 1,
+      ...baseColumn
+    },
+    {
+      field: "examTestDuration",
+      headerName: "Thời gian làm",
+      minWidth: 120,
+      maxWidth: 150,
+      renderCell: (rowData) => {
+        if(rowData.value){
+          return `${rowData.value} phút`
+        }
+        return ''
+      },
+      ...baseColumn
+    },
+    {
+      field: "examTestDescription",
+      headerName: "Mô tả",
+      minWidth: 200,
+      flex: 1,
+      renderCell: (rowData) => {
+        return parseHTMLToString(rowData.value)
+      },
+      ...baseColumn
+    },
+    {
+      field: "totalScore",
+      headerName: "Tổng điểm",
+      ...baseColumn,
+      minWidth: 120,
+      maxWidth: 150,
+    },
+    {
+      field: "totalTime",
+      headerName: "Tổng thời gian làm",
+      renderCell: (rowData) => {
+        if(rowData?.row?.submitedAt){
+          return `${getDiffMinutes(rowData?.row?.startedAt, rowData?.row?.submitedAt)} Phút`
+        }
+        return ''
+      },
+      ...baseColumn,
+      minWidth: 140,
+      maxWidth: 160,
+    },
+    {
+      field: "totalViolate",
+      headerName: "Lỗi vi phạm",
+      renderCell: (rowData) => {
+        if(rowData?.value){
+          return (
+            <p
+              style={{fontWeight: 'bolder', cursor: 'pointer', textDecoration: 'underline', color: 'red'}}
+              onClick={() => handleOpenPopupExamViolate(rowData?.row?.examResultId)}
+            >
+              {String(rowData?.value).padStart(2, '0')} lỗi
+            </p>
+          )
+        }
+        return ''
+      },
+      ...baseColumn,
+      minWidth: 100,
+      maxWidth: 120,
+    },
+    {
+      field: "",
+      headerName: "",
+      sortable: false,
+      minWidth: 100,
+      maxWidth: 100,
+      renderCell: (rowData) => {
+        return (
+          <Box display="flex" justifyContent="space-between" alignItems='center' width="100%">
+            {
+              (rowData?.row?.submitedAt == null) ? (
+                <PrimaryButton
+                  variant="contained"
+                  color="primary"
+                  onClick={(data) => handleDoingExam(rowData?.row)}
+                >
+                  Làm bài
+                </PrimaryButton>
+              ) : (
+                <SecondaryButton
+                  variant="outlined"
+                  onClick={(data) => handleDoingExam(rowData?.row)}
+                >
+                  Xem bài
+                </SecondaryButton>
+              )
+            }
+          </Box>
+        )
+      }
+    },
+  ];
+  const history = useHistory();
+  const location = useLocation();
+  const data = location.state?.data
+  const exam = location.state?.exam
+  const { closeMenu, openMenu } = useMenu();
+
+  if(data === undefined){
+    window.location.href = '/exam/my-exam';
+    openMenu()
+  }
+
+  const [openExamViolateDialog, setOpenExamViolateDialog] = useState(false);
+  const [examResultIdViolate, setExamResultIdViolate] = useState(null);
+
+  const handleDoingExam = (rowData) => {
+    closeMenu()
+    if(exam?.examMonitor && exam?.examMonitor > 0 && rowData?.totalScore == null && rowData?.submitedAt == null){
+      history.push({
+        pathname: `/exam/my-exam-preview`,
+        state: {
+          test: rowData,
+          exam,
+        },
+      });
+    }else{
+      request(
+        "get",
+        `/exam/student/submissions/examStudentTest/${rowData?.examStudentTestId}`,
+        (res) => {
+          if(res.status === 200){
+            if(res.data.resultCode === 200){
+              history.push({
+                pathname: `/exam/doing`,
+                state: {
+                  data: res.data.data
+                },
+              });
+            }else{
+              errorNoti(res.data.resultMsg, 3000)
+            }
+          }else {
+            errorNoti(res, 3000)
+          }
+        },
+        { onError: (e) => errorNoti(e, 3000) },
+      );
+    }
+  };
+
+  const handleOpenPopupExamViolate = (examResultId) => {
+    setOpenExamViolateDialog(true)
+    setExamResultIdViolate(examResultId)
+  }
+
+  return (
+    <div>
+      <Card elevation={5} >
+        <CardContent>
+          <div style={{display: "flex", flexDirection: "column", alignItems: 'center', width: '100%'}}>
+            <h1 style={{margin: 0, padding: 0}}>{exam?.examName}</h1>
+            <p style={{margin: 0, padding: 0}}>{parseHTMLToString(exam?.examDescription)}</p>
+            <div style={{display: "flex"}}>
+              <p style={{margin: '0 20px 0 0', padding: 0, display: "flex"}}><span style={{
+                fontWeight: "bold",
+                marginRight: '5px'
+              }}>Thời gian bắt đầu:</span>{formatDateTime(exam?.startTime)}</p>
+              <p style={{margin: 0, padding: 0, display: "flex"}}><span style={{
+                fontWeight: "bold",
+                marginRight: '5px'
+              }}>Thời gian kết thúc:</span>{formatDateTime(exam?.endTime)}</p>
+            </div>
+          </div>
+          <h3>Danh sách đề thi</h3>
+          <DataGrid
+            rows={data}
+            columns={columns}
+            getRowId={(row) => row.examTestId}
+            disableColumnMenu
+            autoHeight
+            hideFooter
+          />
+        </CardContent>
+        <CardActions style={{justifyContent: 'flex-end'}}>
+          <TertiaryButton
+            variant="outlined"
+            onClick={() => {
+              history.push("/exam/my-exam");
+              openMenu()
+            }}
+          >
+            Hủy
+          </TertiaryButton>
+        </CardActions>
+      </Card>
+      {
+        openExamViolateDialog && (
+          <ExamViolateDialog
+            open={openExamViolateDialog}
+            setOpen={setOpenExamViolateDialog}
+            examResultId={examResultIdViolate}
+          />
+        )
+      }
+    </div>
+  );
+}
+
+const screenName = "MENU_EXAMINEE_PARTICIPANT";
+export default withScreenSecurity(MyExamList, screenName, true);
+//export default MyExam;

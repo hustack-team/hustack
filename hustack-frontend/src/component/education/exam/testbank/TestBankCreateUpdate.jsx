@@ -59,6 +59,7 @@ function TestBankCreateUpdate(props) {
 
   const [code, setCode] = useState(data?.code);
   const [name, setName] = useState(data?.name);
+  const [duration, setDuration] = useState(data?.duration);
   const [description, setDescription] = useState(data?.description);
   const [questions, setQuestions] = useState(data?.questions);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,8 +90,9 @@ function TestBankCreateUpdate(props) {
     }
     const body = {
       code: code,
-      name:  name,
-      description:  description,
+      name: name,
+      description: description,
+      duration: +duration,
       examTestQuestionSaveReqList: examTestQuestionSaveReqList,
       examTestQuestionDeleteReqList: questionDeleteList
     }
@@ -175,7 +177,7 @@ function TestBankCreateUpdate(props) {
             </Typography>
             <form className={classes.root} noValidate autoComplete="off">
               <div>
-                <div>
+                <div style={{width: '100%'}}>
                   <TextField
                     autoFocus
                     required
@@ -185,6 +187,7 @@ function TestBankCreateUpdate(props) {
                     label="Mã đề thi"
                     placeholder="Nhập mã đề thi"
                     value={code}
+                    style={{width: '20%'}}
                     onChange={(event) => {
                       setCode(event.target.value);
                     }}
@@ -200,8 +203,25 @@ function TestBankCreateUpdate(props) {
                     label="Tên đề thi"
                     placeholder="Nhập tên đề thi"
                     value={name}
+                    style={{width: '55%'}}
                     onChange={(event) => {
                       setName(event.target.value);
+                    }}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+
+                  <TextField
+                    autoFocus
+                    id="testDuration"
+                    label="Thời gian làm(phút)"
+                    placeholder="Nhập gian lượng làm"
+                    value={duration}
+                    style={{width: '20%'}}
+                    type={'number'}
+                    onChange={(event) => {
+                      setDuration(event.target.value);
                     }}
                     InputLabelProps={{
                       shrink: true,

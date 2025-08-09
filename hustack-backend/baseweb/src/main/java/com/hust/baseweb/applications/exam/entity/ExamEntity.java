@@ -18,9 +18,6 @@ import java.time.LocalDateTime;
 @Table(name = "exam")
 public class ExamEntity extends BaseEntity {
 
-    @Column(name = "exam_test_id")
-    private String examTestId;
-
     @Column(name = "code")
     private String code;
 
@@ -35,6 +32,15 @@ public class ExamEntity extends BaseEntity {
 
     @Column(name = "answer_status")
     private String answerStatus;
+
+    @Column(name = "score_status")
+    private Integer scoreStatus;
+
+    @Column(name = "monitor")
+    private Integer monitor;
+
+    @Column(name = "block_screen")
+    private Integer blockScreen;
 
     @Column(name = "start_time")
     private LocalDateTime startTime;

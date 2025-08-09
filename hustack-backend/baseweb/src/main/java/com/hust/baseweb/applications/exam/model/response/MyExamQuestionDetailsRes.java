@@ -1,5 +1,7 @@
 package com.hust.baseweb.applications.exam.model.response;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
+
 public interface MyExamQuestionDetailsRes {
 
     String getExamTestQuestionId();
@@ -10,11 +12,6 @@ public interface MyExamQuestionDetailsRes {
     String getQuestionContent();
     String getQuestionFile();
     Integer getQuestionNumberAnswer();
-    String getQuestionContentAnswer1();
-    String getQuestionContentAnswer2();
-    String getQuestionContentAnswer3();
-    String getQuestionContentAnswer4();
-    String getQuestionContentAnswer5();
     boolean getQuestionMultichoice();
     String getQuestionAnswer();
     String getQuestionExplain();
@@ -22,5 +19,7 @@ public interface MyExamQuestionDetailsRes {
     String getAnswer();
     String getFilePathAnswer();
     String getFilePathComment();
-    Integer getScore();
+    Float getScore();
+    @JsonRawValue
+    String getQuestionAnswers();
 }

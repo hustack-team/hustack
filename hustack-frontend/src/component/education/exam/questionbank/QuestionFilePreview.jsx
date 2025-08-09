@@ -19,9 +19,11 @@ function QuestionFilePreview(props) {
     setOpen,
     file,
     examResultDetailsIdSelected,
+    indexSelected,
     isComment,
     imageComment,
     setImageComment,
+    setContentComment,
   } = props;
 
   const [isEdit, setIsEdit] = useState(false)
@@ -66,9 +68,11 @@ function QuestionFilePreview(props) {
                 <ImageEditor
                   file={file}
                   examResultDetailsIdSelected={examResultDetailsIdSelected}
+                  indexSelected={indexSelected}
                   isEdit={isEdit}
                   isSave={isSave}
                   setImageComment={setImageComment}
+                  setContentComment={setContentComment}
                 />
               ) : (
                 <FilePreviewUrl file={file}/>

@@ -7,10 +7,7 @@ import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionDetailsRes;
 import com.hust.baseweb.applications.exam.model.response.ExamQuestionFilterRes;
-import com.hust.baseweb.applications.exam.repository.ExamQuestionRepository;
-import com.hust.baseweb.applications.exam.repository.ExamQuestionTagRepository;
-import com.hust.baseweb.applications.exam.repository.ExamTagRepository;
-import com.hust.baseweb.applications.exam.repository.ExamTestQuestionRepository;
+import com.hust.baseweb.applications.exam.repository.*;
 import com.hust.baseweb.applications.exam.service.ExamQuestionService;
 import com.hust.baseweb.applications.exam.service.MongoFileService;
 import com.hust.baseweb.applications.exam.utils.DataUtils;
@@ -19,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +41,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     ExamTagRepository examTagRepository;
     ExamQuestionTagRepository examQuestionTagRepository;
     ExamTestQuestionRepository examTestQuestionRepository;
+    ExamQuestionAnswerRepository examQuestionAnswerRepository;
     MongoFileService mongoFileService;
     ModelMapper modelMapper;
     EntityManager entityManager;
@@ -69,7 +68,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     @Override
     public ResponseData<ExamQuestionDetailsRes> details(String id) {
         ResponseData<ExamQuestionDetailsRes> responseData = new ResponseData<>();
-        if(DataUtils.stringIsNotNullOrEmpty(id)){
+        if(StringUtils.isNotEmpty(id)){
             Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneById(id);
             if(examQuestionEntity.isPresent()){
                 responseData.setHttpStatus(HttpStatus.OK);
@@ -80,7 +79,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             }
         }
 
-//        if(DataUtils.stringIsNotNullOrEmpty(code)){
+//        if(StringUtils.isNotEmpty(code)){
 //            Optional<ExamQuestionDetailsRes> examQuestionEntity = examQuestionRepository.findOneByCode(code);
 //            if(examQuestionEntity.isPresent()){
 //                responseData.setHttpStatus(HttpStatus.OK);
@@ -114,7 +113,22 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         }
 
         ExamQuestionEntity examQuestionEntity = modelMapper.map(examQuestionSaveReq, ExamQuestionEntity.class);
-        examQuestionEntity.setFilePath(String.join(";", filePaths));
+        List<String> remainingFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePath != null) {
+                boolean exist = false;
+                for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+                    if (filePath.contains("_answer_"+answerSaveReq.getOrder())) {
+                        answerSaveReq.setFile(filePath);
+                        exist = true;
+                    }
+                }
+                if(!exist){
+                    remainingFilePaths.add(filePath);
+                }
+            }
+        }
+        examQuestionEntity.setFilePath(String.join(";", remainingFilePaths));
         examQuestionEntity = examQuestionRepository.save(examQuestionEntity);
 
         List<ExamQuestionTagEntity> examQuestionTagEntityList = new ArrayList<>();
@@ -124,6 +138,19 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             examQuestionTagEntityList.add(examQuestionTagEntity);
         }
         examQuestionTagRepository.saveAll(examQuestionTagEntityList);
+
+        List<ExamQuestionAnswerEntity> examQuestionAnswerEntities = new ArrayList<>();
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+            examQuestionAnswerEntities.add(
+                ExamQuestionAnswerEntity
+                    .builder()
+                    .examQuestionId(examQuestionEntity.getId())
+                    .order(answerSaveReq.getOrder())
+                    .content(answerSaveReq.getContent())
+                    .file(answerSaveReq.getFile())
+                    .build());
+        }
+        examQuestionAnswerRepository.saveAll(examQuestionAnswerEntities);
 
         responseData.setHttpStatus(HttpStatus.OK);
         responseData.setResultCode(HttpStatus.OK.value());
@@ -152,12 +179,27 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
         examQuestionEntity.setId(examQuestionExist.get().getId());
         examQuestionEntity.setCreatedBy(examQuestionExist.get().getCreatedBy());
         examQuestionEntity.setCreatedAt(examQuestionExist.get().getCreatedAt());
+        List<String> remainingFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePath != null) {
+                boolean exist = false;
+                for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+                    if (filePath.contains("_answer_"+answerSaveReq.getOrder())) {
+                        answerSaveReq.setFile(filePath);
+                        exist = true;
+                    }
+                }
+                if(!exist){
+                    remainingFilePaths.add(filePath);
+                }
+            }
+        }
         examQuestionEntity.setFilePath(
-            DataUtils.stringIsNotNullOrEmpty(examQuestionEntity.getFilePath()) ?
-                (!filePaths.isEmpty() ?
-                    examQuestionEntity.getFilePath() +";"+ String.join(";", filePaths) :
+            StringUtils.isNotEmpty(examQuestionEntity.getFilePath()) ?
+                (!remainingFilePaths.isEmpty() ?
+                    examQuestionEntity.getFilePath() +";"+ String.join(";", remainingFilePaths) :
                     examQuestionEntity.getFilePath()) :
-                String.join(";", filePaths));
+                String.join(";", remainingFilePaths));
         examQuestionRepository.save(examQuestionEntity);
 
         for(String filePath: examQuestionSaveReq.getDeletePaths()){
@@ -181,6 +223,27 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             ExamQuestionTagEntity examQuestionTagEntity = new ExamQuestionTagEntity();
             examQuestionTagEntity.setId(new ExamQuestionTagKey(item.getId(), examQuestionEntity.getId()));
             examQuestionTagRepository.save(examQuestionTagEntity);
+        }
+
+        List<ExamQuestionAnswerEntity> examQuestionAnswerEntities = new ArrayList<>();
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswers()){
+            examQuestionAnswerEntities.add(
+                ExamQuestionAnswerEntity
+                    .builder()
+                    .id(answerSaveReq.getId())
+                    .examQuestionId(examQuestionEntity.getId())
+                    .order(answerSaveReq.getOrder())
+                    .content(answerSaveReq.getContent())
+                    .file(answerSaveReq.getFile())
+                    .build());
+        }
+        examQuestionAnswerRepository.saveAll(examQuestionAnswerEntities);
+
+        for(ExamQuestionAnswerSaveReq answerSaveReq: examQuestionSaveReq.getAnswersDelete()){
+            examQuestionAnswerRepository.deleteById(answerSaveReq.getId());
+            if(StringUtils.isNotEmpty(answerSaveReq.getFile())){
+                mongoFileService.deleteByPath(answerSaveReq.getFile());
+            }
         }
 
         responseData.setHttpStatus(HttpStatus.OK);
@@ -209,10 +272,23 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             return responseData;
         }
 
+        List<ExamQuestionAnswerEntity> questionAnswerEntityList = examQuestionAnswerRepository.findAllByExamQuestionId(id);
+        if(!questionAnswerEntityList.isEmpty()){
+            List<String> listFileDelete = questionAnswerEntityList.stream()
+                                                                  .map(ExamQuestionAnswerEntity::getFile)
+                                                                  .collect(Collectors.toList());
+            for(String filePath: listFileDelete){
+                if(StringUtils.isNotEmpty(filePath)){
+                    mongoFileService.deleteByPath(filePath);
+                }
+            }
+            examQuestionAnswerRepository.deleteAll(questionAnswerEntityList);
+        }
+
         if(examQuestionExist.get().getFilePath() != null){
             String[] filePaths = examQuestionExist.get().getFilePath().split(";");
             for(String filePath: filePaths){
-                if(DataUtils.stringIsNotNullOrEmpty(filePath)){
+                if(StringUtils.isNotEmpty(filePath)){
                     mongoFileService.deleteByPath(filePath);
                 }
             }

@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -77,6 +78,7 @@ public class ExamTestServiceImpl implements ExamTestService {
                                  .id(examTestEntity.get().getId())
                                  .code(examTestEntity.get().getCode())
                                  .name(examTestEntity.get().getName())
+                                 .duration(examTestEntity.get().getDuration())
                                  .description(examTestEntity.get().getDescription())
                                  .examTestQuestionDetails(list).build());
         return responseData;
@@ -135,7 +137,7 @@ public class ExamTestServiceImpl implements ExamTestService {
         List<ExamTestQuestionEntity> examTestQuestionEntityList = new ArrayList<>();
         for(ExamTestQuestionSaveReq examTestQuestionSaveReq: examTestSaveReq.getExamTestQuestionSaveReqList()){
             ExamTestQuestionEntity examTestQuestionEntity = modelMapper.map(examTestQuestionSaveReq, ExamTestQuestionEntity.class);
-            if(!DataUtils.stringIsNotNullOrEmpty(examTestQuestionEntity.getId())){
+            if(!StringUtils.isNotEmpty(examTestQuestionEntity.getId())){
                 examTestQuestionEntity.setId(UUID.randomUUID().toString());
             }
             examTestQuestionEntity.setExamTestId(examTestEntity.getId());

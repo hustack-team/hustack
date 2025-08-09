@@ -1,27 +1,19 @@
 package com.hust.baseweb.applications.exam.model.response;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 
-import java.util.List;
-
-@Getter
-@Setter
-@FieldNameConstants
-@NoArgsConstructor
-public class ExamDetailsRes {
-
-    private String examTestId;
-    private List<ExamTestDetailsRes> examTests;
-    private String id;
-    private String code;
-    private String name;
-    private String description;
-    private Integer status;
-    private String answerStatus;
-    private String startTime;
-    private String endTime;
-    private List<ExamStudentResultDetailsRes> examStudents;
+public interface ExamDetailsRes {
+    String getId();
+    String getCode();
+    String getName();
+    String getDescription();
+    Integer getStatus();
+    String getAnswerStatus();
+    Integer getScoreStatus();
+    Integer getMonitor();
+    Integer getBlockScreen();
+    String getStartTime();
+    String getEndTime();
+    @JsonRawValue
+    String getExamTests();
 }

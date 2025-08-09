@@ -1,13 +1,11 @@
 package com.hust.baseweb.applications.exam.controller;
 
 import com.hust.baseweb.applications.exam.entity.ExamEntity;
+import com.hust.baseweb.applications.exam.entity.ExamResultDetailsEntity;
 import com.hust.baseweb.applications.exam.entity.ExamResultEntity;
 import com.hust.baseweb.applications.exam.model.ResponseData;
 import com.hust.baseweb.applications.exam.model.request.*;
-import com.hust.baseweb.applications.exam.model.response.ExamDetailsRes;
-import com.hust.baseweb.applications.exam.model.response.ExamMarkingDetailsRes;
-import com.hust.baseweb.applications.exam.model.response.MyExamDetailsRes;
-import com.hust.baseweb.applications.exam.model.response.MyExamFilterRes;
+import com.hust.baseweb.applications.exam.model.response.*;
 import com.hust.baseweb.applications.exam.service.ExamService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -20,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -44,9 +44,15 @@ public class ExamController {
     }
 
     @Secured("ROLE_TEACHER")
-    @GetMapping("/teacher/submissions/{examStudentId}")
-    public ResponseEntity<ResponseData<ExamMarkingDetailsRes>> detailsExamMarking(@PathVariable String examStudentId) {
-        return ResponseEntity.ok(examService.detailsExamMarking(examStudentId));
+    @GetMapping("/examTest/{examExamTestId}")
+    public ResponseEntity<ResponseData<List<ExamStudentResultDetailsRes>>> detailStudentExam(@PathVariable("examExamTestId") String examExamTestId) {
+        return ResponseEntity.ok(examService.detailStudentExam(examExamTestId));
+    }
+
+    @Secured("ROLE_TEACHER")
+    @GetMapping("/teacher/submissions/{examStudentTestId}")
+    public ResponseEntity<ResponseData<ExamMarkingDetailsRes>> detailsExamMarking(@PathVariable String examStudentTestId) {
+        return ResponseEntity.ok(examService.detailsExamMarking(examStudentTestId));
     }
 
     @Secured("ROLE_TEACHER")
@@ -60,6 +66,12 @@ public class ExamController {
     @PostMapping
     public ResponseEntity<ResponseData<ExamEntity>> create(@RequestBody @Valid ExamSaveReq examSaveReq) {
         return ResponseEntity.ok(examService.create(examSaveReq));
+    }
+
+    @Secured("ROLE_TEACHER")
+    @GetMapping("/preview-update/{id}")
+    public ResponseEntity<ResponseData<ExamPreviewUpdateRes>> previewUpdate(@PathVariable("id") String id) {
+        return ResponseEntity.ok(examService.previewUpdate(id));
     }
 
     @Secured("ROLE_TEACHER")
@@ -80,15 +92,24 @@ public class ExamController {
         return ResponseEntity.ok(examService.filterMyExam(pageable, myExamFilterReq));
     }
 
-    @GetMapping("/student/submissions/{examId}/{examStudentId}")
-    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@PathVariable("examId") String examId,
-                                                                        @PathVariable("examStudentId") String examStudentId) {
-        return ResponseEntity.ok(examService.detailsMyExam(examId, examStudentId));
+    @GetMapping("/student/submissions/{examId}")
+    public ResponseEntity<ResponseData<List<MyExamTestWithResultRes>>> getListTestMyExam(@PathVariable("examId") String examId) {
+        return ResponseEntity.ok(examService.getListTestMyExam(examId));
+    }
+
+    @GetMapping("/student/submissions/examStudentTest/{examStudentTestId}")
+    public ResponseEntity<ResponseData<MyExamDetailsRes>> detailsMyExam(@PathVariable("examStudentTestId") String examStudentTestId) {
+        return ResponseEntity.ok(examService.detailsMyExam(examStudentTestId));
+    }
+
+    @GetMapping("/student/submissions/{examStudentTestId}/attempts")
+    public ResponseEntity<ResponseData<ExamResultEntity>> startDoingMyExam(@PathVariable("examStudentTestId") String examStudentTestId) {
+        return ResponseEntity.ok(examService.startDoingMyExam(examStudentTestId));
     }
 
     @PostMapping("/student/submissions")
-    public ResponseEntity<ResponseData<ExamResultEntity>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
-                                                                      @RequestPart(value = "files", required = false) MultipartFile[] files) {
+    public ResponseEntity<ResponseData<List<ExamResultDetailsEntity>>> doingMyExam(@RequestPart("body") MyExamResultSaveReq myExamResultSaveReq,
+                                                                                   @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(examService.doingMyExam(myExamResultSaveReq, files));
     }
 }

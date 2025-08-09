@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Button, Chip} from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import PropTypes from "prop-types";
@@ -25,6 +25,7 @@ export default function FileUploader(props) {
   const classes = useStyles();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => props.onChange(selectedFiles), [selectedFiles]);
 
@@ -37,11 +38,17 @@ export default function FileUploader(props) {
       }
     }
     setSelectedFiles(newSelectedFileArr);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }
 
   function deleteFileByIndex(index) {
     selectedFiles.splice(index, 1);
     setSelectedFiles([...selectedFiles]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }
 
   return (
@@ -62,7 +69,9 @@ export default function FileUploader(props) {
         Upload file
         <input type="file" hidden
                multiple={props.multiple}
-               onChange={event => updateSelectedFiles(event.target.files)}/>
+               onChange={event => updateSelectedFiles(event.target.files)}
+               ref={fileInputRef}
+        />
       </Button>
 
       <span className={classes.fileUploaderChips}>
